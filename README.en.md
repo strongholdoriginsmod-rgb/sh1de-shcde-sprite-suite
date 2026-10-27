@@ -156,3 +156,9 @@ See [Build history](docs/BUILD_HISTORY.md) (German).
 - Atlas contract (`extras/atlas-contract`).
 
 See [Script Extender compatibility and unverified runtime ABI](docs/SCRIPT_EXTENDER.md).
+
+## Stronghold Origins: full HUD/GUI graphics catalog
+
+The **ORIGINS Grafiken** workspace indexes all **13,562** versioned entries from the [Stronghold Europe graphics repository](https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten), including **4,086 HUD/GUI assets**, Noesis XAML, historic blue/silver color schemes and the GUI atlases. Start the Universal Suite, open **ORIGINS Grafiken**, search and filter every source path, and select an authorized local Git-LFS clone to verify SHA-256 provenance and create isolated editable copies. The native Stronghold 1 DE HUD Studio remains accessible.
+
+Large and partly game-derived binary resources remain in the access-managed graphics repository. The Suite source contains the complete path/Git-ID catalog and processing tools. [Setup and limitations](docs/ORIGINS_GRAFIKDATEN_KATALOG.md).

@@ -2647,14 +2647,17 @@ class Universal(center.Center):
         self.sandbox_tab = SandboxTab(self.notebook, self)
         self.exchange_tab = ExchangeTab(self.notebook, self)
         from suite_sh1_hud_studio import Sh1HudStudio
+        from suite_origins_grafikdaten import OriginsGraphicsTab
         self.hud_tab = Sh1HudStudio(self.notebook, self)
+        self.origins_graphics_tab = OriginsGraphicsTab(self.notebook, self)
         self.target_tab = TargetTab(self.notebook, self)
         self.notebook.insert(1, self.catalog_tab, text="Asset-Katalog")
         self.notebook.insert(2, self.diagnose_tab, text="Diagnose & Reparatur")
         self.notebook.insert(3, self.sandbox_tab, text="Sandkasten")
         self.notebook.insert(4, self.exchange_tab, text="Editor & Austausch")
         self.notebook.insert(5, self.hud_tab, text="SH1 HUD-Studio")
-        self.notebook.insert(6, self.target_tab, text="Ziel & SE 2.11")
+        self.notebook.insert(6, self.origins_graphics_tab, text="ORIGINS Grafiken")
+        self.notebook.insert(7, self.target_tab, text="Ziel & SE 2.11")
         ttk.Button(
             self.command_bar, text="HUD-Studio",
             command=lambda: self.open_tab(self.hud_tab)
@@ -2684,6 +2687,7 @@ class Universal(center.Center):
             ("Sandkasten", "Sandbox Studio", self.sandbox_tab),
             ("Editor & Austausch", "Editor and exchange", self.exchange_tab),
             ("SH1 HUD-Studio", "SH1 HUD Studio", self.hud_tab),
+            ("ORIGINS Grafiken", "ORIGINS graphics", self.origins_graphics_tab),
             ("Ziel & SE 2.11", "Targets and SE 2.11", self.target_tab),
             ("Paket bauen", "Build packages", self.bc7_page),
             ("Start & Anleitung", "Start and guide", self.tab_home),
@@ -2703,6 +2707,7 @@ class Universal(center.Center):
                 (self.sandbox_tab, ("Sandbox", "Sandbox")),
                 (self.exchange_tab, ("Editor", "Editor")),
                 (self.hud_tab, ("HUD", "HUD")),
+                (self.origins_graphics_tab, ("Grafiken", "Graphics")),
                 (self.target_tab, ("Ziele", "Targets")),
                 (self.bc7_page, ("Bauen", "Build")),
             )

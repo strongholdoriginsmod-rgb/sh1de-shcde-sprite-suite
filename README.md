@@ -166,3 +166,9 @@ ist ausdrücklich keine neue Release- oder Ingamefreigabe.
 - Atlasvertrag (`extras/atlas-contract`).
 
 Weitere Einschränkungen und Testgrenzen: [Script Extender v2.14.3](docs/SCRIPT_EXTENDER.md).
+
+## Stronghold Origins: vollständiger HUD-/GUI-Grafikkatalog
+
+Der Arbeitsbereich **ORIGINS Grafiken** umfasst alle **13.562** bekannten Dateien aus dem versionierten [Stronghold-Europe-Grafikdaten-Projekt](https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten), darunter **4.086 HUD-/GUI-Elemente**, Noesis-XAML, das Blau/Silber-HUD und die GUI-Atlanten. Über **Suite starten.cmd → ORIGINS Grafiken** lassen sich alle Dateinamen suchen, filtern und per Git-/LFS-SHA-256 prüfen. Berechtigte Mitwirkende wählen ihren lokalen Git-LFS-Klon und erzeugen daraus getrennte Bearbeitungskopien mit Herkunftsnachweis. Das originale Stronghold-1-HUD bleibt zusätzlich im eigenen **SH1 HUD-Studio** erreichbar.
+
+Die großen, teilweise spielabgeleiteten Binärdaten verbleiben im zugangsverwalteten Grafikdatenprojekt. Im Sprite-Suite-Quellcode liegen der vollständige Katalog mit den Original-Git-IDs und die Verarbeitung. [Einrichtung und Grenzen](docs/ORIGINS_GRAFIKDATEN_KATALOG.md).
