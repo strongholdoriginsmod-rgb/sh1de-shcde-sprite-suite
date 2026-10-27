@@ -105,6 +105,34 @@ QA-Schnappschuss außerhalb des Repositories.
   möglich. Ein erstellter Integrationscommit allein ist **kein**
   erfolgreicher GitHub-Push.
 
+## Nachtrag: SHCDE Script Extender 2.14.3
+
+Der j?ngere lokale Arbeitsstand erg?nzt nun
+`tools/shcdese_compat_check.py` und eine **nur lesende**
+Startschaltfl?che im Zielspiel-Reiter der Universal-GUI.
+Der statische Pr?fer vergleicht PE-Versionen, installierte
+Script-Extender-Metadaten, BepInEx-Voraussetzungen,
+Noesis-UI-Slots, Quell-Buildpins und die Konfiguration
+`RequireSignedBepInExPlugins`. Eine ?bereinstimmung
+der Versionsnummer allein gilt ausdr?cklich **nicht**
+als Nachweis von ABI-, Hook- oder Ingame-Kompatibilit?t.
+Die Quelle mit Version 2.14.3 war am 19.10.2026 ver?ffentlicht.
+Die Funktion f?hrt weder Installationen noch Schreibzugriffe
+in Spielverzeichnissen aus.
+
+`tests/sandbox/test_shcdese_compat_check.py` pr?ft synthetische
+gute und fehlerhafte Installationen, doppelte/ung?ltige
+Sicherheitskonfigurationen, Versionsformate, runtime-build-Pins
+und unterlassene Dateimodifikation.
+**16 Checker-Tests und zwei GUI-Verdrahtungstests bestanden**
+sowohl im Integrations- als auch im GitHub-Source-only-Checkout.
+
+Die reine QA-Spielquelle enthielt noch SHCDESE **1.44.0** statt
+der verifizierten Referenz **2.14.3**. Die Original-Unity-Datei
+blieb bei der Lesepr?fung unver?ndert. Es wurde ausdr?cklich
+weder eine C#-ABI-Gleichheit noch das Spielverhalten nachgewiesen.
+Vor einem Upgrade bleiben Neubau, API-/ABI-Pr?fung und Ingame-Test offen.
+
 ## Weitere zielgerichtete Freigabeschritte
 
 Vor einem Spiel-/Plugin-Release müssen eine saubere SHCDE-Installation

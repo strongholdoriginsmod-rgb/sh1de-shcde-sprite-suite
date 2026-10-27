@@ -2360,6 +2360,10 @@ class TargetTab(ttk.Frame):
             overflow_label="Installation & Sicherungen ▾",
         )
         self.actions.pack(fill="x", padx=8, pady=(5, 3))
+        ttk.Button(
+            self, text="Script Extender 2.14.3 prüfen (nur lesen)",
+            command=self.check_se,
+        ).pack(anchor="w", padx=9, pady=(0, 4))
         self.target_status = tk.StringVar(
             value=LANG.tr("Zielspiele werden eingelesen …")
         )
@@ -2527,6 +2531,39 @@ class TargetTab(ttk.Frame):
             return
         self.app.run([tool("ziel_se211.py"),"aktivieren",name,
                       "--source-data",source],f"Ziel {name} verifiziert aktivieren")
+
+    def check_se(self):
+        """Read the selected Crusader game or ask for one, never install SE."""
+        import ziel_se211
+        selected = self.table.selection()
+        folder = None
+        if selected:
+            registry = ziel_se211.targets().get("ziele", {})
+            spec = registry.get(selected[0])
+            if isinstance(spec, dict):
+                folder = spec.get("spiel")
+        if not folder:
+            folder = filedialog.askdirectory(
+                parent=self, title="SHCDE-Spielordner für SE-2.14.3-Prüfung auswählen",
+                initialdir=str(ROOT),
+            )
+        if not folder:
+            return
+        game = Path(folder)
+        if not game.is_dir() or not (
+            game / "Stronghold Crusader Definitive Edition_Data"
+        ).is_dir():
+            messagebox.showwarning(
+                "Crusader-Spielordner",
+                "Bitte das Wurzelverzeichnis von Stronghold Crusader "
+                "Definitive Edition auswählen. Stronghold 1 ist kein SE-Ziel.",
+                parent=self,
+            )
+            return
+        self.app.run(
+            [tool("shcdese_compat_check.py"), "--game", str(game)],
+            "Script Extender 2.14.3: Noesis, ABI und Signaturpflicht prüfen",
+        )
 
     def install_se(self):
         name = self.current()
