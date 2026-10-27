@@ -1,0 +1,97 @@
+{
+  "assembly": "SHCDESE",
+  "relative_path": "BepInEx/plugins/000shcdese/SHCDESE.dll",
+  "size": 1565184,
+  "sha256": "3b944cab94e1a2d389e3cd81aa241131c9d708e7c4f227eeed41439432caee99",
+  "baseline_version": "2.11.0",
+  "toolchain_dir": "work/toolchains/se-versionen/2.11.0",
+  "search_dirs": [
+    "D:/Games/Stronghold Crusader Definitive Edition COPY"
+  ],
+  "removed_ids": [
+    "zhuqiaomon"
+  ],
+  "note": [
+    "Updated 2026-09-27 from official v2.11.0; tag 48fd239dc56300d9e3acacaa26a8cd87de0c6464.",
+    "SE 2.x uses RedBird; obsolete Zhuqiaomon is removed from the V2 contract.",
+    "Compiler dependencies and RedBird components are pinned to the official release."
+  ],
+  "companions": [
+    {
+      "id": "nlua",
+      "assembly": "NLua",
+      "assembly_version": "1.7.9.0",
+      "mvid": "401e1007-417b-4366-a608-f6b8ffe5ca2e",
+      "relative_path": "BepInEx/plugins/000shcdese/NLua.dll",
+      "size": 92160,
+      "sha256": "476fff1274aa8a85d18df8ca1cfc1f420ed4654dcf9aba0957b93b978a3592f6"
+    },
+    {
+      "id": "keralua",
+      "assembly": "KeraLua",
+      "assembly_version": "1.4.9.0",
+      "mvid": "4ab3a0be-7da2-4255-8556-dcab69a7adc4",
+      "relative_path": "BepInEx/plugins/000shcdese/KeraLua.dll",
+      "size": 30720,
+      "sha256": "02095f7fe9d24c0999e2bd073038a1161b569c1a64be894804116d5b195a858e"
+    },
+    {
+      "id": "r3",
+      "assembly": "R3",
+      "assembly_version": "1.3.1.0",
+      "mvid": "b58e2dc8-2e7f-419e-bf7d-bc9786b1bf15",
+      "relative_path": "BepInEx/plugins/000shcdese/R3.dll",
+      "size": 604160,
+      "sha256": "8d77d5e9b30f6bdc2aa60055a5950ea75d259c9d1c9667a04a7d598e1da9d609"
+    },
+    {
+      "id": "system_memory",
+      "assembly": "System.Memory",
+      "assembly_version": "4.0.5.0",
+      "mvid": "27c7dfb4-b639-4500-8914-8d6e6caca8cb",
+      "relative_path": "BepInEx/plugins/000shcdese/System.Memory.dll",
+      "size": 145200,
+      "sha256": "d5e8e4866f9cfa66f7765660f84b210198893e55335487afe5ebda342c0e913d"
+    },
+    {
+      "id": "redbird_core",
+      "assembly": "RedBird.Core",
+      "assembly_version": "1.5.0.0",
+      "mvid": "0ca8fc0a-fb1d-4661-b68d-51f2000bad45",
+      "relative_path": "BepInEx/plugins/000shcdese/RedBird.Core.dll",
+      "size": 119296,
+      "sha256": "ee4b036c486077f7d8898ae054f124edde73e6ae1a059e8991c361e2b720d29f",
+      "add": true
+    },
+    {
+      "id": "redbird_abstractions",
+      "assembly": "RedBird.Abstractions",
+      "assembly_version": "1.5.0.0",
+      "mvid": "873c04a2-0fff-42d5-b3dc-ba2cc2bb14ec",
+      "relative_path": "BepInEx/plugins/000shcdese/RedBird.Abstractions.dll",
+      "size": 28160,
+      "sha256": "339cece116f66f59ecc7da5e9a5c0b2dfe24f4e7a5e7efc005864fa77c027a1e",
+      "add": true
+    },
+    {
+      "id": "redbird_backend",
+      "assembly": "RedBird.Backends.NativeX64",
+      "assembly_version": "1.5.0.0",
+      "mvid": "1ffce45a-1f84-4f06-bbb9-b7d67c7e4f75",
+      "relative_path": "BepInEx/plugins/000shcdese/RedBird.Backends.NativeX64.dll",
+      "size": 44544,
+      "sha256": "0843dd4c381a3e77dd6d8b51d5ccf95465b3fb49bfdf2980f39a212d774aadb0",
+      "add": true
+    },
+    {
+      "id": "redbird_x64",
+      "assembly": "RedBird.X64",
+      "assembly_version": "1.5.0.0",
+      "mvid": "88e48873-c306-479a-9b1e-2d2b8b92f514",
+      "relative_path": "BepInEx/plugins/000shcdese/RedBird.X64.dll",
+      "size": 173568,
+      "sha256": "e085b83b2b87b5d2142c980090d8d9ec616a90a443bd125c17b41e0bb47a44eb",
+      "add": true
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "wildlife-canary",
+  "description": "Nachweis fuer die beiden umgewidmeten Tierplaetze: body_camel unsichtbar (944 transparente Frames) und body_hyena als europaeisches Wildschwein umgefaerbt (1200 Frames, 1200 unveraenderte Masken). Siehe docs/KAMELE.md und docs/WILDTIERE.md",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - blanked camel slot canary",
+    "Version": "0.17.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "authored_sprites": [
+    {
+      "source_dir": "assets/sprites/authored/camel-slot-blank",
+      "group": "body_camel",
+      "category": "authored_sprite",
+      "origin": "authored",
+      "frame_count": 944,
+      "mask_count": 944,
+      "expected_names_sha256": "ac7141dd7e735abaa5715d68a240866ac0eb8db9fe9deeef8cd6cb128fc5f90f",
+      "expected_payload_sha256": "d90a0be3d9235e77b6c8a62b5f32f3f2f1b94ea906aee60d7cbfdf5c30f8245b",
+      "allow_atlas_shadow": false
+    },
+    {
+      "source_dir": "assets/sprites/derived/boar-europe",
+      "group": "body_hyena",
+      "category": "authored_sprite",
+      "origin": "derived",
+      "frame_count": 1200,
+      "mask_count": 1200,
+      "expected_names_sha256": "91893c365ee2953cecd71b9bceb14ab9581b0f227e794919929b909cbd289c82",
+      "expected_payload_sha256": "5b1d2603f83054d3970e594f4f07af7d88bc1b856c1ecfafd937d51861cdbb54",
+      "allow_atlas_shadow": false
+    }
+  ]
+}

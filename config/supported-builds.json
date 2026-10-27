@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "source_builds": [
+    {
+      "id": "local-sh1de-unity-2021.3.27f1-2025-01-20",
+      "display_version": "Local SH1DE build (exact patch unknown)",
+      "unity_version": "2021.3.27f1",
+      "files": [
+        {"relative_path": "globalgamemanagers", "size": 5768120, "sha256": "508d20fc68575e5272d932b222c3dca1af1fb68dd8ecbc92d4d3d6de79032f61"},
+        {"relative_path": "resources.assets", "size": 118850160, "sha256": "b021f27f702cbd359e50755e4a1175c6bd7c820820cb783979e1544d767a08dc"},
+        {"relative_path": "resources.assets.resS", "size": 1141102800, "sha256": "b1be1f22cf61a5a1e0a8b7c33d41ad0ab57dba5c5e54f8b1d29581dc3bec9b69"},
+        {"relative_path": "sharedassets1.assets", "size": 194991780, "sha256": "871ef59ba9e524959c0ed89f47a1c9e2994dce467bdfbd9a6a0f4a389a1f2ab4"},
+        {"relative_path": "Managed/Assembly-CSharp.dll", "size": 2391552, "sha256": "749e2d0c5644b73e2d8f764bb373c331a62a8fa7dd39c2048363d4fcd7cfd896"}
+      ]
+    }
+  ],
+  "target_builds": [
+    {
+      "id": "local-shcde-2.7-unity-2021.3.45f2",
+      "display_version": "Local SHCDE 2.7 generation (2.7.0.x exact patch unknown)",
+      "unity_version": "2021.3.45f2",
+      "script_extender": "2.11.0",
+      "nlua": "1.7.9",
+      "r3": "1.3.1",
+      "files": [
+        {"relative_path": "globalgamemanagers", "size": 9281900, "sha256": "9ad4493ca0a8e88491a3f06595c98e425af33318d3af1bdd726d0ffd2eb32925"},
+        {"relative_path": "resources.assets", "size": 114824968, "sha256": "2c9223df3e51dc73993e18eba99e9e1473ec2b69689df5f73e57ac241c760eb8"},
+        {"relative_path": "resources.assets.resS", "size": 1396428560, "sha256": "5a475dfb42d678b3445c49848eec7db9daf080ab3072e58929d19dc0673ffad6"},
+        {"relative_path": "sharedassets1.assets", "size": 900022764, "sha256": "17b35e01a22780db45b11da7a8d72cc825cdf7410a4da8588023ecb7fd9a719b"},
+        {"relative_path": "Managed/Assembly-CSharp.dll", "size": 3576832, "sha256": "2df11d739dddf8dc75cb8058ed15b509a04f3e440361eb0e8c73e2f09c2cd42c"}
+      ]
+    },
+    {
+      "id": "local-shcde-2.80-unity-2021.3.45f2",
+      "display_version": "Local SHCDE 2.80",
+      "unity_version": "2021.3.45f2",
+      "script_extender": "2.11.0",
+      "nlua": "1.7.9",
+      "r3": "1.3.1",
+      "files": [
+        {"relative_path": "globalgamemanagers", "size": 9282036, "sha256": "0ad00970daf26346f7a45a2677f6471b1726e8da88aacd5e97a33161272c3386"},
+        {"relative_path": "resources.assets", "size": 114825928, "sha256": "32729482f29fb4dec3aa3bd20d35d39eb572462ddedc8ec107e63cd031ce3013"},
+        {"relative_path": "resources.assets.resS", "size": 1396428560, "sha256": "be074b3f04769c1be41f99efbf4fa9de70e55e20b21ed54e6e250605d86f066e"},
+        {"relative_path": "sharedassets1.assets", "size": 916905108, "sha256": "60def90d6b7690e7b506fe30f55bdd3c155ddcd08e88157e5300fd4e2ae3b24e"},
+        {"relative_path": "Managed/Assembly-CSharp.dll", "size": 3693056, "sha256": "01da4c57f8a0e04a77804e78f79bacb1ae63d934d6d391f0dcaf3742bcca5de3"}
+      ]
+    }
+  ],
+  "note": "These entries approve only the exact canonical local *_Data inputs fingerprinted on 2026-08-07 and the exact local 2.80 reference/test copy fingerprinted on 2026-09-01."
+}

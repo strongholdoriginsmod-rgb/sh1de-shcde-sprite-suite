@@ -1,0 +1,291 @@
+<Operations xmlns:local="clr-namespace:CrusaderDE">
+  <Operation Type="SetAttribute" XPath="/n:UserControl/n:Grid" AttributeName="Height" Value="484" />
+  <Operation Type="SetAttribute" XPath="/n:UserControl/n:Grid/n:Button[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']" AttributeName="Height" Value="484" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Grid[@Width='660'][@Height='120']" AttributeName="Name" Value="CrusaderDiplomacyNativeDetail" />
+
+  <Operation Type="Add" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']">
+    <Content>
+      <Grid Name="CrusaderDiplomacyV2Panel" Width="660" Height="320" Margin="20,150,20,0" HorizontalAlignment="Center" VerticalAlignment="Top" Visibility="Collapsed">
+
+        <Grid.Resources xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+          <Style x:Key="DiplomacyActionButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BTN_SH_Plain}">
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                  <Grid>
+                    <Rectangle Fill="Transparent" />
+                    <Image Name="SpriteInactive" IsHitTestVisible="False" Stretch="Fill" Source="{TemplateBinding local:PropEx.Sprite1}" />
+                    <Image Name="SpriteMouseOver" IsHitTestVisible="False" Stretch="Fill" Source="{TemplateBinding local:PropEx.Sprite2}" Visibility="Hidden" />
+                    <Image Name="SpriteMousePressed" IsHitTestVisible="False" Stretch="Fill" Source="{TemplateBinding local:PropEx.Sprite3}" Visibility="Hidden" />
+                    <Image Name="SpriteLocked" IsHitTestVisible="False" Stretch="Fill" Source="{TemplateBinding local:PropEx.Sprite4}" Visibility="Hidden" />
+                    <Border Name="KeyFocus" IsHitTestVisible="False" BorderBrush="#FFD9B56D" BorderThickness="1" Margin="2" Visibility="Hidden" />
+                  </Grid>
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="SpriteInactive" Property="Visibility" Value="Hidden" />
+                      <Setter TargetName="SpriteMouseOver" Property="Visibility" Value="Visible" />
+                      <Setter TargetName="SpriteMousePressed" Property="Visibility" Value="Hidden" />
+                      <Setter TargetName="SpriteLocked" Property="Visibility" Value="Hidden" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                      <Setter TargetName="SpriteInactive" Property="Visibility" Value="Hidden" />
+                      <Setter TargetName="SpriteMouseOver" Property="Visibility" Value="Hidden" />
+                      <Setter TargetName="SpriteMousePressed" Property="Visibility" Value="Visible" />
+                      <Setter TargetName="SpriteLocked" Property="Visibility" Value="Hidden" />
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                      <Setter TargetName="SpriteInactive" Property="Visibility" Value="Hidden" />
+                      <Setter TargetName="SpriteMouseOver" Property="Visibility" Value="Hidden" />
+                      <Setter TargetName="SpriteMousePressed" Property="Visibility" Value="Hidden" />
+                      <Setter TargetName="SpriteLocked" Property="Visibility" Value="Visible" />
+                    </Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True">
+                      <Setter TargetName="KeyFocus" Property="Visibility" Value="Visible" />
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
+          <Style x:Key="DiplomacyAllianceRow" TargetType="{x:Type RadioButton}" BasedOn="{StaticResource BTN_RADIO_Image}">
+            <Setter Property="Template">
+              <Setter.Value>
+                <ControlTemplate TargetType="{x:Type RadioButton}">
+                  <Border Name="RowBackground" Background="#88000000" BorderBrush="#00000000" BorderThickness="1" />
+                  <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                      <Setter TargetName="RowBackground" Property="Background" Value="#FFB52E0C" />
+                    </Trigger>
+                    <Trigger Property="IsChecked" Value="True">
+                      <Setter TargetName="RowBackground" Property="Background" Value="#FFA11F08" />
+                      <Setter TargetName="RowBackground" Property="BorderBrush" Value="#FFD9B56D" />
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                      <Setter TargetName="RowBackground" Property="Background" Value="#FFC2240C" />
+                    </Trigger>
+                    <Trigger Property="IsEnabled" Value="False">
+                      <Setter TargetName="RowBackground" Property="Opacity" Value="0.48" />
+                    </Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True">
+                      <Setter TargetName="RowBackground" Property="BorderBrush" Value="#FFFFD700" />
+                    </Trigger>
+                  </ControlTemplate.Triggers>
+                </ControlTemplate>
+              </Setter.Value>
+            </Setter>
+          </Style>
+        </Grid.Resources>
+        <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False" Background="#88000000" BorderBrush="#FFD9B56D" BorderThickness="1" CornerRadius="2" />
+
+        <TextBlock Name="CrusaderDiplomacyV2Ruler" Width="310" Margin="15,9,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Foreground="{Binding AlliesSelectedLordColour}" TextTrimming="CharacterEllipsis">
+          <TextBlock.Effect><DropShadowEffect ShadowDepth="2" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+        </TextBlock>
+        <Grid Name="CrusaderDiplomacyV2DetailsPanel" Width="660" Height="320" HorizontalAlignment="Center" VerticalAlignment="Top">
+          <TextBlock Name="CrusaderDiplomacyV2Agreement" Width="408" Margin="17,44,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="15" Foreground="#FFEFF3C6" TextAlignment="Left" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="2" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <Image Width="620" Height="4" Margin="20,38,20,0" HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False" Stretch="Fill" Source="{StaticResource Panel_Divider}" />
+
+          <Button Name="CrusaderDiplomacyV2Fealty" Width="190" Height="29" Margin="0,40,17,0" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Fealty" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" />
+          <TextBlock Name="CrusaderDiplomacyV2FealtyLabel" Width="182" Height="20" Margin="0,44,21,0" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" IsHitTestVisible="False" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" />
+          <TextBlock Name="CrusaderDiplomacyV2AttitudeTitle" Width="310" Margin="17,192,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" Foreground="#FFD9B56D" />
+          <TextBlock Name="CrusaderDiplomacyV2AttitudeLine1" Width="151" Margin="17,211,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2Gratitude" Width="151" Margin="176,211,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2Respect" Width="151" Margin="17,231,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2AttitudeLine2" Width="151" Margin="176,231,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2Reliability" Width="151" Margin="17,251,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2TrustCeiling" Width="151" Margin="176,251,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <Image Width="620" Height="4" Margin="20,185,20,0" HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False" Stretch="Fill" Source="{StaticResource Panel_Divider}" />
+
+          <TextBlock Name="CrusaderDiplomacyV2StrategicTitle" Width="310" Margin="335,192,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" Foreground="#FFD9B56D" />
+          <TextBlock Name="CrusaderDiplomacyV2StrategicLine1" Width="151" Margin="335,211,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2Threat" Width="151" Margin="494,211,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2Dependency" Width="151" Margin="335,231,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2StrategicLine2" Width="151" Margin="494,231,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2CommonEnemies" Width="151" Margin="335,251,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2AllianceCount" Width="151" Margin="494,251,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <Image Width="620" Height="4" Margin="20,275,20,0" HorizontalAlignment="Center" VerticalAlignment="Top" IsHitTestVisible="False" Stretch="Fill" Source="{StaticResource Panel_Divider}" />
+
+          <TextBlock Name="CrusaderDiplomacyV2DemandTitle" Width="625" Margin="17,65,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" Foreground="#FFD9B56D" />
+          <TextBlock Name="CrusaderDiplomacyV2DemandLine1" Width="625" Margin="17,83,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2DemandLine2" Width="625" Margin="17,101,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis">
+            <TextBlock.Effect><DropShadowEffect ShadowDepth="1" Direction="315" Color="#CC000000" BlurRadius="0" /></TextBlock.Effect>
+          </TextBlock>
+          <TextBlock Name="CrusaderDiplomacyV2ActionHint" Width="625" Margin="17,119,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" TextTrimming="CharacterEllipsis" />
+
+          <Button Name="CrusaderDiplomacyV2Primary" Width="145" Height="37" Margin="15,141,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Request" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2PrimaryLabel" Width="137" Height="24" Margin="19,147,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+
+          <Button Name="CrusaderDiplomacyV2Send" Width="145" Height="37" Margin="175,141,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Send" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2SendLabel" Width="137" Height="24" Margin="179,147,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+
+          <Button Name="CrusaderDiplomacyV2Orders" Width="145" Height="37" Margin="335,141,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Orders" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2OrdersLabel" Width="137" Height="24" Margin="339,147,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+
+          <Button Name="CrusaderDiplomacyV2Break" Width="145" Height="37" Margin="495,141,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Break" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2BreakLabel" Width="137" Height="24" Margin="499,147,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+          <Button Name="CrusaderDiplomacyV2DeclineDemand" Width="200" Height="37" Margin="15,280,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:DeclineDemand" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2DeclineDemandLabel" Width="192" Height="24" Margin="19,286,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+          <Button Name="CrusaderDiplomacyV2TradeOpen" Width="205" Height="30" Margin="435,280,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:Open:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeOpenLabel" Width="197" Height="23" Margin="439,285,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+
+        </Grid>
+
+        <RadioButton GroupName="DiplomacyViews" Name="CrusaderDiplomacyV2DetailsButton" Width="145" Height="37" Margin="340,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Details" Style="{StaticResource BTN_RADIO_Image}" />
+        <TextBlock Name="CrusaderDiplomacyV2DetailsLabel" Width="137" Height="24" Margin="344,6,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+        <RadioButton GroupName="DiplomacyViews" Name="CrusaderDiplomacyV2OverviewButton" Width="145" Height="37" Margin="500,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Overview" Style="{StaticResource BTN_RADIO_Image}" />
+        <TextBlock Name="CrusaderDiplomacyV2OverviewLabel" Width="137" Height="24" Margin="504,6,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" FontSize="14" Foreground="#FF2D180C" TextAlignment="Center" />
+        <Grid Name="CrusaderDiplomacyV2OverviewPanel" Width="660" Height="282" Margin="0,38,0,0" HorizontalAlignment="Center" VerticalAlignment="Top" Visibility="Collapsed">
+          <TextBlock Name="CrusaderDiplomacyV2OverviewTitle" Width="625" Margin="17,7,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="16" Foreground="#FFD9B56D" />
+          <TextBlock Name="CrusaderDiplomacyV2OverviewHeader" Width="180" Margin="24,31,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceRoleHeader" Width="130" Margin="210,31,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceDutyHeader" Width="280" Margin="345,31,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" />
+          <ScrollViewer Width="626" Height="86" Margin="17,51,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+              <Grid Name="CrusaderDiplomacyV2AllianceRow1" Width="602" Height="26" Visibility="Collapsed">
+                <RadioButton Name="CrusaderDiplomacyV2AllianceMember1" GroupName="DiplomacyAllianceMembers" Width="602" Height="24" VerticalAlignment="Top" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceSelect:0:0" Style="{StaticResource DiplomacyAllianceRow}" IsEnabled="False" />
+                <TextBlock Name="CrusaderDiplomacyV2OverviewRow1" Width="180" Margin="7,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceRole1" Width="130" Margin="193,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceDuty1" Width="240" Margin="328,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <Image Name="CrusaderDiplomacyV2AllianceOrder1" Width="20" Height="20" Margin="576,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+              </Grid>
+              <Grid Name="CrusaderDiplomacyV2AllianceRow2" Width="602" Height="26" Visibility="Collapsed">
+                <RadioButton Name="CrusaderDiplomacyV2AllianceMember2" GroupName="DiplomacyAllianceMembers" Width="602" Height="24" VerticalAlignment="Top" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceSelect:0:0" Style="{StaticResource DiplomacyAllianceRow}" IsEnabled="False" />
+                <TextBlock Name="CrusaderDiplomacyV2OverviewRow2" Width="180" Margin="7,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceRole2" Width="130" Margin="193,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceDuty2" Width="240" Margin="328,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <Image Name="CrusaderDiplomacyV2AllianceOrder2" Width="20" Height="20" Margin="576,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+              </Grid>
+              <Grid Name="CrusaderDiplomacyV2AllianceRow3" Width="602" Height="26" Visibility="Collapsed">
+                <RadioButton Name="CrusaderDiplomacyV2AllianceMember3" GroupName="DiplomacyAllianceMembers" Width="602" Height="24" VerticalAlignment="Top" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceSelect:0:0" Style="{StaticResource DiplomacyAllianceRow}" IsEnabled="False" />
+                <TextBlock Name="CrusaderDiplomacyV2OverviewRow3" Width="180" Margin="7,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceRole3" Width="130" Margin="193,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceDuty3" Width="240" Margin="328,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <Image Name="CrusaderDiplomacyV2AllianceOrder3" Width="20" Height="20" Margin="576,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+              </Grid>
+              <Grid Name="CrusaderDiplomacyV2AllianceRow4" Width="602" Height="26" Visibility="Collapsed">
+                <RadioButton Name="CrusaderDiplomacyV2AllianceMember4" GroupName="DiplomacyAllianceMembers" Width="602" Height="24" VerticalAlignment="Top" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceSelect:0:0" Style="{StaticResource DiplomacyAllianceRow}" IsEnabled="False" />
+                <TextBlock Name="CrusaderDiplomacyV2OverviewRow4" Width="180" Margin="7,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceRole4" Width="130" Margin="193,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceDuty4" Width="240" Margin="328,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <Image Name="CrusaderDiplomacyV2AllianceOrder4" Width="20" Height="20" Margin="576,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+              </Grid>
+              <Grid Name="CrusaderDiplomacyV2AllianceRow5" Width="602" Height="26" Visibility="Collapsed">
+                <RadioButton Name="CrusaderDiplomacyV2AllianceMember5" GroupName="DiplomacyAllianceMembers" Width="602" Height="24" VerticalAlignment="Top" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceSelect:0:0" Style="{StaticResource DiplomacyAllianceRow}" IsEnabled="False" />
+                <TextBlock Name="CrusaderDiplomacyV2OverviewRow5" Width="180" Margin="7,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceRole5" Width="130" Margin="193,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceDuty5" Width="240" Margin="328,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <Image Name="CrusaderDiplomacyV2AllianceOrder5" Width="20" Height="20" Margin="576,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+              </Grid>
+              <Grid Name="CrusaderDiplomacyV2AllianceRow6" Width="602" Height="26" Visibility="Collapsed">
+                <RadioButton Name="CrusaderDiplomacyV2AllianceMember6" GroupName="DiplomacyAllianceMembers" Width="602" Height="24" VerticalAlignment="Top" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceSelect:0:0" Style="{StaticResource DiplomacyAllianceRow}" IsEnabled="False" />
+                <TextBlock Name="CrusaderDiplomacyV2OverviewRow6" Width="180" Margin="7,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceRole6" Width="130" Margin="193,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceDuty6" Width="240" Margin="328,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <Image Name="CrusaderDiplomacyV2AllianceOrder6" Width="20" Height="20" Margin="576,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+              </Grid>
+              <Grid Name="CrusaderDiplomacyV2AllianceRow7" Width="602" Height="26" Visibility="Collapsed">
+                <RadioButton Name="CrusaderDiplomacyV2AllianceMember7" GroupName="DiplomacyAllianceMembers" Width="602" Height="24" VerticalAlignment="Top" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceSelect:0:0" Style="{StaticResource DiplomacyAllianceRow}" IsEnabled="False" />
+                <TextBlock Name="CrusaderDiplomacyV2OverviewRow7" Width="180" Margin="7,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceRole7" Width="130" Margin="193,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <TextBlock Name="CrusaderDiplomacyV2AllianceDuty7" Width="240" Margin="328,3,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+                <Image Name="CrusaderDiplomacyV2AllianceOrder7" Width="20" Height="20" Margin="576,2,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+              </Grid>
+            </StackPanel>
+          </ScrollViewer>
+          <TextBlock Name="CrusaderDiplomacyV2OverviewFooter" Width="625" Height="36" Margin="17,141,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
+          <Button Name="CrusaderDiplomacyV2AllianceSend" Width="200" Height="30" Margin="17,181,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceAction:Send:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" IsEnabled="False" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceSendLabel" Width="192" Height="22" Margin="21,186,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Button Name="CrusaderDiplomacyV2AllianceRequestGoods" Width="200" Height="30" Margin="229,181,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceAction:RequestGoods:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" IsEnabled="False" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceRequestGoodsLabel" Width="192" Height="22" Margin="233,186,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Button Name="CrusaderDiplomacyV2AllianceFulfill" Width="200" Height="30" Margin="17,249,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceAction:Fulfill:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" IsEnabled="False" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceFulfillLabel" Width="192" Height="22" Margin="21,254,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Button Name="CrusaderDiplomacyV2AllianceOrders" Width="200" Height="30" Margin="441,181,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceAction:Orders:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" IsEnabled="False" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceOrdersLabel" Width="192" Height="22" Margin="445,186,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Button Name="CrusaderDiplomacyV2AllianceFealty" Width="200" Height="30" Margin="17,215,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceAction:Fealty:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" IsEnabled="False" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceFealtyLabel" Width="192" Height="22" Margin="21,220,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Button Name="CrusaderDiplomacyV2AllianceBreak" Width="200" Height="30" Margin="441,215,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceAction:Break:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" IsEnabled="False" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceBreakLabel" Width="192" Height="22" Margin="445,220,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Button Name="CrusaderDiplomacyV2AllianceDecline" Width="200" Height="30" Margin="229,249,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:AllianceAction:Decline:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource DiplomacyActionButton}" IsEnabled="False" />
+          <TextBlock Name="CrusaderDiplomacyV2AllianceDeclineLabel" Width="192" Height="22" Margin="233,254,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FF2D180C" TextAlignment="Center" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+        <Grid Name="CrusaderDiplomacyV2TradeGrid" Width="660" Height="320" HorizontalAlignment="Center" VerticalAlignment="Top" Visibility="Collapsed">
+          <Border Background="#FF24190E" BorderBrush="#FFD9B56D" BorderThickness="2" CornerRadius="2" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeTitle" Width="625" Height="23" Margin="17,6,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="18" Foreground="#FFFFDF94" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeRelationship" Width="625" Height="18" Margin="17,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Image Width="620" Height="4" Margin="20,49,20,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" Stretch="Fill" Source="{StaticResource Panel_Divider}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeFromLabel" Width="625" Height="20" Margin="17,55,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeOfferText" Width="288" Height="21" Margin="43,78,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Image Name="CrusaderDiplomacyV2TradeOfferIcon" Width="20" Height="20" Margin="17,77,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" Stretch="Uniform" />
+          <Button Name="CrusaderDiplomacyV2TradeFromNext" Width="158" Height="25" Margin="335,74,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:FromNext:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeFromNextLabel" Width="150" Height="22" Margin="339,78,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="Ware wechseln" />
+          <TextBox Name="CrusaderDiplomacyV2TradeFromAmountInput" Width="127" Height="25" Margin="510,78,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="10" MaxLength="5" ToolTip="1–50000; originaler Warenbestand und Lagerplatz werden vor Buchung geprüft." FontSize="14" Padding="4,1,4,1" Background="#FFE8D8B0" Foreground="#FF2D180C" BorderBrush="#FFB8995E" BorderThickness="1" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeToLabel" Width="625" Height="20" Margin="17,142,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeRequestText" Width="288" Height="21" Margin="43,165,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="14" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Image Name="CrusaderDiplomacyV2TradeRequestIcon" Width="20" Height="20" Margin="17,164,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" Stretch="Uniform" />
+          <Button Name="CrusaderDiplomacyV2TradeToNext" Width="158" Height="25" Margin="335,161,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:ToNext:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeToNextLabel" Width="150" Height="22" Margin="339,165,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="Ware wechseln" />
+          <TextBox Name="CrusaderDiplomacyV2TradeToAmountInput" Width="127" Height="25" Margin="510,165,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Text="10" MaxLength="5" ToolTip="1–50000; originaler Warenbestand und Lagerplatz werden vor Buchung geprüft." FontSize="14" Padding="4,1,4,1" Background="#FFE8D8B0" Foreground="#FF2D180C" BorderBrush="#FFB8995E" BorderThickness="1" />
+          <Button Name="CrusaderDiplomacyV2TradeFrom5" Width="115" Height="26" Margin="18,106,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:From5:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeFrom5Label" Width="107" Height="22" Margin="22,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="5" />
+          <Button Name="CrusaderDiplomacyV2TradeFrom10" Width="115" Height="26" Margin="145,106,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:From10:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeFrom10Label" Width="107" Height="22" Margin="149,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="10" />
+          <Button Name="CrusaderDiplomacyV2TradeFrom25" Width="115" Height="26" Margin="272,106,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:From25:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeFrom25Label" Width="107" Height="22" Margin="276,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="25" />
+          <Button Name="CrusaderDiplomacyV2TradeFrom100" Width="115" Height="26" Margin="399,106,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:From100:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeFrom100Label" Width="107" Height="22" Margin="403,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="100" />
+          <Button Name="CrusaderDiplomacyV2TradeFrom500" Width="115" Height="26" Margin="526,106,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:From500:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeFrom500Label" Width="107" Height="22" Margin="530,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="500" />
+          <Button Name="CrusaderDiplomacyV2TradeTo5" Width="115" Height="26" Margin="18,192,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:To5:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeTo5Label" Width="107" Height="22" Margin="22,196,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="5" />
+          <Button Name="CrusaderDiplomacyV2TradeTo10" Width="115" Height="26" Margin="145,192,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:To10:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeTo10Label" Width="107" Height="22" Margin="149,196,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="10" />
+          <Button Name="CrusaderDiplomacyV2TradeTo25" Width="115" Height="26" Margin="272,192,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:To25:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeTo25Label" Width="107" Height="22" Margin="276,196,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="25" />
+          <Button Name="CrusaderDiplomacyV2TradeTo100" Width="115" Height="26" Margin="399,192,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:To100:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeTo100Label" Width="107" Height="22" Margin="403,196,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="100" />
+          <Button Name="CrusaderDiplomacyV2TradeTo500" Width="115" Height="26" Margin="526,192,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:To500:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeTo500Label" Width="107" Height="22" Margin="530,196,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="500" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeIncoming" Width="625" Height="23" Margin="17,223,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFEFF3C6" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeStatus" Width="625" Height="31" Margin="17,249,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="13" Foreground="#FFD9B56D" TextTrimming="CharacterEllipsis" IsHitTestVisible="False" />
+          <Button Name="CrusaderDiplomacyV2TradeSend" Width="120" Height="29" Margin="15,284,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:Send:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeSendLabel" Width="112" Height="22" Margin="19,288,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="Absenden" />
+          <Button Name="CrusaderDiplomacyV2TradeAccept" Width="120" Height="29" Margin="144,284,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:Accept:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeAcceptLabel" Width="112" Height="22" Margin="148,288,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="Annehmen" />
+          <Button Name="CrusaderDiplomacyV2TradeDecline" Width="120" Height="29" Margin="273,284,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:Decline:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeDeclineLabel" Width="112" Height="22" Margin="277,288,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="Ablehnen" />
+          <Button Name="CrusaderDiplomacyV2TradeCounter" Width="120" Height="29" Margin="402,284,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:Counter:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeCounterLabel" Width="112" Height="22" Margin="406,288,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="Gegenangebot" />
+          <Button Name="CrusaderDiplomacyV2TradeClose" Width="120" Height="29" Margin="531,284,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{StaticResource UI-Buttons C001}" local:PropEx.Sprite2="{StaticResource UI-Buttons C002}" local:PropEx.Sprite3="{StaticResource UI-Buttons C003}" local:PropEx.Sprite4="{StaticResource UI-Buttons C004}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Trade:Close:0:0" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_SH_Plain}" />
+          <TextBlock Name="CrusaderDiplomacyV2TradeCloseLabel" Width="112" Height="22" Margin="535,288,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" TextAlignment="Center" FontSize="13" Foreground="#FF2D180C" Text="Schließen" />
+        </Grid>
+        </Grid>
+      </Grid>
+    </Content>
+  </Operation>
+</Operations>

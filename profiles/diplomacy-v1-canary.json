@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "id": "diplomacy-v1-canary",
+  "description": "Isolated offline-skirmish enemy-goods, alliance negotiation, team and save-data canary",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - diplomacy V1 canary",
+    "Version": "0.18.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": true,
+    "audio_payload": false,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "diplomacy": true,
+    "dock_placement": false
+  },
+  "diplomacy_rules": {
+    "economy_building_material_percent": 25,
+    "lord_military_value": 250,
+    "unknown_unit_health_divisor": 4,
+    "unknown_unit_value_minimum": 25,
+    "unknown_unit_value_maximum": 250,
+    "target_base_value": 350,
+    "economy_weight_basis_points": 800,
+    "military_weight_basis_points": 1400,
+    "personality_base_basis_points": 8000,
+    "personality_margin_basis_points": 80,
+    "target_minimum": 500,
+    "target_maximum": 7500,
+    "target_round_step": 50,
+    "goodwill_grace_days": 5,
+    "goodwill_decay_percent": 2,
+    "offer_base_percent": 85,
+    "offer_margin_tenths_percent": 6,
+    "offer_minimum_percent": 25,
+    "offer_maximum_percent": 85,
+    "offer_additional_gift_percent": 5,
+    "offer_rejection_lock_days": 5,
+    "demand_lifetime_days": 10,
+    "maximum_demand_goods": 3,
+    "new_alliance_grace_days": 10,
+    "starting_alliance_grace_days": 20,
+    "loyalty_base_decay_basis_points": 50,
+    "loyalty_margin_decay_basis_points": 1,
+    "ultimatum_threshold_percent": 35,
+    "ultimatum_restore_percent": 60,
+    "ultimatum_lifetime_days": 10,
+    "break_lock_days": 10
+  },
+  "gm_atlases": [],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [],
+  "xaml_patches": [
+    {
+      "source": "assets/xaml/HUD_AlliesPanel.xaml",
+      "output": "Patches/Assets/GUI/XAMLResources/HUD_AlliesPanel.xaml",
+      "category": "xaml_patch",
+      "expected_sha256": "96407537a90b430a68bdf0eaa54a3e50414fdb6602ea4d9212ef75bd777e8203"
+    }
+  ]
+}

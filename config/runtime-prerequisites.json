@@ -1,0 +1,159 @@
+{
+  "schema_version": 2,
+  "config_id": "local-shcde-2.80-shcdese-2.11-net481-win-x64",
+  "runtime_id": "win-x64",
+  "target_framework": "net481",
+  "script_extender_version": "2.11.0",
+  "files": [
+    {
+      "id": "shcdese",
+      "roles": ["build", "runtime"],
+      "relative_path": "BepInEx/plugins/000shcdese/SHCDESE.dll",
+      "size": 1565184,
+      "sha256": "3b944cab94e1a2d389e3cd81aa241131c9d708e7c4f227eeed41439432caee99",
+      "assembly_name": "SHCDESE",
+      "assembly_version": "2.11.0.0",
+      "mvid": "4b17e151-08fd-463f-9596-415bf3435ca1"
+    },
+    {
+      "id": "nlua",
+      "roles": ["runtime"],
+      "relative_path": "BepInEx/plugins/000shcdese/NLua.dll",
+      "size": 92160,
+      "sha256": "476fff1274aa8a85d18df8ca1cfc1f420ed4654dcf9aba0957b93b978a3592f6",
+      "assembly_name": "NLua",
+      "assembly_version": "1.7.9.0",
+      "mvid": "401e1007-417b-4366-a608-f6b8ffe5ca2e"
+    },
+    {
+      "id": "keralua",
+      "roles": ["runtime"],
+      "relative_path": "BepInEx/plugins/000shcdese/KeraLua.dll",
+      "size": 30720,
+      "sha256": "02095f7fe9d24c0999e2bd073038a1161b569c1a64be894804116d5b195a858e",
+      "assembly_name": "KeraLua",
+      "assembly_version": "1.4.9.0",
+      "mvid": "4ab3a0be-7da2-4255-8556-dcab69a7adc4"
+    },
+    {
+      "id": "redbird_core",
+      "roles": ["build", "runtime"],
+      "relative_path": "BepInEx/plugins/000shcdese/RedBird.Core.dll",
+      "size": 119296,
+      "sha256": "ee4b036c486077f7d8898ae054f124edde73e6ae1a059e8991c361e2b720d29f",
+      "assembly_name": "RedBird.Core",
+      "assembly_version": "1.5.0.0",
+      "mvid": "0ca8fc0a-fb1d-4661-b68d-51f2000bad45"
+    },
+    {
+      "id": "system_memory",
+      "roles": ["build", "runtime"],
+      "relative_path": "BepInEx/plugins/000shcdese/System.Memory.dll",
+      "size": 145200,
+      "sha256": "d5e8e4866f9cfa66f7765660f84b210198893e55335487afe5ebda342c0e913d",
+      "assembly_name": "System.Memory",
+      "assembly_version": "4.0.5.0",
+      "mvid": "27c7dfb4-b639-4500-8914-8d6e6caca8cb"
+    },
+    {
+      "id": "bepinex_core",
+      "roles": ["build", "runtime"],
+      "relative_path": "BepInEx/core/BepInEx.dll",
+      "size": 128512,
+      "sha256": "8255b28902886085c578b9e427d3073c97002db85176d2090cdeda90ef14ce70",
+      "assembly_name": "BepInEx",
+      "assembly_version": "5.4.23.5",
+      "mvid": "d1b92069-86c2-41dc-ad96-bb21eee55a97"
+    },
+    {
+      "id": "harmony",
+      "roles": ["build", "runtime"],
+      "relative_path": "BepInEx/core/0Harmony.dll",
+      "size": 204800,
+      "sha256": "1a21cc03424fc82c3dd1346905d16494536b9595ae4162228d99fb7c285c1031",
+      "assembly_name": "0Harmony",
+      "assembly_version": "2.9.0.0",
+      "mvid": "474744d6-5d8e-460f-a08c-d5fd82b5d65f"
+    },
+    {
+      "id": "r3",
+      "roles": ["build", "runtime"],
+      "relative_path": "BepInEx/plugins/000shcdese/R3.dll",
+      "size": 604160,
+      "sha256": "8d77d5e9b30f6bdc2aa60055a5950ea75d259c9d1c9667a04a7d598e1da9d609",
+      "assembly_name": "R3",
+      "assembly_version": "1.3.1.0",
+      "mvid": "b58e2dc8-2e7f-419e-bf7d-bc9786b1bf15"
+    },
+    {
+      "id": "assembly_csharp",
+      "roles": ["build", "runtime"],
+      "relative_path": "Stronghold Crusader Definitive Edition_Data/Managed/Assembly-CSharp.dll",
+      "size": 3693056,
+      "sha256": "01da4c57f8a0e04a77804e78f79bacb1ae63d934d6d391f0dcaf3742bcca5de3",
+      "assembly_name": "Assembly-CSharp",
+      "assembly_version": "0.0.0.0",
+      "mvid": "1ad0eaf4-bb64-4eb8-9126-ff328de7f68c"
+    },
+    {
+      "id": "noesis_gui",
+      "roles": ["build", "runtime"],
+      "relative_path": "Stronghold Crusader Definitive Edition_Data/Managed/Noesis.NoesisGUI.dll",
+      "size": 1356800,
+      "sha256": "98476d3ca84ae0f2dcfbaddcc64b01a1f65474bd44402673fd6856d1b5347648",
+      "assembly_name": "Noesis.NoesisGUI",
+      "assembly_version": "0.0.0.0",
+      "mvid": "7383317c-d471-469f-ac85-2aafde4cb013"
+    },
+    {
+      "id": "unity_engine",
+      "roles": ["build", "runtime"],
+      "relative_path": "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.dll",
+      "size": 111352,
+      "sha256": "6abba25864b843149b594c7831dbf5eb7afe87c55d5112a4739ca4da09b91280",
+      "assembly_name": "UnityEngine",
+      "assembly_version": "0.0.0.0",
+      "mvid": "2098d95a-268b-46a0-9676-e36d11d685a5"
+    },
+    {
+      "id": "unity_engine_core_module",
+      "roles": ["build", "runtime"],
+      "relative_path": "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.CoreModule.dll",
+      "size": 1275640,
+      "sha256": "e468e19789d608b41e2c7fe4f367c7082fece7d1883f568e75870f6c5384cc86",
+      "assembly_name": "UnityEngine.CoreModule",
+      "assembly_version": "0.0.0.0",
+      "mvid": "806021f9-55ec-43bb-97cd-1adca41e00da"
+    },
+    {
+      "id": "unity_engine_asset_bundle_module",
+      "roles": ["build", "runtime"],
+      "relative_path": "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.AssetBundleModule.dll",
+      "size": 31992,
+      "sha256": "0ba5cb05eb305368c96124efc9104e65a17cc8872822147c0252644d4efecb83",
+      "assembly_name": "UnityEngine.AssetBundleModule",
+      "assembly_version": "0.0.0.0",
+      "mvid": "90538353-7aa0-4a16-ad89-f45382d0c777"
+    },
+    {
+      "id": "unity_engine_audio_module",
+      "roles": ["build", "runtime"],
+      "relative_path": "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.AudioModule.dll",
+      "size": 69368,
+      "sha256": "9cf8c391390e5178c75cdfb186da3dc9f8679a31491f69739aaa6f65bbd0724d",
+      "assembly_name": "UnityEngine.AudioModule",
+      "assembly_version": "0.0.0.0",
+      "mvid": "54f216ae-0646-4f4f-aa73-c4817fcfcede"
+    },
+    {
+      "id": "unity_engine_image_conversion_module",
+      "roles": ["build", "runtime"],
+      "relative_path": "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.ImageConversionModule.dll",
+      "size": 22776,
+      "sha256": "1fe9119a493265849938f734e384a7a63cf6b8c75ed20c43c742feb601eba8ed",
+      "assembly_name": "UnityEngine.ImageConversionModule",
+      "assembly_version": "0.0.0.0",
+      "mvid": "ee44ec0b-022d-49ac-b713-628f3e55be93"
+    }
+  ]
+}

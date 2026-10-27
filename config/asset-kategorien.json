@@ -1,0 +1,74 @@
+{
+  "schema": "stronghold-europe.asset-kategorien.v1",
+  "hinweis": "Thematische Ordnung fuer den Asset-Katalog der Universal-Suite. Frei erweiterbar: neue Kategorien anlegen, Gruppen verschieben, eigene Erweiterungen eintragen. Gruppen, die hier fehlen, erscheinen automatisch unter 'Sonstiges'. Die Ordnung ist nur Ansicht - sie aendert nichts am Bau.",
+  "kategorien": [
+    {
+      "name": "Gebaeude",
+      "unterkategorien": [
+        {"name": "Wohn- und Wirtschaftsgebaeude", "gruppen": ["tile_buildings1", "tile_buildings2", "tile_workshops", "tile_goods", "anim_buildings2", "anim_goods"]},
+        {"name": "Kirchen und Kathedralen", "gruppen": ["tile_churches"]},
+        {"name": "Werkstatt-Animationen", "gruppen": ["anim_armourer", "anim_baker", "anim_blacksmith", "anim_brewer", "anim_chopping_block", "anim_farmer", "anim_fletcher", "anim_healer", "anim_hunter", "anim_inn", "anim_iron_miner", "anim_market", "anim_pitch_dugout", "anim_poleturner", "anim_quarry", "anim_stables", "anim_tanner", "anim_windmill", "anim_woodcutter", "anim_tunnelors_guild", "anim_dog_cage", "anim_shields"]},
+        {"name": "Strafen und Vergnuegen", "gruppen": ["anim_gallows", "anim_gibbet", "anim_rack", "anim_stake", "anim_stocks", "anim_ducking_stool", "anim_dungeon", "anim_heads", "anim_maypole", "anim_dancing_bear"]},
+        {"name": "Ruinen", "gruppen": ["tile_ruins"]}
+      ]
+    },
+    {
+      "name": "Burg und Befestigung",
+      "unterkategorien": [
+        {"name": "Burgbauteile und Tuerme", "gruppen": ["tile_castle", "anim_castle"]},
+        {"name": "Mauern und Wehrgaenge", "gruppen": ["tile_walls", "tile_chevrons", "cracks", "rock_chips"]},
+        {"name": "Tore und Zugbruecken", "gruppen": ["body_gate", "anim_drawbridge"]},
+        {"name": "Verteidigungsanlagen", "gruppen": ["anim_boiled_oil", "oil_dropped", "killing_pits", "anim_killing_pits", "pitch_ditches", "anim_tunnels"]}
+      ]
+    },
+    {
+      "name": "Einheiten",
+      "unterkategorien": [
+        {"name": "Europaeische Truppen", "gruppen": ["body_archer", "body_crossbowman", "body_spearman", "body_pikeman", "body_maceman", "body_swordsman", "body_knight", "body_tunnelor", "body_ladder_bearer", "body_fighting_monk", "body_siege_engineer"]},
+        {"name": "Arabische Truppen und Soeldner", "gruppen": ["body_arab_assasin", "body_arab_grenadier", "body_arab_shortbow", "body_arab_slinger", "body_arab_swordsman", "body_arab_slave", "body_horse_archer", "body_horse_archer_top", "body_heavy_camel", "body_camel_lancer", "body_skirmisher", "body_sapper", "body_demolisher", "body_temple_guard", "body_ambusher", "body_javelin", "assasin_rope"]},
+        {"name": "Belagerungsgeraet und Geschosse", "gruppen": ["body_catapult", "body_trebutchet", "body_mangonel", "body_ballista", "body_arab_ballista", "body_battering_ram", "body_siege_tower", "body_shield", "body_missile", "body_missile_2", "body_missile_fire", "body_missile_firepot", "body_missile_cow", "blast3"]},
+        {"name": "Arbeiter und Handwerker", "gruppen": ["body_peasant", "body_farmer", "body_woodcutter", "body_stonemason", "body_iron_miner", "body_pitch_worker", "body_baker", "body_brewer", "body_miller", "body_innkeeper", "body_hunter", "body_fletcher", "body_poleturner", "body_blacksmith", "body_armourer", "body_tanner", "body_trader", "body_horse_trader"]},
+        {"name": "Volk und Hof", "gruppen": ["body_healer", "body_priest", "body_fireman", "body_drunkard", "body_juggler", "body_fire_eater", "body_jester", "body_mother", "body_boy", "body_girl", "body_lady", "body_ghost", "body_disease", "body_imam", "body_bedouin_healer", "body_eunuch", "body_tent"]},
+        {"name": "Fuersten", "gruppen": ["body_lord", "body_lord_female", "body_saladin", "body_bedouin_lord", "body_bedouin_lord_female", "body_arab_lord_female", "body_scribe_lord", "body_bessie"]}
+      ]
+    },
+    {
+      "name": "Tiere",
+      "unterkategorien": [
+        {"name": "Nutztiere", "gruppen": ["body_cow", "body_ox", "body_chicken", "body_chicken_brown", "body_goat", "body_camel"]},
+        {"name": "Wildtiere", "gruppen": ["body_dog", "body_wolf", "body_deer", "body_rabbit", "body_hyena", "body_lion", "body_crocodile"]},
+        {"name": "Voegel", "gruppen": ["body_crow", "body_seagull", "body_condor"]},
+        {"name": "Brennende Tiere", "gruppen": ["body_animal_burning_big", "body_animal_burning_small"]}
+      ]
+    },
+    {
+      "name": "Vegetation",
+      "unterkategorien": [
+        {"name": "Baeume", "gruppen": ["Tree_Chestnut", "Tree_Oak", "tree_apple", "tree_birch", "tree_pine", "tree_cactii"]},
+        {"name": "Straeucher", "gruppen": ["tree_shrub1", "tree_shrub2"]}
+      ]
+    },
+    {
+      "name": "Landschaft",
+      "unterkategorien": [
+        {"name": "Boden und Felder", "gruppen": ["tile_land3", "tile_land8", "tile_land_and_stones", "tile_land_macros", "tile_farmland", "tile_flatties"]},
+        {"name": "Felsen und Klippen", "gruppen": ["tile_rocks8", "tile_cliffs"]},
+        {"name": "Wasser und Kueste", "gruppen": ["tile_sea8", "tile_sea_new_01", "tile_sea_shore", "anim_whitecaps", "anim_whitecaps_wave", "body_splash"]}
+      ]
+    },
+    {
+      "name": "Effekte und Fahnen",
+      "unterkategorien": [
+        {"name": "Feuer und Rauch", "gruppen": ["body_fire", "body_fire2", "body_steam", "puff of smoke", "smoke-30x30", "body_man_burning", "body_brazier"]},
+        {"name": "Fahnen", "gruppen": ["anim_flags", "anim_flag_small", "anim_arab_flag", "anim_crusader_flag"]}
+      ]
+    },
+    {
+      "name": "Spieloberflaeche in der Welt",
+      "unterkategorien": [
+        {"name": "Anzeigen und Zeiger", "gruppen": ["floats", "floats_new", "float_pop_circ-1", "float_pop_circ-2", "cursors", "icon", "Marker", "Info", "Debug", "body_info"]}
+      ]
+    }
+  ],
+  "erweiterungen": []
+}

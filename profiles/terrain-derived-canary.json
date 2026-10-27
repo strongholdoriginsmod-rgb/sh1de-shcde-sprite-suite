@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "id": "terrain-derived-canary",
+  "description": "Lossless derived-geometry European terrain canary for three complete plain-material SHCDE-SE 1.39 GM groups",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - lossless derived terrain atlas canary",
+    "Version": "0.5.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "tile_farmland",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 62,
+      "expected_main_count": 62,
+      "expected_alt_count": 0,
+      "expected_max_index": 62,
+      "expected_names_sha256": "4156afa7a85221d9cb27e81fd033a7b01665429a36fbf2c227fe7b8ff1433d1a",
+      "derived_frame_policy": {
+        "mode": "source_lossless_integral_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_frame_count": 1,
+        "expected_discarded_mask_alpha": 0,
+        "expected_frame_proof_sha256": "ed10b8bff1670287f8ef5352c4eeee4804f84262e8c41341cc563c4114fa8a28"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    },
+    {
+      "gm_file_name": "tile_flatties",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 46,
+      "expected_main_count": 46,
+      "expected_alt_count": 0,
+      "expected_max_index": 46,
+      "expected_names_sha256": "419cd570391cf5417175603e76a3ae8c0378236fd3ab2eb5c9f8615b2f029e1b",
+      "derived_frame_policy": {
+        "mode": "source_lossless_integral_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_frame_count": 16,
+        "expected_discarded_mask_alpha": 0,
+        "expected_frame_proof_sha256": "674a86d52d77cd4ba4a3f13315dec2ca40c1cd2b8a4012ec100dd56bcfc94e80"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    },
+    {
+      "gm_file_name": "tile_cliffs",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 65,
+      "expected_main_count": 65,
+      "expected_alt_count": 0,
+      "expected_max_index": 66,
+      "expected_names_sha256": "2c860411f4de4563e3e8b49b1a1ed95c94680a92842c2b3738f80a79bf486efe",
+      "derived_frame_policy": {
+        "mode": "source_lossless_integral_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_frame_count": 1,
+        "expected_discarded_mask_alpha": 0,
+        "expected_frame_proof_sha256": "e87643dbcde7eb68addf15d4bad8561e238759dbe2871e03183571a6d5b8b436"
+      },
+      "source_remap_policy": {
+        "mode": "reviewed_cross_index_source_v1",
+        "proof_algorithm": "cross_index_exact_canvas_rgba_blue_guard_v1",
+        "expected_frame_count": 1,
+        "expected_mapping_sha256": "62a1d90f34c165f238c3099297747980826733ff5dc5859cbe660ee252cad8c5",
+        "expected_proof_sha256": "27c7b0215081cec03f72e161074291ea84e1aab14dea3b1069a7aa88ec81267d",
+        "expected_source_rgba_sha256": "6f4457f9a4338070d4200b8e39d8e40f7846a017d04b2ebef08716a81851f6bf",
+        "expected_output_rgba_sha256": "75319576d2b953902195a36f508cdc7439bad46a3202ed032497199134cdfa7d",
+        "expected_visible_blue_pixel_count": 0
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

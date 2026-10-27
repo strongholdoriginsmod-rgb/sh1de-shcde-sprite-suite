@@ -1,0 +1,2 @@
+# Optional Qt explorer; Node.js >= 18 is needed for MIT DCL decoder.
+PySide6==6.10.2

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "buildings2-europe",
+  "description": "Sparse European override for tile_buildings2: 1045 SH1DE frames replace their Crusader counterparts, the 184 slots without a European donor keep theirs",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - tile_buildings2 sparse atlas",
+    "Version": "0.17.0-buildings",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "tile_buildings2",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 1229,
+      "expected_main_count": 1229,
+      "expected_alt_count": 0,
+      "expected_max_index": 1359,
+      "expected_names_sha256": "608a67d2c0529555a3dfbe8d95120aa09ea549dbd6506471391a2081d4fd4294",
+      "sparse_keep_frame_count": 136,
+      "geometry_policy": {
+        "mode": "native_source_reanchored_v1",
+        "proof_algorithm": "native_source_rgba_target_anchor_float32_ppu_v1",
+        "expected_frame_count": 1093,
+        "expected_geometry_proof_sha256": "4b9f71a839447d6e881758daca31b2d921897a7ae5460315532dd37104596227",
+        "expected_origin_proof_sha256": "bd82bd016c4066d5119e9a492c0f722ce26b34631007cc000707a76d1400a723",
+        "expected_source_rgba_sha256": "366fa92c7f974441af1f9937f175c5a716678a5ce664d32a7d1dd8894604557d"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "building_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

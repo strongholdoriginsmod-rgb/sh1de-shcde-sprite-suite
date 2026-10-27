@@ -1,0 +1,35 @@
+# Lokale Umgebung und erzeugte Staende / local environment and generated state
+.venv/
+python/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.egg-info/
+.coverage
+work/
+cache/
+state/
+dist/
+bin/
+obj/
+*.user
+
+# Lokale Einstellungen / local settings
+config/*.local.*
+config/ziele.json
+config/suite-einstellungen.json
+config/benutzer-ablagen.json
+profiles/benutzer.json
+
+# Spielabgeleitete Grafik bleibt lokal / game-derived graphics stay local
+assets/**/*.png
+assets/**/*.webm
+assets/**/*.wav
+assets/**/*.blend
+/assets/sprites/
+/assets/ui/
+/assets/concepts/
+/assets/erweiterungen/
+/sandbox/hud/
+/sandbox/szenen/katalog-vorschau.json
+/daten/

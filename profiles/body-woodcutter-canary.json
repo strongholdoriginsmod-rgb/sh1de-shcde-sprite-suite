@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "body-woodcutter-canary",
+  "description": "Runtime canary for one complete mask-bearing SHCDE-SE 1.39 GM atlas",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - woodcutter atlas canary",
+    "Version": "0.2.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "body_woodcutter",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body8Sprites",
+      "target_texture": "body8Sprites",
+      "expected_frame_count": 1368,
+      "expected_main_count": 984,
+      "expected_alt_count": 384,
+      "expected_max_index": 1367,
+      "expected_names_sha256": "4c1431d0525419173e7413fcb83acfda3fdfefa32c151e7ec5e07e773be4d05b",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "unit_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

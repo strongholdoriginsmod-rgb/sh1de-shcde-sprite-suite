@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "presets": [
+    {
+      "id": "tile-castle-keep-1193",
+      "label": "Bergfried-Bauebene 1193–1313",
+      "group": "tile_castle",
+      "from": 1193,
+      "to": 1313,
+      "columns": 11,
+      "rows": 11,
+      "layout": "gm1",
+      "verification": "gm1-part-order-verified-in-sandbox-2026-09-29"
+    }
+  ]
+}

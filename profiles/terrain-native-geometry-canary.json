@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "id": "terrain-native-geometry-canary",
+  "description": "First native-geometry GM atlas: tile_land8 emitted at its Stronghold 1 DE canvas with a re-anchored pivot instead of a clipped target canvas",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - native geometry canary",
+    "Version": "0.12.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "tile_land8",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 512,
+      "expected_main_count": 512,
+      "expected_alt_count": 0,
+      "expected_max_index": 512,
+      "expected_names_sha256": "4be8a0913ac534fb19336cb7040197a066eeb672774d11a42f38be791a5d49da",
+      "geometry_policy": {
+        "mode": "native_source_reanchored_v1",
+        "proof_algorithm": "native_source_rgba_target_anchor_float32_ppu_v1",
+        "expected_frame_count": 512,
+        "expected_geometry_proof_sha256": "98079c48fba72cfd1637956c50ed38f924d6878ba8bab30fdba0cb4710111fb6",
+        "expected_origin_proof_sha256": "53999249225a145f95dad648bf01c4ddce44e2ffd2c6571f359feebe44f0ee7b",
+        "expected_source_rgba_sha256": "8911b594479884be599c0c4b7140267c4d3d8098e3c4ffd519a3434d0c3be746"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

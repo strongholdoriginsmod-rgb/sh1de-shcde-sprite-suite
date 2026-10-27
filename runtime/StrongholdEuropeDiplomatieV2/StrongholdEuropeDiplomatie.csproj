@@ -1,0 +1,170 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Vollstaendiger V2-Nachfolger der eigenstaendigen Diplomatie.
+
+    Die bewaehrte V1-Laufzeit bleibt die gemeinsame Grundlage. Nur die
+    erweiterten V2-Zustaende, Regeln und die V1-Spielstandsmigration liegen in
+    diesem Projekt. Dadurch kann V2 spaeter V1 ersetzen, ohne deren
+    Transport-, Kampf-, Team-, UI- oder Speichersicherung zu verlieren.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>DIPLOMACY_V2;$(DefineConstants)</DefineConstants>
+    <AssemblyName>StrongholdEuropeDiplomatieV2</AssemblyName>
+    <RootNamespace>StrongholdEuropeDE.DiplomatieV2</RootNamespace>
+    <Version>2.4.0</Version>
+    <AssemblyVersion>2.4.0.0</AssemblyVersion>
+    <FileVersion>2.4.0.0</FileVersion>
+    <Deterministic>true</Deterministic>
+    <!-- Ohne dies haengt das SDK die Git-Commitkennung an die Produktversion.
+         Die DLL waere dann an das Repository gebunden, aus dem sie gebaut
+         wurde, und ein Nachbau koennte sie prinzipiell nie reproduzieren -
+         sein Repository hat nie denselben Commit (09.09.2026). -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SharedRuntimeDir Condition="'$(SharedRuntimeDir)' == ''">$(MSBuildProjectDirectory)\..\StrongholdEuropeDE.Runtime</SharedRuntimeDir>
+    <V1PluginSourceDir Condition="'$(V1PluginSourceDir)' == ''">$(MSBuildProjectDirectory)\..\StrongholdEuropeDiplomatie</V1PluginSourceDir>
+    <DiplomatieWorkRoot Condition="'$(DiplomatieWorkRoot)' == ''">$(MSBuildProjectDirectory)\..\..\work\runtime\diplomatie-v2</DiplomatieWorkRoot>
+    <PathMap>$(DiplomatieWorkRoot)=/_/diplomatie-v2-work,$(MSBuildProjectDirectory)=/_/diplomatie-v2-source,$(SharedRuntimeDir)=/_/runtime-source,$(V1PluginSourceDir)=/_/diplomatie-v1-host-source</PathMap>
+    <DiplomacyFeatureSource Condition="'$(DiplomacyFeatureSource)' == ''">$(SharedRuntimeDir)\DiplomacyFeature.cs</DiplomacyFeatureSource>
+    <GeneratedContractPath Condition="'$(GeneratedContractPath)' == ''">$(DiplomatieWorkRoot)\GeneratedDiplomatieContract.g.cs</GeneratedContractPath>
+    <GeneratedCompatibilityContractPath Condition="'$(GeneratedCompatibilityContractPath)' == ''">$(DiplomatieWorkRoot)\GeneratedCompatibilityContract.g.cs</GeneratedCompatibilityContractPath>
+    <GeneratedDiplomacyTextsPath Condition="'$(GeneratedDiplomacyTextsPath)' == ''">$(DiplomatieWorkRoot)\GeneratedDiplomacyTexts.g.cs</GeneratedDiplomacyTextsPath>
+    <!-- Uebersetzt wird gegen die Grundfassung des Extenders (extender-pins.json,
+         aktuell SE 2.11.0). Ohne diese Umlenkung uebersetzt der Bau
+         gegen die Referenzinstallation des Europa-Baus; deren SHCDESE.dll ist
+         aelter, und ein typisch veraendertes Mitglied faellt dann erst im
+         Spiel auf. Faellt die Umlenkung aus, gilt die alte Referenz. -->
+    <SHCDESEEffectiveReference Condition="'$(SHCDESEBaselineReference)' != ''">$(SHCDESEBaselineReference)</SHCDESEEffectiveReference>
+    <SHCDESEEffectiveReference Condition="'$(SHCDESEEffectiveReference)' == ''">$(SHCDESEReference)</SHCDESEEffectiveReference>
+    <OutputPath>$(DiplomatieWorkRoot)\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(DiplomatieWorkRoot)\obj\$(Configuration)\</IntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+  <Target Name="ValidateLocalReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GeneratedContractPath)')" Text="GeneratedContractPath is missing: $(GeneratedContractPath)" />
+    <Error Condition="!Exists('$(GeneratedCompatibilityContractPath)')" Text="GeneratedCompatibilityContractPath is missing: $(GeneratedCompatibilityContractPath)" />
+    <Error Condition="!Exists('$(GeneratedDiplomacyTextsPath)')" Text="GeneratedDiplomacyTextsPath is missing: $(GeneratedDiplomacyTextsPath)" />
+    <Error Condition="!Exists('$(DiplomacyFeatureSource)')" Text="DiplomacyFeatureSource is missing: $(DiplomacyFeatureSource)" />
+    <Error Condition="!Exists('$(BepInExReference)')" Text="BepInExReference is missing: $(BepInExReference)" />
+    <Error Condition="!Exists('$(HarmonyReference)')" Text="HarmonyReference is missing: $(HarmonyReference)" />
+    <Error Condition="!Exists('$(SHCDESEEffectiveReference)')" Text="SHCDESEEffectiveReference is missing: $(SHCDESEEffectiveReference)" />
+    <Error Condition="!Exists('$(SystemMemoryReference)')" Text="SystemMemoryReference is missing: $(SystemMemoryReference)" />
+    <Error Condition="!Exists('$(R3Reference)')" Text="R3Reference is missing: $(R3Reference)" />
+    <Error Condition="!Exists('$(AssemblyCSharpReference)')" Text="AssemblyCSharpReference is missing: $(AssemblyCSharpReference)" />
+    <Error Condition="!Exists('$(NoesisReference)')" Text="NoesisReference is missing: $(NoesisReference)" />
+    <Error Condition="!Exists('$(UnityEngineReference)')" Text="UnityEngineReference is missing: $(UnityEngineReference)" />
+    <Error Condition="!Exists('$(UnityEngineCoreModuleReference)')" Text="UnityEngineCoreModuleReference is missing: $(UnityEngineCoreModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineAssetBundleModuleReference)')" Text="UnityEngineAssetBundleModuleReference is missing: $(UnityEngineAssetBundleModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineAudioModuleReference)')" Text="UnityEngineAudioModuleReference is missing: $(UnityEngineAudioModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineImageConversionModuleReference)')" Text="UnityEngineImageConversionModuleReference is missing: $(UnityEngineImageConversionModuleReference)" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="$(GeneratedContractPath)" Link="GeneratedDiplomatieContract.g.cs" />
+    <Compile Include="$(GeneratedCompatibilityContractPath)" Link="GeneratedCompatibilityContract.g.cs" />
+    <Compile Include="$(GeneratedDiplomacyTextsPath)" Link="GeneratedDiplomacyTexts.g.cs" />
+    <Compile Include="$(V1PluginSourceDir)\DiplomatiePlugin.cs" Link="Host\DiplomatiePlugin.cs" />
+    <Compile Include="$(V1PluginSourceDir)\DiplomatiePersistentHost.cs" Link="Host\DiplomatiePersistentHost.cs" />
+
+    <Compile Include="$(DiplomacyFeatureSource)" Link="Geteilt\DiplomacyFeature.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyCore.cs" Link="Geteilt\DiplomacyCore.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyCombatSafety.cs" Link="Geteilt\DiplomacyCombatSafety.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacySaveCodec.cs" Link="Geteilt\DiplomacySaveCodec.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyRuntimeSafety.cs" Link="Geteilt\DiplomacyRuntimeSafety.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyTransferRecovery.cs" Link="Geteilt\DiplomacyTransferRecovery.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyNativeInventorySection.cs" Link="Geteilt\DiplomacyNativeInventorySection.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyGoodsCommands.cs" Link="Geteilt\DiplomacyGoodsCommands.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyDeferredUi.cs" Link="Geteilt\DiplomacyDeferredUi.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyRelationshipDecisions.cs" Link="Geteilt\DiplomacyRelationshipDecisions.cs" />
+    <Compile Include="$(SharedRuntimeDir)\ExtensionFeatureHost.cs" Link="Geteilt\ExtensionFeatureHost.cs" />
+    <Compile Include="$(SharedRuntimeDir)\RuntimeSessionScopeDecision.cs" Link="Geteilt\RuntimeSessionScopeDecision.cs" />
+    <Compile Include="$(SharedRuntimeDir)\Hashing.cs" Link="Geteilt\Hashing.cs" />
+    <Compile Include="$(SharedRuntimeDir)\EuropeCapabilities.cs" Link="Geteilt\EuropeCapabilities.cs" />
+    <Compile Include="$(SharedRuntimeDir)\RuntimeBuildGuard.cs" Link="Geteilt\RuntimeBuildGuard.cs" />
+    <Compile Include="$(SharedRuntimeDir)\RuntimeDecision.cs" Link="Geteilt\RuntimeDecision.cs" />
+
+    <Compile Include="DiplomacyV2Core.cs" />
+    <Compile Include="DiplomacyV2Feature.cs" />
+    <Compile Include="DiplomacyV2Orders.cs" />
+    <Compile Include="DiplomacyV2HumanOrders.cs" />
+    <Compile Include="DiplomacyV2CastleBoundary.cs" />
+    <Compile Include="DiplomacyV2AllianceUi.cs" />
+    <Compile Include="DiplomacyV2SubmissionPressure.cs" />
+    <Compile Include="DiplomacyV2GoodsRequests.cs" />
+    <Compile Include="DiplomacyV2VassalGoodsRequests.cs" />
+    <Compile Include="DiplomacyV2BreachNotices.cs" />
+    <Compile Include="DiplomacyV2VassalWorkflow.cs" />
+    <Compile Include="DiplomacyV2PresentationEvents.cs" />
+    <Compile Include="DiplomacyV2Economy.cs" />
+    <Compile Include="DiplomacyV2PackageTransfer.cs" />
+    <Compile Include="DiplomacyV2SaveCodec.cs" />
+    <Compile Include="DiplomatieCompatibilityGuard.cs" />
+    <Compile Include="DiplomacyV2Probe.cs" />
+    <Compile Include="DiplomacyV2NativeTruceAdmission.cs" />
+    <!-- Bounded multilateral trade, deterministic negotiations, native four-cell
+         journal and the original Noesis diplomacy trade window. -->
+    <Compile Include="DiplomacyV2TradeCore.cs" />
+    <Compile Include="DiplomacyV2TradeBook.cs" />
+    <Compile Include="DiplomacyV2NativeTrade.cs" />
+    <Compile Include="DiplomacyV2Trading.cs" />
+    <Compile Include="DiplomacyV2TradeUi.cs" />
+
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(HarmonyReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SHCDESE">
+      <HintPath>$(SHCDESEEffectiveReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>$(SystemMemoryReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="R3">
+      <HintPath>$(R3Reference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(AssemblyCSharpReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Noesis.NoesisGUI">
+      <HintPath>$(NoesisReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityEngineReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(UnityEngineCoreModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>$(UnityEngineAssetBundleModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(UnityEngineAudioModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(UnityEngineImageConversionModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

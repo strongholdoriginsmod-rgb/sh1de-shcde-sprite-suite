@@ -1,0 +1,5 @@
+* -text
+*.md text eol=lf
+releases/**/*.exe filter=lfs diff=lfs merge=lfs -text
+komplett/**/*.zip filter=lfs diff=lfs merge=lfs -text
+extras/atlasbuilder/tools/*.exe filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,2156 @@
+{
+  "schema": "sprite-suite.native-render-contract.v1",
+  "dll_sha256": "1e6d4c2e10cc35a7b8082a7e2bcd8bb20680ebeda803d9b943257b948145cb2b",
+  "managed_sha256": "01da4c57f8a0e04a77804e78f79bacb1ae63d934d6d391f0dcaf3742bcca5de3",
+  "abi": {
+    "entry_shorts": 21,
+    "max_entries": 700000,
+    "pixels_per_unit": 64,
+    "height_divisor": 32,
+    "array_shorts": 14700000
+  },
+  "source_methods": [
+    "EngineInterface.DLL_RunTick",
+    "GameMap.processTestMap",
+    "spriteLoader.SpriteLoad",
+    "spriteLoader.GetGMSprite",
+    "SpriteMapping.setGenericBuildingTileGraphic",
+    "Enums.GM"
+  ],
+  "gm_files": {
+    "2": [
+      {
+        "group": "tile_land8",
+        "resource_prefix": "tile_land8",
+        "first_runtime_frame": 0,
+        "nominal_frames": 512,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "5": [
+      {
+        "group": "tile_sea8",
+        "resource_prefix": "tile_sea8",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1864,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "6": [
+      {
+        "group": "tile_buildings1",
+        "resource_prefix": "tile_buildings1",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1752,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "7": [
+      {
+        "group": "tile_buildings2",
+        "resource_prefix": "tile_buildings2",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1359,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "8": [
+      {
+        "group": "tile_workshops",
+        "resource_prefix": "tile_workshops",
+        "first_runtime_frame": 0,
+        "nominal_frames": 2016,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "12": [
+      {
+        "group": "tile_land3",
+        "resource_prefix": "tile_land3",
+        "first_runtime_frame": 0,
+        "nominal_frames": 315,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "14": [
+      {
+        "group": "tile_farmland",
+        "resource_prefix": "tile_farmland",
+        "first_runtime_frame": 0,
+        "nominal_frames": 62,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "15": [
+      {
+        "group": "tile_goods",
+        "resource_prefix": "tile_goods",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1032,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "49": [
+      {
+        "group": "tile_churches",
+        "resource_prefix": "tile_churches",
+        "first_runtime_frame": 0,
+        "nominal_frames": 741,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "52": [
+      {
+        "group": "tile_castle",
+        "resource_prefix": "tile_castle",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1596,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "55": [
+      {
+        "group": "tile_land_macros",
+        "resource_prefix": "tile_land_macros",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1648,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "56": [
+      {
+        "group": "tile_rocks8",
+        "resource_prefix": "tile_rocks8",
+        "first_runtime_frame": 0,
+        "nominal_frames": 740,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "60": [
+      {
+        "group": "tile_land_and_stones",
+        "resource_prefix": "tile_land_and_stones",
+        "first_runtime_frame": 0,
+        "nominal_frames": 512,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "139": [
+      {
+        "group": "killing_pits",
+        "resource_prefix": "killing_pits",
+        "first_runtime_frame": 0,
+        "nominal_frames": 16,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "140": [
+      {
+        "group": "pitch_ditches",
+        "resource_prefix": "pitch_ditches",
+        "first_runtime_frame": 0,
+        "nominal_frames": 8,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "149": [
+      {
+        "group": "tile_ruins",
+        "resource_prefix": "tile_ruins",
+        "first_runtime_frame": 0,
+        "nominal_frames": 638,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "166": [
+      {
+        "group": "tile_sea_shore",
+        "resource_prefix": "tile_sea_shore",
+        "first_runtime_frame": 2167,
+        "nominal_frames": 816,
+        "dash_format": false,
+        "asset_group_available": true
+      },
+      {
+        "group": "tile_sea_new_01",
+        "resource_prefix": "tile_sea_new_01",
+        "first_runtime_frame": 0,
+        "nominal_frames": 2167,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "157": [
+      {
+        "group": "tile_flatties",
+        "resource_prefix": "tile_flatties",
+        "first_runtime_frame": 0,
+        "nominal_frames": 46,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "3": [
+      {
+        "group": "tile_chevrons",
+        "resource_prefix": "tile_chevrons",
+        "first_runtime_frame": 0,
+        "nominal_frames": 512,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "9": [
+      {
+        "group": "tile_cliffs",
+        "resource_prefix": "tile_cliffs",
+        "first_runtime_frame": 0,
+        "nominal_frames": 66,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "10": [
+      {
+        "group": "tile_walls",
+        "resource_prefix": "tile_walls",
+        "first_runtime_frame": 0,
+        "nominal_frames": 80,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "70": [
+      {
+        "group": "Tree_Oak",
+        "resource_prefix": "Tree_Oak",
+        "first_runtime_frame": 0,
+        "nominal_frames": 147,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "30": [
+      {
+        "group": "tree_pine",
+        "resource_prefix": "tree_pine",
+        "first_runtime_frame": 0,
+        "nominal_frames": 147,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "71": [
+      {
+        "group": "tree_shrub1",
+        "resource_prefix": "tree_shrub1",
+        "first_runtime_frame": 0,
+        "nominal_frames": 24,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "72": [
+      {
+        "group": "tree_shrub2",
+        "resource_prefix": "tree_shrub2",
+        "first_runtime_frame": 0,
+        "nominal_frames": 24,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "97": [
+      {
+        "group": "tree_apple",
+        "resource_prefix": "tree_apple",
+        "first_runtime_frame": 0,
+        "nominal_frames": 100,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "29": [
+      {
+        "group": "tree_birch",
+        "resource_prefix": "tree_birch",
+        "first_runtime_frame": 0,
+        "nominal_frames": 147,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "31": [
+      {
+        "group": "Tree_Chestnut",
+        "resource_prefix": "Tree_Chestnut",
+        "first_runtime_frame": 0,
+        "nominal_frames": 147,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "109": [
+      {
+        "group": "body_fighting_monk",
+        "resource_prefix": "body_fighting_monk",
+        "first_runtime_frame": 0,
+        "nominal_frames": 991,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "229": [
+      {
+        "group": "body_temple_guard",
+        "resource_prefix": "body_temple_guard",
+        "first_runtime_frame": 0,
+        "nominal_frames": 991,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "44": [
+      {
+        "group": "body_knight",
+        "resource_prefix": "body_knight",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1823,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "35": [
+      {
+        "group": "body_ladder_bearer",
+        "resource_prefix": "body_ladder_bearer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 358,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "40": [
+      {
+        "group": "body_pikeman",
+        "resource_prefix": "body_pikeman",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1177,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "73": [
+      {
+        "group": "body_pitch_worker",
+        "resource_prefix": "body_pitch_worker",
+        "first_runtime_frame": 0,
+        "nominal_frames": 551,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "106": [
+      {
+        "group": "body_tunnelor",
+        "resource_prefix": "body_tunnelor",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1159,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "102": [
+      {
+        "group": "body_armourer",
+        "resource_prefix": "body_armourer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 783,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "133": [
+      {
+        "group": "body_healer",
+        "resource_prefix": "body_healer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 639,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "120": [
+      {
+        "group": "body_ballista",
+        "resource_prefix": "body_ballista",
+        "first_runtime_frame": 0,
+        "nominal_frames": 351,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "123": [
+      {
+        "group": "body_battering_ram",
+        "resource_prefix": "body_battering_ram",
+        "first_runtime_frame": 0,
+        "nominal_frames": 304,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "62": [
+      {
+        "group": "body_catapult",
+        "resource_prefix": "body_catapult",
+        "first_runtime_frame": 0,
+        "nominal_frames": 751,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "83": [
+      {
+        "group": "body_mangonel",
+        "resource_prefix": "body_mangonel",
+        "first_runtime_frame": 0,
+        "nominal_frames": 487,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "124": [
+      {
+        "group": "body_siege_tower",
+        "resource_prefix": "body_siege_tower",
+        "first_runtime_frame": 0,
+        "nominal_frames": 152,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "84": [
+      {
+        "group": "body_trebutchet",
+        "resource_prefix": "body_trebutchet",
+        "first_runtime_frame": 0,
+        "nominal_frames": 503,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "92": [
+      {
+        "group": "body_lion",
+        "resource_prefix": "body_lion",
+        "first_runtime_frame": 0,
+        "nominal_frames": 943,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "93": [
+      {
+        "group": "body_rabbit",
+        "resource_prefix": "body_rabbit",
+        "first_runtime_frame": 0,
+        "nominal_frames": 767,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "182": [
+      {
+        "group": "body_fireman",
+        "resource_prefix": "body_fireman",
+        "first_runtime_frame": 0,
+        "nominal_frames": 979,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "185": [
+      {
+        "group": "body_animal_burning_big",
+        "resource_prefix": "body_animal_burning_big",
+        "first_runtime_frame": 0,
+        "nominal_frames": 20,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "186": [
+      {
+        "group": "body_animal_burning_small",
+        "resource_prefix": "body_animal_burning_small",
+        "first_runtime_frame": 0,
+        "nominal_frames": 16,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "18": [
+      {
+        "group": "body_archer",
+        "resource_prefix": "body_archer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1751,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "36": [
+      {
+        "group": "body_baker",
+        "resource_prefix": "body_baker",
+        "first_runtime_frame": 0,
+        "nominal_frames": 835,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "59": [
+      {
+        "group": "body_blacksmith",
+        "resource_prefix": "body_blacksmith",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1263,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "128": [
+      {
+        "group": "body_boy",
+        "resource_prefix": "body_boy",
+        "first_runtime_frame": 0,
+        "nominal_frames": 655,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "53": [
+      {
+        "group": "body_brewer",
+        "resource_prefix": "body_brewer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 783,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "126": [
+      {
+        "group": "body_chicken",
+        "resource_prefix": "body_chicken",
+        "first_runtime_frame": 0,
+        "nominal_frames": 669,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "154": [
+      {
+        "group": "body_chicken_brown",
+        "resource_prefix": "body_chicken_brown",
+        "first_runtime_frame": 0,
+        "nominal_frames": 669,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "41": [
+      {
+        "group": "body_crossbowman",
+        "resource_prefix": "body_crossbowman",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1308,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "63": [
+      {
+        "group": "body_cow",
+        "resource_prefix": "body_cow",
+        "first_runtime_frame": 0,
+        "nominal_frames": 479,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "91": [
+      {
+        "group": "body_deer",
+        "resource_prefix": "body_deer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 2103,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "95": [
+      {
+        "group": "body_dog",
+        "resource_prefix": "body_dog",
+        "first_runtime_frame": 0,
+        "nominal_frames": 703,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "81": [
+      {
+        "group": "body_drunkard",
+        "resource_prefix": "body_drunkard",
+        "first_runtime_frame": 0,
+        "nominal_frames": 271,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "33": [
+      {
+        "group": "body_farmer",
+        "resource_prefix": "body_farmer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1775,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "132": [
+      {
+        "group": "body_fire_eater",
+        "resource_prefix": "body_fire_eater",
+        "first_runtime_frame": 0,
+        "nominal_frames": 496,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "20": [
+      {
+        "group": "body_fletcher",
+        "resource_prefix": "body_fletcher",
+        "first_runtime_frame": 0,
+        "nominal_frames": 911,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "188": [
+      {
+        "group": "body_ghost",
+        "resource_prefix": "body_ghost",
+        "first_runtime_frame": 0,
+        "nominal_frames": 127,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "129": [
+      {
+        "group": "body_girl",
+        "resource_prefix": "body_girl",
+        "first_runtime_frame": 0,
+        "nominal_frames": 655,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "77": [
+      {
+        "group": "body_horse_trader",
+        "resource_prefix": "body_horse_trader",
+        "first_runtime_frame": 0,
+        "nominal_frames": 127,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "89": [
+      {
+        "group": "body_hunter",
+        "resource_prefix": "body_hunter",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1801,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "147": [
+      {
+        "group": "body_innkeeper",
+        "resource_prefix": "body_innkeeper",
+        "first_runtime_frame": 0,
+        "nominal_frames": 813,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "61": [
+      {
+        "group": "body_iron_miner",
+        "resource_prefix": "body_iron_miner",
+        "first_runtime_frame": 0,
+        "nominal_frames": 639,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "101": [
+      {
+        "group": "body_jester",
+        "resource_prefix": "body_jester",
+        "first_runtime_frame": 0,
+        "nominal_frames": 943,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "131": [
+      {
+        "group": "body_juggler",
+        "resource_prefix": "body_juggler",
+        "first_runtime_frame": 0,
+        "nominal_frames": 579,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "99": [
+      {
+        "group": "body_lady",
+        "resource_prefix": "body_lady",
+        "first_runtime_frame": 0,
+        "nominal_frames": 639,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "100": [
+      {
+        "group": "body_lord",
+        "resource_prefix": "body_lord",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "43": [
+      {
+        "group": "body_maceman",
+        "resource_prefix": "body_maceman",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1527,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "119": [
+      {
+        "group": "body_man_burning",
+        "resource_prefix": "body_man_burning",
+        "first_runtime_frame": 0,
+        "nominal_frames": 311,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "37": [
+      {
+        "group": "body_miller",
+        "resource_prefix": "body_miller",
+        "first_runtime_frame": 0,
+        "nominal_frames": 779,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "127": [
+      {
+        "group": "body_mother",
+        "resource_prefix": "body_mother",
+        "first_runtime_frame": 0,
+        "nominal_frames": 287,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "21": [
+      {
+        "group": "body_ox",
+        "resource_prefix": "body_ox",
+        "first_runtime_frame": 0,
+        "nominal_frames": 511,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "17": [
+      {
+        "group": "body_peasant",
+        "resource_prefix": "body_peasant",
+        "first_runtime_frame": 0,
+        "nominal_frames": 3007,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "74": [
+      {
+        "group": "body_poleturner",
+        "resource_prefix": "body_poleturner",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1231,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "96": [
+      {
+        "group": "body_priest",
+        "resource_prefix": "body_priest",
+        "first_runtime_frame": 0,
+        "nominal_frames": 655,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "121": [
+      {
+        "group": "body_shield",
+        "resource_prefix": "body_shield",
+        "first_runtime_frame": 0,
+        "nominal_frames": 136,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "86": [
+      {
+        "group": "body_siege_engineer",
+        "resource_prefix": "body_siege_engineer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1403,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "39": [
+      {
+        "group": "body_spearman",
+        "resource_prefix": "body_spearman",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1719,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "32": [
+      {
+        "group": "body_stonemason",
+        "resource_prefix": "body_stonemason",
+        "first_runtime_frame": 0,
+        "nominal_frames": 823,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "42": [
+      {
+        "group": "body_swordsman",
+        "resource_prefix": "body_swordsman",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1087,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "75": [
+      {
+        "group": "body_tanner",
+        "resource_prefix": "body_tanner",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1111,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "78": [
+      {
+        "group": "body_trader",
+        "resource_prefix": "body_trader",
+        "first_runtime_frame": 0,
+        "nominal_frames": 255,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "19": [
+      {
+        "group": "body_woodcutter",
+        "resource_prefix": "body_woodcutter",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1367,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "190": [
+      {
+        "group": "body_arab_shortbow",
+        "resource_prefix": "body_arab_shortbow",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1736,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "193": [
+      {
+        "group": "body_arab_assasin",
+        "resource_prefix": "body_arab_assasin",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1467,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "199": [
+      {
+        "group": "body_horse_archer",
+        "resource_prefix": "body_horse_archer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1455,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "194": [
+      {
+        "group": "body_horse_archer_top",
+        "resource_prefix": "body_horse_archer_top",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1455,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "196": [
+      {
+        "group": "body_arab_grenadier",
+        "resource_prefix": "body_arab_grenadier",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1255,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "214": [
+      {
+        "group": "body_sapper",
+        "resource_prefix": "body_sapper",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1463,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "209": [
+      {
+        "group": "body_bedouin_healer",
+        "resource_prefix": "body_bedouin_healer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1599,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "210": [
+      {
+        "group": "body_eunuch",
+        "resource_prefix": "body_eunuch",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1591,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "211": [
+      {
+        "group": "body_ambusher",
+        "resource_prefix": "body_ambusher",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1471,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "191": [
+      {
+        "group": "body_arab_slave",
+        "resource_prefix": "body_arab_slave",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1337,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "192": [
+      {
+        "group": "body_arab_slinger",
+        "resource_prefix": "body_arab_slinger",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1360,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "195": [
+      {
+        "group": "body_arab_swordsman",
+        "resource_prefix": "body_arab_swordsman",
+        "first_runtime_frame": 0,
+        "nominal_frames": 911,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "197": [
+      {
+        "group": "body_arab_ballista",
+        "resource_prefix": "body_arab_ballista",
+        "first_runtime_frame": 0,
+        "nominal_frames": 343,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "198": [
+      {
+        "group": "assasin_rope",
+        "resource_prefix": "assasin_rope",
+        "first_runtime_frame": 0,
+        "nominal_frames": 7,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "200": [
+      {
+        "group": "tree_cactii",
+        "resource_prefix": "tree_cactii",
+        "first_runtime_frame": 0,
+        "nominal_frames": 16,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "201": [
+      {
+        "group": "anim_crusader_flag",
+        "resource_prefix": "anim_crusader_flag",
+        "first_runtime_frame": 0,
+        "nominal_frames": 15,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "233": [
+      {
+        "group": "anim_arab_flag",
+        "resource_prefix": "anim_arab_flag",
+        "first_runtime_frame": 0,
+        "nominal_frames": 15,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "202": [
+      {
+        "group": "body_info",
+        "resource_prefix": "body_info",
+        "first_runtime_frame": 0,
+        "nominal_frames": 188,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "203": [
+      {
+        "group": "body_wolf",
+        "resource_prefix": "body_wolf",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1055,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "205": [
+      {
+        "group": "body_saladin",
+        "resource_prefix": "body_saladin",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "94": [
+      {
+        "group": "body_camel",
+        "resource_prefix": "body_camel",
+        "first_runtime_frame": 0,
+        "nominal_frames": 815,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "208": [
+      {
+        "group": "body_camel_lancer",
+        "resource_prefix": "body_camel_lancer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1343,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "219": [
+      {
+        "group": "body_missile_firepot",
+        "resource_prefix": "body_missile_firepot",
+        "first_runtime_frame": 0,
+        "nominal_frames": 31,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "212": [
+      {
+        "group": "body_skirmisher",
+        "resource_prefix": "body_skirmisher",
+        "first_runtime_frame": 0,
+        "nominal_frames": 2427,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "213": [
+      {
+        "group": "body_heavy_camel",
+        "resource_prefix": "body_heavy_camel",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1215,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "215": [
+      {
+        "group": "body_demolisher",
+        "resource_prefix": "body_demolisher",
+        "first_runtime_frame": 0,
+        "nominal_frames": 2103,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "220": [
+      {
+        "group": "body_javelin",
+        "resource_prefix": "body_javelin",
+        "first_runtime_frame": 0,
+        "nominal_frames": 143,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "221": [
+      {
+        "group": "body_goat",
+        "resource_prefix": "body_goat",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1551,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "222": [
+      {
+        "group": "body_hyena",
+        "resource_prefix": "body_hyena",
+        "first_runtime_frame": 0,
+        "nominal_frames": 943,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "224": [
+      {
+        "group": "body_crocodile",
+        "resource_prefix": "body_crocodile",
+        "first_runtime_frame": 0,
+        "nominal_frames": 767,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "223": [
+      {
+        "group": "body_condor",
+        "resource_prefix": "body_condor",
+        "first_runtime_frame": 0,
+        "nominal_frames": 207,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "226": [
+      {
+        "group": "body_bedouin_lord",
+        "resource_prefix": "body_bedouin_lord",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "225": [
+      {
+        "group": "body_imam",
+        "resource_prefix": "body_imam",
+        "first_runtime_frame": 0,
+        "nominal_frames": 655,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "227": [
+      {
+        "group": "body_scribe_lord",
+        "resource_prefix": "body_scribe_lord",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "228": [
+      {
+        "group": "body_lord_female",
+        "resource_prefix": "body_lord_female",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "230": [
+      {
+        "group": "body_bessie",
+        "resource_prefix": "body_bessie",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "231": [
+      {
+        "group": "body_arab_lord_female",
+        "resource_prefix": "body_arab_lord_female",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "232": [
+      {
+        "group": "body_bedouin_lord_female",
+        "resource_prefix": "body_bedouin_lord_female",
+        "first_runtime_frame": 0,
+        "nominal_frames": 1679,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "138": [
+      {
+        "group": "body_brazier",
+        "resource_prefix": "body_brazier",
+        "first_runtime_frame": 0,
+        "nominal_frames": 7,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "134": [
+      {
+        "group": "body_disease",
+        "resource_prefix": "body_disease",
+        "first_runtime_frame": 0,
+        "nominal_frames": 31,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "118": [
+      {
+        "group": "body_fire",
+        "resource_prefix": "body_fire",
+        "first_runtime_frame": 0,
+        "nominal_frames": 731,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "144": [
+      {
+        "group": "body_fire2",
+        "resource_prefix": "body_fire2",
+        "first_runtime_frame": 0,
+        "nominal_frames": 293,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "168": [
+      {
+        "group": "body_crow",
+        "resource_prefix": "body_crow",
+        "first_runtime_frame": 0,
+        "nominal_frames": 207,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "34": [
+      {
+        "group": "body_missile",
+        "resource_prefix": "body_missile",
+        "first_runtime_frame": 0,
+        "nominal_frames": 183,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "122": [
+      {
+        "group": "body_missile_2",
+        "resource_prefix": "body_missile_2",
+        "first_runtime_frame": 0,
+        "nominal_frames": 143,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "135": [
+      {
+        "group": "body_missile_cow",
+        "resource_prefix": "body_missile_cow",
+        "first_runtime_frame": 0,
+        "nominal_frames": 28,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "145": [
+      {
+        "group": "body_missile_fire",
+        "resource_prefix": "body_missile_fire",
+        "first_runtime_frame": 0,
+        "nominal_frames": 143,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "167": [
+      {
+        "group": "body_seagull",
+        "resource_prefix": "body_seagull",
+        "first_runtime_frame": 0,
+        "nominal_frames": 143,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "170": [
+      {
+        "group": "body_splash",
+        "resource_prefix": "body_splash",
+        "first_runtime_frame": 0,
+        "nominal_frames": 23,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "125": [
+      {
+        "group": "body_steam",
+        "resource_prefix": "body_steam",
+        "first_runtime_frame": 0,
+        "nominal_frames": 15,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "137": [
+      {
+        "group": "body_gate",
+        "resource_prefix": "body_gate",
+        "first_runtime_frame": 0,
+        "nominal_frames": 47,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "82": [
+      {
+        "group": "body_tent",
+        "resource_prefix": "body_tent",
+        "first_runtime_frame": 0,
+        "nominal_frames": 2,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "158": [
+      {
+        "group": "rock_chips",
+        "resource_prefix": "rock_chips",
+        "first_runtime_frame": 0,
+        "nominal_frames": 32,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "116": [
+      {
+        "group": "oil_dropped",
+        "resource_prefix": "oil_dropped",
+        "first_runtime_frame": 0,
+        "nominal_frames": 32,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "136": [
+      {
+        "group": "cracks",
+        "resource_prefix": "cracks",
+        "first_runtime_frame": 0,
+        "nominal_frames": 17,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "169": [
+      {
+        "group": "puff of smoke",
+        "resource_prefix": "puff of smoke",
+        "first_runtime_frame": 0,
+        "nominal_frames": 15,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "141": [
+      {
+        "group": "blast3",
+        "resource_prefix": "blast3",
+        "first_runtime_frame": 0,
+        "nominal_frames": 72,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "23": [
+      {
+        "group": "smoke-30x30",
+        "resource_prefix": "smoke-30x30",
+        "first_runtime_frame": 0,
+        "nominal_frames": 31,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "103": [
+      {
+        "group": "anim_armourer",
+        "resource_prefix": "anim_armourer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 15,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "66": [
+      {
+        "group": "anim_baker",
+        "resource_prefix": "anim_baker",
+        "first_runtime_frame": 0,
+        "nominal_frames": 67,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "58": [
+      {
+        "group": "anim_blacksmith",
+        "resource_prefix": "anim_blacksmith",
+        "first_runtime_frame": 0,
+        "nominal_frames": 198,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "113": [
+      {
+        "group": "anim_boiled_oil",
+        "resource_prefix": "anim_boiled_oil",
+        "first_runtime_frame": 0,
+        "nominal_frames": 137,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "51": [
+      {
+        "group": "anim_brewer",
+        "resource_prefix": "anim_brewer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 127,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "22": [
+      {
+        "group": "anim_buildings2",
+        "resource_prefix": "anim_buildings2",
+        "first_runtime_frame": 0,
+        "nominal_frames": 134,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "54": [
+      {
+        "group": "anim_castle",
+        "resource_prefix": "anim_castle",
+        "first_runtime_frame": 0,
+        "nominal_frames": 138,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "181": [
+      {
+        "group": "anim_chopping_block",
+        "resource_prefix": "anim_chopping_block",
+        "first_runtime_frame": 0,
+        "nominal_frames": 20,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "180": [
+      {
+        "group": "anim_dancing_bear",
+        "resource_prefix": "anim_dancing_bear",
+        "first_runtime_frame": 0,
+        "nominal_frames": 54,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "179": [
+      {
+        "group": "anim_dog_cage",
+        "resource_prefix": "anim_dog_cage",
+        "first_runtime_frame": 0,
+        "nominal_frames": 41,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "68": [
+      {
+        "group": "anim_drawbridge",
+        "resource_prefix": "anim_drawbridge",
+        "first_runtime_frame": 0,
+        "nominal_frames": 129,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "159": [
+      {
+        "group": "anim_ducking_stool",
+        "resource_prefix": "anim_ducking_stool",
+        "first_runtime_frame": 0,
+        "nominal_frames": 9,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "160": [
+      {
+        "group": "anim_dungeon",
+        "resource_prefix": "anim_dungeon",
+        "first_runtime_frame": 0,
+        "nominal_frames": 12,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "88": [
+      {
+        "group": "anim_farmer",
+        "resource_prefix": "anim_farmer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 78,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "76": [
+      {
+        "group": "anim_flags",
+        "resource_prefix": "anim_flags",
+        "first_runtime_frame": 0,
+        "nominal_frames": 130,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "189": [
+      {
+        "group": "anim_flag_small",
+        "resource_prefix": "anim_flag_small",
+        "first_runtime_frame": 0,
+        "nominal_frames": 31,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "27": [
+      {
+        "group": "anim_fletcher",
+        "resource_prefix": "anim_fletcher",
+        "first_runtime_frame": 0,
+        "nominal_frames": 71,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "114": [
+      {
+        "group": "anim_gallows",
+        "resource_prefix": "anim_gallows",
+        "first_runtime_frame": 0,
+        "nominal_frames": 19,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "161": [
+      {
+        "group": "anim_gibbet",
+        "resource_prefix": "anim_gibbet",
+        "first_runtime_frame": 0,
+        "nominal_frames": 16,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "28": [
+      {
+        "group": "anim_goods",
+        "resource_prefix": "anim_goods",
+        "first_runtime_frame": 0,
+        "nominal_frames": 192,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "187": [
+      {
+        "group": "anim_heads",
+        "resource_prefix": "anim_heads",
+        "first_runtime_frame": 0,
+        "nominal_frames": 6,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "162": [
+      {
+        "group": "anim_healer",
+        "resource_prefix": "anim_healer",
+        "first_runtime_frame": 0,
+        "nominal_frames": 41,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "90": [
+      {
+        "group": "anim_hunter",
+        "resource_prefix": "anim_hunter",
+        "first_runtime_frame": 0,
+        "nominal_frames": 24,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "171": [
+      {
+        "group": "anim_inn",
+        "resource_prefix": "anim_inn",
+        "first_runtime_frame": 0,
+        "nominal_frames": 86,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "47": [
+      {
+        "group": "anim_iron_miner",
+        "resource_prefix": "anim_iron_miner",
+        "first_runtime_frame": 0,
+        "nominal_frames": 169,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "176": [
+      {
+        "group": "anim_killing_pits",
+        "resource_prefix": "anim_killing_pits",
+        "first_runtime_frame": 0,
+        "nominal_frames": 31,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "155": [
+      {
+        "group": "anim_market",
+        "resource_prefix": "anim_market",
+        "first_runtime_frame": 0,
+        "nominal_frames": 17,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "115": [
+      {
+        "group": "anim_maypole",
+        "resource_prefix": "anim_maypole",
+        "first_runtime_frame": 0,
+        "nominal_frames": 63,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "65": [
+      {
+        "group": "anim_pitch_dugout",
+        "resource_prefix": "anim_pitch_dugout",
+        "first_runtime_frame": 0,
+        "nominal_frames": 47,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "64": [
+      {
+        "group": "anim_poleturner",
+        "resource_prefix": "anim_poleturner",
+        "first_runtime_frame": 0,
+        "nominal_frames": 126,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "25": [
+      {
+        "group": "anim_quarry",
+        "resource_prefix": "anim_quarry",
+        "first_runtime_frame": 0,
+        "nominal_frames": 322,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "178": [
+      {
+        "group": "anim_rack",
+        "resource_prefix": "anim_rack",
+        "first_runtime_frame": 0,
+        "nominal_frames": 20,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "104": [
+      {
+        "group": "anim_shields",
+        "resource_prefix": "anim_shields",
+        "first_runtime_frame": 0,
+        "nominal_frames": 15,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "98": [
+      {
+        "group": "anim_stables",
+        "resource_prefix": "anim_stables",
+        "first_runtime_frame": 0,
+        "nominal_frames": 41,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "175": [
+      {
+        "group": "anim_stake",
+        "resource_prefix": "anim_stake",
+        "first_runtime_frame": 0,
+        "nominal_frames": 19,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "163": [
+      {
+        "group": "anim_stocks",
+        "resource_prefix": "anim_stocks",
+        "first_runtime_frame": 0,
+        "nominal_frames": 6,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "69": [
+      {
+        "group": "anim_tanner",
+        "resource_prefix": "anim_tanner",
+        "first_runtime_frame": 0,
+        "nominal_frames": 75,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "105": [
+      {
+        "group": "anim_tunnelors_guild",
+        "resource_prefix": "anim_tunnelors_guild",
+        "first_runtime_frame": 0,
+        "nominal_frames": 6,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "130": [
+      {
+        "group": "anim_tunnels",
+        "resource_prefix": "anim_tunnels",
+        "first_runtime_frame": 0,
+        "nominal_frames": 31,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "173": [
+      {
+        "group": "anim_whitecaps_wave",
+        "resource_prefix": "anim_whitecaps_wave",
+        "first_runtime_frame": 0,
+        "nominal_frames": 211,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "26": [
+      {
+        "group": "anim_windmill",
+        "resource_prefix": "anim_windmill",
+        "first_runtime_frame": 0,
+        "nominal_frames": 74,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "67": [
+      {
+        "group": "anim_woodcutter",
+        "resource_prefix": "anim_woodcutter",
+        "first_runtime_frame": 0,
+        "nominal_frames": 24,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "85": [
+      {
+        "group": "float_pop_circ-1",
+        "resource_prefix": "float_pop_circ-1",
+        "first_runtime_frame": 0,
+        "nominal_frames": 100,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "218": [
+      {
+        "group": "float_pop_circ-2",
+        "resource_prefix": "float_pop_circ-2",
+        "first_runtime_frame": 0,
+        "nominal_frames": 7,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "16": [
+      {
+        "group": "floats",
+        "resource_prefix": "floats",
+        "first_runtime_frame": 0,
+        "nominal_frames": 348,
+        "dash_format": false,
+        "asset_group_available": true
+      }
+    ],
+    "172": [
+      {
+        "group": "floats_new",
+        "resource_prefix": "floats_new",
+        "first_runtime_frame": 0,
+        "nominal_frames": 331,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ],
+    "107": [
+      {
+        "group": "cursors",
+        "resource_prefix": "cursors",
+        "first_runtime_frame": 0,
+        "nominal_frames": 104,
+        "dash_format": true,
+        "asset_group_available": true
+      }
+    ]
+  },
+  "body_frame_rules": {
+    "one_based_gm_ids": [
+      17,
+      18,
+      19,
+      20,
+      21,
+      23,
+      25,
+      26,
+      27,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      47,
+      51,
+      53,
+      58,
+      59,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      81,
+      82,
+      83,
+      84,
+      86,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      106,
+      107,
+      109,
+      113,
+      114,
+      115,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      137,
+      138,
+      141,
+      144,
+      145,
+      147,
+      154,
+      155,
+      159,
+      160,
+      161,
+      162,
+      163,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      175,
+      176,
+      178,
+      179,
+      180,
+      181,
+      182,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      199,
+      200,
+      201,
+      202,
+      203,
+      205,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      219,
+      220,
+      221,
+      222,
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233
+    ],
+    "direct_gm_ids": [
+      6,
+      7,
+      8,
+      16,
+      22,
+      28,
+      49,
+      52,
+      54,
+      105,
+      116,
+      136,
+      158,
+      198
+    ],
+    "special_gm_ids": [
+      85,
+      167,
+      207,
+      223
+    ]
+  }
+}

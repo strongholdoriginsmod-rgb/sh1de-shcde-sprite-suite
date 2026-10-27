@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "europe-roster-locale-canary",
+  "description": "Code-free de-DE/en-US roster-name locale transport canary",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - roster locale canary",
+    "Version": "0.8.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": false,
+    "audio_payload": false,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "dock_placement": false
+  },
+  "gm_atlases": [],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [],
+  "project_files": [
+    {
+      "source": "assets/locales/de-DE/crusader.txt",
+      "output": "Locales/de-DE/crusader.txt",
+      "category": "locale_override",
+      "expected_sha256": "4532803116899dafcd392042177660fa7cddcd72cc3d289cb3c54622af0c43e9"
+    },
+    {
+      "source": "assets/locales/en-US/crusader.txt",
+      "output": "Locales/en-US/crusader.txt",
+      "category": "locale_override",
+      "expected_sha256": "b612b220e3ab2a6ec06b1bc91a26d3c0743eb858cdc3c0d2c58ae6c13397983f"
+    }
+  ]
+}

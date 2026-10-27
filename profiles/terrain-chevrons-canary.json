@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "terrain-chevrons-canary",
+  "description": "Isolated exact European sloped-terrain canary for the complete SHCDE-SE 1.39 tile_chevrons GM array",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - sloped terrain texture canary",
+    "Version": "0.10.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "tile_chevrons",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 512,
+      "expected_main_count": 512,
+      "expected_alt_count": 0,
+      "expected_max_index": 512,
+      "expected_names_sha256": "cfcdbc9420fe00964ede64b1b1f35ff6727c38a31a9226e61129d2ca1fde8031",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

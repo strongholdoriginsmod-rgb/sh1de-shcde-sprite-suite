@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<title>Stronghold Sprite Editor</title>
+<style>/*__CSS__*/</style>
+</head>
+<body>
+<header class="app-header">
+  <button class="sidebar-toggle quiet" data-action="toggle-files" title="Dateiliste ein-/ausblenden" aria-label="Dateiliste ein-/ausblenden">☰</button>
+  <div class="brand">Sprite Editor</div>
+  <details class="menu"><summary>Projekt</summary><div class="menu-popup">
+    <button data-action="new">Neues Projekt <kbd>Strg N</kbd></button>
+    <button data-action="open">Öffnen… <kbd>Strg O</kbd></button>
+    <button data-action="save">Speichern <kbd>Strg S</kbd></button>
+    <hr><button data-action="undo">Rückgängig <kbd>Strg Z</kbd></button><button data-action="redo">Wiederholen <kbd>Strg Umschalt Z</kbd></button><hr><button data-action="project">Projekteinstellungen…</button>
+    <button data-action="demo">Beispiel öffnen</button><button data-action="clear-history">Historie leeren…</button>
+    <hr><button data-action="help">Hilfe und Dateiformate</button>
+  </div></details>
+  <button class="header-import" data-action="import">Importieren…</button>
+  <span class="header-separator"></span>
+  <button class="icon-button" id="undo" data-action="undo" title="Rückgängig (Strg Z)" aria-label="Rückgängig">↶</button>
+  <button class="icon-button" id="redo" data-action="redo" title="Wiederholen (Strg Umschalt Z)" aria-label="Wiederholen">↷</button>
+  <button id="project-title" class="project-title quiet" data-action="project" title="Projekteinstellungen">Unbenannt</button>
+  <button class="save-header" data-action="save">Speichern</button>
+  <button class="primary" data-action="export">Exportieren…</button>
+  <button class="sidebar-toggle quiet" data-action="toggle-inspector" title="Eigenschaften ein-/ausblenden" aria-label="Eigenschaften ein-/ausblenden">▤</button>
+</header>
+<div id="recovery-bar" class="recovery-bar" hidden><span id="recovery-text"></span><button data-action="recover">Wiederherstellen</button><button class="quiet" data-action="discard-recovery">Verwerfen</button></div>
+<main class="workspace">
+  <aside id="files-panel" class="files-panel" aria-label="Dateien">
+    <div class="panel-heading"><h1>Dateien</h1><button class="quiet small" data-action="import" title="Dateien hinzufügen">Hinzufügen</button></div>
+    <div class="file-filters"><label class="sr-only" for="group-select">Assetgruppe</label><select id="group-select"><option value="">Keine Gruppe</option></select>
+      <label class="sr-only" for="search">Dateien filtern</label><input id="search" type="search" placeholder="Dateien filtern" autocomplete="off"></div>
+    <div id="asset-list" class="asset-list" tabindex="0" role="listbox" aria-label="Sprites" aria-multiselectable="true"><div id="asset-space"></div></div>
+    <div class="file-footer"><span id="file-count">0 Dateien</span><button class="quiet small" data-action="select-all">Alle</button><button class="quiet small" data-action="delete" title="Ausgewählte Sprites entfernen">Entfernen</button></div>
+  </aside>
+  <section class="editor" aria-label="Bildbearbeitung">
+    <nav class="view-tabs" aria-label="Ansicht"><button data-view="scene" class="active">Aufbau</button><button data-view="sprite">Sprite</button><button data-view="animation">Animation</button><button data-view="split">Schnitt</button><button data-view="atlas">Atlas</button></nav>
+    <div class="canvas-toolbar">
+      <div class="tool-cluster"><button class="small" data-action="fit" title="Einpassen (F)">Einpassen</button><button class="small" data-action="zoom-out" aria-label="Verkleinern">−</button><button class="zoom-readout small quiet" id="zoom-value" data-action="actual" title="100 % (1)">100 %</button><button class="small" data-action="zoom-in" aria-label="Vergrößern">+</button></div>
+      <div class="tool-cluster view-options"><label class="check"><input id="show-grid" type="checkbox" checked> Raster</label><label class="check"><input id="show-labels" type="checkbox"> Nummern</label></div>
+      <label class="sr-only" for="channel">Bildkanal</label><select id="channel" class="compact-select" title="Bildkanal"><option value="rgba">RGBA</option><option value="rgb">RGB</option><option value="a">Alpha</option><option value="r">Rot</option><option value="g">Grün</option><option value="b">Blau</option><option value="mask">Maske</option><option value="mask-r">Maske · R</option><option value="mask-g">Maske · G</option><option value="mask-b">Maske · B</option><option value="mask-a">Maske · A</option></select>
+      <label class="sr-only" for="background">Hintergrund</label><select id="background" class="compact-select" title="Hintergrund"><option value="checker">Transparent</option><option value="light">Hell</option><option value="dark">Dunkel</option></select>
+    </div>
+    <div id="canvas-wrap" class="canvas-wrap checker"><canvas id="viewport" tabindex="0" aria-label="Arbeitsfläche"></canvas>
+      <div id="empty-state" class="empty-state"><p>PNG-Dateien ablegen</p><button data-action="import">Dateien auswählen</button><span>Einzelbilder, Serien oder ZIP-Archive</span></div>
+      <div id="drop-overlay" class="drop-overlay" hidden>Dateien importieren</div>
+      <div id="canvas-note" class="canvas-note" hidden></div>
+    </div>
+    <div id="sprite-bar" class="context-bar" hidden><label for="compare">Anzeige</label><select id="compare"><option value="current">Bearbeitet</option><option value="original">Original</option><option value="reference">Zielreferenz</option><option value="overlay">Quelle + Ziel</option><option value="difference">Differenz zum Original</option></select><button class="small" id="pivot-tool" data-action="pivot-tool" aria-pressed="false">Pivot setzen</button><span class="muted">Ursprung links unten</span></div>
+    <div id="animation-bar" class="context-bar" hidden><button class="small" data-action="prev-frame" title="Vorheriger Frame">←</button><button class="small" id="play" data-action="play">Abspielen</button><button class="small" data-action="next-frame" title="Nächster Frame">→</button><input id="frame-slider" type="range" min="0" max="0" value="0" aria-label="Animationsframe"><span id="frame-label">0 / 0</span><label for="fps">FPS</label><input id="fps" type="number" value="12" min="1" max="60"><label class="check"><input id="onion" type="checkbox"> Vorheriger Frame</label></div>
+    <div id="split-bar" class="context-bar" hidden><button class="small" data-action="split-import">Bild laden…</button><button class="small" data-action="scene-to-split">Aufbau übernehmen</button><button class="small" id="brush-tool" data-action="brush-tool" aria-pressed="false">Zuordnen</button><label for="brush-slot">Tile</label><input id="brush-slot" type="number" min="1" max="4096" value="1"><label for="brush-radius">Radius</label><input id="brush-radius" type="number" min="1" max="128" value="8"><label class="check"><input id="brush-erase" type="checkbox"> Entfernen</label><label class="check"><input id="split-overlay" type="checkbox" checked> Flächen</label><button class="small" data-action="split-transfer">Als Tiles übernehmen</button></div>
+    <div class="status-bar"><span id="status-left">Keine Dateien</span><span id="status-middle"></span><span id="recovery-status" title="Lokale Browser-Sicherung ersetzt keine Projektdatei.">Lokal</span></div>
+  </section>
+  <aside id="inspector" class="inspector" aria-label="Eigenschaften">
+    <nav class="inspector-tabs" aria-label="Inspektor"><button data-panel="properties" class="active">Eigenschaften</button><button data-panel="target">Ziel</button><button data-panel="checks">Prüfung</button></nav>
+    <div id="inspector-content" class="inspector-content"></div>
+  </aside>
+</main>
+<div id="toast" class="toast" role="status" hidden><span id="toast-text"></span><button class="quiet" data-action="close-toast" aria-label="Meldung schließen">×</button></div>
+<dialog id="modal" class="modal"><form id="modal-form"><header><h2 id="modal-title"></h2><button type="button" class="quiet close-dialog" data-action="close-modal" aria-label="Dialog schließen">×</button></header><div id="modal-content" class="modal-content"></div><div id="modal-error" class="form-error" role="alert" hidden></div><footer><button type="button" data-action="close-modal">Abbrechen</button><button id="modal-submit" class="primary" type="submit">Übernehmen</button></footer></form></dialog>
+<dialog id="busy-dialog" class="busy-dialog"><h2 id="busy-title">Dateien verarbeiten</h2><progress id="busy-progress"></progress><p id="busy-detail"></p><button id="busy-cancel">Abbrechen</button></dialog>
+<input id="file-input" type="file" multiple hidden><noscript>JavaScript muss für den lokalen Editor aktiviert sein.</noscript>
+<script>/*__CORE__*/</script><script>/*__CODEC__*/</script><script>/*__IO__*/</script><script>/*__APP__*/</script>
+</body></html>

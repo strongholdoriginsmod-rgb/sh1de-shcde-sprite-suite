@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "id": "lord-review-canary",
+  "description": "Pixel-proven mixed SH1DE/SHCDE lord unit canary with explicit Crusader-only frame passthrough for SHCDE-SE 1.39",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - mixed lord review canary",
+    "Version": "1.0.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "body_lord",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body2Sprites",
+      "target_texture": "body14Sprites",
+      "expected_frame_count": 1936,
+      "expected_main_count": 1680,
+      "expected_alt_count": 256,
+      "expected_max_index": 1679,
+      "expected_names_sha256": "f1e20cdd7c1b4e7c86e7a3ddb000ac8e9871a81995b4f680d2ae277532593cf1",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "body14_review_gm_atlas",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_with_keep_v2",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 392,
+        "expected_target_frame_count": 1544,
+        "expected_source_names_sha256": "f16838e4127778a24c7198e547fe27da363b28529b20d0b6028d9cc7a0655ee2",
+        "expected_target_names_sha256": "d4ae39116683483c9c15bb5adb6aab82b5777d9b399df3bc6690cf2e3f797b1e",
+        "expected_provenance_sha256": "fca37c6bcddd69e2d6dfeee372813c992346f3e07f61a8bacf8d5c6332e76490",
+        "expected_keep_frame_count": 720,
+        "expected_keep_names_sha256": "def7f8c0f7310f85c629824025d74e11d61fcffbb75e999261490377b05e2623",
+        "expected_blocked_review_frame_count": 824,
+        "expected_blocked_review_names_sha256": "595588f8dba207b9532182914ef7af5b8278319957c5d83ed3768496b8e0950e",
+        "expected_fractional_frame_count": 0,
+        "expected_fractional_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_action_origin_status_sha256": "6869a0bacd470e6daeccb02e026d11e929627d9e88193f99043b1f418b49c2ad"
+      }
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

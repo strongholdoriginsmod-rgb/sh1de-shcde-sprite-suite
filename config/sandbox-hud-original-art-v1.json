@@ -1,0 +1,4271 @@
+{
+  "schema": "stronghold-europe.sandbox.hud-original-art.v1",
+  "verification": "source-rectangles-and-command-ids-from-XAML; reconstruction-not-engine-pixel-parity",
+  "source": {
+    "xaml_main": "XAMLResources/HUD_Main.xaml",
+    "xaml_sha256": "b84c40b60ac4b790f9ecb5ae712234664ddedb3c73a69988dd5a8b8187a4ab74",
+    "sprites_dictionary": "Sprites/UI-MasterAtlas.xaml",
+    "dictionary_sha256": "b4092a81bdef00449f65b37d3988c432c1862f409d085ff84c039a71007cfb88",
+    "atlas_relative": "assets/ui/derived/ui-europa-geprueft/UI-MasterAtlas.png",
+    "atlas_sha256": "cfbc7915123c73e908caaaeee8358860ac8662d3501ce4b2318897689abf7652",
+    "atlas_type": "LOCAL_DERIVED_EUROPEAN_OVERRIDE_NOT_UNMODIFIED_SHCDE_ORIGINAL",
+    "crop_dir_relative": "assets/ui/derived/sandbox-hud-crops"
+  },
+  "layout": {
+    "base_width": 914,
+    "base_height": 306,
+    "art_resource": "UI-HUD 007",
+    "pixel_scale": 0.5,
+    "note": "XAML margin coordinates and atlas native rectangles; parent animations/bindings require separate engine review",
+    "composition": {
+      "source": "HUD_Main.xaml; Swish1 settled state (0.5 seconds), BuildMenuGrid and MainScroll XAML hierarchies",
+      "alignment_size": [
+        914,
+        166
+      ],
+      "scroll": {
+        "parent_margin": [
+          110,
+          22
+        ],
+        "clip_rect": [
+          10,
+          -1,
+          876,
+          103
+        ],
+        "translated_position": [
+          -287,
+          -4
+        ]
+      },
+      "build_menu": {
+        "parent_margin": [
+          132,
+          30
+        ],
+        "clip_rect": [
+          -147,
+          -50,
+          496,
+          150
+        ],
+        "child_margin": [
+          -141,
+          0
+        ],
+        "settled_translate": [
+          16,
+          0
+        ]
+      }
+    }
+  },
+  "rectangles": {
+    "UI-Buildings A001": [
+      7737,
+      6841,
+      68,
+      68
+    ],
+    "UI-Buildings A002": [
+      7809,
+      6827,
+      68,
+      68
+    ],
+    "UI-Buildings A003": [
+      7881,
+      6825,
+      68,
+      68
+    ],
+    "UI-Buildings A004": [
+      7953,
+      6825,
+      68,
+      68
+    ],
+    "UI-Buildings A005": [
+      8025,
+      6825,
+      68,
+      68
+    ],
+    "UI-Buildings A006": [
+      8097,
+      6825,
+      68,
+      68
+    ],
+    "UI-Buildings A007": [
+      7809,
+      6899,
+      68,
+      68
+    ],
+    "UI-Buildings A008": [
+      7881,
+      6897,
+      68,
+      68
+    ],
+    "UI-Buildings A009": [
+      7953,
+      6897,
+      68,
+      68
+    ],
+    "UI-Buildings A010": [
+      8025,
+      6897,
+      68,
+      68
+    ],
+    "UI-Buildings A011": [
+      8097,
+      6897,
+      68,
+      68
+    ],
+    "UI-Buildings A012": [
+      7274,
+      6847,
+      68,
+      68
+    ],
+    "UI-Buildings A013": [
+      7371,
+      6869,
+      68,
+      68
+    ],
+    "UI-Buildings A014": [
+      7443,
+      6869,
+      68,
+      68
+    ],
+    "UI-Buildings A015": [
+      7515,
+      6887,
+      68,
+      68
+    ],
+    "UI-Buildings A016": [
+      7587,
+      6887,
+      68,
+      68
+    ],
+    "UI-Buildings A017": [
+      7659,
+      6913,
+      68,
+      68
+    ],
+    "UI-Buildings A018": [
+      7731,
+      6913,
+      68,
+      68
+    ],
+    "UI-Buildings B001": [
+      4199,
+      8095,
+      110,
+      95
+    ],
+    "UI-Buildings B002": [
+      4313,
+      8095,
+      110,
+      95
+    ],
+    "UI-Buildings B003": [
+      5212,
+      536,
+      108,
+      102
+    ],
+    "UI-Buildings B004": [
+      6285,
+      8087,
+      108,
+      102
+    ],
+    "UI-Buildings B005": [
+      5311,
+      7196,
+      113,
+      120
+    ],
+    "UI-Buildings B006": [
+      5428,
+      7181,
+      113,
+      120
+    ],
+    "UI-Buildings C001": [
+      5630,
+      5849,
+      105,
+      132
+    ],
+    "UI-Buildings C002": [
+      5282,
+      7321,
+      105,
+      132
+    ],
+    "UI-Buildings C003": [
+      6034,
+      5549,
+      132,
+      109
+    ],
+    "UI-Buildings C004": [
+      5867,
+      6258,
+      132,
+      109
+    ],
+    "UI-Buildings C005": [
+      5676,
+      3775,
+      131,
+      136
+    ],
+    "UI-Buildings C006": [
+      4555,
+      6685,
+      131,
+      136
+    ],
+    "UI-Buildings C007": [
+      7453,
+      2524,
+      141,
+      154
+    ],
+    "UI-Buildings C008": [
+      6350,
+      2680,
+      141,
+      154
+    ],
+    "UI-Buildings C009": [
+      5857,
+      4210,
+      128,
+      128
+    ],
+    "UI-Buildings C010": [
+      6910,
+      3715,
+      128,
+      128
+    ],
+    "UI-Buildings C011": [
+      7136,
+      4152,
+      147,
+      97
+    ],
+    "UI-Buildings C012": [
+      5213,
+      5980,
+      147,
+      97
+    ],
+    "UI-Buildings C013": [
+      7663,
+      3617,
+      108,
+      124
+    ],
+    "UI-Buildings C014": [
+      7771,
+      4119,
+      108,
+      124
+    ],
+    "UI-Buildings C015": [
+      4905,
+      6146,
+      144,
+      133
+    ],
+    "UI-Buildings C016": [
+      5053,
+      6152,
+      144,
+      133
+    ],
+    "UI-Buildings D001": [
+      6168,
+      5461,
+      132,
+      83
+    ],
+    "UI-Buildings D002": [
+      5281,
+      7991,
+      132,
+      83
+    ],
+    "UI-Buildings D003": [
+      6148,
+      1785,
+      151,
+      126
+    ],
+    "UI-Buildings D004": [
+      6761,
+      1922,
+      151,
+      126
+    ],
+    "UI-Buildings D005": [
+      5670,
+      1456,
+      152,
+      181
+    ],
+    "UI-Buildings D006": [
+      5521,
+      2499,
+      152,
+      181
+    ],
+    "UI-Buildings D007": [
+      6940,
+      7465,
+      88,
+      92
+    ],
+    "UI-Buildings D008": [
+      7032,
+      7465,
+      88,
+      92
+    ],
+    "UI-Buildings D009": [
+      5361,
+      5543,
+      141,
+      117
+    ],
+    "UI-Buildings D010": [
+      5363,
+      5858,
+      141,
+      117
+    ],
+    "UI-Buildings D011": [
+      3462,
+      5083,
+      190,
+      114
+    ],
+    "UI-Buildings D012": [
+      5463,
+      2684,
+      190,
+      114
+    ],
+    "UI-Buildings D013": [
+      5989,
+      4088,
+      155,
+      122
+    ],
+    "UI-Buildings D014": [
+      5989,
+      4214,
+      155,
+      122
+    ],
+    "UI-Buildings E001": [
+      6495,
+      2664,
+      157,
+      150
+    ],
+    "UI-Buildings E002": [
+      7601,
+      2680,
+      157,
+      150
+    ],
+    "UI-Buildings E003": [
+      6814,
+      2512,
+      159,
+      153
+    ],
+    "UI-Buildings E004": [
+      4543,
+      4631,
+      159,
+      153
+    ],
+    "UI-Buildings E005": [
+      6344,
+      1354,
+      162,
+      168
+    ],
+    "UI-Buildings E006": [
+      6510,
+      1354,
+      162,
+      168
+    ],
+    "UI-Buildings E007": [
+      5668,
+      2807,
+      146,
+      157
+    ],
+    "UI-Buildings E008": [
+      5818,
+      2807,
+      146,
+      157
+    ],
+    "UI-Buildings E009": [
+      4643,
+      2404,
+      151,
+      163
+    ],
+    "UI-Buildings E010": [
+      4798,
+      2404,
+      151,
+      163
+    ],
+    "UI-Buildings F001": [
+      8087,
+      3200,
+      103,
+      114
+    ],
+    "UI-Buildings F002": [
+      8087,
+      3318,
+      103,
+      114
+    ],
+    "UI-Buildings F003": [
+      5701,
+      3662,
+      106,
+      109
+    ],
+    "UI-Buildings F003a": [
+      6304,
+      5489,
+      104,
+      108
+    ],
+    "UI-Buildings F004": [
+      5875,
+      6604,
+      106,
+      109
+    ],
+    "UI-Buildings F004a": [
+      7989,
+      3778,
+      104,
+      108
+    ],
+    "UI-Buildings F005": [
+      1356,
+      8055,
+      158,
+      135
+    ],
+    "UI-Buildings F005a": [
+      6338,
+      1915,
+      158,
+      163
+    ],
+    "UI-Buildings F006": [
+      1518,
+      8055,
+      158,
+      135
+    ],
+    "UI-Buildings F006a": [
+      6500,
+      1915,
+      158,
+      163
+    ],
+    "UI-Buildings F007": [
+      4431,
+      2169,
+      208,
+      197
+    ],
+    "UI-Buildings F007a": [
+      6116,
+      1060,
+      208,
+      264
+    ],
+    "UI-Buildings F008": [
+      4431,
+      2370,
+      208,
+      197
+    ],
+    "UI-Buildings F008a": [
+      3968,
+      1016,
+      208,
+      264
+    ],
+    "UI-Buildings F009": [
+      5824,
+      4498,
+      139,
+      132
+    ],
+    "UI-Buildings F010": [
+      4868,
+      6401,
+      139,
+      132
+    ],
+    "UI-Buildings F011": [
+      7337,
+      2797,
+      112,
+      97
+    ],
+    "UI-Buildings F012": [
+      6075,
+      7348,
+      112,
+      97
+    ],
+    "UI-Buildings F013": [
+      4639,
+      6002,
+      116,
+      120
+    ],
+    "UI-Buildings F014": [
+      4639,
+      6126,
+      116,
+      120
+    ],
+    "UI-Buildings G001": [
+      5686,
+      4912,
+      86,
+      160
+    ],
+    "UI-Buildings G002": [
+      6099,
+      6031,
+      86,
+      160
+    ],
+    "UI-Buildings G003": [
+      6148,
+      4392,
+      158,
+      87
+    ],
+    "UI-Buildings G004": [
+      6310,
+      4396,
+      158,
+      87
+    ],
+    "UI-Buildings G005": [
+      7862,
+      3778,
+      123,
+      77
+    ],
+    "UI-Buildings G006": [
+      6974,
+      5051,
+      123,
+      77
+    ],
+    "UI-Buildings G007": [
+      7997,
+      3184,
+      37,
+      94
+    ],
+    "UI-Buildings G008": [
+      8038,
+      3157,
+      37,
+      94
+    ],
+    "UI-Buildings G009": [
+      4639,
+      6250,
+      116,
+      137
+    ],
+    "UI-Buildings G010": [
+      5197,
+      6798,
+      116,
+      137
+    ],
+    "UI-Buildings G011": [
+      5991,
+      3714,
+      175,
+      122
+    ],
+    "UI-Buildings G012": [
+      6976,
+      2787,
+      175,
+      122
+    ],
+    "UI-Buildings G013": [
+      5061,
+      5684,
+      150,
+      114
+    ],
+    "UI-Buildings G014": [
+      5061,
+      5802,
+      150,
+      114
+    ],
+    "UI-Buildings G015": [
+      6192,
+      6188,
+      80,
+      153
+    ],
+    "UI-Buildings G016": [
+      5123,
+      7129,
+      80,
+      153
+    ],
+    "UI-Buildings G017": [
+      5201,
+      6181,
+      144,
+      114
+    ],
+    "UI-Buildings G018": [
+      4905,
+      6283,
+      144,
+      114
+    ],
+    "UI-Buildings G019": [
+      6303,
+      1784,
+      179,
+      127
+    ],
+    "UI-Buildings G020": [
+      4775,
+      3141,
+      179,
+      127
+    ],
+    "UI-Buildings H001": [
+      3333,
+      5090,
+      125,
+      116
+    ],
+    "UI-Buildings H002": [
+      4049,
+      7781,
+      125,
+      116
+    ],
+    "UI-Buildings H003": [
+      7849,
+      1832,
+      194,
+      123
+    ],
+    "UI-Buildings H004": [
+      7788,
+      1959,
+      194,
+      123
+    ],
+    "UI-Buildings H005": [
+      5615,
+      6722,
+      106,
+      65
+    ],
+    "UI-Buildings H006": [
+      6653,
+      8010,
+      106,
+      65
+    ],
+    "UI-Buildings H007": [
+      3929,
+      8095,
+      131,
+      95
+    ],
+    "UI-Buildings H008": [
+      4064,
+      8095,
+      131,
+      95
+    ],
+    "UI-Buildings H009": [
+      5071,
+      3426,
+      155,
+      110
+    ],
+    "UI-Buildings H010": [
+      5989,
+      4340,
+      155,
+      110
+    ],
+    "UI-Buildings H011": [
+      6305,
+      7351,
+      81,
+      97
+    ],
+    "UI-Buildings H011a": [
+      7654,
+      3152,
+      75,
+      97
+    ],
+    "UI-Buildings H012": [
+      7602,
+      5237,
+      81,
+      97
+    ],
+    "UI-Buildings H012a": [
+      7650,
+      4821,
+      75,
+      97
+    ],
+    "UI-Buildings H013": [
+      7602,
+      5338,
+      76,
+      81
+    ],
+    "UI-Buildings H014": [
+      7602,
+      5423,
+      76,
+      81
+    ],
+    "UI-Buildings H019": [
+      3318,
+      3389,
+      29,
+      67
+    ],
+    "UI-Buildings H019a": [
+      952,
+      8123,
+      29,
+      67
+    ],
+    "UI-Buildings H020": [
+      985,
+      8123,
+      29,
+      67
+    ],
+    "UI-Buildings H020a": [
+      1966,
+      433,
+      29,
+      67
+    ],
+    "UI-Buildings H021": [
+      3611,
+      4177,
+      52,
+      50
+    ],
+    "UI-Buildings H022": [
+      5864,
+      7055,
+      52,
+      50
+    ],
+    "UI-Buildings H023": [
+      7375,
+      3041,
+      70,
+      90
+    ],
+    "UI-Buildings H024": [
+      5545,
+      7181,
+      70,
+      90
+    ],
+    "UI-Buildings H025": [
+      1371,
+      2589,
+      68,
+      62
+    ],
+    "UI-Buildings H026": [
+      1443,
+      2589,
+      68,
+      62
+    ],
+    "UI-Buildings I001": [
+      7337,
+      2673,
+      112,
+      120
+    ],
+    "UI-Buildings I002": [
+      5391,
+      7320,
+      112,
+      120
+    ],
+    "UI-Buildings I003": [
+      8079,
+      2845,
+      111,
+      123
+    ],
+    "UI-Buildings I004": [
+      8079,
+      2972,
+      111,
+      123
+    ],
+    "UI-Buildings I005": [
+      7743,
+      3747,
+      115,
+      117
+    ],
+    "UI-Buildings I006": [
+      5741,
+      7059,
+      115,
+      117
+    ],
+    "UI-Buildings I007": [
+      6170,
+      3714,
+      121,
+      122
+    ],
+    "UI-Buildings I008": [
+      6768,
+      4561,
+      121,
+      122
+    ],
+    "UI-Buildings I009": [
+      6280,
+      4989,
+      116,
+      119
+    ],
+    "UI-Buildings I010": [
+      5621,
+      7059,
+      116,
+      119
+    ],
+    "UI-Buildings J001": [
+      3850,
+      6349,
+      141,
+      126
+    ],
+    "UI-Buildings J002": [
+      5303,
+      6467,
+      141,
+      126
+    ],
+    "UI-Buildings J003": [
+      7358,
+      4697,
+      120,
+      120
+    ],
+    "UI-Buildings J004": [
+      7482,
+      4697,
+      120,
+      120
+    ],
+    "UI-Buildings J005": [
+      7745,
+      3868,
+      117,
+      123
+    ],
+    "UI-Buildings J006": [
+      7866,
+      3859,
+      117,
+      123
+    ],
+    "UI-Buildings J007": [
+      3206,
+      3514,
+      141,
+      138
+    ],
+    "UI-Buildings J008": [
+      5361,
+      5401,
+      141,
+      138
+    ],
+    "UI-Buildings J009": [
+      6095,
+      2659,
+      152,
+      152
+    ],
+    "UI-Buildings J010": [
+      6656,
+      2678,
+      152,
+      152
+    ],
+    "UI-Buildings K001": [
+      5677,
+      2499,
+      65,
+      188
+    ],
+    "UI-Buildings K002": [
+      6019,
+      2487,
+      65,
+      188
+    ],
+    "UI-Buildings K003": [
+      5968,
+      2830,
+      81,
+      134
+    ],
+    "UI-Buildings K004": [
+      6513,
+      6487,
+      81,
+      134
+    ],
+    "UI-Buildings K005": [
+      4178,
+      7743,
+      98,
+      154
+    ],
+    "UI-Buildings K006": [
+      2842,
+      430,
+      98,
+      155
+    ],
+    "UI-Buildings K007": [
+      3699,
+      5438,
+      116,
+      174
+    ],
+    "UI-Buildings K008": [
+      7272,
+      3135,
+      116,
+      174
+    ],
+    "UI-Buildings K009": [
+      4177,
+      4686,
+      110,
+      166
+    ],
+    "UI-Buildings K010": [
+      4072,
+      5742,
+      110,
+      166
+    ],
+    "UI-Buildings L003": [
+      8087,
+      4480,
+      97,
+      118
+    ],
+    "UI-Buildings L004": [
+      8087,
+      4602,
+      97,
+      118
+    ],
+    "UI-Buildings L005": [
+      4460,
+      7004,
+      129,
+      147
+    ],
+    "UI-Buildings L006": [
+      4554,
+      7737,
+      129,
+      147
+    ],
+    "UI-Buildings L007": [
+      6175,
+      3580,
+      123,
+      130
+    ],
+    "UI-Buildings L008": [
+      7411,
+      3492,
+      123,
+      130
+    ],
+    "UI-Buildings L009": [
+      3912,
+      5060,
+      168,
+      132
+    ],
+    "UI-Buildings L010": [
+      4084,
+      5060,
+      168,
+      132
+    ],
+    "UI-Buildings L011": [
+      5654,
+      5573,
+      132,
+      77
+    ],
+    "UI-Buildings L012": [
+      5731,
+      6089,
+      132,
+      77
+    ],
+    "UI-Buildings L013": [
+      5960,
+      7984,
+      115,
+      75
+    ],
+    "UI-Buildings L014": [
+      6194,
+      7908,
+      115,
+      75
+    ],
+    "UI-Buildings L015": [
+      5543,
+      7970,
+      60,
+      84
+    ],
+    "UI-Buildings L016": [
+      6610,
+      7362,
+      60,
+      84
+    ],
+    "UI-Buildings L023": [
+      6350,
+      2524,
+      132,
+      152
+    ],
+    "UI-Buildings L024": [
+      4266,
+      6070,
+      132,
+      152
+    ],
+    "UI-Buildings L025": [
+      4657,
+      5879,
+      98,
+      119
+    ],
+    "UI-Buildings L026": [
+      7764,
+      3387,
+      98,
+      119
+    ],
+    "UI-Buildings M001": [
+      6251,
+      2838,
+      128,
+      113
+    ],
+    "UI-Buildings M002": [
+      6383,
+      2838,
+      128,
+      113
+    ],
+    "UI-Buildings M003": [
+      6647,
+      2834,
+      158,
+      130
+    ],
+    "UI-Buildings M004": [
+      4100,
+      6222,
+      158,
+      130
+    ],
+    "UI-Buildings M007": [
+      7705,
+      1542,
+      148,
+      127
+    ],
+    "UI-Buildings M008": [
+      4260,
+      6374,
+      148,
+      127
+    ],
+    "UI-Buildings M009": [
+      5746,
+      2687,
+      126,
+      116
+    ],
+    "UI-Buildings M010": [
+      7449,
+      4133,
+      126,
+      116
+    ],
+    "UI-Buildings M011": [
+      7474,
+      1773,
+      167,
+      159
+    ],
+    "UI-Buildings M012": [
+      5413,
+      2802,
+      167,
+      159
+    ],
+    "UI-Buildings N001": [
+      3899,
+      2592,
+      78,
+      64
+    ],
+    "UI-Buildings N002": [
+      7599,
+      5508,
+      78,
+      64
+    ],
+    "UI-Buildings N003": [
+      6973,
+      2913,
+      78,
+      50
+    ],
+    "UI-Buildings N004": [
+      7411,
+      3885,
+      78,
+      50
+    ],
+    "UI-Buildings N005": [
+      5011,
+      6567,
+      78,
+      51
+    ],
+    "UI-Buildings N006": [
+      6985,
+      6797,
+      78,
+      51
+    ],
+    "UI-Buildings N007": [
+      5558,
+      8138,
+      78,
+      52
+    ],
+    "UI-Buildings N008": [
+      6193,
+      8054,
+      78,
+      52
+    ],
+    "UI-Buildings N009": [
+      6295,
+      3715,
+      125,
+      121
+    ],
+    "UI-Buildings N010": [
+      6413,
+      5236,
+      125,
+      121
+    ],
+    "UI-Buildings N011": [
+      3930,
+      5742,
+      138,
+      166
+    ],
+    "UI-Buildings N012": [
+      4191,
+      5208,
+      138,
+      166
+    ],
+    "UI-Buildings N013": [
+      5448,
+      6467,
+      141,
+      126
+    ],
+    "UI-Buildings N014": [
+      5317,
+      6791,
+      141,
+      126
+    ],
+    "UI-Buildings N015": [
+      5849,
+      4062,
+      136,
+      144
+    ],
+    "UI-Buildings N016": [
+      5476,
+      4571,
+      136,
+      144
+    ],
+    "UI-Buildings N017": [
+      5967,
+      4682,
+      139,
+      81
+    ],
+    "UI-Buildings N018": [
+      4868,
+      6537,
+      139,
+      81
+    ],
+    "UI-Buildings N019": [
+      5861,
+      6371,
+      140,
+      93
+    ],
+    "UI-Buildings N020": [
+      7001,
+      4846,
+      140,
+      93
+    ],
+    "UI-Buildings N021": [
+      4759,
+      6114,
+      142,
+      125
+    ],
+    "UI-Buildings N022": [
+      4759,
+      6243,
+      142,
+      125
+    ],
+    "UI-Buildings N023": [
+      5462,
+      6791,
+      140,
+      126
+    ],
+    "UI-Buildings N024": [
+      5739,
+      5859,
+      140,
+      126
+    ],
+    "UI-Buildings N025": [
+      5053,
+      6289,
+      144,
+      107
+    ],
+    "UI-Buildings N026": [
+      5201,
+      6299,
+      144,
+      107
+    ],
+    "UI-Buildings N027": [
+      2758,
+      1282,
+      230,
+      150
+    ],
+    "UI-Buildings N028": [
+      3928,
+      2026,
+      230,
+      150
+    ],
+    "UI-Buildings N029": [
+      1730,
+      433,
+      232,
+      162
+    ],
+    "UI-Buildings N030": [
+      4162,
+      2018,
+      232,
+      162
+    ],
+    "UI-Buildings N031": [
+      4204,
+      892,
+      242,
+      175
+    ],
+    "UI-Buildings N032": [
+      3448,
+      938,
+      242,
+      175
+    ],
+    "UI-Buildings N033": [
+      4440,
+      1404,
+      238,
+      147
+    ],
+    "UI-Buildings N034": [
+      4398,
+      2018,
+      238,
+      147
+    ],
+    "UI-Buildings N035": [
+      7645,
+      1779,
+      200,
+      125
+    ],
+    "UI-Buildings N036": [
+      7121,
+      1948,
+      200,
+      125
+    ],
+    "UI-Buildings N037": [
+      3899,
+      2180,
+      210,
+      202
+    ],
+    "UI-Buildings N038": [
+      3899,
+      2386,
+      210,
+      202
+    ],
+    "UI-Buildings N039": [
+      4383,
+      3151,
+      188,
+      195
+    ],
+    "UI-Buildings N040": [
+      4806,
+      1817,
+      188,
+      195
+    ],
+    "UI-Buildings N041": [
+      4193,
+      2953,
+      192,
+      192
+    ],
+    "UI-Buildings N042": [
+      3825,
+      3772,
+      192,
+      192
+    ],
+    "UI-Buildings N043": [
+      4326,
+      1787,
+      180,
+      227
+    ],
+    "UI-Buildings N044": [
+      4113,
+      2184,
+      180,
+      227
+    ],
+    "UI-Buildings N045": [
+      3034,
+      3514,
+      168,
+      138
+    ],
+    "UI-Buildings N046": [
+      4640,
+      2018,
+      168,
+      138
+    ],
+    "UI-Buildings N047": [
+      3428,
+      6270,
+      82,
+      207
+    ],
+    "UI-Buildings N048": [
+      3514,
+      6270,
+      82,
+      207
+    ],
+    "UI-Buildings N049": [
+      7149,
+      4698,
+      81,
+      125
+    ],
+    "UI-Buildings N050": [
+      5306,
+      7067,
+      81,
+      125
+    ],
+    "UI-Buildings N051": [
+      7101,
+      5051,
+      81,
+      69
+    ],
+    "UI-Buildings N052": [
+      7197,
+      6095,
+      81,
+      69
+    ],
+    "UI-Buildings N053": [
+      2738,
+      5170,
+      81,
+      53
+    ],
+    "UI-Buildings N054": [
+      2823,
+      5170,
+      81,
+      53
+    ],
+    "UI-Buildings N055": [
+      1984,
+      1800,
+      81,
+      51
+    ],
+    "UI-Buildings N056": [
+      6956,
+      6252,
+      81,
+      51
+    ],
+    "UI-Buildings N057": [
+      5476,
+      4719,
+      81,
+      54
+    ],
+    "UI-Buildings N058": [
+      6872,
+      7407,
+      81,
+      54
+    ],
+    "UI-Buildings N059": [
+      2758,
+      1020,
+      175,
+      258
+    ],
+    "UI-Buildings N060": [
+      3928,
+      1290,
+      175,
+      258
+    ],
+    "UI-Buildings N061": [
+      4107,
+      1331,
+      198,
+      215
+    ],
+    "UI-Buildings N062": [
+      4436,
+      1555,
+      198,
+      215
+    ],
+    "UI-Buildings N063": [
+      3928,
+      1552,
+      214,
+      233
+    ],
+    "UI-Buildings N064": [
+      3928,
+      1789,
+      214,
+      233
+    ],
+    "UI-Buildings N065": [
+      3116,
+      3656,
+      217,
+      287
+    ],
+    "UI-Buildings N066": [
+      3116,
+      3947,
+      217,
+      287
+    ],
+    "UI-Buildings N067": [
+      7115,
+      6965,
+      47,
+      80
+    ],
+    "UI-Buildings N068": [
+      7166,
+      6965,
+      47,
+      80
+    ],
+    "UI-Buildings N069": [
+      4704,
+      1196,
+      236,
+      201
+    ],
+    "UI-Buildings N070": [
+      4944,
+      1196,
+      236,
+      201
+    ],
+    "UI-Buildings N071": [
+      7155,
+      2807,
+      174,
+      122
+    ],
+    "UI-Buildings N072": [
+      3940,
+      6074,
+      174,
+      122
+    ],
+    "UI-Buildings N073": [
+      6445,
+      3941,
+      140,
+      143
+    ],
+    "UI-Buildings N074": [
+      6992,
+      4251,
+      140,
+      143
+    ],
+    "UI-Buildings N075": [
+      6814,
+      2669,
+      159,
+      106
+    ],
+    "UI-Buildings N076": [
+      6148,
+      4282,
+      159,
+      106
+    ],
+    "UI-HUD 007": [
+      3610,
+      2,
+      1752,
+      206
+    ]
+  },
+  "commands": [
+    {
+      "name": "ButtonBuildSubKeepsReturn",
+      "command": "STRUCT_MENU_RETURN_KEEPS",
+      "page": "A",
+      "x": 10.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildKeep1",
+      "command": "STRUCT_KEEP_ONE",
+      "page": "B",
+      "x": 80.0,
+      "y": 18.0,
+      "width": 46.0,
+      "height": 42.0,
+      "image": "UI-Buildings B001",
+      "hover_image": "UI-Buildings B002"
+    },
+    {
+      "name": "ButtonBuildKeep2",
+      "command": "STRUCT_KEEP_TWO",
+      "page": "B",
+      "x": 156.0,
+      "y": 8.0,
+      "width": null,
+      "height": 56.0,
+      "image": "UI-Buildings B003",
+      "hover_image": "UI-Buildings B004"
+    },
+    {
+      "name": "ButtonBuildKeep3",
+      "command": "STRUCT_KEEP_THREE",
+      "page": "B",
+      "x": 234.0,
+      "y": 12.0,
+      "width": 75.0,
+      "height": 78.0,
+      "image": "UI-Buildings B005",
+      "hover_image": "UI-Buildings B006"
+    },
+    {
+      "name": "ButtonBuildOutpostArab",
+      "command": "STRUCT_OUTPOST_ARAB",
+      "page": "N",
+      "x": 310.0,
+      "y": 0.0,
+      "width": 58.0,
+      "height": 70.0,
+      "image": "UI-Buildings N071",
+      "hover_image": "UI-Buildings N072"
+    },
+    {
+      "name": "ButtonBuildOutpostBedouin",
+      "command": "STRUCT_OUTPOST_BEDOUIN",
+      "page": "N",
+      "x": 310.0,
+      "y": 0.0,
+      "width": 58.0,
+      "height": 70.0,
+      "image": "UI-Buildings N075",
+      "hover_image": "UI-Buildings N076"
+    },
+    {
+      "name": "ButtonBuildOutpost",
+      "command": "STRUCT_OUTPOST",
+      "page": "N",
+      "x": 400.0,
+      "y": -10.0,
+      "width": 58.0,
+      "height": null,
+      "image": "UI-Buildings N073",
+      "hover_image": "UI-Buildings N074"
+    },
+    {
+      "name": "ButtonBuildStairs",
+      "command": "STRUCT_STAIRS",
+      "page": "C",
+      "x": -10.0,
+      "y": 12.0,
+      "width": 45.0,
+      "height": 58.0,
+      "image": "UI-Buildings C001",
+      "hover_image": "UI-Buildings C002"
+    },
+    {
+      "name": "ButtonBuildWoodenWall",
+      "command": "STRUCT_WOOD_WALL",
+      "page": "C",
+      "x": 36.0,
+      "y": 5.0,
+      "width": 52.0,
+      "height": 52.0,
+      "image": "UI-Buildings C003",
+      "hover_image": "UI-Buildings C004"
+    },
+    {
+      "name": "ButtonBuildStoneWall",
+      "command": "STRUCT_STONE_WALL",
+      "page": "C",
+      "x": 96.0,
+      "y": 5.0,
+      "width": 59.0,
+      "height": 67.0,
+      "image": "UI-Buildings C005",
+      "hover_image": "UI-Buildings C006"
+    },
+    {
+      "name": "ButtonBuildCrenalatedWall",
+      "command": "STRUCT_CRENAL_WALL",
+      "page": "C",
+      "x": 158.0,
+      "y": 5.0,
+      "width": 62.0,
+      "height": 68.0,
+      "image": "UI-Buildings C007",
+      "hover_image": "UI-Buildings C008"
+    },
+    {
+      "name": "ButtonBuildStoneBarracks",
+      "command": "STRUCT_BARRACKS_STONE",
+      "page": "C",
+      "x": 230.0,
+      "y": -4.0,
+      "width": 56.0,
+      "height": 57.0,
+      "image": "UI-Buildings C009",
+      "hover_image": "UI-Buildings C010"
+    },
+    {
+      "name": "ButtonBuildWoodenBarracks",
+      "command": "STRUCT_BARRACKS_WOOD",
+      "page": "C",
+      "x": 280.0,
+      "y": 28.0,
+      "width": 60.0,
+      "height": 34.0,
+      "image": "UI-Buildings C011",
+      "hover_image": "UI-Buildings C012"
+    },
+    {
+      "name": "ButtonBuildWoodenBedouinStockade",
+      "command": "STRUCT_BEDOUIN_STOCKADE",
+      "page": "C",
+      "x": 280.0,
+      "y": 28.0,
+      "width": null,
+      "height": 42.0,
+      "image": "UI-Buildings C015",
+      "hover_image": "UI-Buildings C016"
+    },
+    {
+      "name": "ButtonBuildArmoury",
+      "command": "STRUCT_ARMOURY",
+      "page": "C",
+      "x": 340.0,
+      "y": 10.0,
+      "width": 48.0,
+      "height": 54.0,
+      "image": "UI-Buildings C013",
+      "hover_image": "UI-Buildings C014"
+    },
+    {
+      "name": "ButtonBuildSubTowers",
+      "command": "STRUCT_SUB_MENU_TOWERS",
+      "page": "A",
+      "x": 399.0,
+      "y": 5.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A003",
+      "hover_image": "UI-Buildings A004"
+    },
+    {
+      "name": "ButtonBuildSubGates",
+      "command": "STRUCT_SUB_MENU_GATEHOUSES",
+      "page": "A",
+      "x": 399.0,
+      "y": 43.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A005",
+      "hover_image": "UI-Buildings A006"
+    },
+    {
+      "name": "ButtonBuildSubMilitaryBuildings",
+      "command": "STRUCT_SUB_MENU_MILITARY",
+      "page": "A",
+      "x": 439.0,
+      "y": 5.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A007",
+      "hover_image": "UI-Buildings A008"
+    },
+    {
+      "name": "ButtonBuildSubKeeps",
+      "command": "STRUCT_SUB_MENU_KEEPS",
+      "page": "A",
+      "x": 439.0,
+      "y": 43.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A001",
+      "hover_image": "UI-Buildings A002"
+    },
+    {
+      "name": "ButtonBuildStockpile",
+      "command": "STRUCT_GOODS_YARD",
+      "page": "D",
+      "x": 35.0,
+      "y": 5.0,
+      "width": 57.0,
+      "height": 34.0,
+      "image": "UI-Buildings D001",
+      "hover_image": "UI-Buildings D002"
+    },
+    {
+      "name": "ButtonBuildWoodcutter",
+      "command": "STRUCT_WOODCUTTERS_HUT",
+      "page": "D",
+      "x": 2.0,
+      "y": 30.0,
+      "width": 67.0,
+      "height": 55.0,
+      "image": "UI-Buildings D003",
+      "hover_image": "UI-Buildings D004"
+    },
+    {
+      "name": "ButtonBuildQuarry",
+      "command": "STRUCT_QUARRY",
+      "page": "D",
+      "x": 100.0,
+      "y": -5.0,
+      "width": 68.0,
+      "height": 83.0,
+      "image": "UI-Buildings D005",
+      "hover_image": "UI-Buildings D006"
+    },
+    {
+      "name": "ButtonBuildOxTether",
+      "command": "STRUCT_OXEN_BASE",
+      "page": "D",
+      "x": 175.0,
+      "y": 5.0,
+      "width": null,
+      "height": 44.0,
+      "image": "UI-Buildings D007",
+      "hover_image": "UI-Buildings D008"
+    },
+    {
+      "name": "ButtonBuildIronMine",
+      "command": "STRUCT_IRON_MINE",
+      "page": "D",
+      "x": 225.0,
+      "y": 15.0,
+      "width": null,
+      "height": 60.0,
+      "image": "UI-Buildings D009",
+      "hover_image": "UI-Buildings D010"
+    },
+    {
+      "name": "ButtonBuildPitchRig",
+      "command": "STRUCT_PITCH_DIGGER",
+      "page": "D",
+      "x": 300.0,
+      "y": 15.0,
+      "width": null,
+      "height": 51.0,
+      "image": "UI-Buildings D011",
+      "hover_image": "UI-Buildings D012"
+    },
+    {
+      "name": "ButtonBuildMarket",
+      "command": "STRUCT_TRADEPOST",
+      "page": "D",
+      "x": 400.0,
+      "y": 10.0,
+      "width": null,
+      "height": 68.0,
+      "image": "UI-Buildings D013",
+      "hover_image": "UI-Buildings D014"
+    },
+    {
+      "name": "ButtonBuildHunter",
+      "command": "STRUCT_HUNTERS_HUT",
+      "page": "E",
+      "x": 10.0,
+      "y": 12.0,
+      "width": null,
+      "height": 71.0,
+      "image": "UI-Buildings E001",
+      "hover_image": "UI-Buildings E002"
+    },
+    {
+      "name": "ButtonBuildDairyFarm",
+      "command": "STRUCT_CATTLEFARM",
+      "page": "E",
+      "x": 110.0,
+      "y": 15.0,
+      "width": null,
+      "height": 70.0,
+      "image": "UI-Buildings E003",
+      "hover_image": "UI-Buildings E004"
+    },
+    {
+      "name": "ButtonBuildAppleFarm",
+      "command": "STRUCT_APPLEFARM",
+      "page": "E",
+      "x": 210.0,
+      "y": 15.0,
+      "width": null,
+      "height": 76.0,
+      "image": "UI-Buildings E005",
+      "hover_image": "UI-Buildings E006"
+    },
+    {
+      "name": "ButtonBuildWheatFarm",
+      "command": "STRUCT_WHEATFARM",
+      "page": "E",
+      "x": 310.0,
+      "y": 15.0,
+      "width": null,
+      "height": 76.0,
+      "image": "UI-Buildings E007",
+      "hover_image": "UI-Buildings E008"
+    },
+    {
+      "name": "ButtonBuildHopsFarm",
+      "command": "STRUCT_HOPSFARM",
+      "page": "E",
+      "x": 410.0,
+      "y": 10.0,
+      "width": null,
+      "height": 76.0,
+      "image": "UI-Buildings E009",
+      "hover_image": "UI-Buildings E010"
+    },
+    {
+      "name": "ButtonBuildHovel",
+      "command": "STRUCT_HOVEL",
+      "page": "F",
+      "x": -5.0,
+      "y": 12.0,
+      "width": 62.0,
+      "height": 49.0,
+      "image": "UI-Buildings F001",
+      "hover_image": "UI-Buildings F002"
+    },
+    {
+      "name": "ButtonBuildSmallChurch",
+      "command": "STRUCT_CHURCH1",
+      "page": "F",
+      "x": 70.0,
+      "y": 15.0,
+      "width": 49.0,
+      "height": 46.0,
+      "image": "UI-Buildings F003",
+      "hover_image": "UI-Buildings F004"
+    },
+    {
+      "name": "ButtonBuildMedChurch",
+      "command": "STRUCT_CHURCH2",
+      "page": "F",
+      "x": 127.0,
+      "y": 5.0,
+      "width": 73.0,
+      "height": 74.0,
+      "image": "UI-Buildings F005",
+      "hover_image": "UI-Buildings F006"
+    },
+    {
+      "name": "ButtonBuildLargeChurch",
+      "command": "STRUCT_CHURCH3",
+      "page": "F",
+      "x": 207.0,
+      "y": -12.0,
+      "width": 95.0,
+      "height": 94.0,
+      "image": "UI-Buildings F007",
+      "hover_image": "UI-Buildings F008"
+    },
+    {
+      "name": "ButtonBuildSmallMosque",
+      "command": "STRUCT_CHURCH1",
+      "page": "F",
+      "x": 70.0,
+      "y": 15.0,
+      "width": 49.0,
+      "height": 46.0,
+      "image": "UI-Buildings F003a",
+      "hover_image": "UI-Buildings F004a"
+    },
+    {
+      "name": "ButtonBuildMedMosque",
+      "command": "STRUCT_CHURCH2",
+      "page": "F",
+      "x": 127.0,
+      "y": 5.0,
+      "width": 73.0,
+      "height": 74.0,
+      "image": "UI-Buildings F005a",
+      "hover_image": "UI-Buildings F006a"
+    },
+    {
+      "name": "ButtonBuildLargeMosque",
+      "command": "STRUCT_CHURCH3",
+      "page": "F",
+      "x": 207.0,
+      "y": -12.0,
+      "width": 95.0,
+      "height": 94.0,
+      "image": "UI-Buildings F007a",
+      "hover_image": "UI-Buildings F008a"
+    },
+    {
+      "name": "ButtonBuildApocathery",
+      "command": "STRUCT_HEALER",
+      "page": "F",
+      "x": 305.0,
+      "y": 5.0,
+      "width": 68.0,
+      "height": 65.0,
+      "image": "UI-Buildings F009",
+      "hover_image": "UI-Buildings F010"
+    },
+    {
+      "name": "ButtonBuildWell",
+      "command": "STRUCT_WELL",
+      "page": "F",
+      "x": 380.0,
+      "y": 20.0,
+      "width": 49.0,
+      "height": 43.0,
+      "image": "UI-Buildings F011",
+      "hover_image": "UI-Buildings F012"
+    },
+    {
+      "name": "ButtonBuildWaterpot",
+      "command": "STRUCT_WATERPOT",
+      "page": "F",
+      "x": 380.0,
+      "y": 20.0,
+      "width": null,
+      "height": 50.0,
+      "image": "UI-Buildings F013",
+      "hover_image": "UI-Buildings F014"
+    },
+    {
+      "name": "ButtonBuildSubGoodStuff",
+      "command": "STRUCT_SUB_MENU_GOOD",
+      "page": "A",
+      "x": 438.0,
+      "y": 4.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A009",
+      "hover_image": "UI-Buildings A010"
+    },
+    {
+      "name": "ButtonBuildSubBadStuff",
+      "command": "STRUCT_SUB_MENU_BAD",
+      "page": "A",
+      "x": 438.0,
+      "y": 43.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A011",
+      "hover_image": "UI-Buildings A012"
+    },
+    {
+      "name": "ButtonBuildFletcher",
+      "command": "STRUCT_FLETCHERS_WORKSHOP",
+      "page": "I",
+      "x": 10.0,
+      "y": 11.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings I001",
+      "hover_image": "UI-Buildings I002"
+    },
+    {
+      "name": "ButtonBuildPoleturner",
+      "command": "STRUCT_POLETURNERS_WORKSHOP",
+      "page": "I",
+      "x": 110.0,
+      "y": 10.0,
+      "width": null,
+      "height": 66.0,
+      "image": "UI-Buildings I003",
+      "hover_image": "UI-Buildings I004"
+    },
+    {
+      "name": "ButtonBuildBlacksmith",
+      "command": "STRUCT_BLACKSMITHS_WORKSHOP",
+      "page": "I",
+      "x": 210.0,
+      "y": 2.0,
+      "width": null,
+      "height": 66.0,
+      "image": "UI-Buildings I005",
+      "hover_image": "UI-Buildings I006"
+    },
+    {
+      "name": "ButtonBuildTanner",
+      "command": "STRUCT_TANNERS_WORKSHOP",
+      "page": "I",
+      "x": 310.0,
+      "y": 10.0,
+      "width": null,
+      "height": 67.0,
+      "image": "UI-Buildings I007",
+      "hover_image": "UI-Buildings I008"
+    },
+    {
+      "name": "ButtonBuildArmourer",
+      "command": "STRUCT_ARMOURERS_WORKSHOP",
+      "page": "I",
+      "x": 410.0,
+      "y": 13.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings I009",
+      "hover_image": "UI-Buildings I010"
+    },
+    {
+      "name": "ButtonBuildGranary",
+      "command": "STRUCT_GRANARY",
+      "page": "J",
+      "x": 10.0,
+      "y": 14.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings J001",
+      "hover_image": "UI-Buildings J002"
+    },
+    {
+      "name": "ButtonBuildBaker",
+      "command": "STRUCT_BAKERS_WORKSHOP",
+      "page": "J",
+      "x": 110.0,
+      "y": 12.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings J003",
+      "hover_image": "UI-Buildings J004"
+    },
+    {
+      "name": "ButtonBuildMill",
+      "command": "STRUCT_MILL",
+      "page": "J",
+      "x": 212.0,
+      "y": 0.0,
+      "width": null,
+      "height": 80.0,
+      "image": "UI-Buildings J005",
+      "hover_image": "UI-Buildings J006"
+    },
+    {
+      "name": "ButtonBuildBrewer",
+      "command": "STRUCT_BREWERS_WORKSHOP",
+      "page": "J",
+      "x": 290.0,
+      "y": 7.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings J007",
+      "hover_image": "UI-Buildings J008"
+    },
+    {
+      "name": "ButtonBuildInn",
+      "command": "STRUCT_INN",
+      "page": "J",
+      "x": 390.0,
+      "y": 1.0,
+      "width": null,
+      "height": 80.0,
+      "image": "UI-Buildings J009",
+      "hover_image": "UI-Buildings J010"
+    },
+    {
+      "name": "ButtonBuildSubTowersReturn",
+      "command": "STRUCT_MENU_RETURN_TOWERS",
+      "page": "A",
+      "x": 10.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildTowerA",
+      "command": "STRUCT_TOWER1",
+      "page": "K",
+      "x": 80.0,
+      "y": 20.0,
+      "width": 20.0,
+      "height": 75.0,
+      "image": "UI-Buildings K001",
+      "hover_image": "UI-Buildings K002"
+    },
+    {
+      "name": "ButtonBuildTowerB",
+      "command": "STRUCT_TOWER2",
+      "page": "K",
+      "x": 160.0,
+      "y": 15.0,
+      "width": 33.0,
+      "height": 60.0,
+      "image": "UI-Buildings K003",
+      "hover_image": "UI-Buildings K004"
+    },
+    {
+      "name": "ButtonBuildTowerC",
+      "command": "STRUCT_TOWER3",
+      "page": "K",
+      "x": 240.0,
+      "y": 7.0,
+      "width": 41.0,
+      "height": 70.0,
+      "image": "UI-Buildings K005",
+      "hover_image": "UI-Buildings K006"
+    },
+    {
+      "name": "ButtonBuildTowerD",
+      "command": "STRUCT_TOWER4",
+      "page": "K",
+      "x": 320.0,
+      "y": 0.0,
+      "width": 49.0,
+      "height": 79.0,
+      "image": "UI-Buildings K007",
+      "hover_image": "UI-Buildings K008"
+    },
+    {
+      "name": "ButtonBuildTowerE",
+      "command": "STRUCT_TOWER5",
+      "page": "K",
+      "x": 400.0,
+      "y": 3.0,
+      "width": 46.0,
+      "height": 75.0,
+      "image": "UI-Buildings K009",
+      "hover_image": "UI-Buildings K010"
+    },
+    {
+      "name": "ButtonBuildSubGatesReturn",
+      "command": "STRUCT_MENU_RETURN_GATEHOUSES",
+      "page": "A",
+      "x": 4.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildSmallGate",
+      "command": "STRUCT_SUB_MENU_GATEHOUSES_STONESMALL",
+      "page": "L",
+      "x": 120.0,
+      "y": 10.0,
+      "width": 41.0,
+      "height": 59.0,
+      "image": "UI-Buildings L003",
+      "hover_image": "UI-Buildings L004"
+    },
+    {
+      "name": "ButtonBuildLargeGate",
+      "command": "STRUCT_SUB_MENU_GATEHOUSES_STONELARGE",
+      "page": "L",
+      "x": 170.0,
+      "y": 7.0,
+      "width": 57.0,
+      "height": 70.0,
+      "image": "UI-Buildings L005",
+      "hover_image": "UI-Buildings L006"
+    },
+    {
+      "name": "ButtonBuildDrawbridge",
+      "command": "STRUCT_DRAWBRIDGE",
+      "page": "L",
+      "x": 240.0,
+      "y": 5.0,
+      "width": 54.0,
+      "height": 56.0,
+      "image": "UI-Buildings L007",
+      "hover_image": "UI-Buildings L008"
+    },
+    {
+      "name": "ButtonBuildDogCage",
+      "command": "STRUCT_DOG_CAGE",
+      "page": "L",
+      "x": 304.0,
+      "y": 15.0,
+      "width": 75.0,
+      "height": 57.0,
+      "image": "UI-Buildings L009",
+      "hover_image": "UI-Buildings L010"
+    },
+    {
+      "name": "ButtonBuildPitchDitch",
+      "command": "STRUCT_PITCH_DITCH",
+      "page": "L",
+      "x": 368.0,
+      "y": 5.0,
+      "width": 57.0,
+      "height": 30.0,
+      "image": "UI-Buildings L011",
+      "hover_image": "UI-Buildings L012"
+    },
+    {
+      "name": "ButtonBuildKillingPit",
+      "command": "STRUCT_KILLING_PIT",
+      "page": "L",
+      "x": 368.0,
+      "y": 45.0,
+      "width": 50.0,
+      "height": 32.0,
+      "image": "UI-Buildings L013",
+      "hover_image": "UI-Buildings L014"
+    },
+    {
+      "name": "ButtonBuildBrazier",
+      "command": "STRUCT_BRAZIER",
+      "page": "L",
+      "x": 414.0,
+      "y": 20.0,
+      "width": 22.0,
+      "height": 34.0,
+      "image": "UI-Buildings L015",
+      "hover_image": "UI-Buildings L016"
+    },
+    {
+      "name": "ButtonBuildMoat",
+      "command": "STRUCT_NEW_DIG_MOAT",
+      "page": "A",
+      "x": 440.0,
+      "y": 4.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A013",
+      "hover_image": "UI-Buildings A014"
+    },
+    {
+      "name": "ButtonBuildAntiMoat",
+      "command": "STRUCT_NEW_FILL_MOAT",
+      "page": "A",
+      "x": 440.0,
+      "y": 43.0,
+      "width": 36.0,
+      "height": 34.0,
+      "image": "UI-Buildings A015",
+      "hover_image": "UI-Buildings A016"
+    },
+    {
+      "name": "ButtonBuildSubMilitaryBuildingsReturn",
+      "command": "STRUCT_MENU_RETURN_MILITARY",
+      "page": "A",
+      "x": 4.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildEngineersGuild",
+      "command": "STRUCT_ENGINEERS_GUILD",
+      "page": "M",
+      "x": 54.0,
+      "y": 16.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings M001",
+      "hover_image": "UI-Buildings M002"
+    },
+    {
+      "name": "ButtonBuildMangonel",
+      "command": "STRUCT_MANGONEL",
+      "page": "M",
+      "x": 120.0,
+      "y": 7.0,
+      "width": null,
+      "height": 47.0,
+      "image": "UI-Buildings M003",
+      "hover_image": "UI-Buildings M004"
+    },
+    {
+      "name": "ButtonBuildStables",
+      "command": "STRUCT_STABLES",
+      "page": "M",
+      "x": 260.0,
+      "y": 9.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings M007",
+      "hover_image": "UI-Buildings M008"
+    },
+    {
+      "name": "ButtonBuildTunnelersGuild",
+      "command": "STRUCT_TUNNELLERS_GUILD",
+      "page": "M",
+      "x": 335.0,
+      "y": 15.0,
+      "width": null,
+      "height": 65.0,
+      "image": "UI-Buildings M009",
+      "hover_image": "UI-Buildings M010"
+    },
+    {
+      "name": "ButtonBuildCauldron",
+      "command": "STRUCT_OIL_SMELTER",
+      "page": "M",
+      "x": 400.0,
+      "y": 5.0,
+      "width": 76.0,
+      "height": 71.0,
+      "image": "UI-Buildings M011",
+      "hover_image": "UI-Buildings M012"
+    },
+    {
+      "name": "ButtonBuildSubBadStuffReturn",
+      "command": "STRUCT_MENU_RETURN_BAD",
+      "page": "A",
+      "x": -10.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildGallows",
+      "command": "STRUCT_GALLOWS",
+      "page": "G",
+      "x": 28.0,
+      "y": 0.0,
+      "width": 34.0,
+      "height": 74.0,
+      "image": "UI-Buildings G001",
+      "hover_image": "UI-Buildings G002"
+    },
+    {
+      "name": "ButtonBuildCessPit",
+      "command": "STRUCT_CESS_PIT",
+      "page": "G",
+      "x": 62.0,
+      "y": 5.0,
+      "width": 72.0,
+      "height": 39.0,
+      "image": "UI-Buildings G003",
+      "hover_image": "UI-Buildings G004"
+    },
+    {
+      "name": "ButtonBuildStocks",
+      "command": "STRUCT_STOCKS",
+      "page": "G",
+      "x": 100.0,
+      "y": 45.0,
+      "width": 55.0,
+      "height": 31.0,
+      "image": "UI-Buildings G005",
+      "hover_image": "UI-Buildings G006"
+    },
+    {
+      "name": "ButtonBuildHeadOnSpike",
+      "command": "STRUCT_HEAD_ON_SPIKE",
+      "page": "G",
+      "x": 144.0,
+      "y": 5.0,
+      "width": 16.0,
+      "height": 39.0,
+      "image": "UI-Buildings G007",
+      "hover_image": "UI-Buildings G008"
+    },
+    {
+      "name": "ButtonBuildBurningPost",
+      "command": "STRUCT_BURNING_STAKE",
+      "page": "G",
+      "x": 162.0,
+      "y": 12.0,
+      "width": 50.0,
+      "height": 64.0,
+      "image": "UI-Buildings G009",
+      "hover_image": "UI-Buildings G010"
+    },
+    {
+      "name": "ButtonBuildDungeon",
+      "command": "STRUCT_DUNGEON",
+      "page": "G",
+      "x": 202.0,
+      "y": -5.0,
+      "width": 81.0,
+      "height": 54.0,
+      "image": "UI-Buildings G011",
+      "hover_image": "UI-Buildings G012"
+    },
+    {
+      "name": "ButtonBuildStretchingRack",
+      "command": "STRUCT_RACK_STRETCHING",
+      "page": "G",
+      "x": 260.0,
+      "y": 30.0,
+      "width": 67.0,
+      "height": 51.0,
+      "image": "UI-Buildings G013",
+      "hover_image": "UI-Buildings G014"
+    },
+    {
+      "name": "ButtonBuildGibbet",
+      "command": "STRUCT_GIBBET",
+      "page": "G",
+      "x": 324.0,
+      "y": 8.0,
+      "width": 33.0,
+      "height": 72.0,
+      "image": "UI-Buildings G015",
+      "hover_image": "UI-Buildings G016"
+    },
+    {
+      "name": "ButtonBuildChoppingBlock",
+      "command": "STRUCT_CHOPPING_BLOCK",
+      "page": "G",
+      "x": 354.0,
+      "y": 0.0,
+      "width": 64.0,
+      "height": 51.0,
+      "image": "UI-Buildings G017",
+      "hover_image": "UI-Buildings G018"
+    },
+    {
+      "name": "ButtonBuildDunkingStool",
+      "command": "STRUCT_DUNKING_STOOL",
+      "page": "G",
+      "x": 402.0,
+      "y": 25.0,
+      "width": 82.0,
+      "height": 58.0,
+      "image": "UI-Buildings G019",
+      "hover_image": "UI-Buildings G020"
+    },
+    {
+      "name": "ButtonBuildSubGoodStuffReturn",
+      "command": "STRUCT_MENU_RETURN_GOOD",
+      "page": "A",
+      "x": -12.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildDancingBear",
+      "command": "STRUCT_DANCING_BEAR",
+      "page": "H",
+      "x": 90.0,
+      "y": 25.0,
+      "width": 89.0,
+      "height": 54.0,
+      "image": "UI-Buildings H003",
+      "hover_image": "UI-Buildings H004"
+    },
+    {
+      "name": "ButtonBuildMaypole",
+      "command": "STRUCT_MAYPOLE",
+      "page": "H",
+      "x": 30.0,
+      "y": 0.0,
+      "width": 55.0,
+      "height": 55.0,
+      "image": "UI-Buildings H001",
+      "hover_image": "UI-Buildings H002"
+    },
+    {
+      "name": "ButtonBuildGardenSmall",
+      "command": "STRUCT_GARDEN_SMALL",
+      "page": "H",
+      "x": 210.0,
+      "y": 10.0,
+      "width": 46.0,
+      "height": 25.0,
+      "image": "UI-Buildings H005",
+      "hover_image": "UI-Buildings H006"
+    },
+    {
+      "name": "ButtonBuildGardenMed",
+      "command": "STRUCT_GARDEN_MED",
+      "page": "H",
+      "x": 160.0,
+      "y": 0.0,
+      "width": 46.0,
+      "height": 39.0,
+      "image": "UI-Buildings H007",
+      "hover_image": "UI-Buildings H008"
+    },
+    {
+      "name": "ButtonBuildGardenLarge",
+      "command": "STRUCT_GARDEN_LARGE",
+      "page": "H",
+      "x": 200.0,
+      "y": 30.0,
+      "width": 69.0,
+      "height": 51.0,
+      "image": "UI-Buildings H009",
+      "hover_image": "UI-Buildings H010"
+    },
+    {
+      "name": "ButtonBuildPilgrimsCross",
+      "command": "STRUCT_STATUE",
+      "page": "H",
+      "x": 255.0,
+      "y": -5.0,
+      "width": 33.0,
+      "height": 48.0,
+      "image": "UI-Buildings H011",
+      "hover_image": "UI-Buildings H012"
+    },
+    {
+      "name": "ButtonBuildStatueA",
+      "command": "STRUCT_STATUE",
+      "page": "H",
+      "x": 255.0,
+      "y": -5.0,
+      "width": 33.0,
+      "height": 48.0,
+      "image": "UI-Buildings H011a",
+      "hover_image": "UI-Buildings H012a"
+    },
+    {
+      "name": "ButtonBuildShrine",
+      "command": "STRUCT_SHRINE",
+      "page": "H",
+      "x": 280.0,
+      "y": 45.0,
+      "width": 30.0,
+      "height": 32.0,
+      "image": "UI-Buildings H013",
+      "hover_image": "UI-Buildings H014"
+    },
+    {
+      "name": "ButtonBuildFlag1",
+      "command": "STRUCT_FLAG1",
+      "page": "H",
+      "x": 412.0,
+      "y": 5.0,
+      "width": 34.0,
+      "height": 31.0,
+      "image": "UI-Buildings H025",
+      "hover_image": "UI-Buildings H026"
+    },
+    {
+      "name": "ButtonBuildFlag4",
+      "command": "STRUCT_FLAG2",
+      "page": "H",
+      "x": 446.0,
+      "y": 52.0,
+      "width": 35.0,
+      "height": 45.0,
+      "image": "UI-Buildings H023",
+      "hover_image": "UI-Buildings H024"
+    },
+    {
+      "name": "ButtonBuildFlag3",
+      "command": "STRUCT_FLAG4",
+      "page": "H",
+      "x": 442.0,
+      "y": 5.0,
+      "width": null,
+      "height": 55.0,
+      "image": "UI-Buildings H019",
+      "hover_image": "UI-Buildings H020"
+    },
+    {
+      "name": "ButtonBuildFlag3A",
+      "command": "STRUCT_FLAG4",
+      "page": "H",
+      "x": 442.0,
+      "y": 5.0,
+      "width": null,
+      "height": 55.0,
+      "image": "UI-Buildings H019a",
+      "hover_image": "UI-Buildings H020a"
+    },
+    {
+      "name": "ButtonBuildFlag2",
+      "command": "STRUCT_FLAG3",
+      "page": "H",
+      "x": 412.0,
+      "y": 45.0,
+      "width": null,
+      "height": 32.0,
+      "image": "UI-Buildings H021",
+      "hover_image": "UI-Buildings H022"
+    },
+    {
+      "name": "ButtonBuildSubSubSmallGatesReturn",
+      "command": "STRUCT_MENU_RETURN_GATEHOUSES",
+      "page": "A",
+      "x": 4.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildSmallGatehouseNS",
+      "command": "STRUCT_GATE_STONE1A",
+      "page": "L",
+      "x": 100.0,
+      "y": 6.0,
+      "width": 41.0,
+      "height": 59.0,
+      "image": "UI-Buildings L003",
+      "hover_image": "UI-Buildings L004"
+    },
+    {
+      "name": "ButtonBuildSmallGatehouseEW",
+      "command": "STRUCT_GATE_STONE1B",
+      "page": "L",
+      "x": 200.0,
+      "y": 6.0,
+      "width": 41.0,
+      "height": 59.0,
+      "image": "UI-Buildings L025",
+      "hover_image": "UI-Buildings L026"
+    },
+    {
+      "name": "ButtonBuildSubSubLargeGatesReturn",
+      "command": "STRUCT_MENU_RETURN_GATEHOUSES",
+      "page": "A",
+      "x": 4.0,
+      "y": 22.0,
+      "width": 36.0,
+      "height": 35.0,
+      "image": "UI-Buildings A017",
+      "hover_image": "UI-Buildings A018"
+    },
+    {
+      "name": "ButtonBuildLargeGatehouseNS",
+      "command": "STRUCT_GATE_STONE2A",
+      "page": "L",
+      "x": 100.0,
+      "y": 2.0,
+      "width": 57.0,
+      "height": 70.0,
+      "image": "UI-Buildings L005",
+      "hover_image": "UI-Buildings L006"
+    },
+    {
+      "name": "ButtonBuildLargeGatehouseEW",
+      "command": "STRUCT_GATE_STONE2B",
+      "page": "L",
+      "x": 220.0,
+      "y": 3.0,
+      "width": 57.0,
+      "height": 69.0,
+      "image": "UI-Buildings L023",
+      "hover_image": "UI-Buildings L024"
+    },
+    {
+      "name": "ButtonBuildMERuins1",
+      "command": "STRUCT_RUINS01",
+      "page": "N",
+      "x": 4.0,
+      "y": -4.0,
+      "width": 30.0,
+      "height": 27.0,
+      "image": "UI-Buildings N001",
+      "hover_image": "UI-Buildings N002"
+    },
+    {
+      "name": "ButtonBuildMERuins3",
+      "command": "STRUCT_RUINS03",
+      "page": "N",
+      "x": 20.0,
+      "y": 28.0,
+      "width": 30.0,
+      "height": 27.0,
+      "image": "UI-Buildings N005",
+      "hover_image": "UI-Buildings N006"
+    },
+    {
+      "name": "ButtonBuildMERuins5",
+      "command": "STRUCT_RUINS05",
+      "page": "N",
+      "x": 52.0,
+      "y": 27.0,
+      "width": 59.0,
+      "height": null,
+      "image": "UI-Buildings N009",
+      "hover_image": "UI-Buildings N010"
+    },
+    {
+      "name": "ButtonBuildMERuins7",
+      "command": "STRUCT_RUINS07",
+      "page": "N",
+      "x": 100.0,
+      "y": -12.0,
+      "width": 59.0,
+      "height": null,
+      "image": "UI-Buildings N013",
+      "hover_image": "UI-Buildings N014"
+    },
+    {
+      "name": "ButtonBuildMERuins9",
+      "command": "STRUCT_RUINS09",
+      "page": "N",
+      "x": 210.0,
+      "y": -12.0,
+      "width": 60.0,
+      "height": null,
+      "image": "UI-Buildings N017",
+      "hover_image": "UI-Buildings N018"
+    },
+    {
+      "name": "ButtonBuildMERuins11",
+      "command": "STRUCT_RUINS11",
+      "page": "N",
+      "x": 310.0,
+      "y": -12.0,
+      "width": 60.0,
+      "height": null,
+      "image": "UI-Buildings N021",
+      "hover_image": "UI-Buildings N022"
+    },
+    {
+      "name": "ButtonBuildMERuins13",
+      "command": "STRUCT_RUINS13",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 60.0,
+      "height": null,
+      "image": "UI-Buildings N025",
+      "hover_image": "UI-Buildings N026"
+    },
+    {
+      "name": "ButtonBuildMERuins15",
+      "command": "STRUCT_RUINS15",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 64.0,
+      "height": null,
+      "image": "UI-Buildings N029",
+      "hover_image": "UI-Buildings N030"
+    },
+    {
+      "name": "ButtonBuildMERuins17",
+      "command": "STRUCT_RUINS17",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 64.0,
+      "height": null,
+      "image": "UI-Buildings N033",
+      "hover_image": "UI-Buildings N034"
+    },
+    {
+      "name": "ButtonBuildMERuins2",
+      "command": "STRUCT_RUINS02",
+      "page": "N",
+      "x": -14.0,
+      "y": 23.0,
+      "width": 30.0,
+      "height": 32.0,
+      "image": "UI-Buildings N003",
+      "hover_image": "UI-Buildings N004"
+    },
+    {
+      "name": "ButtonBuildMERuins4",
+      "command": "STRUCT_RUINS04",
+      "page": "N",
+      "x": 4.0,
+      "y": 55.0,
+      "width": 30.0,
+      "height": 25.0,
+      "image": "UI-Buildings N007",
+      "hover_image": "UI-Buildings N008"
+    },
+    {
+      "name": "ButtonBuildMERuins6",
+      "command": "STRUCT_RUINS06",
+      "page": "N",
+      "x": 40.0,
+      "y": -12.0,
+      "width": 59.0,
+      "height": null,
+      "image": "UI-Buildings N011",
+      "hover_image": "UI-Buildings N012"
+    },
+    {
+      "name": "ButtonBuildMERuins8",
+      "command": "STRUCT_RUINS08",
+      "page": "N",
+      "x": 160.0,
+      "y": 14.0,
+      "width": 59.0,
+      "height": null,
+      "image": "UI-Buildings N015",
+      "hover_image": "UI-Buildings N016"
+    },
+    {
+      "name": "ButtonBuildMERuins10",
+      "command": "STRUCT_RUINS10",
+      "page": "N",
+      "x": 260.0,
+      "y": 26.0,
+      "width": 60.0,
+      "height": null,
+      "image": "UI-Buildings N019",
+      "hover_image": "UI-Buildings N020"
+    },
+    {
+      "name": "ButtonBuildMERuins12",
+      "command": "STRUCT_RUINS12",
+      "page": "N",
+      "x": 360.0,
+      "y": 27.0,
+      "width": 60.0,
+      "height": null,
+      "image": "UI-Buildings N023",
+      "hover_image": "UI-Buildings N024"
+    },
+    {
+      "name": "ButtonBuildMERuins14",
+      "command": "STRUCT_RUINS14",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 64.0,
+      "height": null,
+      "image": "UI-Buildings N027",
+      "hover_image": "UI-Buildings N028"
+    },
+    {
+      "name": "ButtonBuildMERuins16",
+      "command": "STRUCT_RUINS16",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 59.0,
+      "height": null,
+      "image": "UI-Buildings N031",
+      "hover_image": "UI-Buildings N032"
+    },
+    {
+      "name": "ButtonBuildMEDock",
+      "command": "STRUCT_DOCK",
+      "page": "N",
+      "x": 434.0,
+      "y": 22.0,
+      "width": 59.0,
+      "height": null,
+      "image": "UI-Buildings N035",
+      "hover_image": "UI-Buildings N036"
+    },
+    {
+      "name": "ButtonBuildMERuins18",
+      "command": "STRUCT_RUINS18",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 55.0,
+      "height": null,
+      "image": "UI-Buildings N037",
+      "hover_image": "UI-Buildings N038"
+    },
+    {
+      "name": "ButtonBuildMERuins19",
+      "command": "STRUCT_RUINS19",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 48.0,
+      "height": null,
+      "image": "UI-Buildings N039",
+      "hover_image": "UI-Buildings N040"
+    },
+    {
+      "name": "ButtonBuildMERuins20",
+      "command": "STRUCT_RUINS20",
+      "page": "N",
+      "x": 204.0,
+      "y": -12.0,
+      "width": 48.0,
+      "height": null,
+      "image": "UI-Buildings N041",
+      "hover_image": "UI-Buildings N042"
+    },
+    {
+      "name": "ButtonBuildMERuins21",
+      "command": "STRUCT_RUINS21",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 48.0,
+      "height": null,
+      "image": "UI-Buildings N045",
+      "hover_image": "UI-Buildings N046"
+    },
+    {
+      "name": "ButtonBuildMERuins22",
+      "command": "STRUCT_RUINS22",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 40.0,
+      "height": null,
+      "image": "UI-Buildings N043",
+      "hover_image": "UI-Buildings N044"
+    },
+    {
+      "name": "ButtonBuildMERuins23",
+      "command": "STRUCT_RUINS23",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 20.0,
+      "height": null,
+      "image": "UI-Buildings N047",
+      "hover_image": "UI-Buildings N048"
+    },
+    {
+      "name": "ButtonBuildMERuins24",
+      "command": "STRUCT_RUINS24",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 27.0,
+      "height": null,
+      "image": "UI-Buildings N049",
+      "hover_image": "UI-Buildings N050"
+    },
+    {
+      "name": "ButtonBuildMERuins25",
+      "command": "STRUCT_RUINS25",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 30.0,
+      "height": null,
+      "image": "UI-Buildings N051",
+      "hover_image": "UI-Buildings N052"
+    },
+    {
+      "name": "ButtonBuildMERuins26",
+      "command": "STRUCT_RUINS26",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 30.0,
+      "height": null,
+      "image": "UI-Buildings N053",
+      "hover_image": "UI-Buildings N054"
+    },
+    {
+      "name": "ButtonBuildMERuins27",
+      "command": "STRUCT_RUINS27",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 30.0,
+      "height": null,
+      "image": "UI-Buildings N055",
+      "hover_image": "UI-Buildings N056"
+    },
+    {
+      "name": "ButtonBuildMERuins28",
+      "command": "STRUCT_RUINS28",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 30.0,
+      "height": null,
+      "image": "UI-Buildings N057",
+      "hover_image": "UI-Buildings N058"
+    },
+    {
+      "name": "ButtonBuildMERuins29",
+      "command": "STRUCT_RUINS29",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 40.0,
+      "height": null,
+      "image": "UI-Buildings N059",
+      "hover_image": "UI-Buildings N060"
+    },
+    {
+      "name": "ButtonBuildMERuins30",
+      "command": "STRUCT_RUINS30",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 45.0,
+      "height": null,
+      "image": "UI-Buildings N061",
+      "hover_image": "UI-Buildings N062"
+    },
+    {
+      "name": "ButtonBuildMERuins31",
+      "command": "STRUCT_RUINS31",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 50.0,
+      "height": null,
+      "image": "UI-Buildings N063",
+      "hover_image": "UI-Buildings N064"
+    },
+    {
+      "name": "ButtonBuildMERuins32",
+      "command": "STRUCT_RUINS32",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 50.0,
+      "height": null,
+      "image": "UI-Buildings N065",
+      "hover_image": "UI-Buildings N066"
+    },
+    {
+      "name": "ButtonBuildMERuins33",
+      "command": "STRUCT_RUINS33",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 25.0,
+      "height": null,
+      "image": "UI-Buildings N067",
+      "hover_image": "UI-Buildings N068"
+    },
+    {
+      "name": "ButtonBuildMERuins34",
+      "command": "STRUCT_RUINS34",
+      "page": "N",
+      "x": 414.0,
+      "y": -12.0,
+      "width": 75.0,
+      "height": null,
+      "image": "UI-Buildings N069",
+      "hover_image": "UI-Buildings N070"
+    }
+  ],
+  "cropped_assets": {
+    "UI-Buildings A001": {
+      "name": "ed981360cc2ed356c989cd98.png",
+      "sha256": "986c6a0acf383ed1e52af40ec9b78e72b068bcfce76cd49f9ad5ffe947cd6fa3"
+    },
+    "UI-Buildings A002": {
+      "name": "80ec684eff3cc91f4c5ac4a4.png",
+      "sha256": "aa2c284e1e94b775fe6845fcbccf57b882f8a51bc55ba6227d1430c59f618b5e"
+    },
+    "UI-Buildings A003": {
+      "name": "72d973a3ac0dc60758e2d279.png",
+      "sha256": "b4740550250e4d515ea579f25a2ee24696cb003f7f8cfc3b28a23c834ff4ee0f"
+    },
+    "UI-Buildings A004": {
+      "name": "c1703769b39b45263df84884.png",
+      "sha256": "20bdff37ae2da1821dcec769b66f502db0cc9e37e2c12b26e6af9dc6efd5ed97"
+    },
+    "UI-Buildings A005": {
+      "name": "7b4dc736bfb64bc42e10b811.png",
+      "sha256": "62d8df22211d0ed2ba1db949265437646ae561bfb761d106b4039c6fbf3c2589"
+    },
+    "UI-Buildings A006": {
+      "name": "f965af7485e262f532c30dd5.png",
+      "sha256": "9a27d39c0d9b2a210fb9637d83919be79dd68940843ecfebc11a0b5d72a560b4"
+    },
+    "UI-Buildings A007": {
+      "name": "c7a66723914d4604d17e73e9.png",
+      "sha256": "d2a04c77b6103c105b8de5db62fb4cbba497f19e1e6beaa394c027e41199ccb1"
+    },
+    "UI-Buildings A008": {
+      "name": "c3bd16eccbe5655f9c81b886.png",
+      "sha256": "f7998f7bec3ff65dce3643a5ace837b2008ef33888fb37e95a1e8c606461ea0a"
+    },
+    "UI-Buildings A009": {
+      "name": "add5fb732bfbd4fbc6352a57.png",
+      "sha256": "9319f5ddec55109fcb07f17905ad3e19e2961039ec43ca524c27ffcdcbcf77b7"
+    },
+    "UI-Buildings A010": {
+      "name": "0e5a1134e07d67f07803826a.png",
+      "sha256": "79eff43a16274a42374014bf37e680931d27faddef3aac7b1eb4d3de5d9196e8"
+    },
+    "UI-Buildings A011": {
+      "name": "b4b6aed9988ebd8ef9d811df.png",
+      "sha256": "d7d7f1e0d69bac9aa0e224f68294af96c53046b2a337e73f23e0d1246b297b77"
+    },
+    "UI-Buildings A012": {
+      "name": "863f70e411323e70cd16cc88.png",
+      "sha256": "41003f1ec88e8b901a6ed45bcd8627e30f84254702c4f4c2556fefd3415b147c"
+    },
+    "UI-Buildings A013": {
+      "name": "f99c72cbcfbcd702bbe54fe6.png",
+      "sha256": "f2bdeea9ba91b4958e2497bc92d8eaf9e8a4b56e45cdbd69b91adbe5ae555be3"
+    },
+    "UI-Buildings A014": {
+      "name": "783f225855857fa02412844e.png",
+      "sha256": "07b15b4bb6caa52b9235e750ebe00384e9f44e2dde255a9151b99205b3fd051f"
+    },
+    "UI-Buildings A015": {
+      "name": "c671297a3ea02d8a620bc8fc.png",
+      "sha256": "e9c2a2b49291be75032e419b723db4a3eb2ef7f483df763258e7a7a5f1562e1d"
+    },
+    "UI-Buildings A016": {
+      "name": "7d513f75618fad2383859742.png",
+      "sha256": "583dfa450f5ce1b6a1d44df031d185c9f1028ffdcf7ec09ee530af70bc5a17ee"
+    },
+    "UI-Buildings A017": {
+      "name": "cfb2643a3073c1d1fc80b70d.png",
+      "sha256": "6afc5bd8377cbb5dbf29603f022ab09a181c84223c4b3ebfdd15744d1a03960d"
+    },
+    "UI-Buildings A018": {
+      "name": "78de390544b85a2ec005ddba.png",
+      "sha256": "9536a5cc60bb4812a3553706d2490e87c0aa2aefb493b27b3b55a392f3c0bdb8"
+    },
+    "UI-Buildings B001": {
+      "name": "2a923bdb599f6c1e5d4ba0a6.png",
+      "sha256": "2f8a15ecab186c7ca44574b34ca44bca985379adcc9d7a697e7b77549dcdcd4f"
+    },
+    "UI-Buildings B002": {
+      "name": "e9c2838f63b1d8096bf8eb17.png",
+      "sha256": "3f58173d915a47b2e61e2387d36c95a070ea39812d9bf89dfa6f65867ae9a2dd"
+    },
+    "UI-Buildings B003": {
+      "name": "ed4579578ad0728ca608f022.png",
+      "sha256": "c8b5eefa27ccd233a155353d6391d2e224bc2a4caf7d9778ffbc03f4978ec675"
+    },
+    "UI-Buildings B004": {
+      "name": "e32f07140c54a793b508c214.png",
+      "sha256": "b79bd0a58f2b6774edd1a9c2d4169eefa5a2a9acd224a7915bd189ff6464bdb8"
+    },
+    "UI-Buildings B005": {
+      "name": "6c611907d966d45fd1e38e91.png",
+      "sha256": "580055e42105cb20d77408f79ffc72c38c87486fc5a9bededa4d9d86bba40650"
+    },
+    "UI-Buildings B006": {
+      "name": "70b198ad9c41e6d4e1547b77.png",
+      "sha256": "370041f4c8eb1687d491a427708f3caa636f9233c1e074cb26c3083cd6619bea"
+    },
+    "UI-Buildings C001": {
+      "name": "64c2aef23d3ca31780c3b1f1.png",
+      "sha256": "a6fb4585744fb9b259693ae3eba288109557ff6bd59513e21e241e417a6d5810"
+    },
+    "UI-Buildings C002": {
+      "name": "7a5bc72b9543accbac075c5f.png",
+      "sha256": "33e94a3f6f18b7a7fd1426ffdad8416dacf66cd333af7e7d53fcb6c5849fc63a"
+    },
+    "UI-Buildings C003": {
+      "name": "57af7d78ca99637a596e50df.png",
+      "sha256": "5299bd0df870be919efc728d54034bf735a7bdbbc2ce566e7667286419bc9ff8"
+    },
+    "UI-Buildings C004": {
+      "name": "7970be6fc4e5c74f1dbef88e.png",
+      "sha256": "e315628a75e3c93e88f8a54f254fe1643714d4485187806e32791c023a632e61"
+    },
+    "UI-Buildings C005": {
+      "name": "44d536ab77b82b40bcb614e7.png",
+      "sha256": "7d4677437aaa5c120b1faa37cb6b02628b6562df0b3bd915d6a104beccd8f648"
+    },
+    "UI-Buildings C006": {
+      "name": "c2ddfb1426bd85413cb3e52a.png",
+      "sha256": "f887380738a03a1b43b46ec561f2feb5bb8c99f45305a1719bf66a37519013ae"
+    },
+    "UI-Buildings C007": {
+      "name": "b0f3d18b203be656daaf8e26.png",
+      "sha256": "6eb0c24908e10314425ae5e7ed84cf2a8be15999dfaff7d6f6244810862d6817"
+    },
+    "UI-Buildings C008": {
+      "name": "79534e4c939d8a875c4c5b23.png",
+      "sha256": "5a0b43dd612f1b1f652b70bd8808ba84303f001a87bfa6ed7c40e1042311fd78"
+    },
+    "UI-Buildings C009": {
+      "name": "59f6c23b0cc069820cc80784.png",
+      "sha256": "07ca78912be30f61383822b232aee89aa2a9ec2128b76cbcbd07f8f153ffc815"
+    },
+    "UI-Buildings C010": {
+      "name": "e24727aa82cc85e283f0bc01.png",
+      "sha256": "02864656c6e4b3e495982190f41252609f3a7510f2571979534297c192459c25"
+    },
+    "UI-Buildings C011": {
+      "name": "139b4a33b0a933628209cb19.png",
+      "sha256": "109daa21395d61809ee4468dfaddeee67599e929ec3b7dbadf93162ed9541e15"
+    },
+    "UI-Buildings C012": {
+      "name": "2f07a3f600c922c7a9b9164b.png",
+      "sha256": "5d511e8fd0f9c332ca6f17aa1401b3e957cf65616eda0f988a948aff61fbb72b"
+    },
+    "UI-Buildings C013": {
+      "name": "cff23514a19a7d4f938fb0e7.png",
+      "sha256": "93905c4d154fffe18ffa28a79d9ac670ece85e64e78d70bdd19ca353763f56ba"
+    },
+    "UI-Buildings C014": {
+      "name": "9cd49577028d615b9df16e7e.png",
+      "sha256": "3f4517ff4b53d016f5e65f93872124ad69a1f7aa6b3a1e356bf47eba58a5e100"
+    },
+    "UI-Buildings C015": {
+      "name": "6a759819d235d157c8416bf9.png",
+      "sha256": "3e7eb31a00cf44a07a0f234d9302f592d24aaedef273c1007d456f0260927816"
+    },
+    "UI-Buildings C016": {
+      "name": "7442ea3b87240b35a0d4c9dd.png",
+      "sha256": "c9753c5b238d56747642a780c4e1c2b013e40cda71697b91d8517ce6009b8923"
+    },
+    "UI-Buildings D001": {
+      "name": "6dad034a0110d8746d533069.png",
+      "sha256": "4e5ccd44e8ed2c0e78920f7a8082398b1b6d253f04cf1f466152c0975abe89a3"
+    },
+    "UI-Buildings D002": {
+      "name": "9cf44071a48eef054395beb5.png",
+      "sha256": "6f99ce8a0e6f2c8ff58c6554e57451389f9ff4aaef3b3986a726a598dbfe0e78"
+    },
+    "UI-Buildings D003": {
+      "name": "a971ac66a483c4d2766d926e.png",
+      "sha256": "3bb08864405a578c979fe9d6be11ca9c6cb09d8b680c8027c6a7338d32a47edd"
+    },
+    "UI-Buildings D004": {
+      "name": "858787b0f930a55f1140226d.png",
+      "sha256": "eec133c6a4632c35a4a580ebb790957d83c86031e1cdd7d194a0b4d1cde74ea6"
+    },
+    "UI-Buildings D005": {
+      "name": "ce368015ca542d75395579a5.png",
+      "sha256": "33255213964950b35cbfe1f858fcc23581700d255ca11813207b2b4cf9293524"
+    },
+    "UI-Buildings D006": {
+      "name": "39eb1b196488dfb821f23c59.png",
+      "sha256": "212c1cede04c5d4f480d7a43fc0ecd7bcec7ec5084822954bbf61389f0791a0c"
+    },
+    "UI-Buildings D007": {
+      "name": "6f3b2a8e2e0c715c4a3aa5b7.png",
+      "sha256": "6f9638bdc2255c41d6f358a35cdd589ac3d33dc7ad0542b667a945b26b5e4d45"
+    },
+    "UI-Buildings D008": {
+      "name": "1b7be605b5c98a79b14e377e.png",
+      "sha256": "ed40f8eeab03b1996444ad669485706193cc8c11c6ebf9baebfc5a5a3ef67ad5"
+    },
+    "UI-Buildings D009": {
+      "name": "a6146bbf63a9f0a4ead26bc4.png",
+      "sha256": "50241479f479fca16139b8a9e1926f0fe707a8144756431161f015ec9868193c"
+    },
+    "UI-Buildings D010": {
+      "name": "bdb5dc732ff84ac0b59f30b4.png",
+      "sha256": "482c9f1d81f4eab7b05185e642d33a2233bf3797be4d659fe8bfb165bc0be344"
+    },
+    "UI-Buildings D011": {
+      "name": "cefaa677d3f1eee92c7c555e.png",
+      "sha256": "153a4db26ae5cfaf4b63f2529b1b39b59a5a7bb473a297b588818d271c737129"
+    },
+    "UI-Buildings D012": {
+      "name": "edea19b43e80dcc2c54a273e.png",
+      "sha256": "b69b55fd6fdefaf9ecc2f96fc2cea96092570066bab77202aeca538a5bba1478"
+    },
+    "UI-Buildings D013": {
+      "name": "2495be855c81f60baab1da86.png",
+      "sha256": "e6eb90d974b0abd89603b4cd93c59855376f1a0eb6ba5a30d7b1fb556d8b323d"
+    },
+    "UI-Buildings D014": {
+      "name": "97b426b28ea2b6e30721ea08.png",
+      "sha256": "086903cbcee4a83d35635fe7e1d00119d037d6511319299ba6ece0a6d88707c7"
+    },
+    "UI-Buildings E001": {
+      "name": "c31f0f3d5bc9d4e2486fc518.png",
+      "sha256": "a86ca17feb70d836dfbc0cb609c11c52b66044d8fcfa20e4c2e5f19cb4c66c59"
+    },
+    "UI-Buildings E002": {
+      "name": "7a625c37bfcf4e2d543fc68c.png",
+      "sha256": "1bf05182d753a8544e40b20653ae5df6b6191aeb4cb56104de436eff850b7085"
+    },
+    "UI-Buildings E003": {
+      "name": "71e44f7e93a60d38210e8470.png",
+      "sha256": "e9a4b56ccbd403ecc36df549ecfbc2d5c5b38a10e46e303c3efe9342fd322a34"
+    },
+    "UI-Buildings E004": {
+      "name": "3f182454a4830c701ddc6ed4.png",
+      "sha256": "a6773e790a63b5fc211bb3477e25691a6193bbfcd72dcd44668994477a021722"
+    },
+    "UI-Buildings E005": {
+      "name": "00d2fd5fe256e8c93f1c7912.png",
+      "sha256": "086532710864de62526af76a528dfeb67164b78aa92db5c3a1dfe3899d420181"
+    },
+    "UI-Buildings E006": {
+      "name": "3487d49a98c73286b56433e2.png",
+      "sha256": "8365202b82bf21cff82f53ff5da30e3fafbc27ef0777170aedd718e18104f541"
+    },
+    "UI-Buildings E007": {
+      "name": "ee51586af31634d80248563b.png",
+      "sha256": "bcbb0048b4c12cfb75a93628dc6223e0295f44582959c41f40b05f63404a8655"
+    },
+    "UI-Buildings E008": {
+      "name": "42119c1df485ee4e7b3ea002.png",
+      "sha256": "ff71f4c8878ef1e42da49ff851317454006b6f17709fb16bab0c513e477bf457"
+    },
+    "UI-Buildings E009": {
+      "name": "5a23122d0da35f0d4df3a182.png",
+      "sha256": "1422a8b0395bb5cc68af7d16c87a1fb83c7755142d43b76a18d2ef0140b818ca"
+    },
+    "UI-Buildings E010": {
+      "name": "d5c4777a5e16fb23f9edd086.png",
+      "sha256": "53f9f534310a372b0d528610589dfd35d58ad71015231c6188e06d8ebb46577d"
+    },
+    "UI-Buildings F001": {
+      "name": "895e514bc9874b3c1a16aa15.png",
+      "sha256": "e059035585fb619ff2594df126943cc813dfb964ba4fdd522bf9f7af3da495a0"
+    },
+    "UI-Buildings F002": {
+      "name": "0722fd8ec832793700630b5a.png",
+      "sha256": "b39f5e4617c0947e1618bd6217632c2a58f9020158377a1e224499779d3e641a"
+    },
+    "UI-Buildings F003": {
+      "name": "34365c3728b14eb69ab4785f.png",
+      "sha256": "f3177d69192338bdc8b09be521b114f9edb6d51a308b9008877c886ac531b8d0"
+    },
+    "UI-Buildings F003a": {
+      "name": "cdf7f1ebc2786ead42903db3.png",
+      "sha256": "a6bcef18601580789825fe5a3b3e5fed9f66fde90efaaf4b3dc52e3678c6059d"
+    },
+    "UI-Buildings F004": {
+      "name": "6f8d8259b3171c6582534061.png",
+      "sha256": "e7d976c740ae417f37cf00d219a285c1f58722efeaeeacbe5abbd9b5e3e14b48"
+    },
+    "UI-Buildings F004a": {
+      "name": "105003fba65d0b8610a38cb4.png",
+      "sha256": "b6fba289e62c8258f08c84f3274fd815e3050b62e3af6037bc7b1108436ef8f3"
+    },
+    "UI-Buildings F005": {
+      "name": "e9d0f0746b7307e882e3c1c1.png",
+      "sha256": "cd0f719a524bbfe261d88ce493f164b55c5925b2d5dcfebed84f520562ecd7a9"
+    },
+    "UI-Buildings F005a": {
+      "name": "cb46878b1d3153e6585f81a0.png",
+      "sha256": "d3f5adc673efd398b0eeab382bf4740750245f7a13885a8d2554620b4472f42e"
+    },
+    "UI-Buildings F006": {
+      "name": "0f40f86e782c9155f32db423.png",
+      "sha256": "f058baa4f0fbb5b8c206e45aa859d9692537910c48fcb4e06546d516f89b4496"
+    },
+    "UI-Buildings F006a": {
+      "name": "bbbe4f0e468ac2f3dfac79e3.png",
+      "sha256": "5a81eac93e7a263015899ef14c1c8b6767ba34616f4b0804152cf285bd308993"
+    },
+    "UI-Buildings F007": {
+      "name": "3e45893e1adccca7ab42be1e.png",
+      "sha256": "7bddfa950dd050f277b0f25fddc81d000a2698ca60c9457edb1ee50b1fa30e65"
+    },
+    "UI-Buildings F007a": {
+      "name": "deef5843c386baa405359e37.png",
+      "sha256": "e1a3ff0dd83a3a14b22bf9e7c7ea7a99f14ab3a99fd5bf4053a57aaa2dac4e05"
+    },
+    "UI-Buildings F008": {
+      "name": "2fad90febcaf81d9bcbc2660.png",
+      "sha256": "2c164b9b4b0ad77c0c5d77397bbd6a024ca70f0b679787130b29b4cade29a543"
+    },
+    "UI-Buildings F008a": {
+      "name": "9945b3c32073cdd1742b899a.png",
+      "sha256": "61131db4ebb16e4f2ea9913efabd582d22471cf9070cfc0e5854a1855cba6311"
+    },
+    "UI-Buildings F009": {
+      "name": "1b77eb238d360f3426847ca4.png",
+      "sha256": "037936b64e9571db0f00b7313aac3677293af24934da518ce3bbc0ff5cae9550"
+    },
+    "UI-Buildings F010": {
+      "name": "bc5ab2dda7cbd092f503d941.png",
+      "sha256": "4de39d449b022dd59c33bf6a1d34ef8b1dd0c25acd185a6b2741174e0a83a8f0"
+    },
+    "UI-Buildings F011": {
+      "name": "6aa9a086ff8e11924d912199.png",
+      "sha256": "b3be0cd634a27b68b8fc5ba3917616876fdcdeaa51fe18ce36cbd70f1ca094be"
+    },
+    "UI-Buildings F012": {
+      "name": "ab53f9c32480feb726107f65.png",
+      "sha256": "f8a5f53e40494cb56440a9fda81a4e4b0439577dbb9eafb53c6e9b5a9fd387ba"
+    },
+    "UI-Buildings F013": {
+      "name": "2612ea1e0293fcc048cda27d.png",
+      "sha256": "32732216836f810c55b9c106ef9b6861e22bfa61fdd6772ae2bbb99d0665f39b"
+    },
+    "UI-Buildings F014": {
+      "name": "e2d7c4eff52299e7096509d1.png",
+      "sha256": "7c760673f3262bebbcf7ca9bc8d7834a9887f51ca652f2470fe889850c008d7d"
+    },
+    "UI-Buildings G001": {
+      "name": "ce8a395e7ee3a48e0b3e05a0.png",
+      "sha256": "b3e22fd1fbd6417f185f2dfbd9944a418744428c3b764f01a14c74c525061aed"
+    },
+    "UI-Buildings G002": {
+      "name": "ae0fed8b11d23ced22b9c1d7.png",
+      "sha256": "2aa9f94f68e0e4519c87d2b7bee66e60a5ad43d4148bb223dd9d4dea30625e86"
+    },
+    "UI-Buildings G003": {
+      "name": "a645b8db3fd37a4718d0ae14.png",
+      "sha256": "ed80f0f7dd94cc4cff0855353eb0da63dca5f8c0073637f7fdfeac487c619522"
+    },
+    "UI-Buildings G004": {
+      "name": "309faf826f9eb9c00d560ae6.png",
+      "sha256": "e1256619ad39f6d19066f1cf55015d401ddef2081211936efce53918cff6bd2a"
+    },
+    "UI-Buildings G005": {
+      "name": "dedd691508c1f7cc58c05bd7.png",
+      "sha256": "37d7a54365edfdc5e830b7adec910788a083d652ccafcb5cd050fbd34ce263e7"
+    },
+    "UI-Buildings G006": {
+      "name": "39e0cf7e931964a51d139dc5.png",
+      "sha256": "39d070bc969c11419459338c8dc1cd5c1fa0b8a2df39dccf37d67eb43117b66d"
+    },
+    "UI-Buildings G007": {
+      "name": "3d151607526b6eace6f862cd.png",
+      "sha256": "abd1bc1f3bf631d6279090fba97f00aab47f41ccdf39ab44c5ae005176e3ae40"
+    },
+    "UI-Buildings G008": {
+      "name": "dce7dc776e5e5520d096c72d.png",
+      "sha256": "8c14612e9c8f331c853549d80a8d659227bca4abd145350bc1a84d0b5d2eab0f"
+    },
+    "UI-Buildings G009": {
+      "name": "023c37d3fc8fbc8b97f6f04d.png",
+      "sha256": "47f04dc2232e5d05a5822c2d8d0d97660e5ae2dbceb854ea9e93219b23e9325c"
+    },
+    "UI-Buildings G010": {
+      "name": "b782ddb03ab1258bb5776d12.png",
+      "sha256": "2ffb0b74434a5e099e0a7345efa8d8ab15464b6bc945aab83b4f4f37569d633a"
+    },
+    "UI-Buildings G011": {
+      "name": "70fabbd985e71ec1f5d28058.png",
+      "sha256": "4cc4c60d93367fec6d0847c6558e8cf549e413ca1828f11583d946fa490f5150"
+    },
+    "UI-Buildings G012": {
+      "name": "d637c6e42a3181a796b77229.png",
+      "sha256": "32e0829590c99d9e5dde25785e2ccd3a79e1f9dfc9f2c326fbafbffd031e29ca"
+    },
+    "UI-Buildings G013": {
+      "name": "7a93e173e2e576a2ec732df1.png",
+      "sha256": "dcf80209c853dfd9e838572df7100799941b30ea15ab7d5b4565dd488406a687"
+    },
+    "UI-Buildings G014": {
+      "name": "fda51cd3d51458e41e84e7c8.png",
+      "sha256": "43e2329b88cde5616f287a3be10670c00cddad1b310ce92926b697e888a46432"
+    },
+    "UI-Buildings G015": {
+      "name": "3ca4f182fae76807de772411.png",
+      "sha256": "d61031e689b7b7c1e57195fdbff443df67aecd36e7f7cc191115b91286c96003"
+    },
+    "UI-Buildings G016": {
+      "name": "a21767ad2f0ff19d075bc7e5.png",
+      "sha256": "4f92d3f6453fdf0dfb18a1550dfe04b59fc85c106c41c75fe7d52828c4127561"
+    },
+    "UI-Buildings G017": {
+      "name": "c6afb53c43d762351343feb1.png",
+      "sha256": "361eaf9b927a34dd7eda017847c867c850d824f92cb751efe12e5cce137dcf98"
+    },
+    "UI-Buildings G018": {
+      "name": "97000d4f2d31d17e8da368a9.png",
+      "sha256": "776304808871cab6f291ee6e9ce405a40de3af105c28dc9cdcbe5d862e52e877"
+    },
+    "UI-Buildings G019": {
+      "name": "d6d2ffc98a099d2d44af805a.png",
+      "sha256": "1754b9d16851bf9ba59b5431ec1f8c1692dca03fbc85f0ee9efa57d8095a864a"
+    },
+    "UI-Buildings G020": {
+      "name": "14e1a10e91d4c09ef95ca457.png",
+      "sha256": "ad68a94288bedee8890144080977042842828194881a1c252bb879c455823ca2"
+    },
+    "UI-Buildings H001": {
+      "name": "c1e95ac1d060e7028c1e051f.png",
+      "sha256": "bc88227c764f3a9f7b43f9750e95ae5c63cdf12a67ea7ba7130e3fa3abe26c0b"
+    },
+    "UI-Buildings H002": {
+      "name": "3fbbc454f5147d053b22507a.png",
+      "sha256": "31b9cb55fe34711e2cabcb3e21bbc1ffde1472de80d8045ca837fce90885eb35"
+    },
+    "UI-Buildings H003": {
+      "name": "fc35888e125f3a2dfa06bac8.png",
+      "sha256": "8fe112729114318b42bbcf86dfb5dd91941be10d8b1c26527c7a2f5bb532645b"
+    },
+    "UI-Buildings H004": {
+      "name": "af758c6c7b8814f28c2a7299.png",
+      "sha256": "909cf5fca62a1fcb417754bf60df06e6c7a7f312718be3cfd6d7c1597b26e366"
+    },
+    "UI-Buildings H005": {
+      "name": "64753bcde4037826e754c1a8.png",
+      "sha256": "f78b95e4e57e3a7fbc9800f15cc042b0f859f6c95da3c7f2a71ecae2a034a15c"
+    },
+    "UI-Buildings H006": {
+      "name": "3279577d4832eafa7e390789.png",
+      "sha256": "86db6edbd7dd9177098e73c9034ceaef5b7720c8916e50114f8bb2205bcf95b2"
+    },
+    "UI-Buildings H007": {
+      "name": "5c49ef3e03c8d506b9ddcd88.png",
+      "sha256": "06f98413bc531eebd3941a962601081ea539a092c35bb3298ba5b62a3f17e108"
+    },
+    "UI-Buildings H008": {
+      "name": "893e3158943c20ec04bf4b81.png",
+      "sha256": "7e837232cf3ec44b1fa631a5ab50c3ac61c047d1dde24fcef2576d4dda0a561c"
+    },
+    "UI-Buildings H009": {
+      "name": "bdb02f862fa50267d9a1c0f2.png",
+      "sha256": "e66fe573f679af51c3c5d98bd96ef33451b58c08f3cbce4be79f34a65073e1be"
+    },
+    "UI-Buildings H010": {
+      "name": "62f0f6be793607144ba37815.png",
+      "sha256": "1c23ab92d3ef5c2b70cf1f56d8695e7d5bf0d4ffe8f39db641786a46c250446f"
+    },
+    "UI-Buildings H011": {
+      "name": "500d7151596c08c8940b5b5f.png",
+      "sha256": "3f164fb06d9c9af98ede5e4727447743cb403bb865231282f747f840f96fe277"
+    },
+    "UI-Buildings H011a": {
+      "name": "0935eccd40224446ceb29d64.png",
+      "sha256": "12dd218ee71a1fdb2aa7d79f6a6aeef2d119f9426fa8341448c7eef1740b601b"
+    },
+    "UI-Buildings H012": {
+      "name": "45e3b967fba05c5c879a9e65.png",
+      "sha256": "be1ec382092771366b6a3780ed6fe394356a8781158171f3a85235a9b6fafd04"
+    },
+    "UI-Buildings H012a": {
+      "name": "df22852fb3c58844b15aa477.png",
+      "sha256": "ebafe2cd30880ebd0554a9333f44d7cdeafbfd9fe602428ee49c8585e7b04f82"
+    },
+    "UI-Buildings H013": {
+      "name": "00d4205c9c10da59cadceafa.png",
+      "sha256": "b136cda5247ba8aebeae84ed4c037af2a6c25f446cf3a19189f2d1e28498e23b"
+    },
+    "UI-Buildings H014": {
+      "name": "2c9c6000d080648fc395ff6a.png",
+      "sha256": "1fb23366b0841ec53e4f705c85a9a0b24b133f915ff9201e5855a9d7e3e6dc78"
+    },
+    "UI-Buildings H019": {
+      "name": "07b048cfc427b987e4291f62.png",
+      "sha256": "3025a538b91d3a47cf8419585a6e90901d8dbc5c808beba49150bcdc4ef619d4"
+    },
+    "UI-Buildings H019a": {
+      "name": "17a468a33aa10374da268bc3.png",
+      "sha256": "44b41335de3e57e2fdce5a491a86d790e31aafda5c3c913177140d04926801c4"
+    },
+    "UI-Buildings H020": {
+      "name": "504310b69b4f4eb15943f20e.png",
+      "sha256": "8d3369a4b3d49edef07e25cf713439f4feea6af97f6bc7daa67a9d3ae5b9a419"
+    },
+    "UI-Buildings H020a": {
+      "name": "994fea5234b50f7b26b8e792.png",
+      "sha256": "636903fd613dd964cfa0ebf343fe1bccad7767e059aa556865bccc410d355f14"
+    },
+    "UI-Buildings H021": {
+      "name": "c5628b3414b04a0d60ff94cf.png",
+      "sha256": "c6de896b6a45623672dd3075fdf1f4b993fafd7c11cc2b3a794e6e859db8fec7"
+    },
+    "UI-Buildings H022": {
+      "name": "3562e20ea6bf3abd0c043e31.png",
+      "sha256": "9c903fe8e052297a2fd64b3be63ced54f3f7ad099c8406fedac9d5001dac0c18"
+    },
+    "UI-Buildings H023": {
+      "name": "7768a3e4c1134a8925eb68fd.png",
+      "sha256": "4d393c47029389c2c50dc6c837ecb2954c2de85d424f36939de0b2660729b91d"
+    },
+    "UI-Buildings H024": {
+      "name": "bb02323f12d3bb54abcdcbc2.png",
+      "sha256": "d8a407150aacd7c20ae04f5d05f83dc7b17d02a680f5eb3991d0b1ca9a9e4545"
+    },
+    "UI-Buildings H025": {
+      "name": "99da297781ebc75c29396ab2.png",
+      "sha256": "d4fe3b00aa805df5da07e312acc2752acaab3aa329147b4bd2df2d75b04b610e"
+    },
+    "UI-Buildings H026": {
+      "name": "d5e6608b1f7f3d9e9ce79388.png",
+      "sha256": "00f35d6c21f1fc48cf00e546d9806568bb8a54d671e39f203177641aae12cccf"
+    },
+    "UI-Buildings I001": {
+      "name": "f909866c76514608dabd988f.png",
+      "sha256": "76abf424642031d289e2ba485dfbade1700b935d7388cfa805aa1156db87f1f1"
+    },
+    "UI-Buildings I002": {
+      "name": "d11f9603cd12398d861a49af.png",
+      "sha256": "80bc19b4f494c78d9d97351a6b82ae59d60f19d7b8aaff48833bdb160842d99f"
+    },
+    "UI-Buildings I003": {
+      "name": "c06c1500978e28e90d1166d4.png",
+      "sha256": "c0bfa941466f3ed585b1e43672ac1be5efb74de8fd636bed3348811f00f090ad"
+    },
+    "UI-Buildings I004": {
+      "name": "f3f1e1e72db0ae1ff327e942.png",
+      "sha256": "77343c81c871b0a009facbda42d2ddb6bdf63a86ccdc6c1a4d1a491fcc6d14a5"
+    },
+    "UI-Buildings I005": {
+      "name": "defee2897dd226c98f74f5ba.png",
+      "sha256": "597a1859f93ba508dc4d35d609a78b3ac0d296e5093a3c3a0ea1f9b22d29c643"
+    },
+    "UI-Buildings I006": {
+      "name": "afa50a73ed35689ac74bfbff.png",
+      "sha256": "c02d839fa3c21270b3e32408cc95333604b6720a8daa8e4e4aebeba31de72712"
+    },
+    "UI-Buildings I007": {
+      "name": "9c205e5f244bb048d3289a99.png",
+      "sha256": "581849e1bdedf159e5ed8f3f4fa0e409fdef549aa2b910f21b08acb0a91abb96"
+    },
+    "UI-Buildings I008": {
+      "name": "e8cef6f49c48fdec1c1809fd.png",
+      "sha256": "f78b520a793d509d8296946dfdae7c0b1338642b3a2455027a2c8b54e175ce04"
+    },
+    "UI-Buildings I009": {
+      "name": "8a4d649e9dfc0aa23f07ee79.png",
+      "sha256": "73fed0bfd5ea5f24171fdfb14cf9ddbee6928d2e69e5c9a26bdd5f071d557d77"
+    },
+    "UI-Buildings I010": {
+      "name": "0bc05bea960d81531304db08.png",
+      "sha256": "864392e3b6ba3fa91776af1e709f8c1b6f049f784405d7506704f54050fed232"
+    },
+    "UI-Buildings J001": {
+      "name": "3739201ec7e7c6b1bc1ba079.png",
+      "sha256": "f99837f642e72e4026dec3ebfe7ac32b51f56b72b8da352d7628197fd4712935"
+    },
+    "UI-Buildings J002": {
+      "name": "975fb3707d33c4f0fc00465d.png",
+      "sha256": "e2e8bd5b6d5e8c8f30beb6e322f138286ce0207323bd1b6c8444c56cd0c1e216"
+    },
+    "UI-Buildings J003": {
+      "name": "d586f50728229ebaf7b0f10f.png",
+      "sha256": "96c5ef8f1723f4dea1c65af95d6a32795560c83edc6cbcc3bd995a9794c07d08"
+    },
+    "UI-Buildings J004": {
+      "name": "26dee2e44e27072e4935d81f.png",
+      "sha256": "606962c224f431c453c9de839180ce1f257399fb38ce9e36b94736ba498fec54"
+    },
+    "UI-Buildings J005": {
+      "name": "9f466ebc7904e7c6cb58c64e.png",
+      "sha256": "fd9d75b0e80707bd5090a127a928fda2cc907847ac23449c4de6e61bf94825fb"
+    },
+    "UI-Buildings J006": {
+      "name": "57f4f80d86d31272d6aa2687.png",
+      "sha256": "23057398cd59a8d82b023aad385daeb80022faee9b1e5c7fb0f4ea8be10fd003"
+    },
+    "UI-Buildings J007": {
+      "name": "ae6174f0cd23223b7efb8543.png",
+      "sha256": "1fa47d094d4fef6cab75801713aef753f4ca1d84800e2a729c4d849351d1dc9a"
+    },
+    "UI-Buildings J008": {
+      "name": "1370eb75618725ec217812f3.png",
+      "sha256": "2eb39ea5f1e1d0f17ead008cbff3fc9b977f98e687b60bdff54c3e11413e46b3"
+    },
+    "UI-Buildings J009": {
+      "name": "a3bf6adb35d768c789b3c3e0.png",
+      "sha256": "1e36034b2585bf9e3a3d1583cf1b82104f91ced0f3be5d82b72130e9a70767cc"
+    },
+    "UI-Buildings J010": {
+      "name": "406e474163afb90be5d1cedb.png",
+      "sha256": "720a6045a322a058032823801374475c1e4424ab52a25b78501fc56a03743fcf"
+    },
+    "UI-Buildings K001": {
+      "name": "f6424d3d6af955fd2f4431c5.png",
+      "sha256": "097bfd51384a9f1e3ca38cd546a19dff753e18ce464902c3fc76f4a22fb2c8b4"
+    },
+    "UI-Buildings K002": {
+      "name": "ccd0c46880a487761657c052.png",
+      "sha256": "531cfe836e9df886e1657d59de5f3dab323a8c5d8b06c5cb42fce26d3bfff117"
+    },
+    "UI-Buildings K003": {
+      "name": "8b305c824b9086a0247eb873.png",
+      "sha256": "771c88b1b972a7ab3cbb9350669b3f79df3b9adc0b1963b7f56720f20af3747d"
+    },
+    "UI-Buildings K004": {
+      "name": "06c06cc39a8e0557f683e3cc.png",
+      "sha256": "98717a0484559eeb5921f0143ec741fcb773268c0a7943525e57c3871b13b943"
+    },
+    "UI-Buildings K005": {
+      "name": "3f891b610a08194d45f61f44.png",
+      "sha256": "7d3051bf61fa49a7bf6e2d6b7c9e463ff3e1387bae66381cdcfd68e10660a512"
+    },
+    "UI-Buildings K006": {
+      "name": "3e83e952e773e9e929707ddc.png",
+      "sha256": "4fae62bdc5cd8256606ef7ad467bce154cfcc2b0e4c34d741a72902b956745f4"
+    },
+    "UI-Buildings K007": {
+      "name": "73b50acc3988660b3910859a.png",
+      "sha256": "bd23b567b6cb2aa3ba05d5da3f3fafc0449424adea40be6a4de80cbcaaec303a"
+    },
+    "UI-Buildings K008": {
+      "name": "5388f5db9569242662374491.png",
+      "sha256": "af833a8addbff2865da06ba36c3e455dcf8e231cc8b8eb7894c8f041a3220e47"
+    },
+    "UI-Buildings K009": {
+      "name": "386efa568a8b5fcd1681da70.png",
+      "sha256": "e6d5d384d9baac592fe9dae063a5b0cd6c51b2c95c59bfc60a074f6818a8a216"
+    },
+    "UI-Buildings K010": {
+      "name": "641f4748afd5be9cfd973643.png",
+      "sha256": "2392401df86fd8acc18ef9983880870bc76c713bec95bca283aa509dcd490fb9"
+    },
+    "UI-Buildings L003": {
+      "name": "26cdde3ce43b654047fbde5e.png",
+      "sha256": "7e8de6164ba2ff2d89caf768c92c8e250664a3c55401c375bea191e9152ddf29"
+    },
+    "UI-Buildings L004": {
+      "name": "379314bc724c31a86b5e26b3.png",
+      "sha256": "5a1e10b8e69dd8c7e45e9a886d57837accefa09adcc58fe9d3faac7060e44265"
+    },
+    "UI-Buildings L005": {
+      "name": "886c69499e54a46a037c4f35.png",
+      "sha256": "55ec0d7dbd131daa390fcbf2ab3ef5aabbac0f6538c1fac49f3f7b6f136b7e86"
+    },
+    "UI-Buildings L006": {
+      "name": "cedd815c23564824b86da42d.png",
+      "sha256": "b1c895cc78a453c1d7a4a385aa4bd6cd944c61415e7a05fed14a0a1ea1e7fc33"
+    },
+    "UI-Buildings L007": {
+      "name": "523c18fc3c66dc66ebb287a2.png",
+      "sha256": "918e0dd47e19245dafb7e4dfffcff3401b2ca76cbc97b70013c00f8921658e9b"
+    },
+    "UI-Buildings L008": {
+      "name": "2d4e07413714ef7ce887d7ea.png",
+      "sha256": "3ced2d7836fbc46c91c7ab58fac88c0c48c7f49cb1bdb39abea2ece9abf589ea"
+    },
+    "UI-Buildings L009": {
+      "name": "425b809271706f85f28c1dc8.png",
+      "sha256": "b14c7bfecc77d4187a8cb33ebc47762d14a860ec29ed97f58e4253bedfd3e700"
+    },
+    "UI-Buildings L010": {
+      "name": "a97eb6ecf2b9fd049cfa1c07.png",
+      "sha256": "8c7d47230d50fa0058651fd5e129edec5ef9ac642d37dcb0c5a41638cf8498b8"
+    },
+    "UI-Buildings L011": {
+      "name": "42afc952529215b0c34f3384.png",
+      "sha256": "d0a70071c6a18975c9e15b34a9dcfa44c1d68673a0f14237bd5802537ee191a3"
+    },
+    "UI-Buildings L012": {
+      "name": "d48810d23410a3c7001564a0.png",
+      "sha256": "ed2f8a5776ba32b8db5fade6376203605059b0ec034d5ce721fbb81be52847a5"
+    },
+    "UI-Buildings L013": {
+      "name": "ec60bb55ff15aea3bddb3142.png",
+      "sha256": "69a2b641a1fa514a1e5e89fcc6c7a57a7cd1107ec45ef2a9ba1a9cfe095f8880"
+    },
+    "UI-Buildings L014": {
+      "name": "ddf7dc4e5d502f8f0ca54bd2.png",
+      "sha256": "26160edff2ffc4173c612508bb2cbcd689eff57b49f4aabd22bee4ccd9fa9afa"
+    },
+    "UI-Buildings L015": {
+      "name": "d3cebe6167a1479f24ddc5dc.png",
+      "sha256": "841846672da694bd9d511f148c874b8ca9b7df3cd085e43d318a345959af32c9"
+    },
+    "UI-Buildings L016": {
+      "name": "3e164e835e72a7cd30031559.png",
+      "sha256": "91215145098953924be326f5eb10a47eefd630fd7ab088292a124472f6c1e28a"
+    },
+    "UI-Buildings L023": {
+      "name": "95dad8481414dbb359df1b54.png",
+      "sha256": "074ad1d92475f1d8159d53dddd7f42bef5f576aa97a41b9afe6c4214f2184dd5"
+    },
+    "UI-Buildings L024": {
+      "name": "d846f2ca603160bc783318a3.png",
+      "sha256": "7a178cfd805cb13f81061d311080c36d6cdabec51fa863293428c934f6cc3308"
+    },
+    "UI-Buildings L025": {
+      "name": "e6c52734cf552a65448b8f82.png",
+      "sha256": "0798999075b4f5fc834f0780ab9a715e3f90ffad43fe3be2a98b198d5b71f665"
+    },
+    "UI-Buildings L026": {
+      "name": "5688e69d492dca4a64525328.png",
+      "sha256": "5ed7e494813f30087c5d0bece419794e514973e1166946163bd50fc8f85c1ffb"
+    },
+    "UI-Buildings M001": {
+      "name": "e2ec5328c9ece677d5cb465d.png",
+      "sha256": "2bf6f7f078ca667115170af96fe0fa151add03d5497ed9923b3ecce222c39a1d"
+    },
+    "UI-Buildings M002": {
+      "name": "5721597cc2bf6e17f220eaca.png",
+      "sha256": "49c2067b3938c576f42e223e19481916177059cdd755a780c67df6bd1b2d481c"
+    },
+    "UI-Buildings M003": {
+      "name": "da0bb1bf91b3f9828f63ed9c.png",
+      "sha256": "2a2c83e08aaaf66a69c553a4174516a089ecc246bf920b46edb83c9ad669c4ed"
+    },
+    "UI-Buildings M004": {
+      "name": "f8c69995dbd8d485acc7c501.png",
+      "sha256": "a096b9b3dc7afe3c95d909c9800ea289f2ca800a0a5f68caed0a33cc30a9760e"
+    },
+    "UI-Buildings M007": {
+      "name": "fcedee34db829a2d755c0110.png",
+      "sha256": "ac08c3e33c477be87920e4ff9279b62ab95f09633f714b40b3a96528c039a539"
+    },
+    "UI-Buildings M008": {
+      "name": "0e36e6681017f929905740b5.png",
+      "sha256": "9c9e10b3e5e9790df7bb29ce8a20243c8d286398af4b1e24580a1ae5274724c3"
+    },
+    "UI-Buildings M009": {
+      "name": "9b06d3650003298cdd36e86f.png",
+      "sha256": "27d779fcc49212ed8aff0bcc77534f29a0b7e04f31701239495d10a3f9fb7388"
+    },
+    "UI-Buildings M010": {
+      "name": "c6349f4f7f34bafd3cdabfbb.png",
+      "sha256": "29289f4086afce30bf717dd4e9551d30faa555b06fd0d11a5cf7f7b8753b6606"
+    },
+    "UI-Buildings M011": {
+      "name": "29cc20cdb41b72dd7434b91b.png",
+      "sha256": "0d5ff138725ee2f54fc84d5a85d160c505a89e6e8bb395b7b94a018f97ca4219"
+    },
+    "UI-Buildings M012": {
+      "name": "31ffc15b301eb2336ed43a4f.png",
+      "sha256": "a5ecb8cfebace6e857259f84deeb1616c8cc38757734856107bc0a2645ccf70d"
+    },
+    "UI-Buildings N001": {
+      "name": "4ac81052a53f1e34bd7622c4.png",
+      "sha256": "0c0e73d816944347aec4fc52c48d733854e6630b59ba46dddb65d0a267ad7055"
+    },
+    "UI-Buildings N002": {
+      "name": "9106f945ecff555372d83d65.png",
+      "sha256": "53e4acafed1c11e3dcfe896746db61dd8089b9c293463f5cf7b564f94859d3c0"
+    },
+    "UI-Buildings N003": {
+      "name": "1395b2c340a8dff0d75812d0.png",
+      "sha256": "1534a2b8116d46b01de15565e7c9877cbf1f8b467d28b5d98d527379fdbfab31"
+    },
+    "UI-Buildings N004": {
+      "name": "b95806d935787957928329c0.png",
+      "sha256": "c258d7336246d004f77f631865adb52a8dba1e4f2cafccbcf742be0841749920"
+    },
+    "UI-Buildings N005": {
+      "name": "ba57b72d8f4f9fcfa1a447b3.png",
+      "sha256": "39c4638785fe9a967a219c2a6f6da50ff3e3fec08a6e48d3d9b60c0c234afd01"
+    },
+    "UI-Buildings N006": {
+      "name": "ef8e440bd0aad72092a9c9dd.png",
+      "sha256": "fb37d3db91d437cb2a6602b25879323c90899aaad49a17db18b6cfc57ca31d22"
+    },
+    "UI-Buildings N007": {
+      "name": "b6e29c3b151531002bd20f53.png",
+      "sha256": "907420510d9fe88cc6580cbe30e5a944a339a525119cd3d020720b3b369c260c"
+    },
+    "UI-Buildings N008": {
+      "name": "518c1a35ba2068d44ce4e50b.png",
+      "sha256": "2afe6eebb0a8ac0fce74c526306161b2c8e70885ed85bd110cf8111b065e8ec4"
+    },
+    "UI-Buildings N009": {
+      "name": "c4d7b3b3f231bfb4f0e03310.png",
+      "sha256": "f8e5efe84c08de22546f967f6c66524d05c534e54efe9b146fe31e164ae2b6a0"
+    },
+    "UI-Buildings N010": {
+      "name": "f165ecffa80c6a4fd3344402.png",
+      "sha256": "81ad6324ab74b6fbb0d760f8d9265daa0a603b5229175d25f53a076c63f6e90b"
+    },
+    "UI-Buildings N011": {
+      "name": "4da8e58bc64b8282d293f33a.png",
+      "sha256": "083a0e24782303ef4e64a1289a96a0c8d03cbc1d841e17c9c2b207e7eed16131"
+    },
+    "UI-Buildings N012": {
+      "name": "39ca99e919c17a15164c0915.png",
+      "sha256": "a7a2014d25aee80f4d4fa8edfbd7a2bd515fd88239c1927a1166b743a2948df6"
+    },
+    "UI-Buildings N013": {
+      "name": "7f2d32fb108010f53b1815be.png",
+      "sha256": "ea29c9c6878dfc40c3ccdc18a05523e18a28da416335bc1d60fa47ba2c282ce9"
+    },
+    "UI-Buildings N014": {
+      "name": "f577954bf5bbd18e34ff0e48.png",
+      "sha256": "e379c457f20f3736f9b25c378df03e8a8f1e27900e093f7cff0f71454370cfed"
+    },
+    "UI-Buildings N015": {
+      "name": "08889989641dfe649ef7ff1b.png",
+      "sha256": "8cc95be6ecc8c5f5d063864d3d59df12550b7d6bdd2eba1a21204f6f7e9abc45"
+    },
+    "UI-Buildings N016": {
+      "name": "990558d41c87825f06d7084d.png",
+      "sha256": "ae6fb19356bfa87133720ad4805e0cc01a1b64f8dd69c7ea9a1ae6fb3e48fee5"
+    },
+    "UI-Buildings N017": {
+      "name": "06866d5bfe6206a5982d2ed7.png",
+      "sha256": "c6394ddbc19b99d0817432b601b07b948dc08b9429aa80ad2f99a652ed62c44e"
+    },
+    "UI-Buildings N018": {
+      "name": "2f68dd6866befbcf0472ec9d.png",
+      "sha256": "571e7ea0acdcfaa054a79ebd19b1011645ad329d0255ae7c8293c3567ffdadbd"
+    },
+    "UI-Buildings N019": {
+      "name": "3242836afebbff158801cf2b.png",
+      "sha256": "ff00bc100fa1e35401e89f5a0218190c35893918324cbec81c7700bb75375c1b"
+    },
+    "UI-Buildings N020": {
+      "name": "fd0c405ebad8b75bb545d572.png",
+      "sha256": "6118f35a0f1f0cfa9c84a498167a69b7f7f730f42c294adb402b114d7b51a397"
+    },
+    "UI-Buildings N021": {
+      "name": "9a3c954164011ec3e3159a4f.png",
+      "sha256": "68c40cf0ff0f30d97d25506b244227a841a7a44f0e4c4c96b23bb1b3310f44ea"
+    },
+    "UI-Buildings N022": {
+      "name": "0ceefecac9dab3566a6774d0.png",
+      "sha256": "b4e3df83a916b7f3bfcc4dd5fcda1cede84738f53035234d86b2768d846166aa"
+    },
+    "UI-Buildings N023": {
+      "name": "63a53f2fd0f163b30bd1a481.png",
+      "sha256": "d5930a4bfc1a97d57c5fdc0f88a5d395793dab09ab36a5b09a1011e78cc2f865"
+    },
+    "UI-Buildings N024": {
+      "name": "87104e22d95d6090e3feb200.png",
+      "sha256": "2ef7e88ec15b41b5bcdae287c3013d933e9ca0d20728cfd6531d6c90343399bf"
+    },
+    "UI-Buildings N025": {
+      "name": "40f755304bc8ae0065b89fb2.png",
+      "sha256": "aefb73eb4cdb2f186b0f5128db427ef5e72ff0d2b6ca0781caeaf1feeba24d8f"
+    },
+    "UI-Buildings N026": {
+      "name": "5c2df30a1ea056455c243090.png",
+      "sha256": "30990f5729dcde882a8f1d115cc5d4b653d1bc66e6b8393fe029405dbd5eb83c"
+    },
+    "UI-Buildings N027": {
+      "name": "6305206f7ef0733a05690f00.png",
+      "sha256": "d45f7f0f4ac3fe46df84957118823e785bc32aa99008e3d237feba0057387d9f"
+    },
+    "UI-Buildings N028": {
+      "name": "886e39e8d90be42a99a1ede5.png",
+      "sha256": "31df03b8879e806758955f8ac3c1e8fe8601e5be97a509823f5d2d2c52d05520"
+    },
+    "UI-Buildings N029": {
+      "name": "180bc905417905c77be25595.png",
+      "sha256": "142068a61afbc463d3128364ae66fe6337c83047ae99cfee8257ee478949c85b"
+    },
+    "UI-Buildings N030": {
+      "name": "8fbefcee1c171444afc404f3.png",
+      "sha256": "b5cad339565d9f1ea3dcba8e9777dcd4d5e0a36f6ddc257be5dfe6995df37b85"
+    },
+    "UI-Buildings N031": {
+      "name": "0a2a1c90b3c24bf84494038a.png",
+      "sha256": "8f4531044784940a594f55d55b15f98eb43da6feb5baa6f50b85951a062fa914"
+    },
+    "UI-Buildings N032": {
+      "name": "8adf87deccc4ae6d715d2513.png",
+      "sha256": "fa0c1e814c041607e016669942215f6519ae156bf25e83dcab69b7d19ed8c42f"
+    },
+    "UI-Buildings N033": {
+      "name": "510b521c5de0c654dc85c3ea.png",
+      "sha256": "1aa1835706a2ca843d4f64071e74a59b5169c29a2a9888a026923874170646d4"
+    },
+    "UI-Buildings N034": {
+      "name": "3dc8a39a8b439e35ae7624bd.png",
+      "sha256": "a039fe6d2a4e81de13c441ada89d8d349cc92a4b0873f1e8c55dbac73032ed4b"
+    },
+    "UI-Buildings N035": {
+      "name": "aa092eac7fc58fe21051153f.png",
+      "sha256": "3fc1fff2a5198595a555a1473fa5547ebdb463b54ad0a7f8c147cb301a3e5e23"
+    },
+    "UI-Buildings N036": {
+      "name": "689b162b71c8db84e657a62e.png",
+      "sha256": "a3e5f589d45b866fff6284cb0f25c5a8668a2fdef3cf16b8b9a56f21cd07ae5c"
+    },
+    "UI-Buildings N037": {
+      "name": "0c9f4da9f015f6b21207caab.png",
+      "sha256": "e6e1eba7218fade52e09e557a1ea2d268c8df256ebbdc2564263940618f25c5f"
+    },
+    "UI-Buildings N038": {
+      "name": "bad27d31c6b57bd832c3d15f.png",
+      "sha256": "e4b401b28ca6882cd69804f8f6495835d9ed41966129edc461e5bb3c743698ee"
+    },
+    "UI-Buildings N039": {
+      "name": "0032c153ae8f36f43b874982.png",
+      "sha256": "9fbd33e2cd77ca278082b4a1ad4d5399ef668892dd16450af9b566e1718b6bd8"
+    },
+    "UI-Buildings N040": {
+      "name": "e5cc2e7a392d100fc8240f44.png",
+      "sha256": "52fcf0710ff2f02aca3cd9628047e21ce6d7319cc7b705028759035bb936773d"
+    },
+    "UI-Buildings N041": {
+      "name": "65752156cc5570b7077450a5.png",
+      "sha256": "7f19ac7da246ceaaa05517698987735f89ed2c4e76547fbcb70e2f59a317f771"
+    },
+    "UI-Buildings N042": {
+      "name": "beaee720045685f4cabfabbd.png",
+      "sha256": "0e6ba3cc050d0f53a42c759436d7f32f6ea7d7de1719f0f627606510273afbb1"
+    },
+    "UI-Buildings N043": {
+      "name": "2b47db09f905bc36be765f42.png",
+      "sha256": "1c1311e519741c1939ee4fe42c80f3bbcb6f548b6abfd5ec91841e61004e1540"
+    },
+    "UI-Buildings N044": {
+      "name": "9904d9f7ab561c5696d66ea1.png",
+      "sha256": "3b0a0f62c35a012a3086e4630dfa83a9ad9386d189d543a07490ecd92c20a441"
+    },
+    "UI-Buildings N045": {
+      "name": "2adb47d4b974ad9d26c4e390.png",
+      "sha256": "7d0374656ab7242dbad21688df5c2c6c080fce794ed913b0017ebcb195b96dde"
+    },
+    "UI-Buildings N046": {
+      "name": "8d5fd2efd941248503942813.png",
+      "sha256": "80f1b9072b3b931de4ced40e9c3b1c000d0c7d367fb2ae60ba18ff1cffb94fa7"
+    },
+    "UI-Buildings N047": {
+      "name": "fd6515b01a357929e97f5e1d.png",
+      "sha256": "36db3a06c593e3b3d76c99b0e93ddcb3b1ee414ecb39c58fed0017614d09b2d0"
+    },
+    "UI-Buildings N048": {
+      "name": "334a62f203b7b536c2887111.png",
+      "sha256": "c5168217927303729c2aa03a7cc2eca69b3c4a09b1f32af60f41636e324d87fb"
+    },
+    "UI-Buildings N049": {
+      "name": "01e11c4b47fc1f3593818d0b.png",
+      "sha256": "247a9010674f81ca82746b6a4d04f1ffce31cbcb673741472b041ec06909d29c"
+    },
+    "UI-Buildings N050": {
+      "name": "394f8545607d33486b5c248d.png",
+      "sha256": "b772f0ff89c8cc6bcbe6244d2603b1e170f73136a6d0b398706a4eacfec7153d"
+    },
+    "UI-Buildings N051": {
+      "name": "3ba007a103b8e34fb575565f.png",
+      "sha256": "42f1f7354e695cc0e68e3f955614ed3519da2df39413238164638fb111d6e2e4"
+    },
+    "UI-Buildings N052": {
+      "name": "a09b229bc144188a22ce9625.png",
+      "sha256": "7d7f2f8631d1f238bc804c20259fa0f97b272ff2f6f0fe3b0c2e8fad113554cb"
+    },
+    "UI-Buildings N053": {
+      "name": "4decf42959d28564847d09e5.png",
+      "sha256": "76350e0e081b0d931256f097a170e42a72a9435580701347542e9a111583d013"
+    },
+    "UI-Buildings N054": {
+      "name": "5941267608f645db9226b6eb.png",
+      "sha256": "844bacc3012819786eec87ded8ffdb30f773678145b468973ba26caa08c36d3e"
+    },
+    "UI-Buildings N055": {
+      "name": "5b852dea3dfac7a534e05aca.png",
+      "sha256": "224b10fb98c633471ccaf0627bf8bc05eccb85cc378a221a8f74a6513c03502c"
+    },
+    "UI-Buildings N056": {
+      "name": "37d0ab8271a155b6d92c59a1.png",
+      "sha256": "e483af06103b9603d3bf1f0adbf01c5d03768c7ddee0ed98d36156dc43bc65ff"
+    },
+    "UI-Buildings N057": {
+      "name": "87fd40f92b407ebe83583c4c.png",
+      "sha256": "55ebd2dc4a7cb2379f44b9361beeeceb4716b996336f379c033cd45abc128cb1"
+    },
+    "UI-Buildings N058": {
+      "name": "97ebf1ff78f246f3f372a94e.png",
+      "sha256": "849f9703bfe804645c856750e94364ad82bc9f20e1dc6de2d3804e3f361f120c"
+    },
+    "UI-Buildings N059": {
+      "name": "fdfa3df6b43cb972049e5dcc.png",
+      "sha256": "204d45e39983a5c28ebea2bd4543fcc0b4d221c6c66ba13ce9e682828cab9e27"
+    },
+    "UI-Buildings N060": {
+      "name": "55ccc553eb26623f9684abdd.png",
+      "sha256": "b068acc39f23c7f07158abd158db487d0f1478332b8744541ff1b2397eb49b49"
+    },
+    "UI-Buildings N061": {
+      "name": "75e3bd44f58f496af91b54fa.png",
+      "sha256": "b03abc8aa1c01074123b6d13c007526fd4f24bc779cceab7cdf6e97f34528593"
+    },
+    "UI-Buildings N062": {
+      "name": "b90f7271fc0c8f9f7009a0d7.png",
+      "sha256": "cfd084daae67316e92faf98bf86e822fb21cecd0d70965de37faf08ca06fa677"
+    },
+    "UI-Buildings N063": {
+      "name": "9993e599ab5d2a46b98a057b.png",
+      "sha256": "09b05953bb49933e32fd2d408cc5d20374c113b32168b7a9ac38d72d99746b6d"
+    },
+    "UI-Buildings N064": {
+      "name": "d3623b1e6124230e6d809db6.png",
+      "sha256": "7eaff59675c265b79ac9081d2a89c8b9bcc2c184b4cc86f03054c9835355780d"
+    },
+    "UI-Buildings N065": {
+      "name": "2f5f3eee9fbad3cefc887530.png",
+      "sha256": "45cee22960f91c561aff601dfec13a8d9bdf8e7125ceb5316da2f804612cf26f"
+    },
+    "UI-Buildings N066": {
+      "name": "9d09dd7f4093c94e04d176d7.png",
+      "sha256": "335ae1237c8e624ee167d21397a374d97d4e5b2511623d6886dfd240c58c6f2b"
+    },
+    "UI-Buildings N067": {
+      "name": "03cf7c88cb301f61e287f560.png",
+      "sha256": "a26c5122a88fc4bcfbb6c89be0ddc61c0d677ab5757d8fbc018d8efbdbd15de3"
+    },
+    "UI-Buildings N068": {
+      "name": "cd275cbe3fbb12e6770fc437.png",
+      "sha256": "9ea8b2cfae6b88a380148f0d1966bab991564cf25868f44f4e448b677b9e1318"
+    },
+    "UI-Buildings N069": {
+      "name": "0072a3a2352764c5ba2b8b64.png",
+      "sha256": "4260053d7765d8542eafa7d1887af82d60a6ef94d40b0c915e384bdbd9a6cb2d"
+    },
+    "UI-Buildings N070": {
+      "name": "11ffdaebb107eaae8d5725ec.png",
+      "sha256": "43c7aff4ae6d365a4b37b95a8a1b472088ac7969f6a1db73167952c204ea38ff"
+    },
+    "UI-Buildings N071": {
+      "name": "33824a4e08766ab5358169c7.png",
+      "sha256": "76872ac009af019d3e5f2c0247366197bfbc0018df5b4d0d5f9b9fb83513931d"
+    },
+    "UI-Buildings N072": {
+      "name": "aa851ccaa079b086c2501f5c.png",
+      "sha256": "a7e6b6dd2721553bb6b46baa32ef1a250ae6e49f845216b0e1e106ce97aa4b79"
+    },
+    "UI-Buildings N073": {
+      "name": "b11160ed01fe51a557143012.png",
+      "sha256": "f3bbd19066ac7a3b2e0772acbff2409cc9fe64e3e192b5c7b3b8529f8076b664"
+    },
+    "UI-Buildings N074": {
+      "name": "9e3a91a9cd35c808594eb674.png",
+      "sha256": "3197089a70b9d01d75ec4efbea97cbc16e575e2189b7906495c3b573bf850571"
+    },
+    "UI-Buildings N075": {
+      "name": "b1b70098a4f3f6337d9404d3.png",
+      "sha256": "11aa44773fd034643d3d52a14ac8b8d28f3a447bb07f65db933a0d86c977f53a"
+    },
+    "UI-Buildings N076": {
+      "name": "b14437a0af4450913631fe3d.png",
+      "sha256": "2cc192780cb2a7d402659592b841ab9989e5129da101c5f2fd64604059a608cf"
+    },
+    "UI-HUD 007": {
+      "name": "d270f55f600bca426cd8f165.png",
+      "sha256": "d335350b406b1740cc04f20dab6103ea1324c5a87285c818d014e7747465e4c1"
+    }
+  }
+}

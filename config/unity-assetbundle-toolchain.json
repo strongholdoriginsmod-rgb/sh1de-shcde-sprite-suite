@@ -1,0 +1,20 @@
+{
+  "schema": "stronghold-europe-de.unity-assetbundle-toolchain.v1",
+  "product": "Unity Editor",
+  "version": "2021.3.45f2",
+  "revision": "88f88f591b2e",
+  "build_target": "StandaloneWindows64",
+  "build_options": [
+    "ChunkBasedCompression",
+    "DeterministicAssetBundle",
+    "ForceRebuildAssetBundle",
+    "StrictMode"
+  ],
+  "windows_executable_size_bytes": 72405240,
+  "windows_executable_sha256": "0904c55d483e49115d7b22373812f07a0e5f66ff4656a1433cf73bcd6db99644",
+  "environment_override": "STRONGHOLD_EUROPE_UNITY_EDITOR",
+  "discovery_relative_paths": [
+    "work/toolchains/unity-2021.3.45f2/Editor/Unity.exe"
+  ],
+  "timeout_seconds": 7200
+}

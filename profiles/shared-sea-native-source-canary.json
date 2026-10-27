@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "id": "shared-sea-native-source-canary",
+  "description": "Fail-closed fused SH1DE GM_NEW_SEA atlas: host and shoreline registrations share one 2,984-slot physical atlas with 1,753 source-only frames",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - fused native SH1DE sea canary",
+    "Version": "0.17.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [],
+  "shared_gm_atlases": [
+    {
+      "mode": "shared_gm_atlas_v1",
+      "host_gm_file_name": "tile_sea_new_01",
+      "gm_enum": "GM_NEW_SEA",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 1753,
+      "expected_main_count": 1753,
+      "expected_alt_count": 0,
+      "expected_max_index": 2983,
+      "expected_array_size": 2984,
+      "expected_null_slot_count": 1231,
+      "expected_combined_names_sha256": "9714764395ed6f77d443d60bc8c119e896796b216ece60d37048f2320e1f4190",
+      "expected_output_names_sha256": "52a2255fd429380f768a2c40f6f431763a445d7aa75898baff59440b60f1f039",
+      "expected_slot_logical_output_sha256": "a393ce810f33752b1c70b40fdb2169e3f817723e12890633b177cc23f6b84a11",
+      "expected_slot_logical_source_rgba_sha256": "a1e300b06b38fc826857336c60e15d11ffd985c525ea67cabe47a2e6d6eba0ff",
+      "geometry_policy": {
+        "mode": "native_source_reanchored_v1",
+        "proof_algorithm": "native_source_rgba_target_anchor_float32_ppu_v1"
+      },
+      "members": [
+        {
+          "gm_file_name": "tile_sea_new_01",
+          "slot_offset": 0,
+          "expected_frame_count": 937,
+          "expected_names_sha256": "36c20f221da9f1a693739101326cbe0a7ebac74681297ab6341f145203e856b2",
+          "expected_geometry_proof_sha256": "3131901f474606fd9d02863ed4a1988161ecc9b8ecceed6c69d5651314f253b9",
+          "expected_origin_proof_sha256": "6bb4fe3b6db9b1d3f22832735e107391b3308cd881d3986e49ecba898524db78",
+          "expected_source_rgba_sha256": "532cf898889d6526c818e409da0bab263313c08959e3ce57b72903176828866b",
+          "expected_source_anchor_max_error_px": 0.00006526708602905273,
+          "expected_runtime_anchor_max_error_px": 0.0000005960464477539062
+        },
+        {
+          "gm_file_name": "tile_sea_shore",
+          "slot_offset": 2167,
+          "expected_frame_count": 816,
+          "expected_names_sha256": "c5957aa67e7fcf92d8ae1ab6f7f14e95e9efff237b9d16222381e4c1e4346e72",
+          "expected_geometry_proof_sha256": "1c91751939814e3c9306c37a0aab5a703b48285cc4a902c05345c9e71684ba9a",
+          "expected_origin_proof_sha256": "1c454a5c012fc666641e673fbcdfe41f477414d4a1acd6e488cf719469485b78",
+          "expected_source_rgba_sha256": "648f098ae7bc2e9b274d9a7e4581966dd0ed175e7d63ab0350df8bc3bca3af78",
+          "expected_source_anchor_max_error_px": 0.0,
+          "expected_runtime_anchor_max_error_px": 0.0
+        }
+      ],
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

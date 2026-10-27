@@ -1,0 +1,9 @@
+{
+  "GUID": "zzsonde18festungsbau",
+  "Author": "StrongholdEuropeDE",
+  "Name": "Sonde 18 - Festungsbau",
+  "Description": "Read-only measurement probe for mapper 25-27, 35, 46, 110, 140-147 and 181-186 under SHCDE Script Extender 1.44.0.",
+  "Version": "1.0.0",
+  "Website": "",
+  "Manifest": 0
+}

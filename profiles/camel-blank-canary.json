@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "camel-blank-canary",
+  "description": "Nachweis fuer den unsichtbar gemachten Kamelplatz body_camel (GM 94): 944 vollstaendig transparente Frames und 944 Masken auf den unveraenderten Crusader-Leinwaenden, erzeugt von tools/slot_blank.py. Siehe docs/KAMELE.md",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - blanked camel slot canary",
+    "Version": "0.17.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "authored_sprites": [
+    {
+      "source_dir": "assets/sprites/authored/camel-slot-blank",
+      "group": "body_camel",
+      "category": "authored_sprite",
+      "origin": "authored",
+      "frame_count": 944,
+      "mask_count": 944,
+      "expected_names_sha256": "ac7141dd7e735abaa5715d68a240866ac0eb8db9fe9deeef8cd6cb128fc5f90f",
+      "expected_payload_sha256": "d90a0be3d9235e77b6c8a62b5f32f3f2f1b94ea906aee60d7cbfdf5c30f8245b",
+      "allow_atlas_shadow": false
+    }
+  ]
+}

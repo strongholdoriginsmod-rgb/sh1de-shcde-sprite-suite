@@ -1,0 +1,50 @@
+{
+  "contract_version": 1,
+  "source_purpose": "canonical future presentation contract, independent of saved gameplay schema",
+  "release_state": "disabled_compiled_out",
+  "activation": "future_source_version_only",
+  "renderer": null,
+  "media_assets": [],
+  "metadata": {
+    "session_generation": "positive integer; session-local, not a save identity",
+    "logical_day": "nonnegative integer; committed model day",
+    "speaker_player_id": "1..8; player slot, never a lord identity",
+    "speaker_lord_id": "positive native GetAILord snapshot or null; no inferred identity",
+    "audience_player_id": "1..8",
+    "coalition_id": "committed coalition key",
+    "reason": "semantic cause, no translated text or media filename",
+    "reference": {
+      "kind": "submission_offer | fealty | tribute_cycle; future contracts may add kinds",
+      "started_day": "nonnegative integer or null when unavailable",
+      "sequence": "nonnegative integer or null; paid cycle counter for tribute",
+      "good_id": "nonnegative integer or null; copied game good identifier",
+      "amount": "nonnegative integer or null",
+      "interval_days": "positive integer or null",
+      "due_day": "nonnegative integer or null; next due day for a paid cycle",
+      "other_player_id": "1..8 or null",
+      "payer_player_id": "1..8 or null",
+      "recipient_player_id": "1..8 or null"
+    }
+  },
+  "events": {
+    "alliance.offered": { "marker_prepared": false, "live": false, "future_commit": "new offer creation, not ShowNextPendingOffer or load presentation" },
+    "alliance.formed": { "marker_prepared": false, "live": false, "future_commit": "successful team journal commit, dispatched after all outer native leases" },
+    "alliance.broken": { "marker_prepared": false, "live": false, "future_commit": "successful break journal commit, dispatched after all outer native leases" },
+    "truce.formed": { "marker_prepared": false, "live": false, "future_commit": "TruceFormed resolution; distinguish live transfer from save_journal replay" },
+    "trade_pact.formed": { "marker_prepared": false, "live": false, "future_commit": "TradePactFormed resolution; distinguish live transfer from save_journal replay" },
+    "support.requested": { "marker_prepared": false, "live": false, "future_commit": "new support demand committed, not repeated presentation" },
+    "support.fulfilled": { "marker_prepared": false, "live": false, "future_commit": "completed live transfer bookkeeping with SupportFulfilled resolution" },
+    "ultimatum.issued": { "marker_prepared": false, "live": false, "future_commit": "new ultimatum committed, not repeated presentation" },
+    "ultimatum.fulfilled": { "marker_prepared": false, "live": false, "future_commit": "completed live transfer bookkeeping with UltimatumFulfilled resolution" },
+    "submission.offered": { "marker_prepared": true, "live": false, "marker": "DiplomacyV2VassalWorkflow.ProcessV2SubmissionOffer after StageOffer", "identity": "player/lord captured by existing eligibility check", "reference": "offer day and quoted tribute" },
+    "submission.declined": { "marker_prepared": true, "live": false, "marker": "DiplomacyV2VassalWorkflow.AnswerV2SubmissionOffer after CloseOffer", "identity": "validated callback player/lord snapshot", "reference": "quoted tribute; original offer day unavailable after CloseOffer and explicitly null" },
+    "fealty.established": { "marker_prepared": false, "live": false, "future_commit": "successful submission team commit or accepted human fealty; dispatch after all leases" },
+    "fealty.released": { "marker_prepared": true, "live": false, "marker": "DiplomacyV2VassalWorkflow.TryHandleV2VassalPrimary accepted local-overlord release", "identity": "selected player slot; lord unknown", "reference": "fealty, historical amount/day intentionally absent after release" },
+    "equality.requested": { "marker_prepared": false, "live": false, "future_commit": "new equality request persisted; exclude restored request popup" },
+    "equality.granted": { "marker_prepared": true, "live": false, "marker": "DiplomacyV2VassalWorkflow.TryHandleV2VassalPrimary accepted local-vassal equality only", "identity": "selected player slot; lord unknown", "reference": "fealty, historical amount/day intentionally absent after release", "remaining_coverage": "AI equality acceptance not marked" },
+    "equality.refused": { "marker_prepared": false, "live": false, "future_commit": "accepted rejection decision; separate from subsequent rebellion team commit" },
+    "tribute.paid": { "marker_prepared": true, "live": false, "marker": "DiplomacyV2Feature.ProcessV2Tribute after CompleteVerifiedNativeTransfer", "identity": "AI payer, or AI recipient when local player pays; lord unknown", "reference": "payer, recipient, amount, good, completed cycle count and next due day" },
+    "tribute.defaulted": { "marker_prepared": false, "live": false, "future_commit": "RegisterMiss commits an actual missed cycle; technical transfer failure excluded" },
+    "restitution.accepted": { "marker_prepared": false, "live": false, "future_commit": "completed live bookkeeping with RestitutionAccepted; save_journal replay excluded" }
+  }
+}

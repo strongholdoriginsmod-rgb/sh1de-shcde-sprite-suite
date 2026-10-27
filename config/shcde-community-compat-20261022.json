@@ -1,0 +1,117 @@
+{
+  "schema": "sprite-suite.shcde-community-compatibility-snapshot.v1",
+  "checked_on": "2026-10-22",
+  "message": "Quellen- und Release-Snapshot; keine automatische Freigabe zukünftiger Builds oder gemeinsamer Hooks.",
+  "official_releases": [
+    {
+      "id": "rawra_bepinex",
+      "url": "https://gitlab.com/rawra-stronghold-crusader/shcde-bepinex/-/releases",
+      "version": "1.1.0",
+      "published": "2026-09-07",
+      "bepinex_core_version": "5.4.23.5"
+    },
+    {
+      "id": "rawra_script_extender",
+      "url": "https://gitlab.com/rawra-stronghold-crusader/shcde-script-extender/-/releases",
+      "version": "2.14.3",
+      "published": "2026-10-19",
+      "plugin_guid": "000shcdese"
+    },
+    {
+      "id": "rawra_fixes",
+      "url": "https://gitlab.com/rawra-stronghold-crusader/shcde-fixes/-/releases",
+      "version": "1.29.0",
+      "published": "2026-10-22",
+      "plugin_guid": "fixes"
+    },
+    {
+      "id": "api_shared",
+      "url": "https://github.com/SHCDE-APIShared/APIShared/releases/tag/APIShared/v0.9.2",
+      "version": "0.9.2",
+      "published": "2026-10-15",
+      "plugin_guid": "APIShared_Serp",
+      "assembly": "APIShared.dll",
+      "runtime": "net481",
+      "minimum_script_extender_version": "2.14.0"
+    },
+    {
+      "id": "ensrick_tweaker",
+      "url": "https://gitlab.com/ensrick7/crusader-de-tweaker/-/releases",
+      "version": "2.11.2",
+      "published": "2026-10-19",
+      "plugin_guid": "CrusaderDETweaker"
+    },
+    {
+      "id": "serpens_modpack",
+      "url": "https://github.com/Serpens66/Stronghold-Crusader-DE-Mods/releases/tag/SerpsMods/v1.0.28",
+      "version": "1.0.28",
+      "published": "2026-10-15",
+      "requires": "Rawra Script Extender"
+    },
+    {
+      "id": "ai_toolkit",
+      "url": "https://github.com/Schlossgespensty/AI-Toolkit/releases/tag/0.8.0",
+      "version": "0.8.0",
+      "published": "2026-10-09",
+      "runtime": "Electron/Windows",
+      "writes": "classic .aiv / character.json / lines.json; not a DE AIV codec"
+    }
+  ],
+  "tool_formats": [
+    {
+      "name": "AI-Toolkit",
+      "format": ".aiv",
+      "note": "Classic Crusader AI/UCP; do not reinterpret as DE .aivjson"
+    },
+    {
+      "name": "Serpens AIVParser",
+      "format": ".aivjson",
+      "note": "Read-only DE blueprints, 100x100 grid; .baiv and classic .aiv excluded"
+    },
+    {
+      "name": "Serpens MapParser",
+      "format": ".map/.trail",
+      "note": "Read-only PKWARE DCL/CRC; .sav/.msv unsupported"
+    },
+    {
+      "name": "Serpens SaveExtractor",
+      "format": ".sav",
+      "note": "Read-only original save; extracts map, lords and active CPU AIV candidates to separate <Save-Name>.extracted directory, never overwrites existing output. MapParser itself does NOT parse .sav/.msv."
+    },
+    {
+      "name": "Serpens TrailEditor",
+      "format": ".trail",
+      "note": "Lossless standalone export/build in separate outputs; V2.8 restart-format 60, multiplayer setup -12, editable trail.json/AIVJSON/lordjson/maps; not an in-game Save parser."
+    },
+    {
+      "name": "Serpens AtlasBuilder",
+      "format": "Override/Atlas/<GM group>/atlas.json + atlas.(png|dds) + optional mask",
+      "note": "Script Extender Asset API Atlas format; SE>=2.4 for PNG and >=2.8 for BC7 DDS; separate from SpriteSuite Unity AssetBundle .v1/.v2. Prevent PNG+DDS duplicates, check pivots, PPU and mask."
+    }
+  ],
+  "plugin_contracts": {
+    "private_suite_guid": "strongholdeuropede.private",
+    "suite_runtime_plugin_guid": "strongholdeuropede.runtime.private",
+    "suite_dll": "StrongholdEuropeDE.Runtime.dll",
+    "suite_relative_folder": "BepInEx/plugins/StrongholdEuropeDE",
+    "api_shared_guid": "APIShared_Serp",
+    "api_shared_relative_folder": "BepInEx/plugins/APIShared_Serp",
+    "tweaker_guid": "CrusaderDETweaker",
+    "tweaker_config_folder": "BepInEx/config/CrusaderDETweaker",
+    "script_extender_guid": "000shcdese",
+    "rawra_fixes_guid": "fixes",
+    "api_shared_minimum_se": "2.14.0",
+    "suite_tested_se": "2.11.0",
+    "suite_build_prereq": "config/runtime-prerequisites.json",
+    "safety": "No duplicate GUID/DLL, no foreign hook ownership, no installed mod/config overwrite, no ABI upgrade without independent rebuild and tests"
+  },
+  "references": [
+    "https://github.com/SHCDE-APIShared/APIShared/blob/main/README.md",
+    "https://github.com/SHCDE-APIShared/APIShared/blob/main/info.json",
+    "https://github.com/SHCDE-APIShared/APIShared/blob/main/ARCHITECTURE.md",
+    "https://github.com/Schlossgespensty/AI-Toolkit/blob/main/README.md",
+    "https://github.com/Serpens66/Stronghold-Crusader-DE-Mods/blob/main/Helpers/AIVParser/README.md",
+    "https://github.com/Serpens66/Stronghold-Crusader-DE-Mods/blob/main/Helpers/MapParser/README.md",
+    "https://github.com/Ensrick/crusader-de-tweaker/blob/main/DEVELOPER_NOTES.md"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "anim-tunnelors-guild-canary",
+  "description": "Lossless derived-geometry European tunnelers-guild animation canary for the complete SHCDE-SE 1.39 GM array",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - tunnelers-guild animation canary",
+    "Version": "0.9.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "anim_tunnelors_guild",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "anims1Sprites",
+      "target_texture": "anims1Sprites",
+      "expected_frame_count": 6,
+      "expected_main_count": 6,
+      "expected_alt_count": 0,
+      "expected_max_index": 6,
+      "expected_names_sha256": "f22b71b6948f237bdd33264b2ad65c8b67b0b39b5a85e18b26e1f8d1d0ec3b38",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "animation_gm_atlas",
+      "derived_frame_policy": {
+        "mode": "source_lossless_integral_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_frame_count": 6,
+        "expected_discarded_mask_alpha": 0,
+        "expected_frame_proof_sha256": "a85b48ded34b07ce2231d45fc948a562728205ba273b13b709255c680b97404d"
+      }
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

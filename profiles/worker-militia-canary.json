@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "worker-militia-canary",
+  "description": "Isolated hunter and woodcutter weak-militia damage and attack-command canary",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - worker militia canary",
+    "Version": "0.17.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": true,
+    "audio_payload": false,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": true,
+    "dock_placement": false
+  },
+  "gm_atlases": [],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

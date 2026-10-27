@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ausfahrbare Bauleiste am rechten Bildschirmrand.
+
+  WARUM DIESE DATEI.
+  Der alte Schluss, ein Patch auf HUD_Main.xaml laufe wegen des Extender-
+  Overrides grundsaetzlich ins Leere, war falsch. Das damalige Protokoll meldete
+  den Patch als gefunden und geoeffnet; seine Operationen wurden wegen einer
+  eigenen Namespace-Deklaration auf <Patch> nicht eingelesen. Override und
+  Patch sind kombinierbar.
+
+  MainHUD.xaml bleibt das Ziel dieser Fassung, weil ihr Root-Grid fuer die
+  ausfahrbare Leiste passt und dieses Add-Muster im Spiel angewandt wird. Auch
+  zwei andere Mods erweitern dieselbe Datei:
+      UniversalSiegeAI    Patches/Assets/GUI/XAML/MainHUD.xaml
+      UniversalSiegeCore  Patches/Assets/GUI/XAML/MainHUD.xaml
+  Im Protokoll quittiert der Extender das mit
+      [LuaUIManager] [InjectXamlInternal] Injected successfully near
+      [USM_AIControlAnchor]
+  Diese Datei folgt genau ihrem Muster.
+
+  DREI DINGE SIND UEBERNOMMEN, WEIL SIE DORT BELEGT FUNKTIONIEREN:
+  1. Operation Add auf /n:UserControl/n:Grid mit Namensraumpraefix n:, nicht
+     InsertAfter auf einen Namen. Der Patcher registriert die Praefixe selbst
+     (XamlPatcher.CreateNamespaceManager); ein eigenes xmlns hier wuerde die
+     Operationen still verschlucken - das war der Fehler eines noch aelteren
+     Anlaufs.
+  2. Panel.ZIndex, damit die Leiste ueber dem HUD liegt statt darunter.
+  3. Keine Spielressourcen. Der alte Entwurf band local:PropEx.Sprite1 und
+     Style BTN_Image aus HUD_Main; ob diese Ressourcen in MainHUD aufloesbar
+     sind, ist ungeprueft, und eine gescheiterte StaticResource nimmt in Noesis
+     die ganze Datei mit. Deshalb eigene Farben, wie USM es auch macht.
+     booleanToVisibilityConverter ist die einzige Ausnahme - USM benutzt ihn in
+     dieser Datei, er ist dort also nachweislich vorhanden.
+
+  WAS DER DOCK-KNOPF TUT, und was daran ungeprueft ist.
+  ButtonBuildCommand nimmt den Strukturnamen als Zeichenkette:
+      MainViewModel.cs:26885  public DelegateCommand ButtonBuildCommand
+      MainViewModel.cs:34583  = new DelegateCommand(ButtonBuild)
+      MainViewModel.cs:35403  ButtonBuild(object parameter) -> (string)parameter
+      MainViewModel.cs:34114  eStructToMapperLookUp.TryGetValue(key, ...)
+      MainViewModel.cs:33218  eStructToMapperLookUp["STRUCT_DOCK"] = 195
+  Der Knopf haengt an keinem der drei Aufrufer von IsMapperAvailable, weil er
+  kein Eintrag in buildButtons ist. Er ist deshalb immer anklickbar und ruft
+  immer StartMapperItem(195). Ob die native Seite das annimmt, entscheidet
+  DLL_StartMapAction - das ist nicht dekompiliert und nur im Spiel zu klaeren.
+  Lehnt sie ab, bleibt der Klick folgenlos; beschaedigen kann er nichts.
+
+  Der DataContext ist statisch belegt: Der Konstruktor von MainHUD setzt
+  DataContext = MainViewModel.Instance (MainHUD.cs:28). Damit steht
+  ButtonBuildCommand fuer diese Bindung bereit. Ungeprueft bleibt die native
+  Annahme des Mapper-Aufrufs, nicht der DataContext.
+-->
+<Patch>
+  <Operation Type="Add" XPath="/n:UserControl/n:Grid">
+    <Content>
+      <Grid Name="EuropeBuildBarRoot"
+            Margin="0,120,12,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Panel.ZIndex="28002">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ToggleButton Name="EuropeBuildBarToggle"
+                      Grid.Row="0"
+                      Width="104"
+                      Height="29"
+                      HorizontalAlignment="Right"
+                      Background="#E5352113"
+                      BorderBrush="#FFD0A85A"
+                      BorderThickness="1"
+                      Foreground="#FFFFF0C9"
+                      FontSize="13"
+                      FontWeight="Bold"
+                      Content="Europa"
+                      Focusable="False" />
+
+        <Border Grid.Row="1"
+                Width="160"
+                Margin="0,5,0,0"
+                Padding="8"
+                HorizontalAlignment="Right"
+                Background="#F21A110A"
+                BorderBrush="#FFD0A85A"
+                BorderThickness="1"
+                CornerRadius="3"
+                Visibility="{Binding IsChecked, ElementName=EuropeBuildBarToggle, Converter={StaticResource booleanToVisibilityConverter}}">
+          <StackPanel>
+            <TextBlock Margin="2,0,2,6"
+                       Foreground="#FFD0A85A"
+                       FontSize="11"
+                       Text="Zusätzliche Bauwerke" />
+            <Button Name="EuropeBuildBarSlotDock"
+                    Height="26"
+                    Margin="0,0,0,4"
+                    Background="#E5352113"
+                    BorderBrush="#FFD0A85A"
+                    BorderThickness="1"
+                    Foreground="#FFFFF0C9"
+                    FontSize="12"
+                    Content="Hafen"
+                    Command="{Binding ButtonBuildCommand}"
+                    CommandParameter="STRUCT_DOCK"
+                    Focusable="False" />
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Content>
+  </Operation>
+</Patch>

@@ -1,0 +1,327 @@
+{
+  "schema_version": 1,
+  "id": "fortifications-v1-bc7-canary",
+  "description": "Isolated SHCDE-SE 2.10 fortification editor canary with the pinned anim_castle BC7 stream, direct UI BC7 textures and PCM music streaming",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - fortifications V1 BC7 canary",
+    "Version": "0.19.0-bc7-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": true,
+    "audio_payload": true,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "diplomacy": false,
+    "fortifications": true,
+    "dock_placement": false
+  },
+  "atlas_backend": {
+    "kind": "unity_assetbundle_bc7_visual_equivalence_v2",
+    "quality_policy": {
+      "id": "bc7_visual_equivalence_v2",
+      "sha256": "1ad2d28b7512d247974f5fd0d3e0736d2c4f0a63747329ca149b5d2f6465ad52",
+      "state": "frozen",
+      "verifier_id": "unitypy-1.25.3-bc7-frame-metrics-v1"
+    },
+    "resource_policy": {
+      "additional_gm_resident_bytes": 3221225472,
+      "audio_stream_bytes": 16777216,
+      "global_commit_reserve_bytes": 4294967296,
+      "kind": "windows_24gb_igpu_bc7_12gib_process_private_v5",
+      "minimum_free_physical_bytes": 268435456,
+      "peak_admission_bytes": 2147483648,
+      "process_private_ceiling_bytes": 12884901888,
+      "ui_resident_bytes": 1073741824
+    },
+    "texture_policy": {
+      "id": "bc7-main-bc7-mask-hq100-v1",
+      "main_format": "BC7",
+      "mask_format": "BC7"
+    }
+  },
+  "ui_texture_backend": {
+    "editor_source_path": "tools/unity_asset_bundle/StrongholdEuropeUiTextureBundleBuilder.cs",
+    "editor_source_sha256": "39add597a44db83c5b63c2d16292d02be0ed7cdcf016aae75fde9589af8c46a1",
+    "expected_entry_count": 128,
+    "kind": "unity_assetbundle_bc7_direct_ui_v1",
+    "quality_policy_path": "config/ui-bc7-quality-v1.json",
+    "quality_policy_sha256": "9eee7d515602b30eb6b56d9e94462b30ac0d6554eb3fe286437d36e70d7666ce",
+    "source_manifest_path": "config/ui-textures-bc7-v1.json",
+    "source_manifest_sha256": "7b262e8fbb28c248c292414dd2d57cf984fed9f9d4c9260ff1c1d55c24b12b14"
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "anim_castle",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "anims1Sprites",
+      "expected_frame_count": 106,
+      "expected_main_count": 106,
+      "expected_alt_count": 0,
+      "expected_max_index": 138,
+      "expected_names_sha256": "b746de52c049baef994eec253bc7e37b01df915410ee83b714307f35f0d6c7b6",
+      "review_frame_policy": {
+        "mode": "source_native_geometry_else_keep_v3",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 95,
+        "expected_target_frame_count": 11,
+        "expected_source_names_sha256": "b4587f1e840b0bde7fcef5e2804bd56756a7073ac0f07fe6c5bf2f0932511d8a",
+        "expected_target_names_sha256": "246351ad383e733e2bb46b5fce0f1c6d3561d98fc1da8fe4e98e4a128526ae6c",
+        "expected_provenance_sha256": "dfede86203e0ac0aed794bdc9ab73a70da0663b7034ad4151f5e88d293c5e39c",
+        "expected_keep_frame_count": 11,
+        "expected_keep_names_sha256": "246351ad383e733e2bb46b5fce0f1c6d3561d98fc1da8fe4e98e4a128526ae6c",
+        "expected_blocked_review_frame_count": 0,
+        "expected_blocked_review_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_fractional_frame_count": 0,
+        "expected_fractional_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_action_origin_status_sha256": "55bded2373ef9e2ab2c7a8bcb5c67e6e266345bc3f95aad1b8ca7bee5d9aef3f"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas",
+      "geometry_policy": {
+        "mode": "native_source_reanchored_v1",
+        "proof_algorithm": "native_source_rgba_target_anchor_float32_ppu_v1",
+        "expected_frame_count": 95,
+        "expected_geometry_proof_sha256": "f0be1cb1beb096ff4d518bd48dfa4ee23ec86382a1e7ea14edd1b07a8dd88152",
+        "expected_origin_proof_sha256": "7fc71756f809738686a270b71d3a107e7eae97dfd913c729bd3ad5be72468298",
+        "expected_source_rgba_sha256": "4a08b4309e74089447d082b75411fe31956a9a2107bfc809cda4ebb7d590cf20"
+      }
+    },
+    {
+      "gm_file_name": "body_tent",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body8Sprites",
+      "target_texture": "body8Sprites",
+      "expected_frame_count": 3,
+      "expected_main_count": 3,
+      "expected_alt_count": 0,
+      "expected_max_index": 2,
+      "expected_names_sha256": "4913a67b44e90361e570c1d2a17ddef6abff0914330ec166189eba9dcbe5ba0c",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas",
+      "geometry_policy": {
+        "mode": "native_source_authored_pivot_v1",
+        "proof_algorithm": "native_source_rgba_authored_pivot_float32_ppu_v1",
+        "expected_frame_count": 3,
+        "expected_geometry_proof_sha256": "9c55c3fae80dfb920b25127bac10b6f22efa7cdb973bafff6eba39cef423a74b",
+        "expected_origin_proof_sha256": "7e64363ced32e8cdb8081229d3a2972e87f227c9e62cf7ce9ebf5ba823db82e6",
+        "expected_source_rgba_sha256": "35d4beeea4671a70b3acc33df2dcd189a66dcc68d2e8f7efb101d21f9eb8ec6d"
+      }
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [
+    {
+      "name": "MapEditor",
+      "source_asset": "sharedassets1.assets",
+      "target_asset": "sharedassets1.assets",
+      "output": "Override/Assets/GUI/Images/MapEditor.png",
+      "category": "gui"
+    },
+    {
+      "name": "victory_military_small",
+      "source_asset": "sharedassets1.assets",
+      "target_asset": "sharedassets1.assets",
+      "output": "Override/Assets/GUI/Images/victory_military_small.png",
+      "category": "gui"
+    }
+  ],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [],
+  "authored_backgrounds": [
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/MenusBackground.png",
+      "output": "Override/Assets/GUI/Images/MenusBackground.png",
+      "category": "authored_background",
+      "width": 3840,
+      "height": 2160,
+      "expected_sha256": "c16d64454a5061378e8c369d70dc2d9dee400e8aee232dd2d96961bf6da8c7d0"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/loading background.png",
+      "output": "Override/Assets/GUI/Images/loading background.png",
+      "category": "authored_background",
+      "width": 3840,
+      "height": 2160,
+      "expected_sha256": "7c0c7ec4a6c9cd90be790158119dd76df138fb0b9a6ca126d1f90bef32dcf7fa"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-spikes.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-spikes.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 136,
+      "expected_sha256": "b8b75550c9688aaa62155edc4706178ec985dbf41d79b1cfddb939e867c2f901"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-palisade-battlements-hover.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-palisade-battlements-hover.png",
+      "category": "authored_background",
+      "width": 141,
+      "height": 154,
+      "expected_sha256": "3f0cacb1f00fdf067a9a72a557b2ca686541b3538833f4fd26d5ed4f05b30b08"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-palisade-battlements.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-palisade-battlements.png",
+      "category": "authored_background",
+      "width": 141,
+      "height": 154,
+      "expected_sha256": "4f5fb0f5902188461f4c80d08e6c72d758adad919b604855bd0eef567f2aeee9"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-low.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-low.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 122,
+      "expected_sha256": "43c26bfcb7616255b86c33addeca596723fd161e0cd4948814cd98d2f1e4ad90"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-extra-high.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-extra-high.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 166,
+      "expected_sha256": "9a895a237d766a992de4fed1b0061cf2078dc69115dfb7a1ab40bee07db59c03"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-low-hover.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-low-hover.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 122,
+      "expected_sha256": "29e60fc28d7cc13eab62b391cab9a24dd5abbab0c68d501359b195ba82137131"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-palisade-pointed.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-palisade-pointed.png",
+      "category": "authored_background",
+      "width": 132,
+      "height": 109,
+      "expected_sha256": "46a111592915705136bcaf7d6583cecdddabbd32b831d6c431829c9113e6dea3"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-extra-high-hover.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-extra-high-hover.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 166,
+      "expected_sha256": "61bb7de15cd1f110532ee9bcabfbf11c971eef489acf5864d7008bc27249f6b3"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-spikes-hover.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-spikes-hover.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 136,
+      "expected_sha256": "e3df77d8687f1b786efde380c1ada2ad72e3607c5e675563f2eea031739b9f60"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-palisade-platform-hover.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-palisade-platform-hover.png",
+      "category": "authored_background",
+      "width": 132,
+      "height": 109,
+      "expected_sha256": "56252b0dd94c7d63c7e7c90a2ef05f54951313c4bef851e5b4c773e283827e46"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-palisade-platform.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-palisade-platform.png",
+      "category": "authored_background",
+      "width": 132,
+      "height": 109,
+      "expected_sha256": "8b8b0b04d1ceef8a23e99f9b9e0d7919f358479a15361bfc3c53e03b15b4fc30"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-palisade-pointed-hover.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-palisade-pointed-hover.png",
+      "category": "authored_background",
+      "width": 132,
+      "height": 109,
+      "expected_sha256": "4f5e0637511f593ccce64309e3da015ab88b92aed1e04abefd47e8942946342d"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-normal.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-normal.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 136,
+      "expected_sha256": "81d54bed3a7a97b594f21c208213c9ec4c330be6d03f3cffb34248b48660a38e"
+    },
+    {
+      "source": "work/hintergruende/europa-generiert/fertig/sede-wall-stone-normal-hover.png",
+      "output": "Override/Assets/GUI/Images/sede-wall-stone-normal-hover.png",
+      "category": "authored_background",
+      "width": 131,
+      "height": 136,
+      "expected_sha256": "e30cedae6005e66e2c150767db9a89342b857d3d17734dea5f1c78a649b4cd48"
+    }
+  ],
+  "authored_menu_videos": [],
+  "project_files": [],
+  "xaml_patches": [
+    {
+      "source": "assets/xaml/HUD_Main.fortifications.xaml",
+      "output": "Patches/Assets/GUI/XAMLResources/HUD_Main.xaml",
+      "category": "xaml_patch",
+      "expected_sha256": "92cb91d42702dba71d3b837eb16fbea2a20bdff71b00f54ca71c122ae389472b"
+    }
+  ],
+  "authored_sprites": [],
+  "authored_ui_atlases": [
+    {
+      "source": "assets/ui/derived/sh1-umstellung-v280-se144/UI-Colour1Atlas.png",
+      "output": "Override/Assets/GUI/Sprites/UI-Colour1Atlas.png",
+      "category": "authored_ui_atlas",
+      "origin": "derived",
+      "width": 4096,
+      "height": 4096,
+      "expected_sha256": "ca818c4d1dcf6cf7831e6fe8e85baa6c969b37406aca23faf913fe3002d2be89"
+    },
+    {
+      "source": "assets/ui/derived/sh1-umstellung-v280-se144/UI-Colour2Atlas.png",
+      "output": "Override/Assets/GUI/Sprites/UI-Colour2Atlas.png",
+      "category": "authored_ui_atlas",
+      "origin": "derived",
+      "width": 4096,
+      "height": 4096,
+      "expected_sha256": "0b223553825a71b275bd8b4f3b331a9c0f1218aa0ba7ebf62dfd77e089c397e9"
+    },
+    {
+      "source": "assets/ui/derived/sh1-umstellung-v280-se144-menu-fix/UI-MasterAtlas.png",
+      "output": "Override/Assets/GUI/Sprites/UI-MasterAtlas.png",
+      "category": "authored_ui_atlas",
+      "origin": "derived",
+      "width": 8192,
+      "height": 8192,
+      "expected_sha256": "c028bdda5ad293dee232c4737dd24db4260d0394fabdd8efb955246146a4d889"
+    },
+    {
+      "source": "assets/ui/derived/sh1-umstellung-v280-se144-menu-fix/UI-TrailAtlas.png",
+      "output": "Override/Assets/GUI/Sprites/UI-TrailAtlas.png",
+      "category": "authored_ui_atlas",
+      "origin": "derived",
+      "width": 8192,
+      "height": 8192,
+      "expected_sha256": "e69990617385b0db5929be525a6dfa422a9851dd4a131485227a0753de8422e9"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "id": "anim-castle-v3-canary",
+  "description": "anim_castle auf Quellgeometrie (V3) - Digests werden iteriert",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - combined production build",
+    "Version": "0.16.0-europe",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": false,
+    "audio_payload": false,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "dock_placement": false
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "anim_castle",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "anims1Sprites",
+      "expected_frame_count": 106,
+      "expected_main_count": 106,
+      "expected_alt_count": 0,
+      "expected_max_index": 138,
+      "expected_names_sha256": "b746de52c049baef994eec253bc7e37b01df915410ee83b714307f35f0d6c7b6",
+      "review_frame_policy": {
+        "mode": "source_native_geometry_else_keep_v3",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 95,
+        "expected_target_frame_count": 11,
+        "expected_source_names_sha256": "b4587f1e840b0bde7fcef5e2804bd56756a7073ac0f07fe6c5bf2f0932511d8a",
+        "expected_target_names_sha256": "246351ad383e733e2bb46b5fce0f1c6d3561d98fc1da8fe4e98e4a128526ae6c",
+        "expected_provenance_sha256": "dfede86203e0ac0aed794bdc9ab73a70da0663b7034ad4151f5e88d293c5e39c",
+        "expected_keep_frame_count": 11,
+        "expected_keep_names_sha256": "246351ad383e733e2bb46b5fce0f1c6d3561d98fc1da8fe4e98e4a128526ae6c",
+        "expected_blocked_review_frame_count": 0,
+        "expected_blocked_review_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_fractional_frame_count": 0,
+        "expected_fractional_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_action_origin_status_sha256": "55bded2373ef9e2ab2c7a8bcb5c67e6e266345bc3f95aad1b8ca7bee5d9aef3f"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas",
+      "geometry_policy": {
+        "mode": "native_source_reanchored_v1",
+        "proof_algorithm": "native_source_rgba_target_anchor_float32_ppu_v1",
+        "expected_frame_count": 95,
+        "expected_geometry_proof_sha256": "f0be1cb1beb096ff4d518bd48dfa4ee23ec86382a1e7ea14edd1b07a8dd88152",
+        "expected_origin_proof_sha256": "7fc71756f809738686a270b71d3a107e7eae97dfd913c729bd3ad5be72468298",
+        "expected_source_rgba_sha256": "4a08b4309e74089447d082b75411fe31956a9a2107bfc809cda4ebb7d590cf20"
+      }
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [],
+  "project_files": [],
+  "xaml_patches": []
+}

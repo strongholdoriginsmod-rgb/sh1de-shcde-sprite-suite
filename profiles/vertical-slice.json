@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "id": "vertical-slice",
+  "description": "First executable SH1DE to SHCDE-SE Europe conversion slice",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion",
+    "Version": "0.1.0",
+    "Website": "",
+    "Manifest": 0
+  },
+  "sprites": [
+    {
+      "name": "tile_land8 001",
+      "category": "terrain",
+      "require_mask": false,
+      "allow_nontransparent_clip": false
+    },
+    {
+      "name": "tree_apple-0",
+      "category": "vegetation",
+      "require_mask": true,
+      "allow_nontransparent_clip": false
+    },
+    {
+      "name": "anim_baker-44",
+      "category": "building_animation",
+      "require_mask": false,
+      "allow_nontransparent_clip": false
+    },
+    {
+      "name": "body_woodcutter-0",
+      "category": "unit",
+      "require_mask": true,
+      "allow_nontransparent_clip": false
+    },
+    {
+      "name": "body_woodcutter-0x",
+      "category": "unit_alt_frame",
+      "require_mask": true,
+      "allow_nontransparent_clip": false
+    }
+  ],
+  "texture_overrides": [
+    {
+      "name": "MapEditor",
+      "source_asset": "sharedassets1.assets",
+      "target_asset": "sharedassets1.assets",
+      "output": "Override/Assets/GUI/Images/MapEditor.png",
+      "category": "gui"
+    }
+  ],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [
+    {
+      "source": "Assets/GUI/Video/front_end_background.webm",
+      "output": "Override/Assets/GUI/Video/front_end_background.webm",
+      "category": "menu_video"
+    },
+    {
+      "source": "Assets/GUI/Video/front_end_background_low.webm",
+      "output": "Override/Assets/GUI/Video/front_end_background_low.webm",
+      "category": "menu_video"
+    }
+  ]
+}

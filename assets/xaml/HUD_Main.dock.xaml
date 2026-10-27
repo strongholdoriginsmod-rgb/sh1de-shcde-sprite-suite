@@ -1,0 +1,47 @@
+<!--
+  Isolierter Patch fuer die ausfahrbare Europe-Bauleiste. Dieses Fragment
+  besitzt keine Festungscontrols und darf nur bei aktiver Dock-Bahn erscheinen.
+-->
+<Patch>
+  <Operation Type="InsertAfter" XPath="//*[@Name='SideTabs']">
+    <Content>
+      <StackPanel
+          Name="EuropeBuildBar"
+          Margin="4,80,0,0"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Top"
+          Orientation="Vertical">
+        <ToggleButton
+            Name="EuropeBuildBarToggle"
+            Width="72"
+            Height="28"
+            Margin="0,0,4,0"
+            HorizontalAlignment="Right"
+            Background="#E5352113"
+            BorderBrush="#FFD0A85A"
+            BorderThickness="1"
+            Foreground="#FFFFF0C9"
+            Content="Europa" />
+        <StackPanel
+            Name="EuropeBuildBarItems"
+            Margin="0,4,4,0"
+            HorizontalAlignment="Right"
+            Orientation="Vertical"
+            Visibility="{Binding IsChecked, ElementName=EuropeBuildBarToggle, Converter={StaticResource booleanToVisibilityConverter}}">
+          <Button
+              Name="EuropeBuildBarSlotDock"
+              Width="72"
+              Height="28"
+              Margin="0,0,0,4"
+              Command="{Binding ButtonBuildCommand}"
+              CommandParameter="STRUCT_DOCK"
+              Background="#E5352113"
+              BorderBrush="#FFD0A85A"
+              BorderThickness="1"
+              Foreground="#FFFFF0C9"
+              Content="Hafen" />
+        </StackPanel>
+      </StackPanel>
+    </Content>
+  </Operation>
+</Patch>

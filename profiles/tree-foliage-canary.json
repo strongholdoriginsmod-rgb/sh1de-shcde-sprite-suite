@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "tree-foliage-canary",
+  "description": "Isolated tree_apple atlas and persistent Unlit/Foliage runtime proof",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - tree foliage canary",
+    "Version": "0.2.1",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": true,
+    "audio_payload": false,
+    "foliage_tree_apple": true,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "dock_placement": false
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "tree_apple",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "treeSprites",
+      "target_texture": "treeSprites",
+      "expected_frame_count": 101,
+      "expected_main_count": 101,
+      "expected_alt_count": 0,
+      "expected_max_index": 100,
+      "expected_names_sha256": "1448c81f2ad64e095c322c2b206342a50fc0f9cb6e63b35c5e71a42ef4a8db2f",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "vegetation_gm_atlas",
+      "acknowledge_loader_139_foliage_material_mismatch": true
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

@@ -1,0 +1,102 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>StrongholdEuropeDE.Runtime</AssemblyName>
+    <RootNamespace>StrongholdEuropeDE.Runtime</RootNamespace>
+    <Version>0.2.0</Version>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>0.2.0.0</FileVersion>
+    <Deterministic>true</Deterministic>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RuntimeWorkRoot Condition="'$(RuntimeWorkRoot)' == ''">$(MSBuildProjectDirectory)\..\..\work\runtime\manual</RuntimeWorkRoot>
+    <PathMap>$(RuntimeWorkRoot)=/_/runtime-work,$(MSBuildProjectDirectory)=/_/runtime-source</PathMap>
+    <GeneratedContractPath Condition="'$(GeneratedContractPath)' == ''">$(RuntimeWorkRoot)\GeneratedAudioContract.g.cs</GeneratedContractPath>
+    <OutputPath>$(RuntimeWorkRoot)\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(RuntimeWorkRoot)\obj\$(Configuration)\</IntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+  <Target Name="ValidateLocalReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GeneratedContractPath)')" Text="GeneratedContractPath is missing: $(GeneratedContractPath)" />
+    <Error Condition="!Exists('$(BepInExReference)')" Text="BepInExReference is missing: $(BepInExReference)" />
+    <Error Condition="!Exists('$(HarmonyReference)')" Text="HarmonyReference is missing: $(HarmonyReference)" />
+    <Error Condition="!Exists('$(SHCDESEReference)')" Text="SHCDESEReference is missing: $(SHCDESEReference)" />
+    <Error Condition="!Exists('$(RedBirdCoreReference)')" Text="RedBirdCoreReference is missing: $(RedBirdCoreReference)" />
+    <Error Condition="!Exists('$(SystemMemoryReference)')" Text="SystemMemoryReference is missing: $(SystemMemoryReference)" />
+    <Error Condition="!Exists('$(R3Reference)')" Text="R3Reference is missing: $(R3Reference)" />
+    <Error Condition="!Exists('$(AssemblyCSharpReference)')" Text="AssemblyCSharpReference is missing: $(AssemblyCSharpReference)" />
+    <Error Condition="!Exists('$(NoesisReference)')" Text="NoesisReference is missing: $(NoesisReference)" />
+    <Error Condition="!Exists('$(UnityEngineReference)')" Text="UnityEngineReference is missing: $(UnityEngineReference)" />
+    <Error Condition="!Exists('$(UnityEngineCoreModuleReference)')" Text="UnityEngineCoreModuleReference is missing: $(UnityEngineCoreModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineAssetBundleModuleReference)')" Text="UnityEngineAssetBundleModuleReference is missing: $(UnityEngineAssetBundleModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineAudioModuleReference)')" Text="UnityEngineAudioModuleReference is missing: $(UnityEngineAudioModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineImageConversionModuleReference)')" Text="UnityEngineImageConversionModuleReference is missing: $(UnityEngineImageConversionModuleReference)" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="$(GeneratedContractPath)" Link="GeneratedAudioContract.g.cs" />
+    <!-- Troop panel pictures of the worker militia (built from the game's
+         own worker sprites on the empty troop shield, work/militia-art). -->
+    <EmbeddedResource Include="Militia\*.png" LogicalName="StrongholdEuropeDE.Runtime.Militia.%(Filename)%(Extension)" />
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(HarmonyReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SHCDESE">
+      <HintPath>$(SHCDESEReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RedBird.Core">
+      <HintPath>$(RedBirdCoreReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>$(SystemMemoryReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- The extender surfaces its native detours as R3 observables; the farm
+         placement rule subscribes to BuildingR3EventHooks.OnPlacementValidation. -->
+    <Reference Include="R3">
+      <HintPath>$(R3Reference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(AssemblyCSharpReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Noesis.NoesisGUI">
+      <HintPath>$(NoesisReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityEngineReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(UnityEngineCoreModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>$(UnityEngineAssetBundleModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(UnityEngineAudioModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(UnityEngineImageConversionModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

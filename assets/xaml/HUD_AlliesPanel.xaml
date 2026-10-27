@@ -1,0 +1,65 @@
+<Patch>
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:TextBlock[@Text='{Binding Source={x:Static local:Translate.Instance}, Path=GameTexts[TEXT_ALLIES_001]}']" AttributeName="Name" Value="EuropeDiplomacyTitle" />
+
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesFaceBackground0}']" AttributeName="Name" Value="EuropeDiplomacyFaceBackground0" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Button[@CommandParameter='0']" AttributeName="Name" Value="EuropeDiplomacyFace0" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Visibility='{Binding AlliesHumanFaceVis[0], Converter={StaticResource booleanToVisibilityConverter}}']" AttributeName="Name" Value="EuropeDiplomacyHumanBorder0" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesRequestedGoods0}']" AttributeName="Name" Value="EuropeDiplomacyRequested0" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesHelp0}']" AttributeName="Name" Value="EuropeDiplomacyHelp0" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesOrders0}']" AttributeName="Name" Value="EuropeDiplomacyOrdersPip0" />
+
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesFaceBackground1}']" AttributeName="Name" Value="EuropeDiplomacyFaceBackground1" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Button[@CommandParameter='1']" AttributeName="Name" Value="EuropeDiplomacyFace1" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Visibility='{Binding AlliesHumanFaceVis[1], Converter={StaticResource booleanToVisibilityConverter}}']" AttributeName="Name" Value="EuropeDiplomacyHumanBorder1" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesRequestedGoods1}']" AttributeName="Name" Value="EuropeDiplomacyRequested1" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesHelp1}']" AttributeName="Name" Value="EuropeDiplomacyHelp1" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesOrders1}']" AttributeName="Name" Value="EuropeDiplomacyOrdersPip1" />
+
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesFaceBackground2}']" AttributeName="Name" Value="EuropeDiplomacyFaceBackground2" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Button[@CommandParameter='2']" AttributeName="Name" Value="EuropeDiplomacyFace2" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Visibility='{Binding AlliesHumanFaceVis[2], Converter={StaticResource booleanToVisibilityConverter}}']" AttributeName="Name" Value="EuropeDiplomacyHumanBorder2" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesRequestedGoods2}']" AttributeName="Name" Value="EuropeDiplomacyRequested2" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesHelp2}']" AttributeName="Name" Value="EuropeDiplomacyHelp2" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesOrders2}']" AttributeName="Name" Value="EuropeDiplomacyOrdersPip2" />
+
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesFaceBackground3}']" AttributeName="Name" Value="EuropeDiplomacyFaceBackground3" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Button[@CommandParameter='3']" AttributeName="Name" Value="EuropeDiplomacyFace3" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Visibility='{Binding AlliesHumanFaceVis[3], Converter={StaticResource booleanToVisibilityConverter}}']" AttributeName="Name" Value="EuropeDiplomacyHumanBorder3" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesRequestedGoods3}']" AttributeName="Name" Value="EuropeDiplomacyRequested3" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesHelp3}']" AttributeName="Name" Value="EuropeDiplomacyHelp3" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesOrders3}']" AttributeName="Name" Value="EuropeDiplomacyOrdersPip3" />
+
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesFaceBackground4}']" AttributeName="Name" Value="EuropeDiplomacyFaceBackground4" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Button[@CommandParameter='4']" AttributeName="Name" Value="EuropeDiplomacyFace4" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Visibility='{Binding AlliesHumanFaceVis[4], Converter={StaticResource booleanToVisibilityConverter}}']" AttributeName="Name" Value="EuropeDiplomacyHumanBorder4" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesRequestedGoods4}']" AttributeName="Name" Value="EuropeDiplomacyRequested4" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesHelp4}']" AttributeName="Name" Value="EuropeDiplomacyHelp4" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesOrders4}']" AttributeName="Name" Value="EuropeDiplomacyOrdersPip4" />
+
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesFaceBackground5}']" AttributeName="Name" Value="EuropeDiplomacyFaceBackground5" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Button[@CommandParameter='5']" AttributeName="Name" Value="EuropeDiplomacyFace5" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Visibility='{Binding AlliesHumanFaceVis[5], Converter={StaticResource booleanToVisibilityConverter}}']" AttributeName="Name" Value="EuropeDiplomacyHumanBorder5" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesRequestedGoods5}']" AttributeName="Name" Value="EuropeDiplomacyRequested5" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesHelp5}']" AttributeName="Name" Value="EuropeDiplomacyHelp5" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']/n:Image[@Source='{Binding AlliesOrders5}']" AttributeName="Name" Value="EuropeDiplomacyOrdersPip5" />
+
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']//n:Button[@CommandParameter='Orders']" AttributeName="Name" Value="EuropeDiplomacyOrders" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']//n:Button[@CommandParameter='Send']" AttributeName="Name" Value="EuropeDiplomacySend" />
+  <Operation Type="SetAttribute" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']//n:Button[@CommandParameter='Request']" AttributeName="Name" Value="EuropeDiplomacyRequest" />
+
+  <Operation Type="Add" XPath="//n:Grid[@Visibility='{Binding Allies_MainViewVis, Converter={StaticResource booleanToVisibilityConverter}}']">
+    <Content>
+      <Grid Name="EuropeDiplomacyVanillaExtension" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid Name="EuropeDiplomacySlot6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Visibility="Collapsed">
+          <Image Name="EuropeDiplomacyFaceBackground6" Width="72" Height="72" Margin="610,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Source="{Binding AlliesFaceBackground6}" />
+          <Button Name="EuropeDiplomacyFace6" Width="72" Height="72" Margin="610,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" local:PropEx.Sprite1="{Binding AlliesFace6}" local:PropEx.Sprite2="{Binding AlliesFace6}" local:PropEx.Sprite3="{Binding AlliesFace6}" local:PropEx.Sprite4="{Binding AlliesFace6}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Select:6" Style="{StaticResource BTN_Image}" />
+          <Image Name="EuropeDiplomacyHumanBorder6" Width="72" Height="72" Margin="610,60,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" Visibility="{Binding AlliesHumanFaceVis[6], Converter={StaticResource booleanToVisibilityConverter}}" Source="{StaticResource Face Border}" />
+          <Image Name="EuropeDiplomacyRequested6" Width="24" Height="25" Margin="670,48,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" Source="{Binding AlliesRequestedGoods6}" />
+          <Image Name="EuropeDiplomacyHelp6" Width="24" Height="25" Margin="670,120,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+          <Image Name="EuropeDiplomacyOrdersPip6" Width="24" Height="25" Margin="602,120,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+        </Grid>
+        <Button Name="EuropeDiplomacyBreak" Width="35" Height="35" Margin="637,225,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" local:PropEx.Sprite1="{StaticResource UI-Buttons S038}" local:PropEx.Sprite2="{StaticResource UI-Buttons S040}" local:PropEx.Sprite3="{StaticResource UI-Buttons S040}" local:PropEx.Sprite4="{StaticResource UI-Buttons S038}" Command="{Binding AlliesClickCommand}" CommandParameter="Diplomacy:Break" MouseEnter="MouseEnterRolloverHandler" MouseLeave="MouseLeaveRolloverHandler" Style="{StaticResource BTN_Image}" />
+      </Grid>
+    </Content>
+  </Operation>
+</Patch>

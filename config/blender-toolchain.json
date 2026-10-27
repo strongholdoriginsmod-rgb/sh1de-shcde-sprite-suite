@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "product": "Blender",
+  "version": "5.2.0",
+  "build_hash": "fbe6228777e7",
+  "windows_executable_sha256": "0060916d6921eb4d46c57254609d805a2ea711917399051391a52ba14beb6327",
+  "windows_portable_archive_sha256": "2d184b626c001692c362291911293b6a297179d618d95e9e9192c3a80318adc4",
+  "portable_relative_path": "StrongholdEuropeDE/toolchains/blender-5.2.0/blender-5.2.0-windows-x64/blender.exe",
+  "environment_override": "STRONGHOLD_EUROPE_BLENDER"
+}

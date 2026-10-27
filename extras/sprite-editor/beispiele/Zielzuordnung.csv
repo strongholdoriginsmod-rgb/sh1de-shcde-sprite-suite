@@ -1,0 +1,4 @@
+source,target,pivot_x,pivot_y,ppu,offset_x,offset_y
+body_source-7.png,body_target-0,0.375,0.25,64,0,0
+body_source-8.png,body_target-1,0.375,0.25,64,0,0
+body_source-9.png,body_target-2,0.375,0.25,64,0,0

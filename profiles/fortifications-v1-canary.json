@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "fortifications-v1-canary",
+  "description": "Isolated SHCDE-SE 1.44 compact fortification HUD and editor Visual-Beta canary",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - fortifications V1 canary",
+    "Version": "0.19.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": true,
+    "audio_payload": false,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "diplomacy": false,
+    "fortifications": true,
+    "dock_placement": false
+  },
+  "gm_atlases": [],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [],
+  "xaml_patches": [
+    {
+      "source": "assets/xaml/HUD_Main.fortifications.xaml",
+      "output": "Patches/Assets/GUI/XAMLResources/HUD_Main.xaml",
+      "category": "xaml_patch",
+      "expected_sha256": "92cb91d42702dba71d3b837eb16fbea2a20bdff71b00f54ca71c122ae389472b"
+    }
+  ]
+}

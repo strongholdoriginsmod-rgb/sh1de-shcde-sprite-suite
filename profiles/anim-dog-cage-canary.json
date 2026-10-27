@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "anim-dog-cage-canary",
+  "description": "Lossless derived-geometry European dog-cage animation canary for the complete SHCDE-SE 1.39 GM array",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - dog-cage animation canary",
+    "Version": "0.9.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "anim_dog_cage",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "anims1Sprites",
+      "target_texture": "anims1Sprites",
+      "expected_frame_count": 42,
+      "expected_main_count": 42,
+      "expected_alt_count": 0,
+      "expected_max_index": 41,
+      "expected_names_sha256": "b6e95c809bfe54844236beda995ee1da41fb74c46507ad19e8e1c98dc9b91248",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "animation_gm_atlas",
+      "derived_frame_policy": {
+        "mode": "source_lossless_integral_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_frame_count": 42,
+        "expected_discarded_mask_alpha": 34680,
+        "expected_frame_proof_sha256": "061aab55b387cd58721a9987d8cd3d480e8e3319bac2d661f007f7f17843b5da"
+      }
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

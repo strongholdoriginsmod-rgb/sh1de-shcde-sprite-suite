@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "id": "water-effects-authored-source-canary",
+  "description": "Fail-closed SH1DE water effects: 380 source-authored native frames with source pivots and PPU, no Crusader pixel or geometry fallback",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - source-authored water effects",
+    "Version": "0.15.0-water",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "anim_whitecaps_wave",
+      "dash_format": true,
+      "mask_policy": "forbidden",
+      "source_texture": "anims1Sprites",
+      "target_texture": "anims1Sprites",
+      "expected_frame_count": 212,
+      "expected_main_count": 212,
+      "expected_alt_count": 0,
+      "expected_max_index": 211,
+      "expected_names_sha256": "392912c3cd3c3f2d344edbfd76dcbfcd6a5334f4069faa6f66fe11293dcba89a",
+      "geometry_policy": {
+        "mode": "native_source_authored_pivot_v1",
+        "proof_algorithm": "native_source_rgba_authored_pivot_float32_ppu_v1",
+        "expected_frame_count": 212,
+        "expected_geometry_proof_sha256": "e18d5ae89cf2c937855b46638c8e3b54095fe7142c1615cf2f79db279578ed7d",
+        "expected_origin_proof_sha256": "d1ed78917cad02ca4468939d98e330fc8665a7fdc581624048abd8cbd8c357d0",
+        "expected_source_rgba_sha256": "a9d6a4418b35e4d3249e473019706ce0328806c5546c1a36431cb4efc1a164e9"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "water_effect_gm_atlas"
+    },
+    {
+      "gm_file_name": "body_splash",
+      "dash_format": true,
+      "mask_policy": "forbidden",
+      "source_texture": "body7Sprites",
+      "target_texture": "body7Sprites",
+      "expected_frame_count": 24,
+      "expected_main_count": 24,
+      "expected_alt_count": 0,
+      "expected_max_index": 23,
+      "expected_names_sha256": "91a25e3bd94b55ff7285a9f5608cf78652bd799eee9a711e1011f8fa94afa523",
+      "geometry_policy": {
+        "mode": "native_source_authored_pivot_v1",
+        "proof_algorithm": "native_source_rgba_authored_pivot_float32_ppu_v1",
+        "expected_frame_count": 24,
+        "expected_geometry_proof_sha256": "c6d3716a30ea46b5bc26dd7efd45b7a6a27d97e1fd454f8288adb4958c45a579",
+        "expected_origin_proof_sha256": "8bb1ceebbcb3c9bd068a7e56339e6f9be58cf0c9e34e5297941fbd1212fc204e",
+        "expected_source_rgba_sha256": "9075999ca45dc2f56dcba8969dd0ab20a9c3132d8e32d2ebd50c441e12d97858"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "water_effect_gm_atlas"
+    },
+    {
+      "gm_file_name": "body_seagull",
+      "dash_format": true,
+      "mask_policy": "forbidden",
+      "source_texture": "body5Sprites",
+      "target_texture": "body5Sprites",
+      "expected_frame_count": 144,
+      "expected_main_count": 144,
+      "expected_alt_count": 0,
+      "expected_max_index": 143,
+      "expected_names_sha256": "18a2853df0bce20896d47ab8fcc4dc13ef8aeb6b7237031d193d0971c8e9b73c",
+      "geometry_policy": {
+        "mode": "native_source_authored_pivot_v1",
+        "proof_algorithm": "native_source_rgba_authored_pivot_float32_ppu_v1",
+        "expected_frame_count": 144,
+        "expected_geometry_proof_sha256": "9d45ab2cbf3c456b4ec1a98d2df6ba348390734c44baa06e46a65a435711a2ce",
+        "expected_origin_proof_sha256": "bdea23ee25e3c3144fb43572ad2bab392103b8cd40da04135490e7b72515b63c",
+        "expected_source_rgba_sha256": "5fff8832776a15fd61658f209322ba3db95d14e7a37ba1199bd805da05dec459"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "water_effect_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

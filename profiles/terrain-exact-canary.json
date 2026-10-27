@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "id": "terrain-exact-canary",
+  "description": "Exact-only European terrain canary for four complete plain-material SHCDE-SE 1.39 GM groups",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - exact terrain atlas canary",
+    "Version": "0.4.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "tile_land_and_stones",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 512,
+      "expected_main_count": 512,
+      "expected_alt_count": 0,
+      "expected_max_index": 512,
+      "expected_names_sha256": "d5c3d3a88f747c5ed6300067e7a638ef50efac1bac61750c8c98c1cdf563abd6",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    },
+    {
+      "gm_file_name": "tile_chevrons",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 512,
+      "expected_main_count": 512,
+      "expected_alt_count": 0,
+      "expected_max_index": 512,
+      "expected_names_sha256": "cfcdbc9420fe00964ede64b1b1f35ff6727c38a31a9226e61129d2ca1fde8031",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    },
+    {
+      "gm_file_name": "killing_pits",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 16,
+      "expected_main_count": 16,
+      "expected_alt_count": 0,
+      "expected_max_index": 16,
+      "expected_names_sha256": "5b863d8a055e646be9333955204f9feebe803fe0261772ad256fe090c4526bdf",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    },
+    {
+      "gm_file_name": "pitch_ditches",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 8,
+      "expected_main_count": 8,
+      "expected_alt_count": 0,
+      "expected_max_index": 8,
+      "expected_names_sha256": "8d2a1456395ada4aaa7b0de0fdcb4b8fde103753324324d1077c32427ade0e19",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "terrain_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

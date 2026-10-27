@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "id": "review-v1-canary",
+  "description": "Die fuenf Gruppen ohne Keep-Frames, auf v1 umgestellt",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - combined production build",
+    "Version": "0.16.0-europe",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": false,
+    "audio_payload": false,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "dock_placement": false
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "body_swordsman",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body13Sprites",
+      "target_texture": "body7Sprites",
+      "expected_frame_count": 1184,
+      "expected_main_count": 1056,
+      "expected_alt_count": 128,
+      "expected_max_index": 1087,
+      "expected_names_sha256": "ca71bb2f62803ef5eded720395babaf516e62070c1097c45a7c49447040ba14c",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 156,
+        "expected_target_frame_count": 1028,
+        "expected_source_names_sha256": "c64cdd6f83a0e74ccffc39fee82ef93306e971863feae5c53d99c8f4e81e18b7",
+        "expected_target_names_sha256": "784b6cfd3d6da2ef8c35d30fc1d9fb1def92938b8f2f0ebef837145bc1e71544",
+        "expected_provenance_sha256": "9ac3095119280f1ddae38803977cf9cd936542ab4ec82584d9062e0ad11af3b0"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas"
+    },
+    {
+      "gm_file_name": "body_chicken",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body5Sprites",
+      "target_texture": "body1Sprites",
+      "expected_frame_count": 798,
+      "expected_main_count": 670,
+      "expected_alt_count": 128,
+      "expected_max_index": 669,
+      "expected_names_sha256": "91acb39bbeff6dca6a1100ff82455aa5ee880feda830941094dc7beed62ff599",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 520,
+        "expected_target_frame_count": 278,
+        "expected_source_names_sha256": "982dad79e046589b2408c95bdf1f01cc2c3aea14a00a2cb2ebdb2fd263a7224c",
+        "expected_target_names_sha256": "784ece4d8b00a98f9b02a0e416fc54b5e775d8827be0ad79621087ca9c2ade6d",
+        "expected_provenance_sha256": "870d68301e04b39b61a795282e595709428f580e1c73a0dba4e87bb12ce37f41"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas"
+    },
+    {
+      "gm_file_name": "body_chicken_brown",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body5Sprites",
+      "target_texture": "body1Sprites",
+      "expected_frame_count": 798,
+      "expected_main_count": 670,
+      "expected_alt_count": 128,
+      "expected_max_index": 669,
+      "expected_names_sha256": "447e0ba7bd9d3c5045a5dacb9d8a94e255e73f2e0b99d4e569dc30de3546cf41",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 576,
+        "expected_target_frame_count": 222,
+        "expected_source_names_sha256": "a71ba0fe6424e80f90f5adef6b8a775f0beed7f3b46b6ba5e4538a95abe082d6",
+        "expected_target_names_sha256": "376dbc3cc58a1b2d8c79fb55bc5709e4becc1430cebca88a9c600b2ba096638d",
+        "expected_provenance_sha256": "a3d0a6e4d42cae6f58aa1e09c7d8518f37cd9a1cf1ae4085ba82ac523d461fc1"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas"
+    },
+    {
+      "gm_file_name": "body_mother",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body7Sprites",
+      "target_texture": "body13Sprites",
+      "expected_frame_count": 544,
+      "expected_main_count": 288,
+      "expected_alt_count": 256,
+      "expected_max_index": 287,
+      "expected_names_sha256": "1ccaee6d28d2c5f56b0e4cca96c9e76ddfba859ac76e011dfdfb5f60cf0e1a00",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 380,
+        "expected_target_frame_count": 164,
+        "expected_source_names_sha256": "130cc0b7423773d45e7848d237085d4854fa1990cb33850268b01cfe988ccc99",
+        "expected_target_names_sha256": "9b3a454bc0120c235f2b6fda1c84498280f3371a186a356cf9be83befcdeef35",
+        "expected_provenance_sha256": "b970f670e0eddf0d0d6244ce656657c6a0830ae15031257e2225e8f359c07849"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas"
+    },
+    {
+      "gm_file_name": "body_shield",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body7Sprites",
+      "target_texture": "body13Sprites",
+      "expected_frame_count": 265,
+      "expected_main_count": 137,
+      "expected_alt_count": 128,
+      "expected_max_index": 136,
+      "expected_names_sha256": "cb58c89fc989eebc32669167c40cbc80d3fa8d3e372d2fb7c0f3dc2f6c1db100",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 230,
+        "expected_target_frame_count": 35,
+        "expected_source_names_sha256": "e7b3d7ceea50ee0bcf682f7e5dabc6c5ed72f3f992d7ca77d3fc68a97ea46740",
+        "expected_target_names_sha256": "528bfb68af8876305803173c3d7ce4a5254979081c8f3629058d775f7245622c",
+        "expected_provenance_sha256": "35cde86a92bb2f1bafbe9544f5c6d490f06286c2126c5a867d6d495becd9780e"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [],
+  "project_files": [],
+  "xaml_patches": []
+}

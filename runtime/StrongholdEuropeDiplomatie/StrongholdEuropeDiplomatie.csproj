@@ -1,0 +1,146 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Die Diplomatie als eigenstaendiges BepInEx-Plugin.
+
+    Der Quelltext ist NICHT kopiert, sondern aus
+    runtime/StrongholdEuropeDE.Runtime/ verlinkt. Eine Kopie waere ein Fork:
+    zwei Staende derselben 404 KB, die still auseinanderlaufen. Verlinkt bleibt
+    Codex' Baum die einzige Quelle, und dieses Projekt ist nur ein zweites
+    Erzeugnis daraus.
+
+    Herausgeloest wird auf der Auslieferungsebene: das Europa-Paket wird mit
+    "diplomacy": false gebaut und traegt weder den Code noch den HUD-Patch,
+    dieses Plugin traegt beides. Genau eine Seite besitzt die Ansprueche.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>StrongholdEuropeDiplomatie</AssemblyName>
+    <RootNamespace>StrongholdEuropeDE.Diplomatie</RootNamespace>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Deterministic>true</Deterministic>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SharedRuntimeDir Condition="'$(SharedRuntimeDir)' == ''">$(MSBuildProjectDirectory)\..\StrongholdEuropeDE.Runtime</SharedRuntimeDir>
+    <DiplomatieWorkRoot Condition="'$(DiplomatieWorkRoot)' == ''">$(MSBuildProjectDirectory)\..\..\work\runtime\diplomatie</DiplomatieWorkRoot>
+    <PathMap>$(DiplomatieWorkRoot)=/_/diplomatie-work,$(MSBuildProjectDirectory)=/_/diplomatie-source,$(SharedRuntimeDir)=/_/runtime-source</PathMap>
+    <!-- Die Engine-Anmeldung. DiplomacyFeature.cs schreibt eine CrusaderDE.dll
+         fest; bauen.py legt eine umgeschriebene Fassung in work/ ab, wenn der
+         Zielbau eine andere Engine verlangt, und zeigt mit dieser Eigenschaft
+         darauf. Ohne Zuweisung wird Codex' Datei unveraendert uebersetzt. -->
+    <DiplomacyFeatureSource Condition="'$(DiplomacyFeatureSource)' == ''">$(SharedRuntimeDir)\DiplomacyFeature.cs</DiplomacyFeatureSource>
+    <GeneratedContractPath Condition="'$(GeneratedContractPath)' == ''">$(DiplomatieWorkRoot)\GeneratedDiplomatieContract.g.cs</GeneratedContractPath>
+    <OutputPath>$(DiplomatieWorkRoot)\bin\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>$(DiplomatieWorkRoot)\obj\$(Configuration)\</IntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+  <Target Name="ValidateLocalReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GeneratedContractPath)')" Text="GeneratedContractPath is missing: $(GeneratedContractPath)" />
+    <Error Condition="!Exists('$(DiplomacyFeatureSource)')" Text="DiplomacyFeatureSource is missing: $(DiplomacyFeatureSource)" />
+    <Error Condition="!Exists('$(BepInExReference)')" Text="BepInExReference is missing: $(BepInExReference)" />
+    <Error Condition="!Exists('$(HarmonyReference)')" Text="HarmonyReference is missing: $(HarmonyReference)" />
+    <Error Condition="!Exists('$(SHCDESEReference)')" Text="SHCDESEReference is missing: $(SHCDESEReference)" />
+    <Error Condition="!Exists('$(ZhuqiaomonReference)')" Text="ZhuqiaomonReference is missing: $(ZhuqiaomonReference)" />
+    <Error Condition="!Exists('$(SystemMemoryReference)')" Text="SystemMemoryReference is missing: $(SystemMemoryReference)" />
+    <Error Condition="!Exists('$(R3Reference)')" Text="R3Reference is missing: $(R3Reference)" />
+    <Error Condition="!Exists('$(AssemblyCSharpReference)')" Text="AssemblyCSharpReference is missing: $(AssemblyCSharpReference)" />
+    <Error Condition="!Exists('$(NoesisReference)')" Text="NoesisReference is missing: $(NoesisReference)" />
+    <Error Condition="!Exists('$(UnityEngineReference)')" Text="UnityEngineReference is missing: $(UnityEngineReference)" />
+    <Error Condition="!Exists('$(UnityEngineCoreModuleReference)')" Text="UnityEngineCoreModuleReference is missing: $(UnityEngineCoreModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineAssetBundleModuleReference)')" Text="UnityEngineAssetBundleModuleReference is missing: $(UnityEngineAssetBundleModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineAudioModuleReference)')" Text="UnityEngineAudioModuleReference is missing: $(UnityEngineAudioModuleReference)" />
+    <Error Condition="!Exists('$(UnityEngineImageConversionModuleReference)')" Text="UnityEngineImageConversionModuleReference is missing: $(UnityEngineImageConversionModuleReference)" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="$(GeneratedContractPath)" Link="GeneratedDiplomatieContract.g.cs" />
+    <Compile Include="DiplomatiePlugin.cs" />
+    <Compile Include="DiplomatiePersistentHost.cs" />
+    <!-- Geteilter Quelltext aus dem Europa-Laufzeitbaum. Die Liste ist die
+         gemessene transitive Huelle der vier Diplomacy-Dateien; sie darf nur
+         wachsen, wenn der Uebersetzer es verlangt. -->
+    <Compile Include="$(DiplomacyFeatureSource)" Link="Geteilt\DiplomacyFeature.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyCore.cs" Link="Geteilt\DiplomacyCore.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyCombatSafety.cs" Link="Geteilt\DiplomacyCombatSafety.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacySaveCodec.cs" Link="Geteilt\DiplomacySaveCodec.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyRuntimeSafety.cs" Link="Geteilt\DiplomacyRuntimeSafety.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyTransferRecovery.cs" Link="Geteilt\DiplomacyTransferRecovery.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyNativeInventorySection.cs" Link="Geteilt\DiplomacyNativeInventorySection.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyGoodsCommands.cs" Link="Geteilt\DiplomacyGoodsCommands.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyDeferredUi.cs" Link="Geteilt\DiplomacyDeferredUi.cs" />
+    <Compile Include="$(SharedRuntimeDir)\DiplomacyRelationshipDecisions.cs" Link="Geteilt\DiplomacyRelationshipDecisions.cs" />
+    <Compile Include="$(SharedRuntimeDir)\ExtensionFeatureHost.cs" Link="Geteilt\ExtensionFeatureHost.cs" />
+    <Compile Include="$(SharedRuntimeDir)\RuntimeSessionScopeDecision.cs" Link="Geteilt\RuntimeSessionScopeDecision.cs" />
+    <Compile Include="$(SharedRuntimeDir)\Hashing.cs" Link="Geteilt\Hashing.cs" />
+    <!-- Die Faehigkeitspruefung: dieselbe Fehler-zu-Bahn-Trennung wie im
+         Europa-Plugin, damit ein fehlendes R3 die Diplomatie abschaltet statt
+         das Spiel zu zerlegen. -->
+    <Compile Include="$(SharedRuntimeDir)\EuropeCapabilities.cs" Link="Geteilt\EuropeCapabilities.cs" />
+    <Compile Include="$(SharedRuntimeDir)\RuntimeBuildGuard.cs" Link="Geteilt\RuntimeBuildGuard.cs" />
+    <Compile Include="$(SharedRuntimeDir)\RuntimeDecision.cs" Link="Geteilt\RuntimeDecision.cs" />
+
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(HarmonyReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SHCDESE">
+      <HintPath>$(SHCDESEReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Zhuqiaomon">
+      <HintPath>$(ZhuqiaomonReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>$(SystemMemoryReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="R3">
+      <HintPath>$(R3Reference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(AssemblyCSharpReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Noesis.NoesisGUI">
+      <HintPath>$(NoesisReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityEngineReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(UnityEngineCoreModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- RuntimeBuildGuard prueft die frueh geladenen Unity-Module ueber ihre
+         Typen (AssetBundle, AudioClip, ImageConversion); ohne diese Verweise
+         uebersetzt der geteilte Waechter nicht. -->
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>$(UnityEngineAssetBundleModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(UnityEngineAudioModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(UnityEngineImageConversionModuleReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>

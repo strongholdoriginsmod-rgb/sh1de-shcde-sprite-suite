@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "plugin_id": "strongholdeuropede.runtime.private",
+  "source_build_id": "local-sh1de-unity-2021.3.27f1-2025-01-20",
+  "target_build_id": "local-shcde-2.80-unity-2021.3.45f2",
+  "target_text": {
+    "relative_path": "Assets/Text/crusader.txt",
+    "locale": "dede",
+    "size": 317902,
+    "sha256": "41e44ee6a00b5ea1a5965b3a1dc9807ab7f45e665484cc214e9920109d326451"
+  },
+  "hud_xaml": {
+    "relative_path": "BepInEx/plugins/000shcdese/Override/Assets/GUI/XAMLResources/HUD_Main.xaml",
+    "size": 332899,
+    "sha256": "b84c40b60ac4b790f9ecb5ae712234664ddedb3c73a69988dd5a8b8187a4ab74"
+  },
+  "hud_buildings_xaml": {
+    "relative_path": "BepInEx/plugins/000shcdese/Override/Assets/GUI/XAMLResources/HUD_Buildings.xaml",
+    "size": 395704,
+    "sha256": "2fc64ba15eed1db69aeae846379c0d2dff24b1df4dd1c070ab0c24cbd34a90c2"
+  },
+  "templates": {
+    "rally_de": "Sammelpunkt setzen: {name}",
+    "rally_en": "Set rally point: {name}",
+    "select_de": "Alle auswählen/abwählen: {name}",
+    "select_en": "Select/deselect all: {name}"
+  },
+  "units": [
+    {
+      "id": "arabian_bowman",
+      "chimp_raw": 70,
+      "bubble_raw": 315,
+      "rally_raw": 0,
+      "select_raw": 7,
+      "hud_control": "ButtonBuildMEArabBow",
+      "de": "Langbogenschütze",
+      "en": "Longbowman"
+    },
+    {
+      "id": "slave",
+      "chimp_raw": 71,
+      "bubble_raw": 316,
+      "rally_raw": 1,
+      "select_raw": 8,
+      "hud_control": "ButtonBuildMEArabSlave",
+      "de": "Brandschätzer",
+      "en": "Torchbearer"
+    },
+    {
+      "id": "slinger",
+      "chimp_raw": 72,
+      "bubble_raw": 317,
+      "rally_raw": 2,
+      "select_raw": 9,
+      "hud_control": "ButtonBuildMEArabSlinger",
+      "de": "Schleuderer",
+      "en": "Slinger"
+    },
+    {
+      "id": "assassin",
+      "chimp_raw": 73,
+      "bubble_raw": 318,
+      "rally_raw": 3,
+      "select_raw": 10,
+      "hud_control": "ButtonBuildMEArabAssassin",
+      "de": "Sturmspäher",
+      "en": "Escalader"
+    },
+    {
+      "id": "horse_archer",
+      "chimp_raw": 74,
+      "bubble_raw": 319,
+      "rally_raw": 4,
+      "select_raw": 11,
+      "hud_control": "ButtonBuildMEArabHorseArcher",
+      "de": "Ungarischer Reiterbogenschütze",
+      "en": "Hungarian Horse Archer"
+    },
+    {
+      "id": "arabian_swordsman",
+      "chimp_raw": 75,
+      "bubble_raw": 320,
+      "rally_raw": 5,
+      "select_raw": 12,
+      "hud_control": "ButtonBuildMEArabSwordsman",
+      "de": "Fußritter",
+      "en": "Dismounted Knight"
+    },
+    {
+      "id": "fire_thrower",
+      "chimp_raw": 76,
+      "bubble_raw": 321,
+      "rally_raw": 6,
+      "select_raw": 13,
+      "hud_control": "ButtonBuildMEArabGrenadier",
+      "de": "Feuerwerker",
+      "en": "Fire Pot Thrower"
+    },
+    {
+      "id": "camel_lancer",
+      "chimp_raw": 78,
+      "bubble_raw": 349,
+      "rally_raw": 178,
+      "select_raw": 186,
+      "hud_control": "ButtonBuildMECamelLancer",
+      "de": "Berittener Sergeant",
+      "en": "Mounted Sergeant"
+    },
+    {
+      "id": "healer",
+      "chimp_raw": 79,
+      "bubble_raw": 350,
+      "rally_raw": 179,
+      "select_raw": 187,
+      "hud_control": "ButtonBuildMEHealer",
+      "de": "Wundarzt",
+      "en": "Surgeon"
+    },
+    {
+      "id": "eunuch",
+      "chimp_raw": 80,
+      "bubble_raw": 351,
+      "rally_raw": 180,
+      "select_raw": 188,
+      "hud_control": "ButtonBuildMEEunuch",
+      "de": "Axtgardist",
+      "en": "Axeguard"
+    },
+    {
+      "id": "ambusher",
+      "chimp_raw": 81,
+      "bubble_raw": 352,
+      "rally_raw": 181,
+      "select_raw": 189,
+      "hud_control": "ButtonBuildMEAmbusher",
+      "de": "Saboteur",
+      "en": "Saboteur"
+    },
+    {
+      "id": "skirmisher",
+      "chimp_raw": 82,
+      "bubble_raw": 353,
+      "rally_raw": 182,
+      "select_raw": 190,
+      "hud_control": "ButtonBuildMESkirmisher",
+      "de": "Wurfspeerträger",
+      "en": "Javelineer"
+    },
+    {
+      "id": "heavy_camel",
+      "chimp_raw": 83,
+      "bubble_raw": 354,
+      "rally_raw": 183,
+      "select_raw": 191,
+      "hud_control": "ButtonBuildMEHeavyCamel",
+      "de": "Armbrustreiter",
+      "en": "Mounted Crossbowman"
+    },
+    {
+      "id": "sapper",
+      "chimp_raw": 84,
+      "bubble_raw": 355,
+      "rally_raw": 184,
+      "select_raw": 192,
+      "hud_control": "ButtonBuildMESapper",
+      "de": "Mineur",
+      "en": "Miner"
+    },
+    {
+      "id": "demolisher",
+      "chimp_raw": 85,
+      "bubble_raw": 356,
+      "rally_raw": 185,
+      "select_raw": 193,
+      "hud_control": "ButtonBuildMEDemolisher",
+      "de": "Schildpionier",
+      "en": "Shielded Sapper"
+    }
+  ],
+  "buildings": [
+    {
+      "id": "mercenary_post",
+      "title_raw": 10,
+      "description_raw": 57,
+      "hud_control": "ButtonBuildWoodenBarracks",
+      "de": "Söldnerlager",
+      "en": "Mercenary Camp",
+      "description_de": "Rekrutiert europäische Söldner gegen Gold.",
+      "description_en": "Recruits European mercenaries for gold."
+    },
+    {
+      "id": "bedouin_stockade",
+      "title_raw": 348,
+      "description_raw": 58,
+      "hud_control": "ButtonBuildWoodenBedouinStockade",
+      "de": "Heerlager",
+      "en": "War Camp",
+      "description_de": "Rekrutiert spezialisierte europäische Truppen gegen Gold.",
+      "description_en": "Recruits specialized European troops for gold."
+    }
+  ]
+}

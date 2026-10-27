@@ -1,0 +1,1955 @@
+{
+ "Eine Beziehungsänderung wird noch abgeschlossen.": {
+  "en": "A relationship change is still being completed.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs",
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Bündnis nicht möglich: Die Koalition wurde besiegt.": {
+  "en": "Alliance unavailable: the coalition was defeated.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Bündnis nicht möglich: Ein feindlicher KI-Verbund muss verbleiben.": {
+  "en": "Alliance unavailable: one hostile AI coalition must remain.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs",
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Das gewählte Bündnis wurde aufgehoben. Andere feindliche Fürsten misstrauen Euch nun stärker.": {
+  "en": "The selected alliance has ended. Other hostile lords now distrust you more.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Das Bündnis wurde geschlossen.": {
+  "en": "The alliance has been formed.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Euer Vasall hat sich losgesagt. Er ist Euch nun feind.": {
+  "en": "Your vassal has broken away. He is your enemy now.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Der Tribut blieb zweimal aus. Das Bündnis ist beendet.": {
+  "en": "The tribute went unpaid twice. The alliance has ended.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Der Gegner hat das Bündnis aufgehoben.": {
+  "en": "The opponent has ended the alliance.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Alle Bündnisse wurden aufgehoben. Die übrigen Fürsten misstrauen Euch nun stärker.": {
+  "en": "All alliances have been ended. The remaining lords now distrust you more.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Alle Bündnisse wurden aufgehoben.": {
+  "en": "All alliances have been ended.",
+  "quellen": [
+   "DiplomacyCombatSafety.cs"
+  ]
+ },
+ "Diplomatie": {
+  "en": "Diplomacy",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Diplomatie konnte nicht sicher gespeichert werden und wurde für diese Partie abgeschaltet. Der Spielstand enthält einen ausdrücklichen Inaktiv-Vermerk.": {
+  "en": "Diplomacy could not be saved safely and has been disabled for this match. The save contains an explicit inactive marker.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Dieser Spielstand hat die Diplomatie ausdrücklich abgeschaltet. Die gespeicherten Mannschaften bleiben erhalten.": {
+  "en": "Diplomacy is explicitly disabled in this save. Its saved teams are preserved.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Gütersendungen sind für diese Partie gesperrt; die übrige Diplomatie läuft weiter.": {
+  "en": "Goods transfers are locked for this match; the rest of diplomacy remains active.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Gütersendung konnte nicht sicher abgeglichen werden. Weitere Sendungen sind für diese Partie gesperrt; die übrige Diplomatie läuft weiter.": {
+  "en": "The goods transfer could not be reconciled safely. Further transfers are locked for this match; the rest of diplomacy remains active.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Eine Gütersendung wird noch geprüft.": {
+  "en": "A goods transfer is still being verified.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Ungültige Gütersendung.": {
+  "en": "Invalid goods transfer.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Nicht genügend Güter.": {
+  "en": "Not enough goods.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Der Empfänger kann diese Menge nicht lagern. Die Sendung wurde vollständig zurückgenommen.": {
+  "en": "The recipient cannot store that amount. The transfer was rolled back in full.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Gütersendung ist fehlgeschlagen.": {
+  "en": "The goods transfer failed.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Gütersendung wurde sicher abgebrochen.": {
+  "en": "The goods transfer was safely aborted.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Gütersendung wurde sicher abgebrochen. Weitere Sendungen verwenden den direkten Transfer.": {
+  "en": "The goods transfer was safely aborted. Further transfers use the direct path.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Das Ultimatum wurde erfüllt. Das Bündnis bleibt bestehen.": {
+  "en": "The ultimatum was fulfilled. The alliance remains in force.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Frühere Vertragsbrüche schließen dieses Bündnis dauerhaft aus.": {
+  "en": "Earlier treaty breaches permanently rule out this alliance.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Bedingungen sind erfüllt, doch Vertrauen und Ansehen reichen noch nicht aus.": {
+  "en": "The terms are fulfilled, but trust and standing are not yet sufficient.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Der Gegner weist die Anfrage zurück.": {
+  "en": "The opponent rejects the request.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Eine Bündnisentscheidung ist bereits offen.": {
+  "en": "An alliance decision is already pending.",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Gesandten benötigen Zeit. Neue Gespräche: ": {
+  "en": "The envoys need time. New talks: ",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Neue Verhandlungen sind derzeit gesperrt.": {
+  "en": "New negotiations are currently locked.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Bündnis aufkündigen": {
+  "en": "End alliance",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Dieses Bündnis wird sofort beendet. Andere feindliche Fürsten werden Euren Vertragsbruch berücksichtigen.": {
+  "en": "This alliance ends immediately. Other hostile lords will remember your breach.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Alle Bündnisse werden sofort beendet. Sämtliche KI-Koalitionen werden feindlich.": {
+  "en": "All alliances end immediately. Every AI coalition becomes hostile.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Teamänderung wurde sicher abgebrochen.": {
+  "en": "The team change was safely aborted.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Bündnisangebot": {
+  "en": "Alliance offer",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Der Gegner bietet ein Bündnis an.": {
+  "en": "The opponent offers an alliance.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Feind — ": {
+  "en": "Enemy — ",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Güter senden oder Bündnis anfragen.": {
+  "en": "Send goods or request an alliance.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Das Bündnis gilt für den gesamten gegnerischen Verbund.": {
+  "en": "The alliance covers the opponent's complete coalition.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Letzter Gegner: Ein Bündnis ist ausgeschlossen.": {
+  "en": "Last opponent: an alliance is unavailable.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Verbündet — ": {
+  "en": "Allied — ",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Verbündet": {
+  "en": "Allied",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Den ausgewählten Verbündeten verwalten": {
+  "en": "Manage the selected ally",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Zurück zur Einzelansicht": {
+  "en": "Back to the single view",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Bündnismitglieder und Lehnsverhältnisse verwalten": {
+  "en": "Manage alliance members and fealty",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Abkommen aufkündigen": {
+  "en": "End agreement",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnis anfragen": {
+  "en": "Request alliance",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Befehle sind nur für Verbündete verfügbar.": {
+  "en": "Orders are available to allies only.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Ultimatum": {
+  "en": "Ultimatum",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "verbündet": {
+  "en": "allied",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "abweisend": {
+  "en": "rebuffing",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "gesprächsbereit": {
+  "en": "willing to talk",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "interessiert": {
+  "en": "interested",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "bündnisbereit": {
+  "en": "ready to ally",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnis nicht möglich": {
+  "en": "alliance unavailable",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Ultimatum: ": {
+  "en": "Ultimatum: ",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Forderung: ": {
+  "en": "Demand: ",
+  "quellen": [
+   "DiplomacyFeature.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " Tage": {
+  "en": " days",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Eine beim Speichern noch unvollständige Gütersendung wurde zurückgenommen. Ihr könnt sie erneut senden.": {
+  "en": "A goods transfer that was incomplete when saving has been rolled back. You can send it again.",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Holz": {
+  "en": "Wood",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Hopfen": {
+  "en": "Hops",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Stein": {
+  "en": "Stone",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Eisen": {
+  "en": "Iron",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Pech": {
+  "en": "Pitch",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Weizen": {
+  "en": "Wheat",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Brot": {
+  "en": "Bread",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Käse": {
+  "en": "Cheese",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Fleisch": {
+  "en": "Meat",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Apfel": {
+  "en": "Apple",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Bier": {
+  "en": "Ale",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Gold": {
+  "en": "Gold",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Mehl": {
+  "en": "Flour",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Bogen": {
+  "en": "Bow",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Armbrust": {
+  "en": "Crossbow",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Lanze": {
+  "en": "Spear",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Pike": {
+  "en": "Pike",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Streitkolben": {
+  "en": "Mace",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Schwert": {
+  "en": "Sword",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Lederrüstung": {
+  "en": "Leather armour",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Rüstung": {
+  "en": "Armour",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Verbündete": {
+  "en": "Allies",
+  "quellen": [
+   "DiplomacyFeature.cs"
+  ]
+ },
+ "Die Sendung wartet auf das Spiel. Zurück oder Schließen bricht sie ab.": {
+  "en": "The transfer is waiting for the game. Back or Close cancels it.",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "eine Vertragspartei ist ausgefallen": {
+  "en": "a party is no longer available",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "das Bündnis hat sich geändert": {
+  "en": "the alliance has changed",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "die Forderung ist bereits erfüllt": {
+  "en": "the demand is already fulfilled",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "die Forderung wurde inzwischen teilweise erfüllt": {
+  "en": "the demand has since been partly fulfilled",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "die Forderung ist abgelaufen": {
+  "en": "the demand has expired",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "die Forderung ist nicht mehr offen": {
+  "en": "the demand is no longer open",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "die Forderung hat sich geändert": {
+  "en": "the demand has changed",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "der Auftrag muss erneut bestätigt werden": {
+  "en": "the order needs to be confirmed again",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "Sendung an {0} abgebrochen: {1}. Dieser Auftrag wurde nicht ausgeführt.": {
+  "en": "Transfer to {0} cancelled: {1}. This order was not executed.",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "Forderung von {0} abgelaufen.": {
+  "en": "Demand from {0} expired.",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "Kontaktpause: noch {0} Tage.": {
+  "en": "Contact pause: {0} days remaining.",
+  "quellen": [
+   "DiplomacyGoodsCommands.cs"
+  ]
+ },
+ "Herrscher": {
+  "en": "Ruler",
+  "quellen": [
+   "DiplomacyRelationshipDecisions.cs",
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Das Abkommen wurde aufgekündigt. Vertrauen und Ansehen sind beschädigt.": {
+  "en": "The agreement was ended. Trust and standing have suffered.",
+  "quellen": [
+   "DiplomacyRelationshipDecisions.cs"
+  ]
+ },
+ "Unbekannter Herrscher": {
+  "en": "Unknown ruler",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Spieler {0}": {
+  "en": "Player {0}",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Euer Bündnis": {
+  "en": "Your alliance",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Verbündete: {0} · Vasallen: {1}": {
+  "en": "Allies: {0} · Vassals: {1}",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Rolle": {
+  "en": "Role",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Pflichten und Befehle": {
+  "en": "Obligations and orders",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Verbündeter": {
+  "en": "Ally",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Noch keine Verbündeten. Waffenruhe und Handel begründen kein Bündnis.": {
+  "en": "No allies yet. A truce or trade pact does not establish an alliance.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Güter senden": {
+  "en": "Send goods",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Güter erbitten": {
+  "en": "Request goods",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Forderung erfüllen": {
+  "en": "Fulfil demand",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Befehle": {
+  "en": "Orders",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Lehnsverhältnis": {
+  "en": "Fealty",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Bündnis lösen": {
+  "en": "End alliance",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Forderung ablehnen": {
+  "en": "Decline demand",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Güter anfordern": {
+  "en": "Request supplies",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Vasallen freilassen": {
+  "en": "Release vassal",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Gleichstellung fordern": {
+  "en": "Request equal standing",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Als Vasall könnt Ihr keine Güter fordern.": {
+  "en": "As a vassal, you cannot request goods.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Ihr zahlt": {
+  "en": "You pay",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Ihr erhaltet": {
+  "en": "You receive",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Rückstand; täglicher Zahlungsversuch": {
+  "en": "Arrears; daily payment retry",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Waren statt Gold": {
+  "en": "Goods accepted",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Wiedergutmachung offen": {
+  "en": "restitution due",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Keine offene Pflicht": {
+  "en": "No obligation due",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Alle {0} Tage · Zahlungen: {1} · Rückstände: {2} · Offen: {3}": {
+  "en": "Every {0} days · Payments: {1} · Arrears: {2} · Open: {3}",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Die Forderung wurde zurückgewiesen.": {
+  "en": "The demand has been rejected.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Dieser Bündnispartner ist an diesem Lehnsverhältnis nicht beteiligt. Vasall: {0}; Lehnsherr: {1}.": {
+  "en": "This ally is not a party to this fealty. Vassal: {0}; overlord: {1}.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Die militärische Lage wird noch geprüft.": {
+  "en": "The military situation is still being assessed.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Forderung abgelehnt.": {
+  "en": "Demand refused.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Eine erneute Forderung ist möglich — ": {
+  "en": "You may demand submission again — ",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Die angenommene Unterwerfung wird noch vollzogen.": {
+  "en": "The accepted submission is still being completed.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Zuerst muss das bereits offene Angebot entschieden werden.": {
+  "en": "The existing offer must be resolved first.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Dieser Fürst gehört einem gemeinsamen KI-Team an. Einzelne Teammitglieder können sich nicht unterwerfen.": {
+  "en": "This ruler belongs to a shared AI team. Individual team members cannot submit.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Ihr seid gleichberechtigte Verbündete. Ein Bündnis begründet keine Lehnspflicht.": {
+  "en": "You are equal allies. An alliance does not create fealty.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Das laufende Abkommen verhindert ein Unterwerfungsangebot.": {
+  "en": "The current agreement prevents a submission offer.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Eine offene Forderung muss zunächst erfüllt oder beendet werden.": {
+  "en": "An outstanding demand must first be fulfilled or ended.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Gespräche ausgesetzt — ": {
+  "en": "Talks suspended — ",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs",
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Identität dieses Herrschers ist noch nicht verfügbar.": {
+  "en": "This ruler's identity is not available yet.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Unterwerfung ausgeschlossen.": {
+  "en": "Will never submit.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Für diesen Herrscher ist keine Unterwerfungsentscheidung verfügbar.": {
+  "en": "A submission decision is not available for this ruler.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Ein weiterer lebender Gegner muss verbleiben.": {
+  "en": "Another living enemy must remain.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Die aktuelle Lage wird beim nächsten diplomatischen Tageswechsel bewertet.": {
+  "en": "The current situation will be assessed at the next diplomatic day change.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Militärisch nicht ausreichend unterlegen.": {
+  "en": "Insufficient military disadvantage.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Hält dem Druck noch stand.": {
+  "en": "Still resisting the pressure.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Die erforderlichen Drucktage sind beobachtet; die Angebotsprüfung steht noch aus.": {
+  "en": "The required days of pressure have been observed; the offer assessment is pending.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Derzeit liegt kein Unterwerfungsangebot vor.": {
+  "en": "There is currently no submission offer.",
+  "quellen": [
+   "DiplomacyV2AllianceUi.cs"
+  ]
+ },
+ "Euer Angriff hat das Abkommen mit {0} gebrochen (Tag {1}).": {
+  "en": "Your attack broke the agreement with {0} (day {1}).",
+  "quellen": [
+   "DiplomacyV2BreachNotices.cs"
+  ]
+ },
+ "Eure Angriffe haben {0} Abkommen mit {1} gebrochen (Tag {2}–{3}).": {
+  "en": "Your attacks broke {0} agreements with {1} (days {2}–{3}).",
+  "quellen": [
+   "DiplomacyV2BreachNotices.cs"
+  ]
+ },
+ "Abkommen gebrochen": {
+  "en": "Agreement broken",
+  "quellen": [
+   "DiplomacyV2BreachNotices.cs"
+  ]
+ },
+ "Eure Truppen sind in die Kernzone des Gegners eingerückt. Das Abkommen und alle Gespräche sind beendet.": {
+  "en": "Your troops entered the enemy's inner territory. The agreement and all talks have ended.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Waffenruhe vereinbart. Nach der Wartezeit könnt Ihr Bedingungen für ein Handelsabkommen anfragen.": {
+  "en": "Truce agreed. Once the waiting period ends, you can request terms for a trade pact.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Handelsabkommen geschlossen: {0} Tage Schutz, höhere diplomatische Wertung Eurer Geschenke und Zugang zu Bündnisbedingungen.": {
+  "en": "Trade pact concluded: {0} days of protection, greater diplomatic value for your gifts, and access to alliance terms.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Bündnisbedingungen sind erfüllt. Ein feindlicher KI-Verbund muss jedoch verbleiben; Waffenruhe und Handel gelten weiter.": {
+  "en": "The alliance terms are fulfilled, but one hostile AI coalition must remain; truce and trade stay in force.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Bündnisbedingungen sind erfüllt. Frühere Vertragsbrüche schließen ein Bündnis mit diesem Herrscher jedoch dauerhaft aus.": {
+  "en": "The alliance terms are fulfilled, but earlier treaty breaches permanently rule out an alliance with this ruler.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Bündnisbedingungen sind erfüllt. Vertrauen und Ansehen reichen für ein Bündnis noch nicht aus.": {
+  "en": "The alliance terms are fulfilled. Trust and standing are not yet sufficient for an alliance.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die letzte Forderung wurde erfüllt. Das Bündnis bleibt bestehen.": {
+  "en": "The final demand was fulfilled. The alliance remains in force.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Wiedergutmachung wurde angenommen. Gespräche sind wieder möglich, doch der Vertragsbruch bleibt in Erinnerung.": {
+  "en": "Restitution was accepted. Talks may resume, but the breach will still be remembered.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Ihr habt Lehnstreue geschworen. Bis Ihr Euch befreit, entrichtet Ihr regelmäßig Tribut.": {
+  "en": "You have sworn fealty. Until you free yourself you will pay regular tribute.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Euer neuer Verbündeter hat Euch Lehnstreue geschworen und entrichtet Euch fortan Tribut.": {
+  "en": "Your new ally has sworn fealty to you and will pay you tribute from now on.",
+  "quellen": [
+   "DiplomacyV2Feature.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Antrag auf Gleichberechtigung": {
+  "en": "Request for equal standing",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Euer Vasall ist stärker geworden als Ihr und verlangt, Euch gleichgestellt zu werden. Gewährt Ihr es, enden die Tributzahlungen und das Bündnis bleibt bestehen. Weist Ihr ihn ab, könnte er sich lossagen.": {
+  "en": "Your vassal has grown stronger than you and demands equal standing. Granting it ends the tribute payments and keeps the alliance. Refusing may make him break away.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Antwortfrist: {0} Spieltage, während diese Entscheidung sichtbar ist.": {
+  "en": "Response period: {0} game days while this decision is visible.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Ihr habt Euren Vasallen freigelassen. Die Tributzahlungen enden, das Bündnis bleibt.": {
+  "en": "You have freed your vassal. The tribute payments end and the alliance remains.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Ihr habt den Antrag abgewiesen. Die Lehnspflicht bleibt bestehen; ein neuer Gleichstellungsantrag ist frühestens in {0} Tagen möglich.": {
+  "en": "You refused the request. Fealty continues; another request for equal standing is possible in {0} days at the earliest.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Keine erfüllbare Forderung ausgewählt.": {
+  "en": "No payable demand is selected.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Eine andere Übertragung wird noch abgeschlossen.": {
+  "en": "Another transfer is still being completed.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Das Güterpaket kann nicht sicher geprüft werden.": {
+  "en": "The goods package cannot be verified safely.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Es fehlen: ": {
+  "en": "Missing: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Das Abkommen ist ausgelaufen.": {
+  "en": "The agreement has expired.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Euer Verbündeter stellt eine letzte Forderung. ": {
+  "en": "Your ally has issued a final demand. ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Der Gegner wird den Vertragsbruch lange in Erinnerung behalten.": {
+  "en": "The opponent will remember this breach for a long time.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "unbekannt": {
+  "en": "unknown",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnis unter Vorbehalt — ": {
+  "en": "Alliance at risk — ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnis · Unterstützung erbeten — ": {
+  "en": "Alliance · support requested — ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnis — nächste Prüfung ": {
+  "en": "Alliance — next review ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Waffenruhe — ": {
+  "en": "Truce — ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Handelsabkommen — ": {
+  "en": "Trade pact — ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "feindselig": {
+  "en": "hostile",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Waffenruhe": {
+  "en": "truce",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "in Verhandlung": {
+  "en": "negotiating",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Handelspartner": {
+  "en": "trade partner",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "vertrauensvoll": {
+  "en": "trusted",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "warnt Euch": {
+  "en": "warning you",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "misstrauisch": {
+  "en": "distrustful",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Beziehung unbekannt": {
+  "en": "Relationship unknown",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Herrscher: ": {
+  "en": "Ruler: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · Vertrauen ": {
+  "en": " · trust ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · Respekt ": {
+  "en": " · respect ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · Groll ": {
+  "en": " · grudge ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Unterwerfung bestätigt": {
+  "en": "Submission accepted",
+  "quellen": [
+   "DiplomacyV2Feature.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Entscheidung offen": {
+  "en": "Decision pending",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Gespräche in 1 Tag": {
+  "en": "Talks in 1 day",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Gespräche in {0} Tagen": {
+  "en": "Talks in {0} days",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Nächster Schritt: Bedingungen zur Wiedergutmachung anfragen.": {
+  "en": "Next step: request terms for restitution.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Nächster Schritt: Benötigte Güter senden, um Gesprächsbereitschaft zu schaffen.": {
+  "en": "Next step: send needed goods to open talks.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Nächster Schritt: Bedingungen für eine Waffenruhe anfragen.": {
+  "en": "Next step: request terms for a truce.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Nächster Schritt: Bedingungen für ein Handelsabkommen anfragen.": {
+  "en": "Next step: request terms for a trade pact.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Der Verbund ist zu einem Bündnis bereit.": {
+  "en": "The coalition is ready for an alliance.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Mindestens ein feindlicher KI-Verbund muss verbleiben.": {
+  "en": "At least one hostile AI coalition must remain.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Bedingungen sind erfüllt; frühere Vertragsbrüche verhindern dieses Bündnis dauerhaft.": {
+  "en": "Terms are fulfilled; earlier treaty breaches permanently prevent this alliance.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Bedingungen sind erfüllt. Benötigte Güter senden, um Vertrauen und Ansehen weiter zu festigen.": {
+  "en": "Terms are fulfilled. Send needed goods to strengthen trust and standing.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Nächster Schritt: Bündnisbedingungen anfragen und Vertrauen festigen.": {
+  "en": "Next step: request alliance terms and strengthen trust.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bedingung zur Waffenruhe: ": {
+  "en": "Truce terms: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Handelsbedingung: ": {
+  "en": "Trade terms: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnisbedingung: ": {
+  "en": "Alliance terms: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Erbetene Unterstützung: ": {
+  "en": "Requested support: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Letzte Forderung: ": {
+  "en": "Final demand: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Wiedergutmachung: ": {
+  "en": "Restitution: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Lieferung verbucht. Offen: ": {
+  "en": "Delivery recorded. Due: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bezahlt die offenen Positionen dieser Forderung.": {
+  "en": "Pays the outstanding items in this demand.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Schonfrist: 1 Tag": {
+  "en": "Grace: 1 day",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Schonfrist: {0} Tage": {
+  "en": "Grace: {0} days",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Noch 1 Tag": {
+  "en": "1 day remaining",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Noch {0} Tage": {
+  "en": "{0} days remaining",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Forderung vollständig erfüllen": {
+  "en": "Fulfil complete demand",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bedingungen anfragen": {
+  "en": "Request terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Güter vom Verbündeten erbitten": {
+  "en": "Request goods from ally",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Wartezeit: ": {
+  "en": "Waiting period: ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Wiedergutmachung anfragen": {
+  "en": "Request restitution terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Waffenruhe anfragen": {
+  "en": "Request truce terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Handelsabkommen anfragen": {
+  "en": "Request trade terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnisbereitschaft prüfen": {
+  "en": "Review alliance readiness",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnisbedingungen anfragen": {
+  "en": "Request alliance terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Unterstützung leisten": {
+  "en": "Provide support",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Details": {
+  "en": "Details",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnis": {
+  "en": "Alliance",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Haltung": {
+  "en": "Attitude",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Vertrauen": {
+  "en": "Trust",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Dankbarkeit": {
+  "en": "Gratitude",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Respekt": {
+  "en": "Respect",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Groll": {
+  "en": "Grudge",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Verlässlichkeit": {
+  "en": "Reliability",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Vertrauensgrenze ": {
+  "en": "Trust ceiling ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Strategische Lage": {
+  "en": "Strategic situation",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Machtbilanz ": {
+  "en": "Power balance ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bedrohung ": {
+  "en": "Threat ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Abhängigkeit ": {
+  "en": "Dependency ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Koalitionswert ": {
+  "en": "Coalition value ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Gemeinsame Gegner ": {
+  "en": "Common enemies ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Eure Bündnisse ": {
+  "en": "Your alliances ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bestand wird aktualisiert": {
+  "en": "Updating stores",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Für die vollständige Erfüllung fehlen noch Vorräte.": {
+  "en": "More stores are needed to fulfil the complete package.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Fehlende Güter senden oder zunächst einlagern.": {
+  "en": "Send available goods or acquire the missing stores.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Forderung zurückweisen. Das kostet Ansehen, aber nie das Bündnis.": {
+  "en": "Reject the demand. It costs standing, never the alliance.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Abkommen lösen": {
+  "en": "End agreement",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Diplomatieansicht ist nicht verfügbar. Die Grundansicht bleibt geöffnet; Bündnis- und Lehnsverwaltung fehlen.": {
+  "en": "The diplomacy view is unavailable. The basic view remains open; alliance and fealty management are unavailable.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Unterwerfungsangebot": {
+  "en": "Offer of submission",
+  "quellen": [
+   "DiplomacyV2Feature.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Antwortfrist: {0} Spieltage.": {
+  "en": "Response time: {0} game days.",
+  "quellen": [
+   "DiplomacyV2Feature.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Angebot prüfen": {
+  "en": "Review offer",
+  "quellen": [
+   "DiplomacyV2Feature.cs",
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Diplomatische Möglichkeiten": {
+  "en": "Diplomatic options",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · Gezielte Geschenke bleiben möglich.": {
+  "en": " · Targeted gifts remain available.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Das vollständige Paket liegt in Euren Lagern bereit.": {
+  "en": "The complete package is available in your stores.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Mit einem Klick vollständig liefern.": {
+  "en": "Deliver everything with one click.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · geliefert ": {
+  "en": " · delivered ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · offen ": {
+  "en": " · due ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · Lager ": {
+  "en": " · stores ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bedingungen zur Waffenruhe": {
+  "en": "Truce terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bedingungen zum Handel": {
+  "en": "Trade terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnisbedingungen": {
+  "en": "Alliance terms",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Unterstützungsersuchen": {
+  "en": "Support request",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Wiedergutmachung": {
+  "en": "Restitution",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Forderung": {
+  "en": "Demand",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Keine dauerhaften Vertragsbrüche vermerkt.": {
+  "en": "No lasting treaty breaches are recorded.",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Vertragsgedächtnis · Brüche ": {
+  "en": "Treaty memory · breaches ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · Vertragsbruchangriffe ": {
+  "en": " · treaty-breaking attacks ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · Grenzverletzungen ": {
+  "en": " · incursions ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ " · beobachteter Verrat ": {
+  "en": " · observed betrayals ",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Gesandte warten": {
+  "en": "Envoys waiting",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Handel anfragen": {
+  "en": "Request trade",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Bündnis prüfen": {
+  "en": "Review alliance",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Waffenruhe erbitten": {
+  "en": "Request truce",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Gegner deutlich stärker": {
+  "en": "opponent much stronger",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Gegner stärker": {
+  "en": "opponent stronger",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "ausgeglichen": {
+  "en": "balanced",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Ihr seid stärker": {
+  "en": "you are stronger",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Ihr seid deutlich stärker": {
+  "en": "you are much stronger",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "ehrenhaft": {
+  "en": "honorable",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "händlerisch": {
+  "en": "mercantile",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "vorsichtig": {
+  "en": "wary",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "kriegerisch": {
+  "en": "warlike",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "opportunistisch": {
+  "en": "opportunistic",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "treu": {
+  "en": "loyal",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "fordernd": {
+  "en": "demanding",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "sehr gering": {
+  "en": "very low",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "gering": {
+  "en": "low",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "mittel": {
+  "en": "moderate",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "hoch": {
+  "en": "high",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "sehr hoch": {
+  "en": "very high",
+  "quellen": [
+   "DiplomacyV2Feature.cs"
+  ]
+ },
+ "Die Bitte wartet auf das Spiel. Zurück oder Schließen bricht sie ab.": {
+  "en": "The request is waiting for the game. Back or Close cancels it.",
+  "quellen": [
+   "DiplomacyV2GoodsRequests.cs"
+  ]
+ },
+ "wartet": {
+  "en": "waiting",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "nicht mehr aktiv": {
+  "en": "no longer active",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "zurückgenommen": {
+  "en": "withdrawn",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "angenommen": {
+  "en": "accepted",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "abgelehnt": {
+  "en": "declined",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "nicht bestätigt": {
+  "en": "unconfirmed",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "aktiv": {
+  "en": "active",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "{0}: Verteidigung": {
+  "en": "{0}: Defence",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "{0}: Angriff auf {1}": {
+  "en": "{0}: Attack on {1}",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "{0}: Rücknahme": {
+  "en": "{0}: Withdrawal",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "{0}: Verteidigung für {1}": {
+  "en": "{0}: Defence for {1}",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ " · Tag {0}": {
+  "en": " · Day {0}",
+  "quellen": [
+   "DiplomacyV2Orders.cs"
+  ]
+ },
+ "Das Güterpaket wurde vollständig zurückgenommen.": {
+  "en": "The goods package was rolled back in full.",
+  "quellen": [
+   "DiplomacyV2PackageTransfer.cs"
+  ]
+ },
+ "Das Unterwerfungsangebot ist durch die veränderte Lage gegenstandslos geworden. Es entstand keine Lehnspflicht.": {
+  "en": "The submission offer is no longer valid because the situation has changed. No fealty was established.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Der anhaltende Druck wirkt: das Unterwerfungsangebot wurde nachgebessert.": {
+  "en": "The sustained pressure is working: the submission offer has been improved.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Das Unterwerfungsangebot ist vom Tisch. Der Krieg geht weiter.": {
+  "en": "The submission offer is off the table. The war continues.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Forderung angenommen.": {
+  "en": "Demand accepted.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Unterwerfung angeboten.": {
+  "en": "Submission offered.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Bei Annahme: Vasall und Bündnis. Bei Ablehnung: weiterhin Krieg.": {
+  "en": "Accept: vassal and alliance. Refuse: war continues.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Eine frühere Lehnspflicht widersprach dem Wesen dieses Herrschers. Ihr seid nun gleichrangige Verbündete; Tribut und Lehnspflichten enden ohne Vertragsbruch.": {
+  "en": "An earlier fealty contract contradicted this ruler's character. You are now equal allies; tribute and fealty end without a treaty breach.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Tribut: {0} {1} in {2} Tagen; danach je Zeitraum an die Wirtschaft angepasst. Bei Goldmangel werden gleichwertige Waren angenommen.": {
+  "en": "Tribute: {0} {1} in {2} days; adjusted to the economy each following period. Equivalent goods are accepted if gold runs short.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Tribut bald fällig: {0} {1} in {2} Tagen ({3}).": {
+  "en": "Tribute due soon: {0} {1} in {2} days ({3}).",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Tribut im Rückstand: {0} {1}. Die Zahlung wird täglich erneut versucht; das Bündnis bleibt bestehen.": {
+  "en": "Tribute in arrears: {0} {1}. Payment is retried daily; the alliance remains in force.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Tribut noch offen: {0} {1}. Die Zahlung wird täglich erneut versucht; noch {2} Tage Schonfrist.": {
+  "en": "Tribute remains unpaid: {0} {1}. Payment is retried daily; {2} days of grace remain.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Ihr habt die Lehnstreue verweigert. Es bleibt ein gewöhnliches Bündnis.": {
+  "en": "You refused fealty. It stays an ordinary alliance.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Ihr seid nun gleichberechtigte Verbündete. Lehnspflicht und Tribut enden; das Bündnis bleibt bestehen.": {
+  "en": "You are now equal allies. Fealty and tribute end; the alliance remains intact.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Ihr habt Euch lange genug bewährt und seid dauerhaft stärker als Euer Lehnsherr. Fordert Ihr Gleichstellung, enden Lehnspflicht und Tribut bei fortbestehendem Bündnis.": {
+  "en": "You have served long enough and maintained a stronger army than your overlord. Claiming equal standing ends fealty and tribute while preserving the alliance.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Wollt Ihr Euren Vasallen freiwillig freilassen? Die Tributzahlungen enden; Ihr bleibt Verbündete.": {
+  "en": "Will you voluntarily release your vassal? Tribute payments end; you remain allies.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Gleichstellung: mindestens ": {
+  "en": "Equal standing: at least ",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ " Tage Lehnstreue und ": {
+  "en": " days of fealty and ",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ " Tage in Folge militärisch überlegen.": {
+  "en": " consecutive days of military superiority.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Vasallen freilassen und das Bündnis bewahren.": {
+  "en": "Release your vassal while preserving the alliance.",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Unterwerfungsangebot prüfen": {
+  "en": "Review submission offer",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Unterwerfung fordern": {
+  "en": "Demand submission",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Euer Lehnsherr": {
+  "en": "Your overlord",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ },
+ "Euer Vasall": {
+  "en": "Your vassal",
+  "quellen": [
+   "DiplomacyV2VassalWorkflow.cs"
+  ]
+ }
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "id": "swordsman-v3-canary",
+  "description": "Nur body_swordsman unter V3 - Partition und Pixel-Digests messen",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - combined production build",
+    "Version": "0.16.0-europe",
+    "Website": "",
+    "Manifest": 0
+  },
+  "runtime": {
+    "enabled": false,
+    "audio_payload": false,
+    "foliage_tree_apple": false,
+    "unit_roster_names": false,
+    "farm_placement": false,
+    "worker_militia": false,
+    "dock_placement": false
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "body_swordsman",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body13Sprites",
+      "target_texture": "body7Sprites",
+      "expected_frame_count": 1184,
+      "expected_main_count": 1056,
+      "expected_alt_count": 128,
+      "expected_max_index": 1087,
+      "expected_names_sha256": "ca71bb2f62803ef5eded720395babaf516e62070c1097c45a7c49447040ba14c",
+      "review_frame_policy": {
+        "mode": "source_native_geometry_else_keep_v3",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 1184,
+        "expected_target_frame_count": 0,
+        "expected_source_names_sha256": "ca71bb2f62803ef5eded720395babaf516e62070c1097c45a7c49447040ba14c",
+        "expected_target_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_provenance_sha256": "23ed4e3180b5f8747dcb2ba0319e2cba93adf4d8efc16d7922048bc89bc40227",
+        "expected_keep_frame_count": 0,
+        "expected_keep_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_blocked_review_frame_count": 0,
+        "expected_blocked_review_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_fractional_frame_count": 0,
+        "expected_fractional_names_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "expected_action_origin_status_sha256": "fec0c899347fd0b895d930e20cde31fed604ad8632aafb7be73a55a165a3e2c8"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "gm_atlas",
+      "geometry_policy": {
+        "mode": "native_source_authored_pivot_v1",
+        "proof_algorithm": "native_source_rgba_authored_pivot_float32_ppu_v1",
+        "expected_frame_count": 1184,
+        "expected_geometry_proof_sha256": "c30a8016a4bce06c2a2efe4e665a9c2adcf45ef65fea7c61afcd3f8c2c3492ee",
+        "expected_origin_proof_sha256": "23ed4e3180b5f8747dcb2ba0319e2cba93adf4d8efc16d7922048bc89bc40227",
+        "expected_source_rgba_sha256": "4005765dc81493717a79412d00b9fc037a76e211e42a306dd88162b22e55551f"
+      }
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": [],
+  "project_files": [],
+  "xaml_patches": []
+}

@@ -1,0 +1,243 @@
+<!--
+  Isolierter SHCDE-SE-1.44-Patch fuer das Festungsbaumenue in Vanilla-Optik.
+
+  Bewusst OHNE xmlns auf dem Patch-Wurzelelement: der XamlPatcher registriert
+  die Praefixe (x, local, n, ...) selbst und liest die Datei in diesem Kontext;
+  eine eigene Deklaration hat frueher dazu gefuehrt, dass keine Operation
+  ausgefuehrt wurde. (Das Wurzelelement darf in Kommentaren nicht woertlich
+  stehen: Builder und Tests binden die Praefixe an sein erstes Vorkommen.)
+
+  Aufbau (Stand 2026-09-02):
+  - Auf der Festungsseite (Bauseite 1) nehmen zwei Kategorieknoepfe exakt die
+    Plaetze und Symbole der nativen Holz- und Steinmauer ein. Treppe,
+    Zinnenmauer, Kasernen, Waffenkammer und die vier Untermenues bleiben
+    unveraendert an ihrem nativen Platz.
+  - Jede Kategorie oeffnet eine Unterseite nach dem Muster der nativen
+    Turm-/Torseiten: Zurueck-Knopf (A017/A018) links, dann die Mauerarten als
+    BTN_Building-Knoepfe mit eigenen Symbolen.
+  - Die Symbole der Mauerarten sind aus den SH1-DE-Bauknoepfen des Atlasses
+    abgeleitet (niedrig/extrahoch = pro Spalte gekuerzte bzw. verlaengerte
+    Steinmauer). Sie liegen als PNG unter
+    Override/Assets/GUI/Images/ und werden hier als BitmapImage-Ressourcen des
+    Host-Grids gebunden - dieselbe Form, in der die nativen Atlanten ihre
+    Bilder anlegen (UI-MasterAtlas.xaml).
+  - Alle Controls starten Collapsed. FortificationHudController blendet sie
+    nur im Karteneditor oder nach bestandenen Mechanik-Messgates ein; Kosten
+    und Grafik der Varianten sind bis dahin "Visual Beta" (native Mauer als
+    Basis), was der Hilfetext jedes Knopfes auch sagt.
+
+  Der XamlPatcher baut jedes Element mit dem Standard-Namensraum der Zieldatei
+  neu auf (RebuildElement); Praefixe auf ELEMENTEN gehen dabei verloren.
+  Deshalb werden Sprite1/Sprite2 ausschliesslich als Attribute gesetzt und die
+  Bilder ueber Grid.Resources bereitgestellt, nie ueber local:PropEx-Elemente.
+-->
+<Patch>
+  <Operation Type="Add" XPath="//*[@x:Name='BuildMenuGrid']">
+    <Content>
+      <Grid Name="EuropeFortificationHost"
+            Width="496"
+            Height="90"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Panel.ZIndex="50">
+        <Grid.Resources>
+          <BitmapImage x:Key="SEDE-Wall-PalisadePointed" UriSource="../Images/sede-wall-palisade-pointed.png" />
+          <BitmapImage x:Key="SEDE-Wall-PalisadePointed-Over" UriSource="../Images/sede-wall-palisade-pointed-hover.png" />
+          <BitmapImage x:Key="SEDE-Wall-PalisadePlatform" UriSource="../Images/sede-wall-palisade-platform.png" />
+          <BitmapImage x:Key="SEDE-Wall-PalisadePlatform-Over" UriSource="../Images/sede-wall-palisade-platform-hover.png" />
+          <BitmapImage x:Key="SEDE-Wall-StoneLow" UriSource="../Images/sede-wall-stone-low.png" />
+          <BitmapImage x:Key="SEDE-Wall-StoneLow-Over" UriSource="../Images/sede-wall-stone-low-hover.png" />
+          <BitmapImage x:Key="SEDE-Wall-StoneNormal" UriSource="../Images/sede-wall-stone-normal.png" />
+          <BitmapImage x:Key="SEDE-Wall-StoneNormal-Over" UriSource="../Images/sede-wall-stone-normal-hover.png" />
+          <BitmapImage x:Key="SEDE-Wall-StoneExtraHigh" UriSource="../Images/sede-wall-stone-extra-high.png" />
+          <BitmapImage x:Key="SEDE-Wall-StoneExtraHigh-Over" UriSource="../Images/sede-wall-stone-extra-high-hover.png" />
+        </Grid.Resources>
+
+        <!-- Kategorie Holzwaende: nativer Platz und natives Symbol der Holzmauer (36,5 / 52x52). -->
+        <Button Name="EuropeFortificationWoodWallsCategory"
+                Width="52" Height="52" Margin="36,5,0,0"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Panel.ZIndex="51"
+                Visibility="Collapsed"
+                local:PropEx.Sprite1="{StaticResource UI-Buildings C003}"
+                local:PropEx.Sprite2="{StaticResource UI-Buildings C004}"
+                Style="{StaticResource BTN_Building}"
+                MouseEnter="MouseEnterBuildingIconHandler"
+                MouseLeave="MouseLeaveBuildingIconHandler"
+                Tag="Holzwände: Spitzpalisade, Plattformpalisade und Holztreppe" />
+
+        <!-- Kategorie Steinmauern: nativer Platz und natives Symbol der Steinmauer (96,5 / 59x67). -->
+        <Button Name="EuropeFortificationStoneWallsCategory"
+                Width="59" Height="67" Margin="96,5,0,0"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Panel.ZIndex="51"
+                Visibility="Collapsed"
+                local:PropEx.Sprite1="{StaticResource UI-Buildings C005}"
+                local:PropEx.Sprite2="{StaticResource UI-Buildings C006}"
+                Style="{StaticResource BTN_Building}"
+                MouseEnter="MouseEnterBuildingIconHandler"
+                MouseLeave="MouseLeaveBuildingIconHandler"
+                Tag="Steinmauern: niedrig, normal und extrahoch" />
+
+        <!-- Unterseite Holz/Stein. Geometrie wie die nativen Turm-/Torseiten:
+             Zurueck bei 10,22 (36x35), Bauwerke ab x=80 im 80er-Raster, an der
+             Unterkante (~y 80) ausgerichtet. Der Controller setzt dieselben
+             Werte beim Einblenden; die Attribute hier sind die Ruhelage. -->
+        <Grid Name="EuropeFortificationPanel"
+              Width="496"
+              Height="90"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Top"
+              Panel.ZIndex="50"
+              Visibility="Collapsed">
+          <Button Name="EuropeFortificationWallReturn"
+                  Width="36" Height="35" Margin="10,22,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource UI-Buildings A017}"
+                  local:PropEx.Sprite2="{StaticResource UI-Buildings A018}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="Zurück zum Festungsmenü" />
+
+          <!-- Holzwaende -->
+          <Button Name="EuropeFortificationPointedPalisade"
+                  Width="62" Height="51" Margin="80,29,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource SEDE-Wall-PalisadePointed}"
+                  local:PropEx.Sprite2="{StaticResource SEDE-Wall-PalisadePointed-Over}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="[Visual Beta] Spitzpalisade – 1 Holz je 4 Felder, nicht begehbar" />
+          <Button Name="EuropeFortificationPlatformPalisade"
+                  Width="62" Height="51" Margin="160,29,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource SEDE-Wall-PalisadePlatform}"
+                  local:PropEx.Sprite2="{StaticResource SEDE-Wall-PalisadePlatform-Over}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="[Visual Beta] Plattformpalisade – 1 Holz je 2 Felder, begehbar" />
+          <Button Name="EuropeFortificationWoodenStairs"
+                  Width="62" Height="51" Margin="240,29,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource UI-Buildings C001}"
+                  local:PropEx.Sprite2="{StaticResource UI-Buildings C002}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="[Visual Beta] Holztreppe – 1 Holz je Feld, vier Felder steigen auf den Wehrgang" />
+
+          <!-- Steinmauern -->
+          <Button Name="EuropeFortificationLowStoneWall"
+                  Width="62" Height="58" Margin="80,22,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource SEDE-Wall-StoneLow}"
+                  local:PropEx.Sprite2="{StaticResource SEDE-Wall-StoneLow-Over}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="[Visual Beta] Niedrige Steinmauer – 1 Stein je 4 Felder, nicht begehbar" />
+          <Button Name="EuropeFortificationNormalStoneWall"
+                  Width="62" Height="64" Margin="160,16,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource SEDE-Wall-StoneNormal}"
+                  local:PropEx.Sprite2="{StaticResource SEDE-Wall-StoneNormal-Over}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="[Visual Beta] Steinmauer – 1 Stein je 2 Felder, begehbar" />
+          <Button Name="EuropeFortificationExtraHighStoneWall"
+                  Width="62" Height="79" Margin="240,1,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource SEDE-Wall-StoneExtraHigh}"
+                  local:PropEx.Sprite2="{StaticResource SEDE-Wall-StoneExtraHigh-Over}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="[Visual Beta] Extrahohe Steinmauer – 3 Stein je 4 Felder" />
+        </Grid>
+
+        <!-- Mess-Beta Holzplattform auf der Turmseite (Bauseite 7), nur im
+             isolierten Canary und nur im Editor; Symbol der nativen Holzplattform. -->
+        <Button Name="EuropeFortificationWoodenPlatform"
+                Width="20" Height="75" Margin="120,20,0,0"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Panel.ZIndex="51"
+                Visibility="Collapsed"
+                local:PropEx.Sprite1="{StaticResource UI-Buildings K001}"
+                local:PropEx.Sprite2="{StaticResource UI-Buildings K002}"
+                Style="{StaticResource BTN_Building}"
+                MouseEnter="MouseEnterBuildingIconHandler"
+                MouseLeave="MouseLeaveBuildingIconHandler"
+                Tag="[Mess-Beta] Holzplattform – 10 Holz; Messvergleich zum nativen Wachturm" />
+
+        <!-- Hoelzernes Torhaus: bleibt bis zur Messung verborgen (WoodenGateMeasured). -->
+        <Button Name="EuropeFortificationWoodGateCategory"
+                Width="36" Height="36"
+                HorizontalAlignment="Left" VerticalAlignment="Top"
+                Panel.ZIndex="51"
+                Visibility="Collapsed"
+                local:PropEx.Sprite1="{StaticResource UI-Buildings L001}"
+                local:PropEx.Sprite2="{StaticResource UI-Buildings L002}"
+                Style="{StaticResource BTN_Building}"
+                MouseEnter="MouseEnterBuildingIconHandler"
+                MouseLeave="MouseLeaveBuildingIconHandler"
+                Tag="Hölzernes Torhaus – 10 Holz" />
+
+        <Grid Name="EuropeFortificationWoodGatePanel"
+              Width="496"
+              Height="90"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Top"
+              Panel.ZIndex="52"
+              Visibility="Collapsed">
+          <Button Name="EuropeFortificationWoodGateReturn"
+                  Width="36" Height="35" Margin="10,22,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource UI-Buildings A017}"
+                  local:PropEx.Sprite2="{StaticResource UI-Buildings A018}"
+                  Style="{StaticResource BTN_Building}"
+                  Tag="Zurück zum Tormenü" />
+          <Button Name="EuropeFortificationWoodGateNorth"
+                  Width="74" Height="63" Margin="80,16,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource UI-Buildings L001}"
+                  local:PropEx.Sprite2="{StaticResource UI-Buildings L002}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="Hölzernes Torhaus – Nord/Süd, 10 Holz" />
+          <Button Name="EuropeFortificationWoodGateEast"
+                  Width="74" Height="63" Margin="170,16,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource UI-Buildings L019}"
+                  local:PropEx.Sprite2="{StaticResource UI-Buildings L020}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="Hölzernes Torhaus – Ost/West, 10 Holz" />
+          <Button Name="EuropeFortificationWoodGateSouth"
+                  Width="74" Height="63" Margin="260,16,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource UI-Buildings L021}"
+                  local:PropEx.Sprite2="{StaticResource UI-Buildings L022}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="Hölzernes Torhaus – Süd/Nord, 10 Holz" />
+          <Button Name="EuropeFortificationWoodGateWest"
+                  Width="74" Height="63" Margin="350,16,0,0"
+                  HorizontalAlignment="Left" VerticalAlignment="Top"
+                  local:PropEx.Sprite1="{StaticResource UI-Buildings L017}"
+                  local:PropEx.Sprite2="{StaticResource UI-Buildings L018}"
+                  Style="{StaticResource BTN_Building}"
+                  MouseEnter="MouseEnterBuildingIconHandler"
+                  MouseLeave="MouseLeaveBuildingIconHandler"
+                  Tag="Hölzernes Torhaus – West/Ost, 10 Holz" />
+        </Grid>
+      </Grid>
+    </Content>
+  </Operation>
+</Patch>

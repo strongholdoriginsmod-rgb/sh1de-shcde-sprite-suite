@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "id": "farm-animals-review-canary",
+  "description": "Pixel-proven mixed SH1DE/SHCDE chicken and brown-chicken unit canary for SHCDE-SE 1.39",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - mixed farm-animal review canary",
+    "Version": "0.8.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "body_chicken",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body5Sprites",
+      "target_texture": "body1Sprites",
+      "expected_frame_count": 798,
+      "expected_main_count": 670,
+      "expected_alt_count": 128,
+      "expected_max_index": 669,
+      "expected_names_sha256": "91acb39bbeff6dca6a1100ff82455aa5ee880feda830941094dc7beed62ff599",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "farm_animals_review_gm_atlas",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 520,
+        "expected_target_frame_count": 278,
+        "expected_source_names_sha256": "982dad79e046589b2408c95bdf1f01cc2c3aea14a00a2cb2ebdb2fd263a7224c",
+        "expected_target_names_sha256": "784ece4d8b00a98f9b02a0e416fc54b5e775d8827be0ad79621087ca9c2ade6d",
+        "expected_provenance_sha256": "870d68301e04b39b61a795282e595709428f580e1c73a0dba4e87bb12ce37f41"
+      }
+    },
+    {
+      "gm_file_name": "body_chicken_brown",
+      "dash_format": true,
+      "mask_policy": "required",
+      "source_texture": "body5Sprites",
+      "target_texture": "body1Sprites",
+      "expected_frame_count": 798,
+      "expected_main_count": 670,
+      "expected_alt_count": 128,
+      "expected_max_index": 669,
+      "expected_names_sha256": "447e0ba7bd9d3c5045a5dacb9d8a94e255e73f2e0b99d4e569dc30de3546cf41",
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "farm_animals_review_gm_atlas",
+      "review_frame_policy": {
+        "mode": "source_if_lossless_else_target_v1",
+        "proof_algorithm": "integral_target_pivot_main_alpha_support_v1",
+        "expected_source_frame_count": 576,
+        "expected_target_frame_count": 222,
+        "expected_source_names_sha256": "a71ba0fe6424e80f90f5adef6b8a775f0beed7f3b46b6ba5e4538a95abe082d6",
+        "expected_target_names_sha256": "376dbc3cc58a1b2d8c79fb55bc5709e4becc1430cebca88a9c600b2ba096638d",
+        "expected_provenance_sha256": "a3d0a6e4d42cae6f58aa1e09c7d8518f37cd9a1cf1ae4085ba82ac523d461fc1"
+      }
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

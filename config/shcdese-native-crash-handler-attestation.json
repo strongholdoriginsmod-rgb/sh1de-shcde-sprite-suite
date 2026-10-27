@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "shcdese-native-crash-handler-supplement",
+  "file_name": "SHCDESE.NativeCrashHandler.dll",
+  "script_extender_version": "1.44.0",
+  "release_tag": "v1.44.0",
+  "official_release_zip_sha256": "708ff21fb8b5386cdaf93410b48a51711a4e4d3cd4d0ceeb4fb9abea6b5c80fa",
+  "size": 118784,
+  "sha256": "a3ce20c6932aeb69224ad1a265babe5695647e84ac605b14e298a4f409c4c2b9",
+  "source_commit": "f72a1bb16db1b109d5ad8cf316a2a7887539fb81",
+  "source_archive": {
+    "size": 102257440,
+    "sha256": "9a3c79aa63664d47601a209ab836106b5a48f86dae6a927d396efb21a1b57453"
+  },
+  "source_files": [
+    {
+      "relative_path": "src/SHCDESE.NativeCrashHandler/CrashHandler.cpp",
+      "size": 26327,
+      "sha256": "573e3db9d7a9ce057613391d2134575c71460739e1fe20f76b02bb0140863964"
+    },
+    {
+      "relative_path": "src/SHCDESE.NativeCrashHandler/CrashHandler.h",
+      "size": 834,
+      "sha256": "8f7d9c013fd26dae3a787717531d986d21d5ebf6d929f855e8b1f8a09fb6e7c7"
+    },
+    {
+      "relative_path": "src/SHCDESE.NativeCrashHandler/SHCDESE.NativeCrashHandler.vcxproj",
+      "size": 3883,
+      "sha256": "81d06e56f290cc76141888400deca329dff59bda428ade55469f3da12c520a3a"
+    }
+  ],
+  "configuration": "Release",
+  "platform": "x64",
+  "platform_toolset": "v145",
+  "compiler_version": "19.51.36248.0",
+  "linker_version": "14.51.36248.0",
+  "build_command": "MSBuild.exe work/prerequisites/shcdese-1.44.0/native-crash-handler-build/src/SHCDESE.NativeCrashHandler/SHCDESE.NativeCrashHandler.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /p:WindowsSdkDir_10=\"<Windows-SDK-10>/\" /p:UniversalCRTSdkDir_10=\"<Windows-SDK-10>/\" /p:UCRTContentRoot=\"<Windows-SDK-10>/\" /p:WindowsTargetPlatformVersion=10.0.26100.0 /m /v:minimal /nologo",
+  "pe": {
+    "machine": "AMD64",
+    "format": "PE32+",
+    "exports": [
+      "SHCDECrashHandler_Install",
+      "SHCDECrashHandler_Uninstall"
+    ]
+  }
+}

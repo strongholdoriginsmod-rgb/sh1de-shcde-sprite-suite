@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "id": "workshops-native-source-canary",
+  "description": "Fail-closed native SH1DE workshop atlas: all 2,016 loader-owned tile_workshops slots with no Crusader pixel fallback",
+  "mod_info": {
+    "GUID": "strongholdeuropede.private",
+    "Author": "Private",
+    "Name": "Stronghold Europe DE",
+    "Description": "Private local Stronghold Europe conversion - native SH1DE workshop source canary",
+    "Version": "0.15.0-canary",
+    "Website": "",
+    "Manifest": 0
+  },
+  "gm_atlases": [
+    {
+      "gm_file_name": "tile_workshops",
+      "dash_format": false,
+      "mask_policy": "forbidden",
+      "source_texture": "AllTileSprites",
+      "target_texture": "AllTileSprites",
+      "expected_frame_count": 2016,
+      "expected_main_count": 2016,
+      "expected_alt_count": 0,
+      "expected_max_index": 2016,
+      "expected_names_sha256": "c38ad2ed692a0147e1c2b337d30613d76910c5167b2b1bc8c36dec5635ccabad",
+      "geometry_policy": {
+        "mode": "native_source_reanchored_v1",
+        "proof_algorithm": "native_source_rgba_target_anchor_float32_ppu_v1",
+        "expected_frame_count": 2016,
+        "expected_geometry_proof_sha256": "64109fdd845b1b3338d213bf203afc026d80c89f4ed961fd379a7608c2466039",
+        "expected_origin_proof_sha256": "2814b9e841a930134c787a88dd40137441ccdb9ba3f5611c88b078df683cc968",
+        "expected_source_rgba_sha256": "ae6c3f55f3e53741c368f5697d08da6e765020949f3aa1dc67a205dae870a0e2"
+      },
+      "padding": 1,
+      "max_dimension": 8192,
+      "category": "building_gm_atlas"
+    }
+  ],
+  "sprites": [],
+  "texture_overrides": [],
+  "mod_logo": {
+    "name": "icon",
+    "source_asset": "resources.assets",
+    "canvas_width": 256,
+    "canvas_height": 256,
+    "output": "Override/Assets/GUI/Sprites/strongholdeuropede.private.png"
+  },
+  "file_overrides": []
+}

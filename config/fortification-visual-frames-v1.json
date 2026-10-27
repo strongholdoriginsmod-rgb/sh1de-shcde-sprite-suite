@@ -1,0 +1,301 @@
+{
+  "schema": "stronghold-europe-de.fortification-visual-frames.v3",
+  "note": "Kachel-Zusammensetzung statt Bildaenderung. Gemessen 2026-09-02 im SHCDE-2.80-Editor: die Mauer ist die angehobene Wehrgangkachel (GM 12, Bild 97..104, Hoehe Boden + 2,813 = 90 px; niedriger Wall Mapper 46: + 1,875 = 60 px), ihre Flaechen sind tile_walls-Chevrons. Bildschirm-waagerechte Mauern setzen den 64x199-Streifen 49..62 auf die vordere Lueckenkachel und die Kappe 47 auf die hintere, bildschirm-senkrechte die Randstuecke 46/48. KORREKTUR 2026-09-04: tile_castle 1551 ist das begehbare Palisadenfeld (Rundhoelzer UND Bohlenwehrgang in einem Frame, kein Plankendeck noetig); 1552..1567 sind vier Holztreppen zu je vier Stufen, nicht Bauhoehen einer Mauer. dx/dy in Atlas-Pixeln; bei gm 12 relativ zur Zelle, bei gm 54 relativ zur Engine-Position. shape = Mauerrichtung an der Kachel (Nachbarn mit WallGFX-Flag >= 65536): se (+/-x), sw (+/-y), h (+x/-y), v (+x/+y), any = Rueckfall; fuer die Treppe zusaetzlich <achse><sinn><stufe>, z. B. se+0 = Achse +/-x, Aufstieg nach +x, unterste Stufe.",
+  "engine": {
+    "wall_gm": 54,
+    "walkway_gm": 12,
+    "chevron_gm": 10,
+    "stone_bodies": "49-62",
+    "back_tile_cap": 47,
+    "vertical_rims": "46,48",
+    "walkway_tiles": "97-104",
+    "walkway_raise_px": {
+      "stone": 90,
+      "low_wall": 60
+    },
+    "stone_body_height_px": 199,
+    "walkway_height_px": 138
+  },
+  "frames": {
+    "52/1551": "SH1 Palisadenfeld: Rundhoelzer MIT Bohlenwehrgang im selben Frame, 70x170, Pivot in der Bodenraute. Wehrgangshoehe 138 px",
+    "52/1552": "SH1 Holztreppe, oberste Stufe, Achse +/-y, Aufstieg nach -y, 64x164",
+    "52/1553": "SH1 Holztreppe, dritte Stufe, Achse +/-y, Aufstieg nach -y, 65x133",
+    "52/1554": "SH1 Holztreppe, zweite Stufe, Achse +/-y, Aufstieg nach -y, 64x98",
+    "52/1555": "SH1 Holztreppe, unterste Stufe, Achse +/-y, Aufstieg nach -y, 64x66",
+    "52/1556": "SH1 Holztreppe, oberste Stufe, Achse +/-x, Aufstieg nach +x, 64x155",
+    "52/1557": "SH1 Holztreppe, dritte Stufe, Achse +/-x, Aufstieg nach +x, 64x123",
+    "52/1558": "SH1 Holztreppe, zweite Stufe, Achse +/-x, Aufstieg nach +x, 64x90",
+    "52/1559": "SH1 Holztreppe, unterste Stufe, Achse +/-x, Aufstieg nach +x, 64x57",
+    "52/1560": "SH1 Holztreppe, oberste Stufe, Achse +/-y, Aufstieg nach +y, 64x151",
+    "52/1561": "SH1 Holztreppe, dritte Stufe, Achse +/-y, Aufstieg nach +y, 64x118",
+    "52/1562": "SH1 Holztreppe, zweite Stufe, Achse +/-y, Aufstieg nach +y, 64x86",
+    "52/1563": "SH1 Holztreppe, unterste Stufe, Achse +/-y, Aufstieg nach +y, 64x53",
+    "52/1564": "SH1 Holztreppe, oberste Stufe, Achse +/-x, Aufstieg nach -x, 64x165",
+    "52/1565": "SH1 Holztreppe, dritte Stufe, Achse +/-x, Aufstieg nach -x, 64x134",
+    "52/1566": "SH1 Holztreppe, zweite Stufe, Achse +/-x, Aufstieg nach -x, 64x99",
+    "52/1567": "SH1 Holztreppe, unterste Stufe, Achse +/-x, Aufstieg nach -x, 64x67",
+    "52/355": "SH1 Pfahlwand (Holztor-Satz), 64x219, Pfaehle links, Absatz rechts",
+    "52/358": "SH1 Pfahlwand (Holztor-Satz), 64x201, Absatz links, Pfaehle rechts"
+  },
+  "recipes": {
+    "extra_high_stone_wall": [
+      {
+        "op": "body",
+        "image": "49-62",
+        "dy": 48,
+        "note": "Frontstreifen um 1,5 Hoeheneinheiten angehoben"
+      },
+      {
+        "op": "body",
+        "image": 47,
+        "dy": 48,
+        "note": "Kappe der Rueckkachel mit angehoben"
+      },
+      {
+        "op": "body",
+        "image": "46,48",
+        "dy": 48,
+        "note": "Randstuecke senkrechter Mauern mit angehoben"
+      },
+      {
+        "op": "layer",
+        "image": "49-62",
+        "dy": 0,
+        "order": -1,
+        "note": "zweite Kopie des Engine-Streifens als Sockel"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "dy": 48,
+        "note": "Wehrgangkachel mit angehoben; die Chevron-Seitenflaeche waechst mit"
+      }
+    ],
+    "platform_palisade": [
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "any",
+        "target": "52/1551",
+        "dy": -90,
+        "note": "Rundholzwand mit Bohlenwehrgang, ein Frame fuer alle Richtungen"
+      },
+      {
+        "op": "hide",
+        "image": "46,47,48,49-62",
+        "note": "Steinstreifen, Kappe und Randstuecke weg; 1551 traegt sich selbst"
+      }
+    ],
+    "pointed_palisade": [
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se",
+        "target": "52/355",
+        "dy": -60,
+        "note": "+x: sichtbare linke Haelfte = Pfaehle"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw",
+        "target": "52/358",
+        "dy": -60,
+        "note": "+y: sichtbare rechte Haelfte = Pfaehle"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "any",
+        "target": "52/355",
+        "dy": -60,
+        "note": "waagerecht/senkrecht/Rueckfall: Pfaehle links, Plankenabsatz rechts"
+      },
+      {
+        "op": "body",
+        "image": "49-62",
+        "target": "52/355",
+        "dy": 30,
+        "note": "vordere Lueckenkachel: Pfahlstueck auf Bodenhoehe (Absenkung des niedrigen Walls aufgehoben)"
+      },
+      {
+        "op": "hide",
+        "image": "47,46,48",
+        "note": "Kappe und Randstuecke weg"
+      }
+    ],
+    "wooden_stairs": [
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se+0",
+        "target": "52/1559",
+        "dy": -90,
+        "note": "Treppe se+, Stufe 0 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se+1",
+        "target": "52/1558",
+        "dy": -90,
+        "note": "Treppe se+, Stufe 1 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se+2",
+        "target": "52/1557",
+        "dy": -90,
+        "note": "Treppe se+, Stufe 2 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se+3",
+        "target": "52/1556",
+        "dy": -90,
+        "note": "Treppe se+, Stufe 3 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se-0",
+        "target": "52/1567",
+        "dy": -90,
+        "note": "Treppe se-, Stufe 0 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se-1",
+        "target": "52/1566",
+        "dy": -90,
+        "note": "Treppe se-, Stufe 1 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se-2",
+        "target": "52/1565",
+        "dy": -90,
+        "note": "Treppe se-, Stufe 2 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "se-3",
+        "target": "52/1564",
+        "dy": -90,
+        "note": "Treppe se-, Stufe 3 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw-0",
+        "target": "52/1555",
+        "dy": -90,
+        "note": "Treppe sw-, Stufe 0 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw-1",
+        "target": "52/1554",
+        "dy": -90,
+        "note": "Treppe sw-, Stufe 1 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw-2",
+        "target": "52/1553",
+        "dy": -90,
+        "note": "Treppe sw-, Stufe 2 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw-3",
+        "target": "52/1552",
+        "dy": -90,
+        "note": "Treppe sw-, Stufe 3 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw+0",
+        "target": "52/1563",
+        "dy": -90,
+        "note": "Treppe sw+, Stufe 0 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw+1",
+        "target": "52/1562",
+        "dy": -90,
+        "note": "Treppe sw+, Stufe 1 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw+2",
+        "target": "52/1561",
+        "dy": -90,
+        "note": "Treppe sw+, Stufe 2 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "sw+3",
+        "target": "52/1560",
+        "dy": -90,
+        "note": "Treppe sw+, Stufe 3 von 4"
+      },
+      {
+        "op": "body",
+        "gm": 12,
+        "image": "97-104",
+        "shape": "any",
+        "target": "52/1551",
+        "dy": -90,
+        "note": "Rundholzwand mit Bohlenwehrgang, ein Frame fuer alle Richtungen"
+      },
+      {
+        "op": "hide",
+        "image": "46,47,48,49-62",
+        "note": "Steinstreifen, Kappe und Randstuecke weg; 1551 traegt sich selbst"
+      }
+    ]
+  },
+  "native_only": {
+    "low_stone_wall": "Mapper 46 senkt die Steinframes selbst um 30 px",
+    "normal_stone_wall": "Mapper 25, unveraendert"
+  },
+  "removed_2026_09_02": [
+    "palisade_battlements",
+    "stone_wall_wood_spikes"
+  ]
+}

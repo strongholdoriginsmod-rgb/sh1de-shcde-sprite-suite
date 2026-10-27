@@ -1,0 +1,52 @@
+# Hashed dependency lock for the tested local builder environment.
+#
+# Target: CPython 3.14.0, Windows 11, AMD64; generated with pip 25.2.
+# This lock is intentionally platform-specific. Hash checking must stay enabled:
+#   py -3.14 -m pip install --require-hashes -r requirements-py314-win_amd64.lock
+#
+# Direct requirements: UnityPy 1.25.3, Pillow 12.3.0, pytest 8.4.2,
+# pytest-cov 6.3.0. All other entries are their resolved runtime dependencies.
+
+archspec==0.2.6 \
+    --hash=sha256:22463371fe8e9fa92fa144bf320cb445373a99f2ca6a5914c890e0c0b7816f8f
+astc-encoder-py==0.1.12 \
+    --hash=sha256:a45d375fc6b0ff2cd3d772aab3eef19a6b7f3e067306e11fab37820ea9576121
+attrs==26.1.0 \
+    --hash=sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309
+brotli==1.2.0 \
+    --hash=sha256:e7c0af964e0b4e3412a0ebf341ea26ec767fa0b4cf81abb5e897c9338b5ad6a3
+colorama==0.4.6 \
+    --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
+coverage==7.15.4 \
+    --hash=sha256:f0204ed122758782970526057093f448051a39db9d810d4e344bb87a3546f425
+etcpak==0.9.15 \
+    --hash=sha256:669d902eeb774bc6d4df226183c09c3d03c9fc0f47b4c0c20030fc2b39eec2f2
+fmod-toolkit==0.1.3 \
+    --hash=sha256:a56432c291d0cfbf9e88dcb94e144bc9f244672590871398f8e1891d5d6f3c2e
+fsspec==2026.7.0 \
+    --hash=sha256:b57ddbafedfaef7018c1ecab32aa200a9d7ca26b77965f64e48b70061249d279
+iniconfig==2.3.0 \
+    --hash=sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12
+lz4==4.4.5 \
+    --hash=sha256:92159782a4502858a21e0079d77cdcaade23e8a5d252ddf46b0652604300d7be
+packaging==26.3 \
+    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+pillow==12.3.0 \
+    --hash=sha256:fdafc9cce40277e0f7a0feabce0ee50dd2fa1800f3b38015e51296b5e814048d
+pluggy==1.6.0 \
+    --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
+pyfmodex==0.7.2 \
+    --hash=sha256:1c42112b788e80ee7b4b57ae25bbbc0a98eb1e32a8e7c9e1246698cdf72efa9d
+pygments==2.20.0 \
+    --hash=sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176
+pytest==8.4.2 \
+    --hash=sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79
+pytest-cov==6.3.0 \
+    --hash=sha256:440db28156d2468cafc0415b4f8e50856a0d11faefa38f30906048fe490f1749
+texture2ddecoder==1.0.6 \
+    --hash=sha256:1bad8209d9dfbfc7daf13ea2e545236ea2bbc1e423b2992b6e7563909975a47b
+tpk-ar==0.2.4 \
+    --hash=sha256:d64897e5a0bcddd58e8a7d4dd922f372da984a0f98bc3b460ec869aab906ee78 \
+    --hash=sha256:efa20708d4d5e9c6a169f71f7a8fb4c994750f002d747916d97f75bb1287c663
+unitypy==1.25.3 \
+    --hash=sha256:b0b921cc74550d62736dabcd015b7ac9abfd3e273006d700bfb80e25561e74d0
