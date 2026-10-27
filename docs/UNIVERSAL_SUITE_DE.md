@@ -1,6 +1,6 @@
 # SH1DE → SHCDE Universal-Suite 2.0 (Stronghold Europe / ORIGINS)
 
-Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Ausgerichtet auf **SHCDE Script Extender 2.11.0**. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
+Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Mit **read-only SHCDE Script Extender v2.14.3-Prüfung**; die historische C#-Runtime bleibt an SE 2.11.0 gebunden. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
 ## Herunterladen
 
@@ -19,7 +19,7 @@ Spielgrafik wird **nicht** verteilt. Sie entsteht beim Einlesen und Bauen aus de
    - *Komplett:* startet sofort.
    - *Nackte Suite:* beim ersten Start legt `setup.ps1` die Python-Umgebung aus einem installierten **Python 3.13** an (Pakete hashgeprüft aus `requirements-py313-win_amd64.lock`).
 3. Für den BC7-Paketbau: **Unity 2021.3.45f2** über Unity Hub installieren (`unityhub://2021.3.45f2/88f88f591b2e`) und ein **.NET SDK ab 8** (empfohlen 10). Im Reiter *Einrichten* eintragen.
-4. **SHCDE Script Extender 2.11.0** von der offiziellen Release-Seite laden und unter `extras/shcdese/SHCDESE-2.11.0.zip` ablegen – dann installiert der Reiter *Ziel & SE 2.11* ihn mit Sicherung und Rückweg.
+4. Den bereits vorhandenen **SHCDE Script Extender** über **Ziel & SE 2.11 → Script Extender 2.14.3 prüfen (nur lesen)** prüfen. v2.14.3 ist der jüngste bestätigte Release (19.10.2026). Kein automatisches Upgrade; der historische SE-2.11-Installer ist **kein** aktueller Updater und verhindert ein Downgrade. Die eigene Runtime erfordert einen getrennten ABI-/Ingame-Test.
 5. *Einrichten* → Spielordner eintragen → *Pfade speichern* → *Spiele einlesen*.
 
 Oben rechts: **Sprache / Language** und **Streng**. Die diagnostische Einrichtungskontrolle kann im Nachsichtmodus Warnungen melden, während *Streng* dort blockiert. Beim **Paketbau** gilt unabhängig davon: neue Bauvoraussetzungen müssen erfüllt sein, der Benutzer bestätigt den Start und die abschließende Buildvalidierung muss erfolgreich sein.
@@ -65,3 +65,5 @@ Das funktioniert auch mit Tastaturfokus in der eingebetteten Qt-Spielkarte.
 Eingabe und Pfeiltasten wählen Ergebnisse, **Enter navigiert**, **Esc schließt**.
 Die Suche verändert keine Dateien und startet keine Builds oder Installationen.
 Deutsch/Englisch kann während des geöffneten Suchfensters umgestellt werden.
+
+Weitere Einschränkungen und Testgrenzen: [Script Extender v2.14.3](SCRIPT_EXTENDER.md).

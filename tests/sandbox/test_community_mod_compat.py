@@ -167,6 +167,9 @@ def test_outdated_se211_auto_install_is_blocked_without_backup(setup,monkeypatch
     monkeypatch.setattr(manager,"safe_target",lambda _name:game)
     monkeypatch.setattr(manager,"resolve",lambda name:(name,game))
     monkeypatch.setattr(manager,"game_running",lambda:False)
+    # The generated dummy DLL has no real PE version; supply the matching
+    # historical metadata so the community minimum-version gate is reached.
+    monkeypatch.setattr(manager,"file_version",lambda _path:"2.11.0.0")
     monkeypatch.setattr(manager,"make_backup",
                         lambda *_:pytest.fail("Do not start a backup/write"))
     with pytest.raises(SystemExit,match="zu alt"):

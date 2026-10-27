@@ -1,0 +1,162 @@
+[
+  {
+    "name": "c0_d1_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c0_d1_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c0_d2_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c0_d2_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c0_d4_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c0_d4_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c0_d8_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c0_d8_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c2_d8_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c2_d8_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d1_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d1_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d2_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d2_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d4_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d4_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d8_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c3_d8_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c4_d8_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c4_d8_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c6_d8_i0",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "c6_d8_i1",
+    "width": 17,
+    "height": 13
+  },
+  {
+    "name": "filter_0",
+    "width": 11,
+    "height": 9
+  },
+  {
+    "name": "filter_1",
+    "width": 11,
+    "height": 9
+  },
+  {
+    "name": "filter_2",
+    "width": 11,
+    "height": 9
+  },
+  {
+    "name": "filter_3",
+    "width": 11,
+    "height": 9
+  },
+  {
+    "name": "filter_4",
+    "width": 11,
+    "height": 9
+  },
+  {
+    "name": "adam_1_1",
+    "width": 1,
+    "height": 1
+  },
+  {
+    "name": "adam_1_5",
+    "width": 1,
+    "height": 5
+  },
+  {
+    "name": "adam_5_1",
+    "width": 5,
+    "height": 1
+  },
+  {
+    "name": "adam_2_2",
+    "width": 2,
+    "height": 2
+  },
+  {
+    "name": "adam_3_3",
+    "width": 3,
+    "height": 3
+  }
+]

@@ -1,6 +1,6 @@
 # SH1DE → SHCDE Universal Suite 2.0 (Stronghold Europe / ORIGINS)
 
-Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Targets **SHCDE Script Extender 2.11.0**. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
+Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Includes a **read-only SHCDESE v2.14.3 compatibility check**; the historical C# runtime remains pinned to SE 2.11.0. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
 
 ## Download
 
@@ -19,7 +19,7 @@ Game graphics are **not** distributed. They are created from your own installed 
    - *Complete:* starts immediately.
    - *Bare suite:* on first start `setup.ps1` creates the Python environment from an installed **Python 3.13** (packages hash-checked from `requirements-py313-win_amd64.lock`).
 3. For BC7 package builds: install **Unity 2021.3.45f2** via Unity Hub (`unityhub://2021.3.45f2/88f88f591b2e`) and a **.NET SDK 8 or newer** (10 recommended). Enter them in the *Setup* tab.
-4. Download **SHCDE Script Extender 2.11.0** from its official release page and put it at `extras/shcdese/SHCDESE-2.11.0.zip` – the *Target & SE 2.11* tab then installs it with a backup and a way back.
+4. Use **Target & SE 2.11 → Script Extender 2.14.3 prüfen (nur lesen)** to inspect an existing installation. Latest confirmed upstream tag v2.14.3 (19 October 2026). No automatic updates; the historical SE 2.11 installer cannot downgrade a newer version. A new C# runtime build and in-game ABI validation remain necessary.
 5. *Setup* → enter game folders → *Save paths* → *Read games*.
 
 Top right: **Sprache / Language** and **Strict**. The default is **lenient mode**: deviations (versions, reference hashes, placement proofs) are reported and logged and the workflow continues; *Adopt proofs* writes the measured values. *Strict* blocks as before.
@@ -64,3 +64,5 @@ and pixel comparison. It also works while the embedded Qt game map has focus.
 Type to filter, use arrow keys to choose, **Enter to navigate**, **Esc to close**.
 Searching never runs builds, installs mods, or changes files. German and
 English queries work regardless of the selected interface language.
+
+See [Script Extender compatibility and unverified runtime ABI](SCRIPT_EXTENDER.md).

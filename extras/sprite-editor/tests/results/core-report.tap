@@ -1,0 +1,604 @@
+TAP version 13
+# Subtest: PNG independent reference: c0_d1_i0
+ok 1 - PNG independent reference: c0_d1_i0
+  ---
+  duration_ms: 25.836741
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c0_d1_i1
+ok 2 - PNG independent reference: c0_d1_i1
+  ---
+  duration_ms: 4.048239
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c0_d2_i0
+ok 3 - PNG independent reference: c0_d2_i0
+  ---
+  duration_ms: 5.050491
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c0_d2_i1
+ok 4 - PNG independent reference: c0_d2_i1
+  ---
+  duration_ms: 4.551288
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c0_d4_i0
+ok 5 - PNG independent reference: c0_d4_i0
+  ---
+  duration_ms: 2.147731
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c0_d4_i1
+ok 6 - PNG independent reference: c0_d4_i1
+  ---
+  duration_ms: 8.449231
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c0_d8_i0
+ok 7 - PNG independent reference: c0_d8_i0
+  ---
+  duration_ms: 2.549298
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c0_d8_i1
+ok 8 - PNG independent reference: c0_d8_i1
+  ---
+  duration_ms: 3.143694
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c2_d8_i0
+ok 9 - PNG independent reference: c2_d8_i0
+  ---
+  duration_ms: 3.2866
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c2_d8_i1
+ok 10 - PNG independent reference: c2_d8_i1
+  ---
+  duration_ms: 2.900788
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d1_i0
+ok 11 - PNG independent reference: c3_d1_i0
+  ---
+  duration_ms: 3.540202
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d1_i1
+ok 12 - PNG independent reference: c3_d1_i1
+  ---
+  duration_ms: 1.820828
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d2_i0
+ok 13 - PNG independent reference: c3_d2_i0
+  ---
+  duration_ms: 1.738093
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d2_i1
+ok 14 - PNG independent reference: c3_d2_i1
+  ---
+  duration_ms: 2.411899
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d4_i0
+ok 15 - PNG independent reference: c3_d4_i0
+  ---
+  duration_ms: 1.943934
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d4_i1
+ok 16 - PNG independent reference: c3_d4_i1
+  ---
+  duration_ms: 1.610641
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d8_i0
+ok 17 - PNG independent reference: c3_d8_i0
+  ---
+  duration_ms: 5.334881
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c3_d8_i1
+ok 18 - PNG independent reference: c3_d8_i1
+  ---
+  duration_ms: 2.125318
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c4_d8_i0
+ok 19 - PNG independent reference: c4_d8_i0
+  ---
+  duration_ms: 1.774358
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c4_d8_i1
+ok 20 - PNG independent reference: c4_d8_i1
+  ---
+  duration_ms: 2.004706
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c6_d8_i0
+ok 21 - PNG independent reference: c6_d8_i0
+  ---
+  duration_ms: 1.940568
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: c6_d8_i1
+ok 22 - PNG independent reference: c6_d8_i1
+  ---
+  duration_ms: 1.966969
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: filter_0
+ok 23 - PNG independent reference: filter_0
+  ---
+  duration_ms: 2.731462
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: filter_1
+ok 24 - PNG independent reference: filter_1
+  ---
+  duration_ms: 1.565583
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: filter_2
+ok 25 - PNG independent reference: filter_2
+  ---
+  duration_ms: 1.535007
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: filter_3
+ok 26 - PNG independent reference: filter_3
+  ---
+  duration_ms: 1.799395
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: filter_4
+ok 27 - PNG independent reference: filter_4
+  ---
+  duration_ms: 1.85528
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: adam_1_1
+ok 28 - PNG independent reference: adam_1_1
+  ---
+  duration_ms: 1.824002
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: adam_1_5
+ok 29 - PNG independent reference: adam_1_5
+  ---
+  duration_ms: 1.865085
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: adam_5_1
+ok 30 - PNG independent reference: adam_5_1
+  ---
+  duration_ms: 1.697662
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: adam_2_2
+ok 31 - PNG independent reference: adam_2_2
+  ---
+  duration_ms: 1.6832
+  type: 'test'
+  ...
+# Subtest: PNG independent reference: adam_3_3
+ok 32 - PNG independent reference: adam_3_3
+  ---
+  duration_ms: 3.046788
+  type: 'test'
+  ...
+# Subtest: PNG preserves low alpha and hidden RGB byte-for-byte
+ok 33 - PNG preserves low alpha and hidden RGB byte-for-byte
+  ---
+  duration_ms: 1.322015
+  type: 'test'
+  ...
+# Subtest: PNG accepts correctly split consecutive IDAT
+ok 34 - PNG accepts correctly split consecutive IDAT
+  ---
+  duration_ms: 0.796051
+  type: 'test'
+  ...
+# Subtest: PNG rejects CRC damage, truncation, trailing bytes, 16-bit and APNG
+ok 35 - PNG rejects CRC damage, truncation, trailing bytes, 16-bit and APNG
+  ---
+  duration_ms: 0.606686
+  type: 'test'
+  ...
+# Subtest: PNG rejects huge dimensions before allocating
+ok 36 - PNG rejects huge dimensions before allocating
+  ---
+  duration_ms: 0.37805
+  type: 'test'
+  ...
+# Subtest: PNG rejects unknown critical chunk and broken zlib
+ok 37 - PNG rejects unknown critical chunk and broken zlib
+  ---
+  duration_ms: 2.253291
+  type: 'test'
+  ...
+# Subtest: PNG warns about profiles without changing channels
+ok 38 - PNG warns about profiles without changing channels
+  ---
+  duration_ms: 1.15291
+  type: 'test'
+  ...
+# Subtest: Cancellation is propagated by codecs
+ok 39 - Cancellation is propagated by codecs
+  ---
+  duration_ms: 1.082754
+  type: 'test'
+  ...
+# Subtest: SHA256 native and fallback match independent crypto, including block boundaries
+ok 40 - SHA256 native and fallback match independent crypto, including block boundaries
+  ---
+  duration_ms: 28.532698
+  type: 'test'
+  ...
+# Subtest: CRC32 standard vector
+ok 41 - CRC32 standard vector
+  ---
+  duration_ms: 0.208145
+  type: 'test'
+  ...
+# Subtest: Base64 round trip and malformed data
+ok 42 - Base64 round trip and malformed data
+  ---
+  duration_ms: 5.425497
+  type: 'test'
+  ...
+# Subtest: ZIP reads independent store.zip
+ok 43 - ZIP reads independent store.zip
+  ---
+  duration_ms: 3.216014
+  type: 'test'
+  ...
+# Subtest: ZIP reads independent deflate.zip
+ok 44 - ZIP reads independent deflate.zip
+  ---
+  duration_ms: 4.219117
+  type: 'test'
+  ...
+# Subtest: ZIP supports standard data descriptor and rejects tampering
+ok 45 - ZIP supports standard data descriptor and rejects tampering
+  ---
+  duration_ms: 1.23205
+  type: 'test'
+  ...
+# Subtest: ZIP self-roundtrip UTF8 names, zero-length entries and deterministic output
+ok 46 - ZIP self-roundtrip UTF8 names, zero-length entries and deterministic output
+  ---
+  duration_ms: 0.475668
+  type: 'test'
+  ...
+# Subtest: ZIP rejects traversal.zip
+ok 47 - ZIP rejects traversal.zip
+  ---
+  duration_ms: 0.16565
+  type: 'test'
+  ...
+# Subtest: ZIP rejects symlink.zip
+ok 48 - ZIP rejects symlink.zip
+  ---
+  duration_ms: 0.167713
+  type: 'test'
+  ...
+# Subtest: ZIP rejects case_collision.zip
+ok 49 - ZIP rejects case_collision.zip
+  ---
+  duration_ms: 0.131369
+  type: 'test'
+  ...
+# Subtest: ZIP rejects unicode_collision.zip
+ok 50 - ZIP rejects unicode_collision.zip
+  ---
+  duration_ms: 0.237318
+  type: 'test'
+  ...
+# Subtest: ZIP rejects corruption, encryption, missing directory and excess output
+ok 51 - ZIP rejects corruption, encryption, missing directory and excess output
+  ---
+  duration_ms: 2.404959
+  type: 'test'
+  ...
+# Subtest: Archive path validation covers Windows, traversal, separators, names
+ok 52 - Archive path validation covers Windows, traversal, separators, names
+  ---
+  duration_ms: 0.411161
+  type: 'test'
+  ...
+# Subtest: Numerical and scene constraints reject ambiguous or excessive inputs
+ok 53 - Numerical and scene constraints reject ambiguous or excessive inputs
+  ---
+  duration_ms: 0.286522
+  type: 'test'
+  ...
+# Subtest: Exact 5x5 ODT numbering and geometry
+ok 54 - Exact 5x5 ODT numbering and geometry
+  ---
+  duration_ms: 0.336348
+  type: 'test'
+  ...
+# Subtest: Rectangular grids enumerate each cell exactly once
+ok 55 - Rectangular grids enumerate each cell exactly once
+  ---
+  duration_ms: 0.657232
+  type: 'test'
+  ...
+# Subtest: Names sort numerically and preserve gaps or compact explicitly
+ok 56 - Names sort numerically and preserve gaps or compact explicitly
+  ---
+  duration_ms: 7.061106
+  type: 'test'
+  ...
+# Subtest: Layout includes tall and offset sprites, separates paint order from slot order
+ok 57 - Layout includes tall and offset sprites, separates paint order from slot order
+  ---
+  duration_ms: 4.901327
+  type: 'test'
+  ...
+# Subtest: Blit clipping all sides and nonintersection
+ok 58 - Blit clipping all sides and nonintersection
+  ---
+  duration_ms: 0.214984
+  type: 'test'
+  ...
+# Subtest: Source-over matches independent float formula at alpha boundaries
+ok 59 - Source-over matches independent float formula at alpha boundaries
+  ---
+  duration_ms: 0.475748
+  type: 'test'
+  ...
+# Subtest: Crop rejects out-of-bounds; flip is involutive; resize is nearest-neighbor
+ok 60 - Crop rejects out-of-bounds; flip is involutive; resize is nearest-neighbor
+  ---
+  duration_ms: 0.274924
+  type: 'test'
+  ...
+# Subtest: Trim keeps world anchor and transparent margins needed for valid pivots
+ok 61 - Trim keeps world anchor and transparent margins needed for valid pivots
+  ---
+  duration_ms: 0.366964
+  type: 'test'
+  ...
+# Subtest: Alpha diagnostics, explicit adjustments and channel views
+ok 62 - Alpha diagnostics, explicit adjustments and channel views
+  ---
+  duration_ms: 0.297629
+  type: 'test'
+  ...
+# Subtest: Split property: every assigned source pixel reassembles exactly across rectangle grids
+ok 63 - Split property: every assigned source pixel reassembles exactly across rectangle grids
+  ---
+  duration_ms: 19.392745
+  type: 'test'
+  ...
+# Subtest: Split extends rear tiles but not the foreground beyond its bounds
+ok 64 - Split extends rear tiles but not the foreground beyond its bounds
+  ---
+  duration_ms: 0.494837
+  type: 'test'
+  ...
+# Subtest: Split blocks unassigned alpha and meaningful mask channels, even alpha zero
+ok 65 - Split blocks unassigned alpha and meaningful mask channels, even alpha zero
+  ---
+  duration_ms: 1.480855
+  type: 'test'
+  ...
+# Subtest: Ownership PNG is lossless; brush respects slot assignment and undo-copy
+ok 66 - Ownership PNG is lossless; brush respects slot assignment and undo-copy
+  ---
+  duration_ms: 0.289747
+  type: 'test'
+  ...
+# Subtest: Split rejects an owner wider than the fixed tile width
+ok 67 - Split rejects an owner wider than the fixed tile width
+  ---
+  duration_ms: 0.779556
+  type: 'test'
+  ...
+# Subtest: Atlas deterministic, nonoverlapping, padded and aligned
+ok 68 - Atlas deterministic, nonoverlapping, padded and aligned
+  ---
+  duration_ms: 3.031705
+  type: 'test'
+  ...
+# Subtest: Atlas rejects impossible sizes and align-up over maximum
+ok 69 - Atlas rejects impossible sizes and align-up over maximum
+  ---
+  duration_ms: 0.235225
+  type: 'test'
+  ...
+# Subtest: Atlas preserves RGBA and mask, edge extrusion and bottom-left rects
+ok 70 - Atlas preserves RGBA and mask, edge extrusion and bottom-left rects
+  ---
+  duration_ms: 0.529379
+  type: 'test'
+  ...
+# Subtest: Unity metadata, fractional rectangles and packed mesh fail closed
+ok 71 - Unity metadata, fractional rectangles and packed mesh fail closed
+  ---
+  duration_ms: 0.562479
+  type: 'test'
+  ...
+# Subtest: TexturePacker origin explicit, top-left rect transformed and unsafe trim blocked
+ok 72 - TexturePacker origin explicit, top-left rect transformed and unsafe trim blocked
+  ---
+  duration_ms: 0.356137
+  type: 'test'
+  ...
+# Subtest: CSV BOM, quoting, semicolon, multiline and formula defense
+ok 73 - CSV BOM, quoting, semicolon, multiline and formula defense
+  ---
+  duration_ms: 0.753367
+  type: 'test'
+  ...
+# Subtest: JSON rejects prototype pollution recursively
+ok 74 - JSON rejects prototype pollution recursively
+  ---
+  duration_ms: 0.31796
+  type: 'test'
+  ...
+# Subtest: PNG import grouping, masks, preservation and explicit source
+ok 75 - PNG import grouping, masks, preservation and explicit source
+  ---
+  duration_ms: 22.727528
+  type: 'test'
+  ...
+# Subtest: Failed import leaves existing state and store unchanged
+ok 76 - Failed import leaves existing state and store unchanged
+  ---
+  duration_ms: 4.776038
+  type: 'test'
+  ...
+# Subtest: Orphan masks, duplicate indices and inconsistent mask dimensions are rejected
+ok 77 - Orphan masks, duplicate indices and inconsistent mask dimensions are rejected
+  ---
+  duration_ms: 5.199266
+  type: 'test'
+  ...
+# Subtest: Metadata import does not fabricate complete status, target normalization
+ok 78 - Metadata import does not fabricate complete status, target normalization
+  ---
+  duration_ms: 2.401985
+  type: 'test'
+  ...
+# Subtest: Mapping CSV commits exact names, is transactional, rejects ambiguity
+ok 79 - Mapping CSV commits exact names, is transactional, rejects ambiguity
+  ---
+  duration_ms: 3.323776
+  type: 'test'
+  ...
+# Subtest: History undo/redo retains original and edited pixel buffers; invalid commit atomic
+ok 80 - History undo/redo retains original and edited pixel buffers; invalid commit atomic
+  ---
+  duration_ms: 2.71023
+  type: 'test'
+  ...
+# Subtest: History caps at 50 snapshots
+ok 81 - History caps at 50 snapshots
+  ---
+  duration_ms: 10.216358
+  type: 'test'
+  ...
+# Subtest: Project ZIP roundtrip retains original PNG bytes, masks, refs and split map
+ok 82 - Project ZIP roundtrip retains original PNG bytes, masks, refs and split map
+  ---
+  duration_ms: 26.08216
+  type: 'test'
+  ...
+# Subtest: Project rejects changed asset SHA and missing files
+ok 83 - Project rejects changed asset SHA and missing files
+  ---
+  duration_ms: 9.245122
+  type: 'test'
+  ...
+# Subtest: Legacy v0.1 keeps pixels, placement, original bytes and source uncertainty
+ok 84 - Legacy v0.1 keeps pixels, placement, original bytes and source uncertainty
+  ---
+  duration_ms: 1.544651
+  type: 'test'
+  ...
+# Subtest: Preflight blocks unconfirmed targets, duplicate targets, mixed PPU and partial masks
+ok 85 - Preflight blocks unconfirmed targets, duplicate targets, mixed PPU and partial masks
+  ---
+  duration_ms: 2.739935
+  type: 'test'
+  ...
+# Subtest: Single overrides demand real dimensions; mask materials fail closed
+ok 86 - Single overrides demand real dimensions; mask materials fail closed
+  ---
+  duration_ms: 1.761398
+  type: 'test'
+  ...
+# Subtest: Mod info rejects bad identifiers and missing authors
+ok 87 - Mod info rejects bad identifiers and missing authors
+  ---
+  duration_ms: 0.282186
+  type: 'test'
+  ...
+# Subtest: Atlas mod ZIP and SEMOD have correct roots, bottom-left rects, hashes and no in-game claim
+ok 88 - Atlas mod ZIP and SEMOD have correct roots, bottom-left rects, hashes and no in-game claim
+  ---
+  duration_ms: 8.575992
+  type: 'test'
+  ...
+# Subtest: Single mod exports original PNG and raw masks without reencoding
+ok 89 - Single mod exports original PNG and raw masks without reencoding
+  ---
+  duration_ms: 7.767372
+  type: 'test'
+  ...
+# Subtest: Atlas reimport recovers color, mask, pivot and PPU
+ok 90 - Atlas reimport recovers color, mask, pivot and PPU
+  ---
+  duration_ms: 11.319732
+  type: 'test'
+  ...
+# Subtest: OpenRaster archive mimetype first, layers named and XML escaped
+ok 91 - OpenRaster archive mimetype first, layers named and XML escaped
+  ---
+  duration_ms: 16.404266
+  type: 'test'
+  ...
+# Subtest: Reference metadata may precede its PNG without losing pivot or PPU
+ok 92 - Reference metadata may precede its PNG without losing pivot or PPU
+  ---
+  duration_ms: 4.306639
+  type: 'test'
+  ...
+# Subtest: Source metadata cannot overwrite another group with identical source names
+ok 93 - Source metadata cannot overwrite another group with identical source names
+  ---
+  duration_ms: 2.313701
+  type: 'test'
+  ...
+# Subtest: Multiple source groups export duplicate filenames into separate folders
+ok 94 - Multiple source groups export duplicate filenames into separate folders
+  ---
+  duration_ms: 5.007657
+  type: 'test'
+  ...
+# Subtest: Trim compensation survives project save and schema validation
+ok 95 - Trim compensation survives project save and schema validation
+  ---
+  duration_ms: 10.950145
+  type: 'test'
+  ...
+# Subtest: Megabyte Base64 data is validated without a recursive pattern overflow
+ok 96 - Megabyte Base64 data is validated without a recursive pattern overflow
+  ---
+  duration_ms: 251.903246
+  type: 'test'
+  ...
+# Subtest: Numeric limits and group capacity reject extra frames, without silent clipping
+ok 97 - Numeric limits and group capacity reject extra frames, without silent clipping
+  ---
+  duration_ms: 3.291848
+  type: 'test'
+  ...
+# Subtest: Actual supplied v0.1 demo imports all 25 originals and coordinates
+ok 98 - Actual supplied v0.1 demo imports all 25 originals and coordinates
+  ---
+  duration_ms: 40.495702
+  type: 'test'
+  ...
+# Subtest: 4096-frame project roundtrip stays within explicit capacity; 4097 is rejected
+ok 99 - 4096-frame project roundtrip stays within explicit capacity; 4097 is rejected
+  ---
+  duration_ms: 150.932281
+  type: 'test'
+  ...
+1..99
+# tests 99
+# suites 0
+# pass 99
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 881.676943

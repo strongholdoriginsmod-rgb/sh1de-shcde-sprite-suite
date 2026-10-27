@@ -1,6 +1,6 @@
 # SH1DE → SHCDE Universal-Suite 2.0 (Stronghold Europe / ORIGINS)
 
-Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Ausgerichtet auf **SHCDE Script Extender 2.11.0**. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
+Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Mit **read-only SHCDE Script Extender v2.14.3-Prüfung**; die historische C#-Runtime bleibt an SE 2.11.0 gebunden. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
 ## Herunterladen
 
@@ -25,7 +25,7 @@ Dieser Zweig erweitert **Oberfläche** um einen eigenen Stronghold-1-HUD-Editor:
    - *Komplett:* startet sofort.
    - *Nackte Suite:* beim ersten Start legt `setup.ps1` die Python-Umgebung aus einem installierten **Python 3.13** an (Pakete hashgeprüft aus `requirements-py313-win_amd64.lock`).
 3. Für den BC7-Paketbau: **Unity 2021.3.45f2** über Unity Hub installieren (`unityhub://2021.3.45f2/88f88f591b2e`) und ein **.NET SDK ab 8** (empfohlen 10). Im Reiter *Einrichten* eintragen.
-4. **SHCDE Script Extender 2.11.0** von der offiziellen Release-Seite laden und unter `extras/shcdese/SHCDESE-2.11.0.zip` ablegen – dann installiert der Reiter *Ziel & SE 2.11* ihn mit Sicherung und Rückweg.
+4. Den bereits vorhandenen **SHCDE Script Extender** über **Ziel & SE 2.11 → Script Extender 2.14.3 prüfen (nur lesen)** prüfen. v2.14.3 ist der jüngste bestätigte Release (19.10.2026). Kein automatisches Upgrade; der historische SE-2.11-Installer ist **kein** aktueller Updater und verhindert ein Downgrade. Die eigene Runtime erfordert einen getrennten ABI-/Ingame-Test.
 5. *Einrichten* → Spielordner eintragen → *Pfade speichern* → *Spiele einlesen*.
 
 Oben rechts: **Sprache / Language** und **Streng**. Bei der **diagnostischen Einrichtungskontrolle** werden Abweichungen im Nachsichtmodus weiterhin protokolliert; *Streng* blockiert dort. **Beim tatsächlichen Paketbau** sind fehlende Voraussetzungen und eine fehlgeschlagene Nachvalidierung immer blockierend – ein fehlerhaftes Paket wird nicht als erfolgreicher Bau gemeldet.
@@ -164,3 +164,5 @@ ist ausdrücklich keine neue Release- oder Ingamefreigabe.
 - **AtlasBuilder** von Serpens66 (`extras/atlasbuilder`, mit Erlaubnis); BC7-Encoder `texconv` von Microsoft DirectXTex (im Zweig `komplett`, sonst über `fetch_texconv.py`).
 - **Stronghold Sprite Editor** 1.0 (`extras/sprite-editor`, MIT), mit zweisprachiger Fassung.
 - Atlasvertrag (`extras/atlas-contract`).
+
+Weitere Einschränkungen und Testgrenzen: [Script Extender v2.14.3](docs/SCRIPT_EXTENDER.md).

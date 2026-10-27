@@ -21,6 +21,7 @@ Das Spiel muss dabei geschlossen sein; laeuft es, gibt es eine Warnung.
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 import shutil
@@ -181,12 +182,22 @@ def describe(name: str, spec: dict) -> dict:
 
 
 def game_running() -> bool:
+    """Detect both game EXE names; fail closed if tasklist cannot be inspected."""
     try:
-        out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq Stronghold Crusader.exe"], capture_output=True,
-                             text=True, encoding="cp850", errors="replace", timeout=10).stdout
-        return "Stronghold Crusader.exe" in out
-    except Exception:
-        return False
+        result = subprocess.run(
+            ["tasklist", "/FO", "CSV", "/NH"], capture_output=True,
+            text=True, encoding="cp850", errors="replace", timeout=10,
+        )
+        if result.returncode != 0:
+            return True
+        names = {row[0].strip().casefold()
+                 for row in csv.reader(result.stdout.splitlines()) if row}
+        return bool(names & {
+            "stronghold crusader.exe",
+            "stronghold crusader definitive edition.exe",
+        })
+    except (OSError, subprocess.TimeoutExpired, csv.Error):
+        return True
 
 
 def backup_root(game: Path) -> Path:
@@ -358,6 +369,22 @@ def cmd_se_installieren(args) -> int:
     except TargetSelectionError as exc:raise SystemExit(str(exc)) from exc
     if game_running():
         raise SystemExit("Spiel läuft: SE-Installation vor Sicherung abgebrochen.")
+    # Do not destroy a user's newer or unidentifiable Script Extender.
+    # This is a historical, hash-pinned 2.11 installer, not a 2.14.x updater.
+    previous = game / "BepInEx/plugins/000shcdese/SHCDESE.dll"
+    if previous.is_symlink():
+        raise SystemExit("Verlinkte Extender-DLL: Abbruch")
+    if previous.exists():
+        from shcdese_compat_check import version as parse_se_version
+        old_version = file_version(previous)
+        old_parsed = parse_se_version(old_version)
+        if old_parsed is None:
+            raise SystemExit("Vorhandene SE-DLL-Version konnte nicht geprüft werden")
+        if old_parsed > (2, 11, 0):
+            raise SystemExit(
+                f"Vorhandener Script Extender {old_version} ist neuer als "
+                "dieser historische 2.11-Installer. Keine Rückstufung."
+            )
     # Historic 2.11 is not a compatible base for current APIShared >=0.9.2.
     # There is no independently pinned or game-tested SE 2.14.x upgrade
     # package in this tool. Never offer a misleading automatic downgrade.

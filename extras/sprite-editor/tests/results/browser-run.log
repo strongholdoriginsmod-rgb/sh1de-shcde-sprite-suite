@@ -1,0 +1,50 @@
+PASS Unmodified standalone HTML initializes without network resources
+PASS Unavailable local recovery is handled without blocking editing
+PASS Built-in synthetic 5x5 example loads 25 sprites
+PASS Workspace scene changes without errors
+PASS Workspace sprite changes without errors
+PASS Workspace animation changes without errors
+PASS Workspace atlas changes without errors
+PASS Workspace split changes without errors
+PASS Merged PNG is emitted with alpha and nonzero artwork
+PASS Project stores every demo original byte-for-byte
+PASS OpenRaster validates independently and matches merged PNG
+PASS Compose-to-cut transfers exact geometry instead of guessing the anchor
+PASS Cut ZIP independently reassembles to the same RGBA image
+PASS Ownership brush commits one undoable stroke
+PASS Undo restores the exact ownership map
+PASS Cut tiles become an independently editable second group
+PASS Saved project reopens through the normal UI
+PASS Original export survives project reopen without changed bytes
+PASS Actual previous v0.1 demo opens through the file dialog
+PASS Transparent trim records nonzero anchor compensation
+PASS Original reset removes trim compensation while preserving manual offsets
+PASS 4096-frame project renders with a bounded virtual file list
+PASS Virtual file list reaches the last frame without expanding all rows
+PASS PNG series imports color-mask pairs and SHDE provenance
+PASS Source metadata is imported explicitly
+PASS Reference PNG import preserves metadata imported before the images
+PASS Target mapping and independent reference metadata match
+PASS Valid target references clear all formal export errors
+PASS Actual downloaded ZIP and SEMOD contain exact pixels, masks and target pivots
+PASS Single override exports source PNG bytes exactly and only after dimension validation
+PASS Batch nearest-neighbor resize applies to masks and PPU coherently
+PASS Single override now fails dimensions instead of silently installing resized assets
+PASS Undo restores all original image IDs after batch transformation
+PASS Redo and second undo preserve synchronized color and mask dimensions
+PASS Animation playback advances using the selected sequence
+PASS Animation pauses without moving the frame index
+PASS Corrupt multi-file import rolls back state, group selection and asset store
+PASS Reducing the cut grid regenerates a valid map atomically
+PASS Grid change is undoable including the original ownership map
+PASS No document overflow at 1920 x 1080
+PASS No document overflow at 1440 x 960
+PASS No document overflow at 1024 x 768
+PASS No document overflow at 768 x 1024
+PASS No document overflow at 390 x 844
+PASS Mobile inspector opens as a drawer
+PASS Mobile file list opens independently
+PASS Project save finishes and clears unsaved indicator
+PASS No unhandled JavaScript exceptions throughout workflows
+PASS No application network requests throughout workflows
+BROWSER CHECKS: 49

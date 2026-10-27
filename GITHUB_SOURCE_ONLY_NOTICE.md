@@ -1,22 +1,33 @@
-# GitHub Source-only Snapshot
+# GitHub: vollständiger Projektstand mit Beispieldateien
 
-Source-only publication of the integrated SH1-HUD, SHCDE Noesis atlas,
-Sandbox Studio and diplomacy development source from integration commit
-`8392c5c9f5f42e3445ddff158915b3e984e3255f`.
+Dieser GitHub-Stand vereint die Sprite Suite mit Stronghold-1-HUD-Studio,
+Stronghold-Origins-Anbindung, SHCDE-Noesis-/Atlas-Werkzeugen, Sandbox Studio
+und der read-only-Kompatibilitätsprüfung für Script Extender v2.14.3.
 
-**This is not a playable game or released binary package.**
-Legacy Windows installers, native DLLs, ZIP archives, raster images,
-OpenRaster projects and SHSprite example containers were deliberately not
-copied from the GitLab project's history. Do not add proprietary game assets.
+**Nicht auf einen reinen Quellcode-Snapshot reduziert:**
+Die neun synthetischen, im Sprite-Editor dokumentierten Beispielartefakte
+(PNG, ORA, SHSprite und ZIP) sowie alle vier bisher im GitLab-Repository
+versionierten Miliz-UI-PNGs sind enthalten. Diese Dateien wurden unverändert
+aus dem vorhandenen GitLab-Projekt übernommen und per SHA-256 verglichen.
+Die historisch vorbereitete reine Quellcodefassung hatte sie noch ausgelassen.
 
-Some reference examples, experimental militia sprite resources and generated
-C# contracts must be supplied or rebuilt locally before affected runtime
-features can be packaged. Native Unity assets, script extender DLLs and
-user-specific `config/installations.local.toml` are not included.
+**Keine Veröffentlichung von Spielinstallationen:** Native Unity-Container,
+extrahierte kommerzielle Spiel-Atlanten, lokale Savegames, Passwörter,
+API-Schlüssel und gerätespezifische Konfigurationen sind keine
+Repository-Projektdateien und werden nicht hochgeladen. Der komplette
+Projektquellcode und die bereits öffentlich versionierten Projektassets
+bleiben dagegen im Repository erhalten.
 
-See `docs/HUD_SANDBOX_INTEGRATION_ABNAHME_2026-10-27.md` for tests,
-incomplete in-game proof, limitations and the native reference contracts.
+Die Datei ist **kein eigenständig spielbares Spiel**. Auch die
+Stronghold-Europe-/Origins-Runtime auf Basis von SE 2.11.0 ist mit einer
+bloßen Formatprüfung gegen SE 2.14.3 **noch nicht Ingame-/ABI-freigegeben**.
+Für neue Script-Extender-Releases ist die Prüfung in
+`tools/shcdese_compat_check.py` nur lesend. Der alte 2.11-Installer darf
+kein neueres Script Extender automatisch zurückstufen.
 
-GitHub publication is only complete after this repository has been
-pushed to a write-authorized GitHub destination. Do not confuse a local
-snapshot commit with a successful remote push.
+Die README- und Kompatibilitätsdokumente erklären die Funktionen,
+Sicherheitsgrenzen und offenen Runtime-Tests.
+
+---
+Historischer Dateiname: `GITHUB_SOURCE_ONLY_NOTICE.md`. Sein ursprünglicher
+Ausschlussvermerk wurde durch diese vollständige Veröffentlichung ersetzt.
