@@ -162,3 +162,25 @@ def test_existing_nested_symlink_must_not_redirect_workcopy(source, tmp_path):
     with pytest.raises(gfx.GraphicsDataError,match="außerhalb|Verknüpf"):
         gfx.copy_for_editing(repo,index,FIXTURE_ASSET,dest)
     assert not (outside/"ui").exists()
+
+
+@pytest.mark.parametrize("remote_url", [
+    gfx.PRIVATE_GITHUB_URL,
+    gfx.PRIVATE_GITHUB_URL.removesuffix(".git"),
+    "https://strongholdoriginsmod-rgb@github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite.git",
+    "git@github.com:strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite.git",
+])
+def test_private_github_graphics_branch_reuses_the_pinned_source_commit(
+    source, remote_url
+):
+    repo, _file, _original = source
+    git(repo, "remote", "set-url", "origin", remote_url)
+    assert gfx.source_repo(repo) == repo.resolve()
+
+
+def test_private_github_like_other_owner_is_not_trusted(source):
+    repo, _file, _original = source
+    git(repo, "remote", "set-url", "origin",
+        "https://github.com/unrelated/sh1de-shcde-sprite-suite.git")
+    with pytest.raises(gfx.GraphicsDataError, match="nicht das bekannte"):
+        gfx.source_repo(repo)

@@ -24,6 +24,30 @@ Originale aus den installierten Spielen werden nicht ungefragt
 öffentlich weiterverteilt. Die Binärdaten verbleiben im von
 Mitwirkenden mit Zugriff verwendeten Grafikdaten-Repository.
 
+## Privater GitHub-Grafikdatenbranch
+
+Dasselbe auf Commit `66dd212217831016d454483f41859258d5d3dc89`
+gepr?fte GitLab-Grafikdatenprojekt ist im **privaten** GitHub-Suite-Repository
+auf einem von `main` getrennten Branch vorgesehen:
+`graphics/stronghold-europe-grafikdaten`.
+
+So kann die Haupt-SpriteSuite mit Quellcode und HUD-Werkzeugen geklont
+werden, **ohne** automatisch mehrere GiB Bild- und Atlasdaten zu beziehen.
+Berechtigte Nutzer klonen den Grafik-Branch in einen eigenen Ordner:
+
+```powershell
+git clone --single-branch --branch graphics/stronghold-europe-grafikdaten https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite.git work/stronghold-europe-grafikdaten
+git -C work/stronghold-europe-grafikdaten lfs pull
+.venv/Scripts/python.exe tools/origins_grafikdaten.py audit --repo work/stronghold-europe-grafikdaten
+```
+
+Die Herkunftspr?fung l?sst nur die offizielle GitLab-Quelle oder diesen
+genau bezeichneten privaten GitHub-Repositorypfad zu **und verlangt
+weiterhin die unver?nderte historische Quellrevision**. Ein ?ffentlicher
+Fork oder eine automatisch ausgetauschte Atlasgrafik wird nicht akzeptiert.
+Der GitHub-Branch bleibt ebenso privat wie die Repositorysichtbarkeit;
+keine Freigabe von Spielgrafiken in einem sp?ter ?ffentlichen Repository.
+
 ## Einmaliges lokales Einrichten
 
 Im Root der Sprite Suite in einem Terminal:

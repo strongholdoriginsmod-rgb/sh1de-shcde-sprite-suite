@@ -22,6 +22,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 OFFICIAL_URL = "https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten.git"
+PRIVATE_GITHUB_URL = "https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite.git"
+PRIVATE_GITHUB_BRANCH = "graphics/stronghold-europe-grafikdaten"
 SOURCE_REVISION = "66dd212217831016d454483f41859258d5d3dc89"
 SCHEMA = "sprite-suite.origins-grafikdaten-inventory.v1"
 INVENTORY = ROOT / "config" / "origins-grafikdaten-inventory.json"
@@ -120,6 +122,13 @@ def source_repo(value: Path | str, *, expected_commit: str | None = None) -> Pat
         OFFICIAL_URL.casefold(),
         OFFICIAL_URL.removesuffix(".git").casefold(),
         "git@gitlab.com:strongholdoriginsmod/stronghold-europe-grafikdaten.git",
+        # Same data tree and exact source revision on a separate branch of
+        # the PRIVATE SpriteSuite GitHub repository. Never accept an arbitrary
+        # GitHub origin or a different commit with matching file names.
+        PRIVATE_GITHUB_URL.casefold(),
+        PRIVATE_GITHUB_URL.removesuffix(".git").casefold(),
+        PRIVATE_GITHUB_URL.replace("https://", "https://strongholdoriginsmod-rgb@").casefold(),
+        "git@github.com:strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite.git",
     }:
         raise GraphicsDataError(
             "Quelle ist nicht das bekannte Stronghold-Origins-Grafikdaten-Repository"
