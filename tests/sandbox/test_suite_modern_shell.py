@@ -117,3 +117,22 @@ def test_home_shortcuts_only_open_relevant_workspace(ui):
     assert app.notebook.select()==str(app.sandbox_tab)
     app.tab_home.quick_buttons["bc7_page"][0].invoke()
     assert app.notebook.select()==str(app.bc7_page)
+
+
+def test_open_layout_guide_changes_language_without_restart(ui):
+    mod,app=ui
+    app.open_tab(app.hud_menu_tab)
+    editor=app.hud_menu_tab.open_layout()
+    assert editor is not None
+    app.update()
+    # An empty worktree has no imported game assets; never create them here.
+    assert editor.guide_heading.get().startswith("1 / 4")
+    assert editor._next_action=="import"
+    app.set_language("en")
+    app.update()
+    assert "Open an image" in editor.guide_heading.get()
+    assert editor.more_menu.entrycget(0,"label")=="Copy"
+    app.set_language("de")
+    app.update()
+    assert "Bild öffnen" in editor.guide_heading.get()
+    editor.close_editor()

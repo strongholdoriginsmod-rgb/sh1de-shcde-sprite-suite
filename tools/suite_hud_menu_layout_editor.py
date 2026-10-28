@@ -21,6 +21,7 @@ import uuid
 from PIL import Image, ImageGrab, ImageTk
 
 from suite_usability import ScrollableColumn
+from suite_layout_flow import layout_advice
 from hud_menu_workspace import (
     CATEGORIES, WorkshopError, import_image, list_assets, workspace,
     _metadata_dir, _write_new, filename,
@@ -71,6 +72,8 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self._render_job = None
         self._syncing_tree = False
         self._busy = False
+        self._export_verified = False
+        self._export_problem = ""
 
         super().__init__(parent)
         self.title("Sprite Suite · HUD & Menüs · visueller Layout-Designer")
@@ -78,20 +81,31 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.minsize(880,570)
         self.scene_name = tk.StringVar(self,value=scene.name)
         self.source_choice = tk.StringVar(self,value=source_asset or "")
+        self.source_display = tk.StringVar(self,value="")
+        self._asset_choices = {}
         self.zoom = tk.DoubleVar(self,value=0.75)
         self.snap = tk.BooleanVar(self,value=True)
         self.snap_step = tk.IntVar(self,value=8)
         self.proportional = tk.BooleanVar(self,value=False)
         self.include_patches = tk.BooleanVar(self,value=False)
         self.status = tk.StringVar(self,value="Grafik direkt mit der Maus bewegen; Eckgriffe skalieren.")
+        self.guide_heading = tk.StringVar(self,value="1 / 4 – Bild öffnen")
+        self.guide_detail = tk.StringVar(self,value="Ein Bild importieren und einfügen.")
+        self.guide_button_text = tk.StringVar(self,value="PNG importieren")
+        self.selection_detail = tk.StringVar(self,value="Eine Ebene auswählen, um ihre Werte zu ändern.")
+        self._next_action = "import"
         self._property_vars={}
         self._show_ui()
+        self._source_trace=self.source_choice.trace_add(
+            "write",self._sync_source_display)
         self._update_scene_names()
         self._refresh_assets()
         self._refresh_layers()
+        self._check_export_status()
         self._schedule_draw()
-        self.after(120,self.fit)
-        self.after(140,self._apply_initial_language)
+        self._after_fit=self.after(120,self.fit)
+        self._after_lang=self.after(140,self._apply_initial_language)
+        self._after_guidance=self.after(160,self._update_guidance)
         self.protocol("WM_DELETE_WINDOW",self.close_editor)
         self.bind("<Control-s>",self._shortcut_save)
         self.bind("<Control-z>",self._shortcut_undo)
@@ -117,11 +131,22 @@ class HudMenuLayoutEditor(tk.Toplevel):
         intro.pack(fill="x")
         ttk.Label(intro,text="Layout bearbeiten",
                   font=("Segoe UI",16,"bold")).pack(side="left")
-        ttk.Label(intro,
-                  text="Bild einfügen  →  auf der Fläche bearbeiten  →  speichern  →  PNG exportieren",
-                  ).pack(side="left",padx=14)
         ttk.Button(intro,text="Hilfe",command=self.show_layout_help
                    ).pack(side="right",padx=3)
+        ttk.Label(intro,text="Bilder platzieren · Ebenen bearbeiten",
+                  ).pack(side="left",padx=14)
+        guide=ttk.Frame(self,padding=(10,7,10,7))
+        guide.pack(fill="x")
+        guide_copy=ttk.Frame(guide)
+        self.next_button=ttk.Button(guide,text="PNG importieren",
+                     command=self.next_step)
+        # Pack the button first so descriptions cannot push it off-screen.
+        self.next_button.pack(side="right",padx=(10,0))
+        guide_copy.pack(side="left",fill="x",expand=True)
+        ttk.Label(guide_copy,textvariable=self.guide_heading,
+                  font=("Segoe UI",11,"bold")).pack(anchor="w")
+        ttk.Label(guide_copy,textvariable=self.guide_detail,
+                  wraplength=460,justify="left").pack(anchor="w",pady=(1,0))
         top=ttk.Frame(self,padding=(7,4,7,1))
         top.pack(fill="x")
         ttk.Label(top,text="Projekt:",font=("Segoe UI",10,"bold")).pack(side="left")
@@ -151,37 +176,44 @@ class HudMenuLayoutEditor(tk.Toplevel):
         ttk.Checkbutton(viewbar,text="Proportionen",
                         variable=self.proportional).pack(side="left",padx=5)
 
-        actions=ttk.Frame(self,padding=(7,1,7,5))
+        actions=ttk.Frame(self,padding=(7,1,7,4))
         actions.pack(fill="x")
         first_row=ttk.Frame(actions)
         first_row.pack(fill="x")
         second_row=ttk.Frame(actions)
         second_row.pack(fill="x",pady=(3,0))
-        third_row=ttk.Frame(actions)
-        third_row.pack(fill="x",pady=(3,0))
         for parent,entries in (
             (first_row,(
-                ("Bild einfügen",self.add_asset),
                 ("PNG importieren",self.import_external),
-                ("Duplizieren",self.duplicate),
-                ("Kopieren",self.copy),
-                ("Einfügen",self.paste),
-                ("Löschen",self.delete),
+                ("Bild einfügen",self.add_asset),
+                ("Original-Pixeleditor",self.open_pixel_editor),
             )),
             (second_row,(
-                ("Ebene ↑",lambda:self.change_order(1)),
-                ("Ebene ↓",lambda:self.change_order(-1)),
-                ("Original-Pixeleditor",self.open_pixel_editor),
                 ("Layout → PNG + Positionsdaten",self.export),
-            )),
-            (third_row,(
-                ("Asset-Mod-Paket bauen",self.build_mod),
                 ("Spieloberfläche anbinden (Noesis)",self.bind_noesis),
             )),
         ):
             for label,callback in entries:
                 ttk.Button(parent,text=label,command=callback).pack(
                     side="left",padx=2)
+        self.more_menu=tk.Menu(self,tearoff=False)
+        for label,callback in (
+            ("Kopieren",self.copy),
+            ("Einfügen",self.paste),
+            ("Duplizieren",self.duplicate),
+            ("Löschen",self.delete),
+            ("Ebene nach vorne",lambda:self.change_order(1)),
+            ("Ebene nach hinten",lambda:self.change_order(-1)),
+            ("Asset-Mod-Paket bauen",self.build_mod),
+            ("Exportstand prüfen",lambda:self._check_export_status(show_problem=True)),
+        ):
+            self.more_menu.add_command(label=label,command=callback)
+        self.more_button=ttk.Menubutton(first_row,text="Weitere Aktionen ▾",
+                                       direction="below",menu=self.more_menu)
+        self.more_button.pack(side="left",padx=(8,0))
+        ttk.Label(second_row,
+                  text="Hinweis: Spielknöpfe bleiben separat.",
+                  ).pack(side="left",padx=(8,0))
 
         host=ttk.PanedWindow(self,orient="horizontal")
         host.pack(fill="both",expand=True,padx=8,pady=2)
@@ -207,18 +239,22 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.canvas.bind("<Configure>",lambda _:self._schedule_draw())
         self.canvas.bind("<Control-MouseWheel>",self._mouse_zoom)
         self.canvas.bind("<MouseWheel>",self._mouse_scroll)
+        self.canvas.bind("<Button-3>",self._show_canvas_menu)
 
         layer_head=ttk.Frame(inspector)
         layer_head.pack(fill="x",padx=4)
-        ttk.Label(layer_head,text="Ebenen (oben = vorne)",
+        ttk.Label(layer_head,text="Bildquelle auswählen",
                   font=("Segoe UI",10,"bold")).pack(side="left")
         chooser=ttk.Frame(inspector)
         chooser.pack(fill="x",padx=4,pady=3)
         self.asset_combo=ttk.Combobox(
-            chooser,textvariable=self.source_choice,state="readonly")
+            chooser,textvariable=self.source_display,state="readonly")
         self.asset_combo.pack(side="left",fill="x",expand=True,padx=(0,4))
-        ttk.Button(chooser,text="+",width=3,
+        self.asset_combo.bind("<<ComboboxSelected>>",self._picked_source)
+        ttk.Button(chooser,text="Einfügen",width=9,
                    command=self.add_asset).pack(side="left")
+        ttk.Label(inspector,text="Ebenen (oben = vorne)",
+                  font=("Segoe UI",10,"bold")).pack(anchor="w",padx=7,pady=(5,2))
         layers_frame=ttk.Frame(inspector)
         layers_frame.pack(fill="both",expand=True,padx=4,pady=(0,6))
         self.layers=ttk.Treeview(
@@ -236,7 +272,10 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.layers.pack(side="left",fill="both",expand=True)
         self.layers.bind("<<TreeviewSelect>>",self._tree_selected)
         self.layers.bind("<Double-1>",self._list_double)
+        self.layers.bind("<Button-3>",self._show_layer_menu)
 
+        ttk.Label(inspector,textvariable=self.selection_detail,
+                  wraplength=280,justify="left").pack(fill="x",padx=6,pady=(0,4))
         fields=ttk.LabelFrame(inspector,text="Position · Größe · Drehung",padding=6)
         fields.pack(fill="x",padx=4,pady=(0,4))
         mapping=[
@@ -318,6 +357,122 @@ class HudMenuLayoutEditor(tk.Toplevel):
             parent=self,
         )
 
+    def _update_guidance(self):
+        """A visible next step, distinct from raw export and game installation."""
+        advice=layout_advice(
+            layer_count=len(self.scene.layers),
+            has_source=bool(self.source_choice.get().strip()),
+            unsaved=self.is_dirty(),
+            export_verified=self._export_verified,
+        )
+        app=getattr(self.master,"app",None)
+        lang=getattr(app,"language",None)
+        english=bool(lang is not None and str(lang.get()).upper()=="EN")
+        if english:
+            translated={
+                "image": (
+                    "1 / 4 – Place an image" if self.source_choice.get()
+                    else "1 / 4 – Open an image",
+                    "Select a source PNG on the right, then insert it."
+                    if self.source_choice.get() else
+                    "Import a PNG, JPEG or WebP file. The original is preserved.",
+                    "Insert image" if self.source_choice.get() else "Import PNG",
+                ),
+                "save": ("2 / 4 – Save layout",
+                         "Your layers or positions changed. Save the editable layout first.",
+                         "Save layout"),
+                "export": ("3 / 4 – Export PNG",
+                           "The layout is saved. Export one composited PNG and its positions.",
+                           "Export PNG"),
+                "ready": ("4 / 4 – PNG ready",
+                          "Saved layout and last verified PNG agree. No game was modified.",
+                          "Bind game UI"),
+            }
+            heading,detail,button=translated[advice.stage]
+        else:
+            heading,detail,button=advice.heading,advice.detail,advice.button
+        self.guide_heading.set(heading)
+        self.guide_detail.set(detail)
+        self.guide_button_text.set(button)
+        self.next_button.configure(text=button)
+        self._next_action=advice.action
+        menu=getattr(self,"more_menu",None)
+        if menu is not None and getattr(self,"_translated_menu",None)!=english:
+            translations=(
+                ("Kopieren","Copy"),
+                ("Einfügen","Paste"),
+                ("Duplizieren","Duplicate"),
+                ("Löschen","Delete"),
+                ("Ebene nach vorne","Move layer forward"),
+                ("Ebene nach hinten","Move layer backward"),
+                ("Asset-Mod-Paket bauen","Build asset mod"),
+                ("Exportstand prüfen","Verify export"),
+            )
+            for index,(de,en) in enumerate(translations):
+                menu.entryconfigure(index,label=en if english else de)
+            self._translated_menu=english
+
+    def next_step(self):
+        """Only a deliberate click can start an import or file write."""
+        action=self._next_action
+        callback={
+            "import":self.import_external,
+            "add":self.add_asset,
+            "save":self.save,
+            "export":self.export,
+            "noesis":self.bind_noesis,
+        }[action]
+        return callback()
+
+    def _check_export_status(self, *, show_problem=False):
+        """Re-check export hashes on explicit actions, not every mouse move."""
+        self._export_verified=False
+        self._export_problem=""
+        try:
+            if self._save_hash is None or self.is_dirty():
+                raise WorkshopError("Layout zuerst speichern.")
+            audit_export(self.scene,self.project,scene_sha256=self._save_hash)
+        except (ValueError,OSError) as exc:
+            self._export_problem=str(exc)
+        else:
+            self._export_verified=True
+        self._update_guidance()
+        if show_problem:
+            if self._export_verified:
+                messagebox.showinfo("Exportstand",
+                    "Gespeicherte Positionen, Bilddateien und PNG-Export stimmen überein.",
+                    parent=self)
+            else:
+                messagebox.showwarning("Exportstand",
+                    self._export_problem + "\n\n"
+                    "Wenn du etwas geändert hast, zuerst speichern "
+                    "und dann »Layout → PNG + Positionsdaten« erneut ausführen.",
+                    parent=self)
+        return self._export_verified
+
+    def _image_saved(self):
+        """Pixel edits invalidate a previously baked composite."""
+        self._check_export_status()
+        self._schedule_draw()
+
+    def _show_layer_menu(self,event):
+        uid=self.layers.identify_row(event.y)
+        if uid:
+            if uid not in self._selection:
+                self.select_only(uid)
+        try:
+            self.more_menu.tk_popup(event.x_root,event.y_root)
+        finally:
+            self.more_menu.grab_release()
+        return "break"
+
+    def _show_canvas_menu(self,event):
+        try:
+            self.more_menu.tk_popup(event.x_root,event.y_root)
+        finally:
+            self.more_menu.grab_release()
+        return "break"
+
     def _update_scene_names(self):
         names=sorted(p.name.removesuffix(".scene.json") for p in
                      scene_file(self.project,self.scene.name).parent.glob("*.scene.json"))
@@ -326,11 +481,30 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.scene_picker.configure(values=names)
 
     def _refresh_assets(self):
-        refs=[asset.relative_path for asset in list_assets(self.project)
-              if asset.path.suffix.lower()==".png"]
-        self.asset_combo.configure(values=refs)
+        assets=[item for item in list_assets(self.project)
+                if item.path.suffix.lower()==".png"]
+        # The user sees the filename FIRST; the full resource key stays
+        # unchanged for rendering and tests and never becomes a display label.
+        self._asset_choices={
+            f"{item.name} · {item.kind}":item.relative_path for item in assets
+        }
+        self.asset_combo.configure(values=list(self._asset_choices))
+        refs=list(self._asset_choices.values())
         if self.source_choice.get() not in refs:
             self.source_choice.set(refs[0] if refs else "")
+        self._sync_source_display()
+
+    def _picked_source(self,_event=None):
+        relative=self._asset_choices.get(self.source_display.get())
+        if relative is not None:
+            self.source_choice.set(relative)
+
+    def _sync_source_display(self,*_args):
+        selected=self.source_choice.get()
+        label=next((name for name,path in self._asset_choices.items()
+                    if path==selected),Path(selected).name if selected else "")
+        self.source_display.set(label)
+        self._update_guidance()
 
     def _refresh_layers(self):
         self._syncing_tree=True
@@ -346,6 +520,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
         ])
         self._syncing_tree=False
         self._sync_properties()
+        self._update_guidance()
 
     def _tree_selected(self,_event=None):
         if self._syncing_tree:return
@@ -371,9 +546,25 @@ class HudMenuLayoutEditor(tk.Toplevel):
         layer=layer_by_id(self.scene,self._selection[0]) if (
             len(self._selection)==1 and any(
                 l.id==self._selection[0] for l in self.scene.layers)) else None
+        app=getattr(self.master,"app",None)
+        language=getattr(app,"language",None)
+        english=bool(language and str(language.get()).upper()=="EN")
         if layer is None:
+            if english:
+                info=("Multiple layers selected – use alignment tools below."
+                      if len(self._selection)>1 else
+                      "Select one layer to edit its position and size.")
+            else:
+                info=("Mehrere Ebenen ausgewählt – zum Ausrichten unten die "
+                      "entsprechende Funktion verwenden."
+                      if len(self._selection)>1 else
+                      "Eine Ebene auswählen, um Position und Größe zu ändern.")
+            self.selection_detail.set(info)
             for value in self._property_vars.values():value.set("")
             return
+        self.selection_detail.set(
+            ("Selected: " if english else "Ausgewählt: ")
+            +(layer.name or Path(layer.asset).name))
         for key,var in self._property_vars.items():
             val=getattr(layer,key)
             var.set(str(round(val,2)) if type(val) is float else str(val))
@@ -496,6 +687,26 @@ class HudMenuLayoutEditor(tk.Toplevel):
                 outline="#87929d",width=1)
             self.canvas.create_image(
                 margin,margin,anchor="nw",image=self._image_tk)
+            if not self.scene.layers:
+                app=getattr(self.master,"app",None)
+                lang=getattr(app,"language",None)
+                english=bool(lang and str(lang.get()).upper()=="EN")
+                if width < 270:
+                    guide=("Insert an image above." if english
+                           else "Oben ein Bild einfügen.")
+                else:
+                    guide=(("Your menu or HUD starts here.\n\n"
+                            "Import a PNG above, or select a source "
+                            "on the right and insert it.") if english else
+                           ("Hier entsteht dein Menü oder HUD.\n\n"
+                            "Oben »PNG importieren« wählen oder rechts "
+                            "ein vorhandenes Bild auswählen und »Bild einfügen« klicken."))
+                self.canvas.create_text(
+                    margin+max(20,width//2),margin+max(26,height//3),
+                    anchor="center",width=max(130,width-45),
+                    text=guide,font=("Segoe UI",11,"bold"),fill="#d1dce6",
+                    justify="center",
+                )
             if self.snap.get() and self.snap_step.get()>1:
                 step=self.snap_step.get()*draw_ratio
                 if step>=8:
@@ -918,7 +1129,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
             path=_existing(self.project,item.asset)
             from suite_hud_menu_editor import HudMenuPixelEditor
             editor=HudMenuPixelEditor(
-                self,path,project=self.project,after_save=self._schedule_draw)
+                self,path,project=self.project,after_save=self._image_saved)
             editor.focus_set()
         except (OSError,ValueError) as exc:
             messagebox.showerror("Pixel bearbeiten",str(exc),parent=self)
@@ -936,7 +1147,9 @@ class HudMenuLayoutEditor(tk.Toplevel):
             self._schedule_draw()
 
     def is_dirty(self):
-        return self._save_hash is None or self._last_saved!=self.scene.as_json()
+        # A pristine, empty layout has no file yet, but has no edits to lose.
+        # Export and Noesis still explicitly require a saved scene checksum.
+        return self._last_saved!=self.scene.as_json()
 
     def save(self):
         try:
@@ -947,6 +1160,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
             self.scene_name.set(self.scene.name)
             self._update_scene_names()
             self.status.set("Layout und sämtliche Positionen dauerhaft gespeichert: "+str(path))
+            self._check_export_status()
             return True
         except (OSError,ValueError) as exc:
             messagebox.showerror("Layout speichern",str(exc),parent=self)
@@ -990,6 +1204,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
             self._update_scene_names()
             self._refresh_layers()
             self.fit()
+            self._check_export_status()
         except (ValueError,OSError) as exc:
             messagebox.showerror("Neues Layout",str(exc),parent=self)
 
@@ -1004,6 +1219,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
             self._selection=[]
             self._refresh_layers()
             self.fit()
+            self._check_export_status()
             self.status.set("Positionen und Ebenen geladen: "+str(scene_file(self.project,selected)))
         except (ValueError,OSError) as exc:
             messagebox.showerror("Layout laden",str(exc),parent=self)
@@ -1034,6 +1250,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
             result=export_composition(
                 self.scene,self.project,resource_name=target,
                 scene_sha256=self._save_hash)
+            self._check_export_status()
             self.status.set("Exportiert: "+result["resource"]+
                 " · transformierte PNG-Pixel + Positionsmanifest gespeichert. "
                 "XAML-/Noesis-Einbau bleibt ein gesonderter Zuordnungsschritt.")
@@ -1163,3 +1380,22 @@ class HudMenuLayoutEditor(tk.Toplevel):
     def close_editor(self):
         if not self._can_discard():return
         self.destroy()
+
+    def destroy(self):
+        """Release Tk callbacks even when the editor is closed very quickly."""
+        for name in ("_after_fit","_after_lang","_after_guidance","_render_job"):
+            job=getattr(self,name,None)
+            if job is not None:
+                try:
+                    self.after_cancel(job)
+                except tk.TclError:
+                    pass
+                setattr(self,name,None)
+        token=getattr(self,"_source_trace",None)
+        if token is not None:
+            try:
+                self.source_choice.trace_remove("write",token)
+            except tk.TclError:
+                pass
+            self._source_trace=None
+        super().destroy()

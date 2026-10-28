@@ -2,6 +2,10 @@
   "schema": "stronghold-europe.suite-sprachen.v1",
   "hinweis": "Oberflaechentexte der Universal-Suite: deutscher Originaltext -> englische Fassung. Fehlt ein Eintrag, bleibt der deutsche Text stehen. Frei erweiterbar.",
   "en": {
+    "Bildquelle auswählen": "Select image source",
+    "Weitere Aktionen ▾": "More actions ▾",
+    "Hinweis: Spielknöpfe bleiben separat.": "Note: Game buttons remain separate.",
+    "Einfügen": "Insert",
     "Grafiken öffnen, bearbeiten und frei auf einer Fläche anordnen.": "Open, edit and arrange graphics on a canvas.",
     "1  Bild öffnen": "1  Open image",
     "2  Pixel bearbeiten": "2  Edit pixels",

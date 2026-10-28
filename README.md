@@ -11,6 +11,9 @@ Export vorbereiten. Technische Arbeitsordner, ältere Spezialseiten
 und ausführliche Protokolle bleiben bei Bedarf erreichbar, stehen
 aber nicht mehr ständig im Vordergrund. Der Layout-Designer gruppiert
 Bildebenen, Ansicht, Speicherung und Export getrennt.
+Der Layout-Designer nennt jetzt stets den nächsten notwendigen Schritt,
+zeigt Bilddateinamen statt langer Ressourcenpfade und bündelt seltene
+Ebenenbefehle im Rechtsklickmenü.
 
 [Anleitung zur neuen Bedienoberfläche](docs/SPRITESUITE_NEUE_OBERFLAECHE_2026-10-28.md).
 
@@ -18,7 +21,7 @@ Bildebenen, Ansicht, Speicherung und Export getrennt.
 
 | Variante | Inhalt | Wie |
 |---|---|---|
-| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-neue-oberflaeche-2026-10-28) → `SpriteSuite-Windows-Portable-Neue-Oberflaeche-2026-10-28.zip` |
+| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-layout-flow-2026-10-28) → `SpriteSuite-Windows-Portable-Layout-Fuehrung-2026-10-28.zip` |
 | **Quellcode** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | `main` → *Code* → *Download ZIP* |
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 

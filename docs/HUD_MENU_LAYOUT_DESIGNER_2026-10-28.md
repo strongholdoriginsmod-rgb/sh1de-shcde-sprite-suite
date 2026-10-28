@@ -10,23 +10,26 @@ muss am Zielspiel geprüft werden.
 
 1. **Suite starten.cmd → HUD & Menüs** öffnen. Ein eigenes PNG, JPEG
    oder WebP importieren oder ein transparentes Bild anlegen.
-2. **Layout-Designer · direkt ziehen & skalieren** wählen oder
-   **Layout · Live-Vorschau → Interaktive Vorschau öffnen**.
+2. **HUD & Menüs → 3 Layout gestalten** wählen. Alternativ
+   im Reiter **Layout** die interaktive Vorschau öffnen.
+   Der alte Name „Layout · Live-Vorschau“ ist jetzt verkürzt.
 3. Oben Layoutname, Zoom und optional Raster/Snapping einstellen.
    Bei Bedarf **Neu** auswählen und die Canvasgröße eingeben.
-4. Rechts eine vorhandene Arbeits-PNG auswählen und **Bild einfügen**.
-   Alternativ über **PNG importieren** ein eigenes Bild einlesen.
-   Die ursprüngliche Quelldatei bleibt unverändert.
+4. Rechts unter **Bildquelle auswählen** eine vorhandene PNG
+   anhand ihres Dateinamens und ihrer Kategorie bestimmen,
+   dann **Bild einfügen** wählen. Über **PNG importieren** wird
+   eine neue Bilddatei eingelesen. Die ursprüngliche Quelldatei
+   bleibt unverändert.
 5. **Klick** wählt die Ebene, **Ziehen** verschiebt sie direkt in der
    Vorschau. **Ecken und Seitenkanten** skalieren; der **grüne Griff**
    dreht die Ebene um ihren Pivot. Mit **Shift** proportional skalieren
    oder mehrere Ebenen auswählen. Bei Snapping rasten Positionen
    und Größen am wählbaren Pixelraster ein.
 6. Über die Ebenenliste Ebenen auswählen, sichtbar/unsichtbar
-   schalten, sperren, nach vorne/hinten verschieben und gemeinsam
-   ausrichten. Kopieren, Einfügen, Duplizieren, Löschen und
-   Undo/Redo sind vorhanden. Pfeiltasten verschieben um 1 Pixel,
-   Shift+Pfeil um 10 Pixel.
+   schalten oder sperren. Mit **Weitere Aktionen** oder per Rechtsklick
+   Kopieren, Einfügen, Duplizieren, Löschen oder Ebenen nach vorne/hinten
+   verschieben. Undo/Redo bleiben verfügbar. Pfeiltasten verschieben
+   um 1 Pixel, Shift+Pfeil um 10 Pixel.
 7. Im Eigenschaftenblock **X, Y, Breite, Höhe, Rotation,
    Deckkraft (0–255), Anker (neun Positionen), Pivot X/Y (0–1)**
    exakt eingeben. **Werte anwenden** schreibt den Zustand in
@@ -36,6 +39,18 @@ muss am Zielspiel geprüft werden.
    **Laden** rekonstruiert die Positionen und die Ebenenfolge.
    Frühere gespeicherte Revisionen bleiben erhalten. Extern
    geänderte Layoutdateien werden nicht blind überschrieben.
+
+## Anzeige des aktuellen Arbeitsstands
+
+Oben stehen **1 / 4 Bild platzieren**, **2 / 4 Änderungen speichern**,
+**3 / 4 PNG erzeugen** oder **4 / 4 PNG bereit**. Der Knopf daneben
+führt den nächsten passenden Schritt aus. Nach einer Positionsänderung
+wechselt die Anzeige zurück zu **Speichern**. Nach einer Änderung der
+Quell-PNG wechselt sie zu **PNG erzeugen**, denn die vorherige
+zusammengesetzte PNG ist dann veraltet. **Exportstand prüfen** unter
+**Weitere Aktionen** prüft die gespeicherte Szene, die Bilddateien und
+den Export erneut. Erst der Noesis-Dialog dient der Zuordnung zum
+Spiel, und auch dort ist ein wirklicher Ingame-Test nötig.
 
 ## Weiterverarbeitung der Positionen
 

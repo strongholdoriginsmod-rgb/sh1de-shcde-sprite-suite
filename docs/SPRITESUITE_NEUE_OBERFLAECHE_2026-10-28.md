@@ -83,13 +83,40 @@ Das Layoutfenster selbst öffnet sich über den dritten Hauptschritt.
 
 ## Im Layout-Designer
 
+Direkt unter dem Fenstertitel zeigt der Editor, was als Nächstes nötig ist.
+Ein Knopf rechts daneben führt genau diese Aktion aus:
+
+- **1 / 4 – Bild platzieren:** Ist schon eine Werkstatt-PNG ausgewählt,
+  **Bild einfügen** wählen. Ansonsten **PNG importieren**.
+- **2 / 4 – Änderungen speichern:** Bild verschieben, Größe und Drehung
+  ändern, anschließend **Layout speichern**.
+- **3 / 4 – PNG erzeugen:** Nach dem Speichern die zusammengesetzte
+  PNG samt Positionsdatei erzeugen. Die Schaltfläche öffnet die Namensabfrage.
+- **4 / 4 – PNG bereit:** Letzter geprüfter Export passt zum gespeicherten
+  Layout. **Spieloberfläche zuordnen** öffnet die Noesis-Anbindung.
+  Das Spiel wurde bis hierhin nicht verändert.
+
+In **Bildquelle auswählen** stehen die lesbaren Dateinamen vorn,
+danach die Kategorie. Der vollständige Ressourcenpfad wird intern
+weiterhin korrekt gespeichert. In der **Ebenenliste** sind Sichtbarkeit,
+Sperre und Reihenfolge erkennbar. Unterhalb zeigt **Ausgewählt**,
+wessen Zahlenwerte gerade bearbeitet werden. Leere Felder bedeuten,
+dass keine einzelne Ebene ausgewählt ist.
+
+**Weitere Aktionen** bündelt Kopieren, Einfügen, Duplizieren, Löschen,
+Ebenen nach vorn/hinten bewegen, den gesonderten Asset-Paketbau und
+**Exportstand prüfen**. Das Menü ist auch per Rechtsklick auf die
+Arbeitsfläche oder die Ebenenliste erreichbar.
+
 - **Neu:** neues, unabhängiges Layout mit eigener Größe erstellen.
 - **Laden:** zuvor gespeichertes Layout wieder öffnen.
 - **Speichern · Strg+S:** editierbares Layout inklusive Positionen speichern.
 - **Bild einfügen / PNG importieren:** vorhandenes Bild als neue Ebene
   anlegen oder eine externe Bilddatei importieren.
-- **Ebene ↑ / Ebene ↓:** eine Ebene nach vorn oder hinten bewegen.
-- **Kopieren / Einfügen / Duplizieren:** Ebenen vervielfältigen.
+- **Ebene nach vorne/hinten:** unter **Weitere Aktionen** die
+  Ebenenreihenfolge verändern.
+- **Kopieren / Einfügen / Duplizieren:** ebenfalls unter
+  **Weitere Aktionen** oder per Rechtsklick verfügbar.
 - **Raster / Snap:** beim Ziehen an Pixelabständen einrasten.
 - **Position · Größe · Drehung:** exakte Zahlen für die gewählte Ebene.
   Nach dem Eingeben **Werte anwenden** anklicken.
@@ -145,7 +172,7 @@ statischen Overlay erwartbar. Die eigentliche Klickfunktion
 gehört zur separaten UI-/ViewModel-Definition des Spiels.
 
 **Einrichtung fordert Python an:** Für Windows den
-[Portable-Release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-neue-oberflaeche-2026-10-28)
+[Portable-Release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-layout-flow-2026-10-28)
 statt „Code → Download ZIP“ herunterladen. In der Portable-Version
 wird Python mitgeliefert.
 

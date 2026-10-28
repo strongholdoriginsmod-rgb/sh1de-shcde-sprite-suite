@@ -2913,6 +2913,9 @@ class Universal(center.Center):
         if shell is not None:
             shell.refresh_language()
         self.tab_home.refresh_quick_language(LANG.code == "en")
+        layout=getattr(self.hud_menu_tab,"_layout_window",None)
+        if layout is not None and layout.winfo_exists():
+            layout._update_guidance()
         finder=getattr(self,"_command_search",None)
         if finder is not None and finder.winfo_exists():
             finder.set_language(LANG.code)

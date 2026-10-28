@@ -20,12 +20,19 @@ still be expanded via **Show all tabs**. Program logs are under **Show log**.
 3. Use **3 Arrange layout** to open the layout editor. Select the image
    from the right-side list, click **Insert image**, then drag it directly
    on the canvas. Yellow handles resize; the green handle rotates.
-4. Click **Save · Ctrl+S** to retain editable layers and positions,
-   then **Layout → PNG + positions** to export a composited PNG plus
-   an exact position manifest.
-5. For a verified, static in-game overlay use **Bind game UI (Noesis)**
-   and select an existing XAML Grid from the installed game.
-   Visibility and interactions must still be checked in-game.
+4. The banner at the top always shows the next necessary action:
+   **1 Place an image**, **2 Save layout**, **3 Export PNG** or
+   **4 PNG ready**. The button beside it performs the indicated step.
+5. **Save · Ctrl+S** retains editable layers and positions, while
+   **Layout → PNG + positions** exports the composited PNG and position
+   manifest. After moving a layer, save again. After editing an input
+   PNG, export again.
+6. Use **More actions** (or right-click the canvas/layer list) for
+   copy, paste, duplicate, delete, layer order and export verification.
+   The source-image dropdown shows the filename before its category.
+7. For a static in-game overlay use **Bind game UI (Noesis)** and
+   select a verified XAML container. Visibility and interactions
+   must still be checked in-game.
 
 ## Know the difference
 
