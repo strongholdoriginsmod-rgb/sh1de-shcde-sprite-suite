@@ -14,6 +14,7 @@ import pytest
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/"tools"))
 import hud_menu_workspace as model
+import hud_menu_layout as layout
 import suite_hud_menu_workshop as gui
 import suite_hud_menu_editor as editor
 
@@ -37,6 +38,7 @@ def workshop(tmp_path,monkeypatch):
     (suite/"work").mkdir(parents=True)
     monkeypatch.setattr(model,"ROOT",suite)
     monkeypatch.setattr(model,"WORK",suite/"work")
+    monkeypatch.setattr(layout,"WORK",suite/"work")
     monkeypatch.setattr(gui,"ROOT",suite)
     try:
         root=tk.Tk()
@@ -159,3 +161,122 @@ def test_main_hud_menu_workshop_opens_real_layer_designer(workshop):
     new_window.close_editor()
     assert source.is_file()
     assert not (suite/"Stronghold Crusader Definitive Edition_Data").exists()
+
+
+def test_last_project_and_image_survive_workshop_reopening(workshop):
+    from suite_hud_menu_session import read_session
+    suite,root,view,links,commands=workshop
+    folder=view._project(create=True)
+    first=suite/"first.png"
+    last=suite/"last.png"
+    Image.new("RGBA",(14,10),(20,90,50,255)).save(first)
+    Image.new("RGBA",(14,10),(80,20,50,255)).save(last)
+    path_a=model.import_image(first,project=folder)
+    path_b=model.import_image(last,project=folder)
+    view.refresh()
+    view._select_path(path_b)
+    saved=read_session()
+    assert saved["project"]==folder
+    assert saved["asset"].endswith("last.png")
+    app=view.app
+    view.destroy()
+    reopened=gui.HudMenuWorkshop(root,app)
+    reopened.pack(fill="both",expand=True)
+    reopened.refresh()
+    root.update()
+    assert reopened._project()==folder
+    assert reopened.selected_asset().relative_path.endswith("last.png")
+    assert "Aktives Projekt:" in reopened.project_summary.get()
+    assert first.is_file() and last.is_file()
+    reopened.destroy()
+
+
+def test_file_import_selects_last_successfully_imported_file(workshop,monkeypatch):
+    from suite_hud_menu_session import read_session
+    suite,root,view,links,commands=workshop
+    first=suite/"zz-top.png"
+    second=suite/"aa-bottom.png"
+    Image.new("RGBA",(19,13),(12,32,65,255)).save(first)
+    Image.new("RGBA",(18,12),(22,42,75,255)).save(second)
+    before=(first.read_bytes(),second.read_bytes())
+    monkeypatch.setattr(gui.filedialog,"askopenfilenames",
+                        lambda *args,**kw:(str(first),str(second)))
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *args,**kw:True)
+    view.filter_var.set("previous-unmatched-key")
+    view.edited_only.set(True)
+    view.import_images()
+    root.update()
+    assert view.filter_var.get()==""
+    assert view.edited_only.get() is False
+    assert view.tabs.index(view.tabs.select())==0
+    assert len(view._assets)==2
+    assert view.selected_asset().relative_path.endswith("aa-bottom.png")
+    assert view.preview.current.name=="aa-bottom.png"
+    assert read_session()["asset"].endswith("aa-bottom.png")
+    assert (first.read_bytes(),second.read_bytes())==before
+
+
+def test_project_switch_remembers_only_valid_work_folder(workshop,monkeypatch):
+    from suite_hud_menu_session import read_session
+    suite,root,view,links,commands=workshop
+    target=model.workspace(suite/"work"/"another-project",create=True)
+    png=suite/"different-image.png"
+    Image.new("RGBA",(6,6),(1,2,3,255)).save(png)
+    model.import_image(png,project=target)
+    monkeypatch.setattr(gui.filedialog,"askdirectory",
+                        lambda *args,**kw:str(target))
+    view.pick_project()
+    root.update()
+    assert view._project()==target
+    assert view.selected_asset().relative_path.endswith("different-image.png")
+    assert read_session()["project"]==target
+    assert "another-project" in view.project_summary.get()
+
+
+def test_export_prepare_opens_live_step_without_extra_modal(workshop,monkeypatch):
+    suite,root,view,links,commands=workshop
+    source=suite/"export-preview.png"
+    Image.new("RGBA",(11,7),(8,9,10,255)).save(source)
+    model.import_image(source,project=view._project(create=True))
+    view.refresh()
+    monkeypatch.setattr(gui.messagebox,"showinfo",
+                        lambda *a,**kw:pytest.fail("Redundant export pop-up"))
+    monkeypatch.setattr(gui.messagebox,"showerror",
+                        lambda *args,**kw:pytest.fail(
+                            "Layout failed to open: " + repr(args)))
+    editor=view.export_help()
+    assert editor is not None and editor.winfo_exists()
+    assert editor._next_action=="add"
+    assert editor.next_button.winfo_exists()
+    assert editor.source_choice.get().endswith("export-preview.png")
+    editor.close_editor()
+
+
+def test_empty_project_is_remembered_after_manual_refresh(workshop):
+    from suite_hud_menu_session import read_session
+    suite,root,view,links,commands=workshop
+    empty=model.workspace(suite/"work"/"new-empty-workspace",create=True)
+    view.project_var.set(str(empty))
+    view.refresh()
+    root.update()
+    assert not view._assets
+    assert read_session()["project"]==empty
+    assert "new-empty-workspace" in view.project_summary.get()
+
+
+def test_project_switch_opens_even_if_recent_preference_cannot_be_written(
+    workshop,monkeypatch,
+):
+    suite,root,view,links,commands=workshop
+    another=model.workspace(suite/"work"/"safe-target",create=True)
+    monkeypatch.setattr(gui.filedialog,"askdirectory",
+                        lambda *args,**kw:str(another))
+    monkeypatch.setattr(gui,"save_session",
+                        lambda *args,**kw:(_ for _ in ()).throw(
+                            model.WorkshopError("Preference file is linked")))
+    monkeypatch.setattr(gui.messagebox,"showerror",
+                        lambda *args,**kw:pytest.fail("Opening should work"))
+    view.pick_project()
+    root.update()
+    assert view._project()==another
+    assert "Projekt geöffnet" in view.message.get()

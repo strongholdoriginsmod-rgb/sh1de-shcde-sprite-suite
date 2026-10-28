@@ -13,7 +13,10 @@ aber nicht mehr ständig im Vordergrund. Der Layout-Designer gruppiert
 Bildebenen, Ansicht, Speicherung und Export getrennt.
 Der Layout-Designer nennt jetzt stets den nächsten notwendigen Schritt,
 zeigt Bilddateinamen statt langer Ressourcenpfade und bündelt seltene
-Ebenenbefehle im Rechtsklickmenü.
+Ebenenbefehle im Rechtsklickmenü. Die HUD-/Menüwerkstatt öffnet nach dem
+Neustart das letzte Projekt, die zuletzt gewählte Grafik und das
+zuletzt gespeicherte Layout erneut. Der Zustandsvermerk bleibt unter
+`work/`; gespeicherte Ebenendaten werden nicht überschrieben.
 
 [Anleitung zur neuen Bedienoberfläche](docs/SPRITESUITE_NEUE_OBERFLAECHE_2026-10-28.md).
 
@@ -21,7 +24,7 @@ Ebenenbefehle im Rechtsklickmenü.
 
 | Variante | Inhalt | Wie |
 |---|---|---|
-| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-layout-flow-2026-10-28) → `SpriteSuite-Windows-Portable-Layout-Fuehrung-2026-10-28.zip` |
+| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-resume-project-2026-10-28) → `SpriteSuite-Windows-Portable-Projektfortsetzung-2026-10-28.zip` |
 | **Quellcode** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | `main` → *Code* → *Download ZIP* |
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 

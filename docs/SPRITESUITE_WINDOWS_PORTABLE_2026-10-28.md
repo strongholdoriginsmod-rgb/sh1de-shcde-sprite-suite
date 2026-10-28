@@ -5,7 +5,7 @@
 ## Start in drei Schritten
 
 1. Auf der [GitHub-Releases-Seite](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases)
-   die Datei **SpriteSuite-Windows-Portable-Layout-Fuehrung-2026-10-28.zip** herunterladen.
+   die Datei **SpriteSuite-Windows-Portable-Projektfortsetzung-2026-10-28.zip** herunterladen.
    **Nicht** die GitHub-Schaltfläche **Code → Download ZIP** nehmen:
    Dieser Download enthält nur Quellcode und keine Python-Laufzeit.
 2. Die ZIP-Datei **vollständig entpacken**, z. B. nach `C:\\SpriteSuite`.

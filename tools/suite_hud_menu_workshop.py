@@ -17,6 +17,7 @@ from hud_menu_workspace import (
     duplicate_image, import_image, import_patch, list_assets, restore_image, workspace,
 )
 from suite_usability import CompactActionBar
+from suite_hud_menu_session import read_session, save_session
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
@@ -28,7 +29,14 @@ class HudMenuWorkshop(ttk.Frame):
     def __init__(self, parent, app):
         super().__init__(parent)
         self.app = app
-        self.project_var = tk.StringVar(self, value="work/hud-menu-werkstatt")
+        remembered = read_session()
+        self.project_var = tk.StringVar(
+            self, value=str(remembered.get("project", "work/hud-menu-werkstatt"))
+        )
+        self._preferred_asset = remembered.get("asset") or None
+        self.project_summary = tk.StringVar(self)
+        self._loaded_project = None
+        self.update_project_caption()
         self.filter_var = tk.StringVar(self)
         self.kind_var = tk.StringVar(self, value="Menüs / UI-Bilder")
         self.edited_only = tk.BooleanVar(self, False)
@@ -43,8 +51,8 @@ class HudMenuWorkshop(ttk.Frame):
         self._build()
         self.filter_var.trace_add("write",lambda *_:self._fill())
         self.edited_only.trace_add("write",lambda *_:self._fill())
-        self.after(120,self._poll)
-        self.after(350,self.refresh)
+        self._poll_job=self.after(120,self._poll)
+        self._refresh_job=self.after(350,self.refresh)
 
     def _build(self):
         header=ttk.Frame(self)
@@ -70,9 +78,8 @@ class HudMenuWorkshop(ttk.Frame):
         self.project_toggle=ttk.Button(project_toggle_row,
             text="Arbeitsordner anzeigen",command=self.toggle_project)
         self.project_toggle.pack(side="left")
-        ttk.Label(project_toggle_row,
-            text="Bilder und Projekte werden nur in der SpriteSuite gespeichert.",
-            style="Muted.TLabel").pack(side="left",padx=10)
+        ttk.Label(project_toggle_row,textvariable=self.project_summary,
+                  style="Muted.TLabel").pack(side="left",padx=10)
         project=ttk.Frame(self)
         project.pack(fill="x",padx=12,pady=3)
         self.project_row=project
@@ -239,36 +246,50 @@ class HudMenuWorkshop(ttk.Frame):
             self.tools_toggle.configure(text="Weitere Grafikwerkzeuge verbergen")
 
     def export_help(self):
-        """Erklärt die beiden unterschiedlichen Paketarten vor dem Export."""
+        """Open the guided export step without an obstructing modal."""
         window=self.open_layout()
         if window is None:
-            return
-        messagebox.showinfo(
-            "Layout exportieren",
-            "Im Layout-Designer zunächst mindestens ein Bild einfügen, "
-            "dann Position und Größe einstellen.\n\n"
-            "1. »Speichern · Strg+S« sichert alle Ebenen und Positionen.\n"
-            "2. »Layout → PNG + Positionsdaten« erstellt das fertige Bild.\n"
-            "3. »Spieloberfläche anbinden (Noesis)« verknüpft diese Grafik "
-            "mit einem tatsächlich vorhandenen Spielmenü.\n\n"
-            "»DLL-freies HUD-/Menüpaket bauen« hier im Hauptfenster ist "
-            "dagegen für die vorhandenen einzelnen Werkstattdateien gedacht. "
-            "Es verschiebt keine Schaltflächen im Spiel.",
-            parent=window,
-        )
+            return None
+        window._check_export_status()
+        window.next_button.focus_set()
+        window.lift()
+        return window
 
     def _project(self,create=False):
         return workspace(self.project_var.get().strip() or DEFAULT,create=create)
 
+    def update_project_caption(self):
+        language=getattr(self.app,"language",None)
+        english=bool(language is not None and
+                     str(language.get()).upper()=="EN")
+        caption="Active project: " if english else "Aktives Projekt: "
+        self.project_summary.set(caption+Path(self.project_var.get()).name)
+
     def refresh(self):
         try:
-            self._assets=list_assets(self._project(create=True))
+            project=self._project(create=True)
+            if self._loaded_project is not None and project!=self._loaded_project:
+                self._preferred_asset=None
+                self._assets=[]
+                self.tree.selection_remove(*self.tree.selection())
+            else:
+                previous=self.selected_asset()
+                if previous is not None and self._preferred_asset is None:
+                    self._preferred_asset=previous.relative_path
+            self._loaded_project=project
+            self._assets=list_assets(project)
+            self.update_project_caption()
             self._index={a.relative_path:a for a in self._assets}
             edited=sum(a.status=="Bearbeitet" for a in self._assets)
             unknown=sum(a.status=="Ohne Importbasis" for a in self._assets)
             self.message.set(f"{len(self._assets)} HUD-/Menüressourcen im Arbeitsordner · "
                              f"{edited} bearbeitet · {unknown} ohne Importbasis.")
             self._fill()
+            if not self._assets:
+                try:
+                    save_session(project)
+                except (OSError,ValueError):
+                    pass
         except (OSError,ValueError,WorkshopError) as exc:
             self._assets=[];self._index={}
             self.message.set(f"Werkstatt konnte nicht gelesen werden: {exc}")
@@ -277,7 +298,8 @@ class HudMenuWorkshop(ttk.Frame):
     def _fill(self):
         if not hasattr(self,"tree"):return
         old=self.selected_asset()
-        oldpath=old.relative_path if old else None
+        oldpath=self._preferred_asset or (old.relative_path if old else None)
+        self._preferred_asset=None
         self.tree.delete(*self.tree.get_children())
         term=self.filter_var.get().strip().casefold()
         first=None;chosen=None
@@ -311,6 +333,11 @@ class HudMenuWorkshop(ttk.Frame):
     def _show_selected(self,_event=None):
         asset=self.selected_asset()
         if not asset:return
+        try:
+            save_session(self._project(), asset.relative_path)
+        except (OSError,ValueError):
+            # A corrupt or linked preference file must not block editing.
+            pass
         self.detail.set(
             f"{asset.relative_path}\n{asset.kind} · {asset.status} · "
             f"{asset.size:,} Bytes\nResource-Key wird nicht automatisch "
@@ -334,8 +361,20 @@ class HudMenuWorkshop(ttk.Frame):
         if folder:
             try:
                 selected=workspace(folder,create=True)
+                self._preferred_asset=None
+                self._assets=[]
+                self.tree.selection_remove(*self.tree.selection())
                 self.project_var.set(str(selected))
+                problem=None
+                try:
+                    save_session(selected)
+                except (ValueError,OSError) as exc:
+                    problem=exc
                 self.refresh()
+                if problem is not None:
+                    self.message.set("Projekt geöffnet. Die Auswahl konnte nicht "
+                                     "für den nächsten Start gespeichert werden: "
+                                     +str(problem))
             except (ValueError,OSError) as exc:
                 messagebox.showerror("Arbeitsordner",str(exc),parent=self)
 
@@ -361,10 +400,12 @@ class HudMenuWorkshop(ttk.Frame):
         for file in files:
             try:
                 result=import_image(file,folder=folder,project=root)
-                good.append(result.name)
+                good.append(result)
             except (ValueError,OSError) as exc:
                 errors.append(f"{Path(file).name}: {exc}")
         self.refresh()
+        if good:
+            self._select_path(good[-1])
         self.message.set(f"{len(good)} Grafiken importiert, {len(errors)} Fehler."
                          +(" "+ "; ".join(errors[:3]) if errors else ""))
 
@@ -391,11 +432,17 @@ class HudMenuWorkshop(ttk.Frame):
 
     def _select_path(self,path):
         rel=Path(path).relative_to(self._project()).as_posix()
+        # Fresh imports must be visible even if an old search/filter hid them.
+        if not any(asset.relative_path==rel and self.tree.exists(str(idx))
+                   for idx,asset in enumerate(self._assets)):
+            self.filter_var.set("")
+            self.edited_only.set(False)
         for idx,asset in enumerate(self._assets):
             if asset.relative_path==rel and self.tree.exists(str(idx)):
                 self.tree.selection_set(str(idx))
                 self.tree.see(str(idx))
                 self._show_selected()
+                self.tabs.select(0)
                 return
 
     def duplicate(self):
@@ -571,7 +618,19 @@ class HudMenuWorkshop(ttk.Frame):
                     messagebox.showerror("ORIGINS-Import",detail,parent=self)
         except queue.Empty:pass
         if self.winfo_exists():
-            self.after(140,self._poll)
+            self._poll_job=self.after(140,self._poll)
+
+    def destroy(self):
+        """Cancel queued callbacks when the workshop is closed or recreated."""
+        for name in ("_poll_job","_refresh_job"):
+            job=getattr(self,name,None)
+            if job is not None:
+                try:
+                    self.after_cancel(job)
+                except tk.TclError:
+                    pass
+                setattr(self,name,None)
+        super().destroy()
 
     def audit(self):
         try:

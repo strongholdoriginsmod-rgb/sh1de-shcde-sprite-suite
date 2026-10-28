@@ -11,7 +11,11 @@ paths and full logs are available on demand, rather than crowding the
 main screen. The layout editor separates layer editing from saving
 and exporting. It now shows the next necessary step, displays image
 filenames before long resource paths, and groups advanced layer actions
-in a right-click menu.
+in a right-click menu. The HUD/menu workshop now remembers the last
+project, selected image and saved layout name in a relative state
+file under `work/`; the last imported image is selected immediately.
+Actual project assets and editable layers remain in their existing
+workspace and metadata files.
 
 [Updated interface guide](docs/SPRITESUITE_UI_QUICKSTART_EN_2026-10-28.md).
 
@@ -19,7 +23,7 @@ in a right-click menu.
 
 | Variant | Contents | How |
 |---|---|---|
-| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-layout-flow-2026-10-28) → `SpriteSuite-Windows-Portable-Layout-Fuehrung-2026-10-28.zip` |
+| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-resume-project-2026-10-28) → `SpriteSuite-Windows-Portable-Projektfortsetzung-2026-10-28.zip` |
 | **Source ZIP** | full application code and tools, but **without** the Python runtime | branch `main` → *Code* → *Download ZIP* |
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 

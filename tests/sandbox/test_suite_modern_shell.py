@@ -82,11 +82,13 @@ def test_sidebar_language_and_advanced_controls_track_suite_state(ui):
     app.set_language("en")
     app.update()
     assert shell.buttons["menus"].cget("text")=="HUD & menus"
+    assert app.hud_menu_tab.project_summary.get().startswith("Active project:")
     assert shell.search_button.cget("text")=="Search (Ctrl+K)"
     assert app.tab_home.quick_buttons["designer"][0].cget("text")=="Arrange layout"
     app.set_language("de")
     app.update()
     assert shell.buttons["menus"].cget("text")=="HUD & Menüs"
+    assert app.hud_menu_tab.project_summary.get().startswith("Aktives Projekt:")
     shell.advanced.invoke()
     assert app.advanced.get() is True
 

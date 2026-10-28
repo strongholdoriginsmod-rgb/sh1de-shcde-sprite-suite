@@ -22,6 +22,7 @@ from PIL import Image, ImageGrab, ImageTk
 
 from suite_usability import ScrollableColumn
 from suite_layout_flow import layout_advice
+from suite_hud_menu_session import read_session, save_session
 from hud_menu_workspace import (
     CATEGORIES, WorkshopError, import_image, list_assets, workspace,
     _metadata_dir, _write_new, filename,
@@ -52,6 +53,14 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.project = workspace(project,create=True)
         self.after_export = after_export
         default = "menu-layout"
+        recent = read_session()
+        preferred = recent.get("scene") if recent.get("project")==self.project else ""
+        if preferred:
+            # Only reopen a previously saved, verified scene, never an
+            # unsaved name or a path supplied by untrusted preference data.
+            candidate = scene_file(self.project,preferred)
+            if candidate.is_file() and not candidate.is_symlink():
+                default = preferred
         saved = scene_file(self.project,default)
         if saved.is_file():
             scene,self._save_hash = load_scene(self.project,default)
@@ -1159,6 +1168,10 @@ class HudMenuLayoutEditor(tk.Toplevel):
             self._last_saved=self.scene.as_json()
             self.scene_name.set(self.scene.name)
             self._update_scene_names()
+            try:
+                save_session(self.project,scene=self.scene.name)
+            except (OSError,ValueError):
+                pass  # The editable scene is already safely saved to disk.
             self.status.set("Layout und sämtliche Positionen dauerhaft gespeichert: "+str(path))
             self._check_export_status()
             return True
@@ -1220,6 +1233,10 @@ class HudMenuLayoutEditor(tk.Toplevel):
             self._refresh_layers()
             self.fit()
             self._check_export_status()
+            try:
+                save_session(self.project,scene=selected)
+            except (OSError,ValueError):
+                pass
             self.status.set("Positionen und Ebenen geladen: "+str(scene_file(self.project,selected)))
         except (ValueError,OSError) as exc:
             messagebox.showerror("Layout laden",str(exc),parent=self)

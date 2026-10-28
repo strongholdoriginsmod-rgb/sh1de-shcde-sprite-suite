@@ -23,6 +23,37 @@ drücken und dessen Namen suchen. Über **Alle Reiter** erscheint bei Bedarf
 wieder die klassische Reiterliste. **Protokoll anzeigen** öffnet die
 Werkzeugausgaben; es ist im Alltag nicht notwendig.
 
+## Projekt beim nächsten Programmstart fortsetzen
+
+Unter **HUD & Menüs** steht jetzt immer **Aktives Projekt:** mit dem
+Namen des Arbeitsordners. Nach einem Neustart öffnet die Suite den
+zuletzt verwendeten, vorhandenen Arbeitsordner, markiert nach
+Möglichkeit dieselbe Grafik und öffnet im Layout-Designer das
+zuletzt **gespeicherte Layout** wieder. Beim Import mehrerer Dateien
+wird die zuletzt erfolgreich importierte Grafik ausgewählt. Ein neu angelegter,
+noch leerer Arbeitsordner bleibt ebenfalls als letzter Arbeitsstand
+eingetragen.
+
+Mit **Arbeitsordner anzeigen → Ordner …** kann man bewusst ein anderes
+Projekt auswählen. Die Zuordnung steht unter
+`SpriteSuite/work/.hud-menu-last-session.json`, enthält **nur relative
+Pfade** und keine systemweiten Dateiverknüpfungen. Originaldateien
+bleiben an ihrem alten Speicherort unverändert. Wenn das gespeicherte
+Projekt gelöscht oder verschoben wurde, startet die Suite wieder mit
+dem Standardarbeitsordner.
+
+**4 Export vorbereiten** öffnet den Layout-Designer nun direkt beim
+passenden nächsten Schritt. Ein zusätzlicher Erklärungshinweis
+blockiert die Vorschau nicht mehr. Erst nach Betätigung eines
+Exportknopfs wird wirklich eine Datei geschrieben.
+
+Die Merkhilfe speichert nur **den Namen** des zuletzt gespeicherten
+Layouts. Die tatsächlichen Ebenen und Positionen bleiben in den
+Layout-Metadaten unter `work/.hud-menu-metadata/`. Wer Projekte auf
+einen anderen Installationspfad oder Computer übertragen möchte,
+muss diese Daten gesondert sichern; die Merkhilfe allein ist kein
+vollständiger Projektarchiv-Export.
+
 ## Erste Übung: NeuesMenuBild.png bearbeiten
 
 1. **HUD & Menüs** in der linken Leiste auswählen.
@@ -172,7 +203,7 @@ statischen Overlay erwartbar. Die eigentliche Klickfunktion
 gehört zur separaten UI-/ViewModel-Definition des Spiels.
 
 **Einrichtung fordert Python an:** Für Windows den
-[Portable-Release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-layout-flow-2026-10-28)
+[Portable-Release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-resume-project-2026-10-28)
 statt „Code → Download ZIP“ herunterladen. In der Portable-Version
 wird Python mitgeliefert.
 

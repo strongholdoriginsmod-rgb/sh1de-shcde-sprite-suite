@@ -193,3 +193,21 @@ def test_pristine_empty_layout_does_not_prompt_to_save(designer,monkeypatch):
                             "An untouched empty layout must close without a prompt"))
     assert editor._can_discard() is True
     assert source.read_bytes()==original
+
+
+def test_editor_reopens_last_saved_named_scene(designer):
+    import suite_hud_menu_layout_editor as gui
+    from suite_hud_menu_session import read_session
+    root,editor,source,before=designer
+    editor.scene.name="MeinMenu-2"
+    editor.add_asset()
+    assert editor.save()
+    assert read_session()["scene"]=="MeinMenu-2"
+    other=gui.HudMenuLayoutEditor(
+        root,project=editor.project,source_asset=editor.source_choice.get())
+    root.update()
+    assert other.scene.name=="MeinMenu-2"
+    assert len(other.scene.layers)==1
+    assert other._next_action=="export"
+    other.close_editor()
+    assert source.read_bytes()==before

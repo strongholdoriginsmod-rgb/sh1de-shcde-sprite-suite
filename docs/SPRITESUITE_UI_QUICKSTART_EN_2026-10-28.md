@@ -11,6 +11,22 @@ sprites**, **SH1 HUD Studio**, **ORIGINS graphics**, **Game preview**,
 available under **More workspaces** or with **Ctrl+K**. The tabs can
 still be expanded via **Show all tabs**. Program logs are under **Show log**.
 
+## Resume a project
+
+The HUD/menu workshop automatically reopens the last existing
+workspace folder, selects the previous image and restores the last
+**saved layout name** when the files are available.
+The current project is shown above the image list. Imported files
+are copied into the workspace without changing the original.
+After importing multiple images, the last successful import becomes
+the selected image.
+
+The preference is stored as a **relative** path in
+`SpriteSuite/work/.hud-menu-last-session.json`. It does not include
+external paths or modify installed games. To switch projects, choose
+**Show workspace folder → Folder …**. **4 Prepare export** now
+opens the designer's next-step guidance directly without another popup.
+
 ## Edit a menu image
 
 1. Open **HUD & menus**. Select a listed PNG or click **1 Open image**

@@ -2913,6 +2913,7 @@ class Universal(center.Center):
         if shell is not None:
             shell.refresh_language()
         self.tab_home.refresh_quick_language(LANG.code == "en")
+        self.hud_menu_tab.update_project_caption()
         layout=getattr(self.hud_menu_tab,"_layout_window",None)
         if layout is not None and layout.winfo_exists():
             layout._update_guidance()

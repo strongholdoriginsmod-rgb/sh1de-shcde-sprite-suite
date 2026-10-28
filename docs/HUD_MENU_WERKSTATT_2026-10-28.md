@@ -43,6 +43,21 @@ installierte Spiel und ein verifiziertes Grid wählen und das
 statische Modpaket erzeugen.
 [Anleitung zur nachgewiesenen Noesis-XAML-Anbindung](NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
 
+## Zuletzt verwendetes Projekt
+
+Die HUD-/Menüwerkstatt merkt sich den zuletzt benutzten Arbeitsordner,
+die zuletzt ausgewählte Bildressource und den Namen des zuletzt
+gespeicherten Layouts. Nach einem Neustart wird die vorige Auswahl
+wiederhergestellt, sofern die Dateien noch vorhanden sind. Der Zustand liegt als relative Verknüpfung in
+`work/.hud-menu-last-session.json` und wird nicht in ein Modpaket
+übernommen. Es werden keine fremden oder installierten Spieldateien
+automatisch geöffnet oder überschrieben.
+
+Nach einem Mehrfachimport erscheint das zuletzt erfolgreich importierte
+Bild sofort in der Arbeitsansicht. **4 Export vorbereiten** öffnet
+den Layout-Designer direkt beim nächsten erforderlichen Schritt,
+ohne vorgeschaltete lange Meldung.
+
 ## Schritt für Schritt
 
 1. **Suite starten.cmd → HUD & Menüs**. Auch über Strg+K erreichbar.
