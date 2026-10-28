@@ -17,6 +17,16 @@ mit passendem Mapping bearbeitet werden. Native ABI-Integritätsprüfungen
 bleiben unabhängig von der Versionsnummer bestehen.
 [Details zur versionsoffenen Verarbeitung](docs/VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
 
+## HUD & Menüs – neue integrierte Grafikwerkstatt
+
+Der eigene Reiter **HUD & Menüs** verbindet Menü- und HUD-Grafiken,
+Alpha-Pixeleditor, neue transparente PNGs, Resource-Key-Kopien,
+Vorher/Nachher, XAML-Patch-Editor, Origins-Grafiken, AtlasBuilder,
+OpenRaster und das DLL-freie Asset-Modpaket. Keine Spielversion und keine
+Script-Extender-Version wird allein wegen ihrer Nummer ausgeschlossen.
+Originale bleiben unverändert; die Arbeitskopien liegen unter work/.
+[Anleitung: HUD & Menüs maximal bearbeiten](docs/HUD_MENU_WERKSTATT_2026-10-28.md).
+
 ## Stronghold 1 DE: HUD im Sprite Suite Editor bearbeiten
 
 Dieser Zweig erweitert **Oberfläche** um einen eigenen Stronghold-1-HUD-Editor: 1.391 original benannte und pixelgenau editierbare UI-Ausschnitte, sichere Größen-/Quellprüfungen, drei rückbaubare PNG-Atlanten und eine **isoliert erzeugte Unity-Kandidatendatei** mit den bearbeiteten Bildern. Die originale Spielinstallation wird nicht verändert. Die Spielgrafiken bleiben auf dem jeweiligen Rechner und werden mit `tools/ui_sh1_hud.py export` aus der eigenen Installation gewonnen.

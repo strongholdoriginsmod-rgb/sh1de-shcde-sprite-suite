@@ -2384,10 +2384,11 @@ class TargetTab(ttk.Frame):
         self.app = app
         ttk.Label(self, text="Ziele & Mods", style="Title.TLabel").pack(anchor="w", padx=8, pady=(12, 2))
         ttk.Label(self, text=(
-            "Jedes Ziel wird gegen alle fünf SHA-256-Dateipins von supported-builds.json "
-            "und die genaue Zielversion des aktuell geladenen Mappings geprüft. "
-            "Registrieren aktiviert niemals automatisch. Aktivieren benötigt außerdem eine "
-            "verifizierte Stronghold-1-DE-Quelle und eine ausdrückliche Bestätigung. "
+            "Jede SHCDE-Spielversion kann registriert werden – auch unbekannte Releases. "
+            "Dafür werden fünf Originaldateien per SHA-256 identifiziert, nicht "
+            "anhand einer Versions-Whitelist. Registrieren aktiviert niemals "
+            "automatisch. Erst Aktivieren verlangt ein genau zu dieser Dateiidentität "
+            "passendes Sprite-Mapping, eine lesbare SH1DE-Quelle und eine ausdrückliche Bestätigung. "
             "Dadurch wird nichts installiert. Mod-Installation und "
             "Sicherungswiederherstellung bleiben ans ausdrücklich aktivierte "
             "Ziel gebunden. Der vorhandene Script Extender wird nicht getauscht."), style="Muted.TLabel", wraplength=1150,
@@ -2652,8 +2653,10 @@ class Universal(center.Center):
         self.exchange_tab = ExchangeTab(self.notebook, self)
         from suite_sh1_hud_studio import Sh1HudStudio
         from suite_origins_grafikdaten import OriginsGraphicsTab
+        from suite_hud_menu_workshop import HudMenuWorkshop
         self.hud_tab = Sh1HudStudio(self.notebook, self)
         self.origins_graphics_tab = OriginsGraphicsTab(self.notebook, self)
+        self.hud_menu_tab = HudMenuWorkshop(self.notebook, self)
         self.target_tab = TargetTab(self.notebook, self)
         self.notebook.insert(1, self.catalog_tab, text="Asset-Katalog")
         self.notebook.insert(2, self.diagnose_tab, text="Diagnose & Reparatur")
@@ -2661,11 +2664,16 @@ class Universal(center.Center):
         self.notebook.insert(4, self.exchange_tab, text="Editor & Austausch")
         self.notebook.insert(5, self.hud_tab, text="SH1 HUD-Studio")
         self.notebook.insert(6, self.origins_graphics_tab, text="ORIGINS Grafiken")
-        self.notebook.insert(7, self.target_tab, text="Ziele & Mods")
+        self.notebook.insert(7, self.hud_menu_tab, text="HUD & Menüs")
+        self.notebook.insert(8, self.target_tab, text="Ziele & Mods")
         ttk.Button(
-            self.command_bar, text="HUD-Studio",
-            command=lambda: self.open_tab(self.hud_tab)
+            self.command_bar, text="HUD & Menüs",
+            command=lambda: self.open_tab(self.hud_menu_tab)
         ).pack(side="left", padx=(4, 7))
+        ttk.Button(
+            self.command_bar, text="SH1 HUD",
+            command=lambda: self.open_tab(self.hud_tab)
+        ).pack(side="left", padx=(0, 5))
         # An unfamiliar user should not have to know the fourteen historic
         # tabs before finding the first useful task. Start with the existing
         # guided home, now promoted to a primary, always-visible workspace.
@@ -2692,6 +2700,7 @@ class Universal(center.Center):
             ("Editor & Austausch", "Editor and exchange", self.exchange_tab),
             ("SH1 HUD-Studio", "SH1 HUD Studio", self.hud_tab),
             ("ORIGINS Grafiken", "ORIGINS graphics", self.origins_graphics_tab),
+            ("HUD & Menüs", "HUD & menus", self.hud_menu_tab),
             ("Ziele & Mods", "Targets and mods", self.target_tab),
             ("Paket bauen", "Build packages", self.bc7_page),
             ("Start & Anleitung", "Start and guide", self.tab_home),
@@ -2710,7 +2719,8 @@ class Universal(center.Center):
                 (self.diagnose_tab, ("Diagnose", "Diagnosis")),
                 (self.sandbox_tab, ("Sandbox", "Sandbox")),
                 (self.exchange_tab, ("Editor", "Editor")),
-                (self.hud_tab, ("HUD", "HUD")),
+                (self.hud_tab, ("SH1 HUD", "SH1 HUD")),
+                (self.hud_menu_tab, ("Menüs", "Menus")),
                 (self.origins_graphics_tab, ("Grafiken", "Graphics")),
                 (self.target_tab, ("Ziele", "Targets")),
                 (self.bc7_page, ("Bauen", "Build")),

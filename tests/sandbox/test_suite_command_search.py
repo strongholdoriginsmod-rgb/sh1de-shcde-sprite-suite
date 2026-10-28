@@ -60,13 +60,17 @@ def test_ctrl_k_dialog_en_de_navigation_and_reuse(suite_gui,monkeypatch):
     monkeypatch.setattr(app,"run",lambda *a,**kw:invoked.append(a))
     targets=build_navigation_targets(app)
     assert len({target.key for target in targets})==len(targets)
-    # The integrated HUD Studio is now an additional primary workspace.
-    assert sum(target.key.startswith("workspace:") for target in targets)==15
+    # The integrated HUD Studio and HUD/Menu Workshop are independent workspaces.
+    assert sum(t.key.startswith("workspace:") for t in targets) == len(app._navigation_entries)
+    assert any(t.title_en == "HUD & menus" for t in targets)
     assert len(targets)>=25
+    pivot_key = next(t.key for t in targets if "pivot measurements" in t.title_en.lower())
+    ora_key = next(t.key for t in targets if "OpenRaster" in t.title_en)
+    atlas_key = next(t.key for t in targets if "AtlasBuilder" in t.title_en)
     for search,required in (
-        ("zinnenlineal","editor:2"),("Game HUD","sandbox:hud"),
-        ("OpenRaster","editor:3"),("Animation","sandbox:animation"),
-        ("AtlasBuilder","editor:1"),("Kartenordner","sandbox:folder"),
+        ("zinnenlineal",pivot_key),("Game HUD","sandbox:hud"),
+        ("OpenRaster",ora_key),("Animation","sandbox:animation"),
+        ("AtlasBuilder",atlas_key),("Kartenordner","sandbox:folder"),
     ):
         assert required in [x.key for x in find_targets(targets,search)]
     assert not invoked
@@ -79,7 +83,7 @@ def test_ctrl_k_dialog_en_de_navigation_and_reuse(suite_gui,monkeypatch):
     dlg.query.set("zinnenlineal")
     app.update()
     assert dlg.visible
-    assert dlg.visible[0].key=="editor:2"
+    assert dlg.visible[0].key==pivot_key
     assert dlg.execute_selected()=="break"
     app.update()
     assert not dlg.winfo_exists()

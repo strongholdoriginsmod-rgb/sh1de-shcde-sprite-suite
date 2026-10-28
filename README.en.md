@@ -17,6 +17,16 @@ target still requires a mapping for that exact game fingerprint, and native
 C# operations still require matching API/ABI evidence.
 [Version-neutral workflow and safety contract](docs/VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
 
+## HUD & menus – integrated graphics workshop
+
+The new **HUD & menus** workspace combines menu and HUD graphics,
+alpha-aware pixel painting, transparent PNG creation, resource-key variants,
+original-versus-edited previews, XAML patches, Origins graphics, AtlasBuilder,
+OpenRaster and version-neutral DLL-free asset packaging. Unknown game and
+Script Extender version numbers are not blanket rejections. Game originals
+remain unchanged; edited files stay under work/.
+[HUD and menu workshop guide](docs/HUD_MENU_WERKSTATT_2026-10-28.md).
+
 ## Setup
 
 1. Extract to a **short path**, e.g. `D:\SU` (Unity creates deep paths).

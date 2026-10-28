@@ -76,8 +76,12 @@ def test_english_live_controls_and_menus_are_truly_reversible(bilingual_suite):
 
     menu=app.target_tab.actions.menu
     assert menu is not None
-    assert "Install SE" in menu.entrycget(0,"label")
-    assert "Remove mod" in menu.entrycget(2,"label")
+    # The historical SE installer was intentionally removed from the main UI:
+    # current or unknown SE versions must be kept, not downgraded.
+    assert "Install mod" in menu.entrycget(0,"label")
+    assert "Remove mod" in menu.entrycget(1,"label")
+    assert not any("Install SE" in menu.entrycget(i,"label")
+                   for i in range(menu.index("end")+1))
     assert "Groups & extensions" in app.catalog_tab.catalog_actions.more_button.cget("text")
     assert app.catalog_tab.catalog_actions.menu.entrycget(0,"label")=="Create category" or (
         "category" in app.catalog_tab.catalog_actions.menu.entrycget(0,"label").lower()
@@ -105,7 +109,7 @@ def test_english_live_controls_and_menus_are_truly_reversible(bilingual_suite):
     assert app.catalog_tab.details_button.cget("text")=="Vorschau / Bearbeiten"
     assert "installieren" in menu.entrycget(0,"label").lower()
     app.set_language("en")
-    assert "Install SE" in menu.entrycget(0,"label")
+    assert "Install mod" in menu.entrycget(0,"label")
 
 
 def test_english_shell_translation_catalog_contains_verified_labels():

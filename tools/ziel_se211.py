@@ -1,6 +1,6 @@
-"""Zielspiele verwalten und auf SHCDE-SE 2.11.0 ausrichten - mit Rueckweg.
+"""Zielspiele versionsneutral verwalten; historischer optionaler SE-2.11-Installer.
 
-Die Suite ist auf Script Extender 2.11.0 ausgerichtet. Dieses Werkzeug kennt
+Die Suite akzeptiert alle Spiel- und SE-Versionsnummern. Dieses Werkzeug kennt
 mehrere Spielinstallationen (z.B. das 2.7-Spiel auf E: und die 2.80-Kopie auf D:),
 schaltet das aktive Ziel um und installiert SE 2.11.0 oder einen Modordner in ein
 Zielspiel. Vor jedem Schreibvorgang wird gesichert; jede Sicherung laesst sich
