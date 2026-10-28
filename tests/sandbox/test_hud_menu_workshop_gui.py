@@ -132,3 +132,30 @@ def test_workshop_menu_packaging_routes_only_to_version_free_tool(workshop,monke
     assert "hudmenu" in args
     assert not (suite/"BepInEx").exists()
     assert not (suite/"Stronghold Crusader Definitive Edition_Data").exists()
+
+
+def test_main_hud_menu_workshop_opens_real_layer_designer(workshop):
+    suite,root,view,links,commands=workshop
+    source=suite/"own-menu-background.png"
+    Image.new("RGBA",(20,12),(155,55,100,190)).save(source)
+    asset=model.import_image(source,project=view._project(create=True))
+    view.refresh()
+    root.update()
+    window=view.open_layout()
+    assert window is not None and window.winfo_exists()
+    assert window.source_choice.get()==asset.relative_to(view._project()).as_posix()
+    window.add_asset()
+    root.update()
+    assert len(window.scene.layers)==1
+    assert window.save()
+    metadata=window.scene.name
+    assert window._save_hash is not None
+    window.close_editor()
+    assert not window.winfo_exists()
+    new_window=view.open_layout()
+    root.update()
+    assert new_window.scene.name==metadata
+    assert len(new_window.scene.layers)==1
+    new_window.close_editor()
+    assert source.is_file()
+    assert not (suite/"Stronghold Crusader Definitive Edition_Data").exists()

@@ -103,6 +103,10 @@ class HudMenuWorkshop(ttk.Frame):
 
         pipeline=ttk.Frame(self)
         pipeline.pack(fill="x",padx=10,pady=(1,6))
+        ttk.Button(
+            pipeline,text="Layout-Designer · direkt ziehen & skalieren",
+            command=self.open_layout,
+        ).pack(side="left",padx=3)
         ttk.Button(pipeline,text="1 · Assets & XAML prüfen",command=self.audit
                   ).pack(side="left",padx=3)
         ttk.Button(pipeline,text="2 · DLL-freies HUD-/Menüpaket bauen",
@@ -149,6 +153,21 @@ class HudMenuWorkshop(ttk.Frame):
         preview_work=ttk.Frame(self.tabs);preview_original=ttk.Frame(self.tabs)
         self.tabs.add(preview_work,text="Bearbeitung")
         self.tabs.add(preview_original,text="Importbasis / Vorher")
+        live_frame=ttk.Frame(self.tabs)
+        self.tabs.add(live_frame,text="Layout · Live-Vorschau")
+        ttk.Label(
+            live_frame,
+            text="Elemente direkt auf einer interaktiven Gesamtvorschau "
+                 "ziehen, skalieren, drehen und exakt positionieren. "
+                 "Die Ebenen, Anker, Pivots und Koordinaten bleiben dauerhaft "
+                 "gespeichert; der Export verarbeitet dieselben Werte.",
+            wraplength=560,justify="left",
+        ).pack(fill="x",padx=12,pady=(20,14))
+        ttk.Button(
+            live_frame,
+            text="Interaktive Vorschau und Ebenen-Designer öffnen …",
+            command=self.open_layout,
+        ).pack(fill="x",padx=12,pady=6)
         self.preview=preview_class(
             preview_work,empty_text="PNG auswählen oder eigene Menügrafik importieren.")
         self.preview.pack(fill="both",expand=True)
@@ -322,6 +341,30 @@ class HudMenuWorkshop(ttk.Frame):
                              "XAML/Atlas-Verweise müssen ausdrücklich angepasst werden.")
         except (ValueError,OSError) as exc:
             messagebox.showerror("Duplizieren",str(exc),parent=self)
+
+    def open_layout(self):
+        """Open the real interactive preview; keep the current artwork selected."""
+        try:
+            root=self._project(create=True)
+            selected=self.selected_asset()
+            source=(selected.relative_path if selected is not None
+                    and selected.path.suffix.lower()==".png" else None)
+            existing=getattr(self,"_layout_window",None)
+            if existing is not None and existing.winfo_exists():
+                if source:existing.source_choice.set(source)
+                existing.lift()
+                existing.focus_set()
+                return existing
+            from suite_hud_menu_layout_editor import HudMenuLayoutEditor
+            window=HudMenuLayoutEditor(
+                self,project=root,source_asset=source,
+                after_export=self.refresh)
+            self._layout_window=window
+            window.focus_set()
+            return window
+        except (OSError,ValueError) as exc:
+            messagebox.showerror("Layout-Designer",str(exc),parent=self)
+            return None
 
     def import_xaml(self):
         file=filedialog.askopenfilename(

@@ -23,6 +23,20 @@ Script-Extender-Versionsnummer** ist keine pauschale Sperre.
 Eine native Funktion ist nur dann kompatibel, wenn ihre tatsächlich
 installierte API/ABI zum Zielspiel passt.
 
+## Direkter visueller Layout-Designer
+
+Im Reiter **HUD & Menüs** bietet **Layout-Designer · direkt ziehen &
+skalieren** eine interaktive Gesamtvorschau mit Ebenen, Verschieben,
+Skalieren, Drehen, Mehrfachauswahl, Copy/Paste, Zoom, Snap/Raster,
+Anker/Pivot, numerischen Positionen, Undo/Redo und dauerhaftem
+JSON-Szenenstand. Der Export bäckt die Koordinaten exakt in eine
+zusammengesetzte PNG und schreibt ein separates Positions-/SHA-Manifest.
+Das Modpaket erhält standardmäßig **nur die exportierte Grafik**, nicht
+ungefragt sämtliche Rohbilder. Der XAML-/Noesis-Einbau ist weiterhin
+an das tatsächliche Zielspiel anzupassen.
+
+[Ausführliche Anleitung: Layout-Designer und Positionsexport](HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
+
 ## Schritt für Schritt
 
 1. **Suite starten.cmd → HUD & Menüs**. Auch über Strg+K erreichbar.

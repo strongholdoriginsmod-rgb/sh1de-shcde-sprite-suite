@@ -27,6 +27,14 @@ Script Extender version numbers are not blanket rejections. Game originals
 remain unchanged; edited files stay under work/.
 [HUD and menu workshop guide](docs/HUD_MENU_WERKSTATT_2026-10-28.md).
 
+**New: direct-manipulation HUD/menu layout editor.** Drag, resize, rotate,
+layer, align, duplicate and copy/paste images directly in the visual preview.
+Persist exact coordinates, anchors, pivots, opacity and ordering; bake them
+into a composite PNG and preserve per-layer transforms in a separate JSON
+manifest. Only the verified composite and optional XAML patches enter the
+DLL-free package.
+[Layout designer / exact export documentation](docs/HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
+
 ## Setup
 
 1. Extract to a **short path**, e.g. `D:\SU` (Unity creates deep paths).

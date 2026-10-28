@@ -27,6 +27,14 @@ Script-Extender-Version wird allein wegen ihrer Nummer ausgeschlossen.
 Originale bleiben unverändert; die Arbeitskopien liegen unter work/.
 [Anleitung: HUD & Menüs maximal bearbeiten](docs/HUD_MENU_WERKSTATT_2026-10-28.md).
 
+**Neu: Photoshop-ähnlicher Layout-Designer.** Einzelbilder direkt auf einer
+Gesamtvorschau einfügen, ziehen, skalieren und drehen, mehrere Ebenen
+verwenden, anordnen, ausrichten und ihre Positionen samt Anker/Pivot,
+Deckkraft und Rotation dauerhaft speichern. Der PNG-Export berechnet genau
+diese Transformationen; das Modpaket übernimmt nur die geprüfte
+Komposition und auf Wunsch eigene XAML-Patches.
+[Layout-Designer und Exportvertrag](docs/HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
+
 ## Stronghold 1 DE: HUD im Sprite Suite Editor bearbeiten
 
 Dieser Zweig erweitert **Oberfläche** um einen eigenen Stronghold-1-HUD-Editor: 1.391 original benannte und pixelgenau editierbare UI-Ausschnitte, sichere Größen-/Quellprüfungen, drei rückbaubare PNG-Atlanten und eine **isoliert erzeugte Unity-Kandidatendatei** mit den bearbeiteten Bildern. Die originale Spielinstallation wird nicht verändert. Die Spielgrafiken bleiben auf dem jeweiligen Rechner und werden mit `tools/ui_sh1_hud.py export` aus der eigenen Installation gewonnen.
