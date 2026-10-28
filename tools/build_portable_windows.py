@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from hashlib import sha256
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -145,12 +146,38 @@ def build(python: Path, venv: Path, out: Path) -> dict:
             "weiterhin separat erforderlich sein.\n"
             "Quellcommit: " + commit + "\n", encoding="utf8"
         )
+        # A relocation-proof start must work without any Python on PATH.
+        # The test opens both Tk and Qt from the bundled private environment.
+        env = dict(os.environ)
+        env["PATH"] = str(Path(os.environ.get("SystemRoot", "C:/Windows")) / "System32")
+        env["PATH"] += os.pathsep + os.environ.get("SystemRoot", "C:/Windows")
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
+        smoke = subprocess.run(
+            [str(package / "python" / "python.exe"),
+             str(package / "tools" / "suite_start.py"), "--self-test"],
+            cwd=package, env=env, capture_output=True, text=True,
+            encoding="utf8", errors="replace", timeout=60,
+        )
+        if smoke.returncode != 0 or "GUI_BACKENDS_READY=1" not in smoke.stdout:
+            raise RuntimeError(
+                "Bundled Python/Tk/Qt startup failed: "
+                + (smoke.stdout + smoke.stderr)[-1200:]
+            )
+        # Do not embed a developer-specific build path in the ZIP.
+        (package / ".venv" / "pyvenv.cfg").write_text(
+            "home = PORTABLE_LAUNCHER_WILL_SET_THIS\n"
+            "include-system-site-packages = false\n"
+            "version = 3.13.15\n", encoding="utf8",
+        )
+        print("SMOKE: Python, Tk and Qt ready without system Python", flush=True)
         provenance = {
             "schema": "sprite-suite.windows-portable.v1",
             "source_commit": commit,
             "python": "CPython 3.13, redistributed locally",
             "python_requires_installation": False,
             "separate_python_required": False,
+            "packager_windows_smoke_passed": True,
+            "cross_computer_smoke_passed": False,
             "private_game_assets_included": False,
         }
         (package / "PORTABLE-BUILD.json").write_text(

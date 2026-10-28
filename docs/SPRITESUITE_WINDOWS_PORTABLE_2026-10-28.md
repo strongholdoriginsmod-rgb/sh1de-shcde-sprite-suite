@@ -17,8 +17,22 @@
    private, vollständig mitgelieferte CPython-3.13-Laufzeit.
 
 Diagnose bei Startproblemen: Im entpackten Ordner in der Eingabeaufforderung
-`Suite starten.cmd --self-test` ausführen. **PORTABLE_READY=1** bedeutet,
-dass die benötigten Pakete geladen werden konnten.
+`Suite starten.cmd --self-test` ausführen. **PORTABLE_READY=1** und
+**GUI_BACKENDS_READY=1** bedeuten, dass die Pakete einschließlich der
+Tk-/Qt-Grafiklaufzeit lokal geladen und geöffnet werden konnten.
+Auch `Sandbox Studio starten.cmd` richtet die entpackte Laufzeit
+eigenständig auf ihren aktuellen Speicherort ein.
+
+**Kompatibilität:** Ziel sind Windows 10 ab Version 1809 und Windows 11
+auf x64-PCs. Das entspricht den dokumentierten Plattformen von Qt 6.10:
+https://doc.qt.io/qtforpython-6.10/overviews/qtdoc-supported-platforms.html
+Windows on ARM sowie ältere Windows-10-Versionen sind nicht freigegeben.
+Ein
+erfolgreicher Test nach Pfadwechsel und ohne System-Python ist ein
+Portabilitätsnachweis, aber noch kein vollständiger Ersatz für einen
+Test auf einem unabhängigen Windows-10-/11-Rechner. Einzelne optionale
+Editoren, externe Encoder und native Werkzeuge können weitere
+Voraussetzungen haben.
 
 ## Was in der ZIP steckt
 

@@ -37,6 +37,10 @@ def test_portable_builder_never_bundles_user_work_or_game_data():
     assert 'if out.exists()' in source
     assert 'source_commit' in source
     assert '"private_game_assets_included": False' in source
+    assert '"cross_computer_smoke_passed": False' in source
+    assert '"packager_windows_smoke_passed": True' in source
+    assert '"--self-test"' in source
+    assert '"GUI_BACKENDS_READY=1"' in source
     assert ".venv" in source
     assert builder.OUT_NAME.endswith(".zip")
 
@@ -53,3 +57,8 @@ def test_windows_bootstrap_has_portable_and_source_fallbacks():
     assert "'--require-hashes'" in installer
     assert '"--self-test"' in starter
     assert "PORTABLE_READY=1" in starter
+    assert "GUI_BACKENDS_READY=1" in starter
+    assert '"--portable-bootstrap"' in starter
+    studio = (ROOT / "Sandbox Studio starten.cmd").read_text("utf8")
+    assert "--portable-bootstrap" in studio
+    assert "suite_start.py" in studio

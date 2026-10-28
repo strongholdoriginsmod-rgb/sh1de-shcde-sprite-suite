@@ -98,10 +98,16 @@ def portable_self_test() -> int:
         print("PORTABLE_ERROR: Bundled .venv/Scripts/python.exe is missing", file=sys.stderr)
         return 3
     code = (
-        "import sys, tkinter, PIL, UnityPy, PySide6; "
+        "import os, sys, tkinter, PIL, UnityPy, PySide6; "
         "from stronghold_europe_de.sdk_toolchain import find_dotnet_sdk; "
+        "from PySide6.QtWidgets import QApplication; "
         "assert sys.version_info[:2] == (3, 13); "
+        "tk=tkinter.Tk(); tk.withdraw(); tk.destroy(); "
+        "os.environ['QT_QPA_PLATFORM']='offscreen'; "
+        "qt=QApplication([]); assert qt.platformName()=='offscreen'; "
+        "qt.quit(); "
         "print('PORTABLE_READY=1'); "
+        "print('GUI_BACKENDS_READY=1'); "
         "print('PYTHON='+sys.version.split()[0]); "
         "print('PIL='+PIL.__version__)"
     )
@@ -118,6 +124,15 @@ def portable_self_test() -> int:
 
 
 def main() -> int:
+    if "--portable-bootstrap" in sys.argv:
+        if not PYTHON_HOME.joinpath("python.exe").is_file():
+            print("PORTABLE_ERROR: bundled runtime is missing", file=sys.stderr)
+            return 3
+        fix_venv()
+        if not (VENV / "Scripts" / "python.exe").is_file():
+            print("PORTABLE_ERROR: bundled venv is missing", file=sys.stderr)
+            return 3
+        return 0
     if "--self-test" in sys.argv:
         return portable_self_test()
     if "--help" in sys.argv or "-h" in sys.argv:
