@@ -11,6 +11,11 @@ Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Defini
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 
 Spielgrafik wird **nicht** verteilt. Sie entsteht beim Einlesen und Bauen aus den eigenen, installierten Spielen.
+**Spiel- und Script-Extender-Versionsnummern sind keine pauschale Sperre:**
+Unbekannte Versionen können inventarisiert, als Ziel registriert und
+mit passendem Mapping bearbeitet werden. Native ABI-Integritätsprüfungen
+bleiben unabhängig von der Versionsnummer bestehen.
+[Details zur versionsoffenen Verarbeitung](docs/VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
 
 ## Stronghold 1 DE: HUD im Sprite Suite Editor bearbeiten
 

@@ -33,7 +33,7 @@ import os
 import re
 import tempfile
 from target_selection_guard import (
-    TargetSelectionError, verify_target,verify_registered,verify_active,
+    TargetSelectionError, inspect_target, verify_target, verify_registered, verify_active,
 )
 from datetime import datetime
 from pathlib import Path
@@ -269,9 +269,10 @@ def cmd_hinzufuegen(args) -> int:
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,50}",args.name):
         raise SystemExit("Ungültiger Zielname: nur Buchstaben, Ziffern, _ und -")
     try:
-        att=verify_target(
-            args.spiel,PROJECT_ROOT/"config"/"supported-builds.json",
-            PROJECT_ROOT/"work"/"mapping"/"proposals.json.gz")
+        # Registration is version-neutral and only inspects the original files.
+        # A mapping is required later, before activating any write target.
+        att=inspect_target(
+            args.spiel,PROJECT_ROOT/"config"/"supported-builds.json")
     except TargetSelectionError as exc:
         raise SystemExit(f"Ziel nicht eingetragen: {exc}") from exc
     data=targets()
@@ -325,7 +326,7 @@ def cmd_aktivieren(args) -> int:
         'work_dir = "work"','cache_dir = "cache"','state_dir = "state"',
         'dist_dir = "dist"','mod_folder_name = "StrongholdEuropeDE"',"",
         "[policy]","private_local_only = true",
-        "allow_game_archive_writes = false","allow_unknown_builds = false","",
+         "allow_game_archive_writes = false","allow_unknown_builds = true","",
     ]
     if isinstance(config.get("target",{}).get("runtime_reference_root"),str):
         at=lines.index("[output]")
@@ -346,7 +347,7 @@ def cmd_aktivieren(args) -> int:
         else:atomic_save_bytes(ZIELE,old_registry)
         raise
     say(f"Verbindliches Ziel aktiviert: {args.name}; {att.build_id}; "
-        f"5/5 Zielhashes und 5/5 SH1DE-Quellhashes; unknown builds gesperrt.")
+        f"5/5 Zielhashes und 5/5 SH1DE-Quellhashes; unknown builds content-fingerprinted; mapping verified.")
     say("Keine Installation und kein Build gestartet.")
     return 0
 
@@ -374,30 +375,36 @@ def cmd_se_installieren(args) -> int:
     if previous.is_symlink():
         raise SystemExit("Verlinkte Extender-DLL: Abbruch")
     if previous.exists():
-        # Historic CLI only: preserve downgrade protection without importing
-        # an interactive SE-version checker or requiring a particular version.
         old_version = file_version(previous)
         match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:\.0)?", old_version or "")
         old_parsed = tuple(map(int, match.groups())) if match else None
         if old_parsed is None:
-            raise SystemExit("Vorhandene SE-DLL-Version konnte nicht geprüft werden")
+            say("KEEP_EXISTING_SE: installed extender version cannot be parsed; "
+                "no files changed. Use the existing installation with the "
+                "version-neutral asset and HUD tooling.")
+            return 0
         if old_parsed > (2, 11, 0):
-            raise SystemExit(
-                f"Vorhandener Script Extender {old_version} ist neuer als "
-                "dieser historische 2.11-Installer. Keine Rückstufung."
-            )
-    # Historic 2.11 is not a compatible base for current APIShared >=0.9.2.
-    # There is no independently pinned or game-tested SE 2.14.x upgrade
-    # package in this tool. Never offer a misleading automatic downgrade.
-    from community_mod_compat import load_json as load_compat_contract
-    contract=load_compat_contract(PROJECT_ROOT/"config"/"shcde-community-compat-20261022.json")
-    required=contract["plugin_contracts"]["api_shared_minimum_se"]
-    from community_mod_compat import version as semver
-    if semver("2.11.0") < semver(required):
-        raise SystemExit(
-            f"SE 2.11.0 ist für das angeforderte Community-Mod-Ökosystem zu alt "
-            f"(APIShared benötigt >= {required}). Diese historische SE-Installation "
-            "ist gesperrt; 2.14.x benötigt eigenen geprüften Build/ABI-/Hash-Nachweis.")
+            say(f"KEEP_EXISTING_SE: {old_version} is newer than the optional "
+                "historical 2.11 installer; no downgrade and no files changed. "
+                "This extender version is accepted by the Suite.")
+            return 0
+    # The optional historical installer must not downgrade a foreign
+    # APIShared integration that explicitly declares a higher SE minimum.
+    for plugin_folder in ("APIShared_Serp", "APIShared"):
+        manifest_path = game / "BepInEx/plugins" / plugin_folder / "info.json"
+        if not manifest_path.is_file() or manifest_path.is_symlink():
+            continue
+        info = load_json(manifest_path, {})
+        required = info.get("MinimumScriptExtenderVersion") if isinstance(info, dict) else None
+        if required:
+            from community_mod_compat import version as semver
+            minimum = semver(required)
+            if minimum is None or semver("2.11.0") < minimum:
+                say(f"KEEP_INSTALLED_PLUGINS: {plugin_folder} requires "
+                    f"Script Extender {required}. The historical 2.11 package "
+                    "was not installed. No game files changed; current versions "
+                    "remain eligible for diagnostics and native asset editing.")
+                return 0
     archive_path = se_zip(args.zip)
     backup = make_backup(game, list(SE_PATHS), f"vor SE 2.11.0 aus {archive_path.name}")
     remove_paths(game, ["BepInEx/plugins/000shcdese"])

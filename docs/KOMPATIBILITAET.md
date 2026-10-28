@@ -45,8 +45,14 @@ beim Laden geprüft. Nach einem Spiel- oder SE-Update daher Inventar und Mapping
 erneuern und neu bauen. So werden auch alte Cache- und Modstände erkannt.
 
 `work/reports/build-compatibility.json` dokumentiert Unterschiede ohne lokale
-Pfade; dafür ist keine manuelle Freigabe nötig. Das frühere
-`allow_unknown_builds` bleibt nur zum Lesen vorhandener Konfigurationen erhalten.
+Pfade; dafür ist keine manuelle Freigabe nötig. Neue SHCDE-Versionen
+werden beim Registrieren anhand der fünf tatsächlichen Spieldateien
+identifiziert und erhalten eine eindeutige Content-Build-ID.
+`allow_unknown_builds = true` dokumentiert die versionsoffene Auswahl.
+Vor schreibender Aktivierung muss das Mapping **exakt zu dieser Build-ID**
+gehören; ein fremdes Mapping wird nicht übernommen.
+
+[Versionen offen, Dateiintegrität erhalten](VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
 
 Die benötigten Sprite-Gruppen, Masken, Anker, API-Signaturen und nativen
 Strukturlayouts müssen weiterhin vorhanden sein. Ändert ein Spielupdate diese

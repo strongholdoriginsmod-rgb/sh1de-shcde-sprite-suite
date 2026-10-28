@@ -67,14 +67,34 @@ def test_pinned_private_package_is_static_safe_but_gameplay_is_unproven(setup):
     assert result["installed_script_extender_version"]=="2.11.0"
     assert sha256((game/compat.SE_DLL).read_bytes()).digest()==initial
 
-def test_central_apishared_092_blocks_extender_211(setup):
+def test_apishared_minimum_is_reported_but_versions_alone_do_not_block(setup):
     project,game,candidate=setup
     put_info(game/"BepInEx/plugins/APIShared_Serp","APIShared_Serp","0.9.2",
              MinimumScriptExtenderVersion="2.14.0")
     result=compat.check(game,candidate,project=project)
-    assert "API_SHARED_MIN_SE" in codes(result)
-    with pytest.raises(compat.CompatibilityError,match="API_SHARED_MIN_SE"):
-        compat.require_safe_to_install(game,candidate,project=project)
+    assert "API_SHARED_MIN_SE" in {
+        row["code"] for row in result["issues"] if row["severity"]=="REVIEW"
+    }
+    assert not codes(result)
+    assert compat.require_safe_to_install(game,candidate,project=project)
+
+
+@pytest.mark.parametrize("se_version",[
+    "1.44.0", "2.11.0", "2.14.3", "3.0.0", "v4.1.0-beta.1", "unrecognized",
+])
+def test_all_se_version_labels_are_audit_eligible(setup,se_version):
+    project,game,candidate=setup
+    info=game/"BepInEx/plugins/000shcdese/info.json"
+    info.write_text(json.dumps({
+        "GUID":"000shcdese", "Version":se_version
+    }),encoding="utf8")
+    result=compat.check(game,candidate,project=project)
+    assert result["installed_script_extender_version"]==se_version
+    assert not codes(result)
+    assert result["status"]=="REVIEW_REQUIRED"
+    assert compat.require_safe_to_install(game,candidate,project=project)
+
+
 
 def test_two_copies_of_apishared_share_guid_and_are_rejected(setup):
     project,game,candidate=setup
@@ -102,13 +122,17 @@ def test_wrong_plugin_guid_and_existing_foreign_owner_block_install(setup):
     assert "FOREIGN_DESTINATION_OWNERSHIP" in codes(
         compat.check(game,candidate,project=project))
 
-def test_co_installed_fixes_require_joint_runtime_qa(setup):
+def test_co_installed_fixes_are_reported_not_rejected(setup):
     project,game,candidate=setup
     put_info(game/"BepInEx/plugins/Fixes","fixes","1.29.0")
     result=compat.check(game,candidate,project=project)
     assert not codes(result)
-    with pytest.raises(compat.CompatibilityError,match="IN_GAME_HOOK"):
-        compat.require_safe_to_install(game,candidate,project=project)
+    assert "IN_GAME_HOOK_INTEROPERABILITY_UNTESTED" in {
+        row["code"] for row in result["issues"]
+    }
+    assert compat.require_safe_to_install(game,candidate,project=project)
+
+
 
 def test_binary_pin_mismatch_is_blocking_not_warning(setup):
     project,game,candidate=setup
@@ -131,21 +155,23 @@ def test_real_qa_game_reports_abi_mismatch_without_writes():
     assert result["candidate"]["runtime_se_version"]=="1.44.0.0"
     assert sha256((game/compat.SE_DLL).read_bytes()).hexdigest()==old
 
-def test_installer_checks_safety_before_backups(setup,monkeypatch):
+def test_installer_still_blocks_unverified_native_binary_before_backup(setup,monkeypatch):
     project,game,candidate=setup
-    put_info(game/"BepInEx/plugins/APIShared_Serp","APIShared_Serp","0.9.2",
-             MinimumScriptExtenderVersion="2.14.0")
+    # An actual SHA mismatch is a memory-safety concern, not a version gate.
+    (game/compat.SE_DLL).write_bytes(b"tampered unmanaged runtime bytes")
     monkeypatch.setattr(manager,"PROJECT_ROOT",project)
     monkeypatch.setattr(manager,"safe_target",lambda _name:game)
     monkeypatch.setattr(manager,"resolve",lambda name:(name,game))
     monkeypatch.setattr(manager,"game_running",lambda:False)
     calls=[]
     monkeypatch.setattr(manager,"make_backup",
-                        lambda *args: calls.append("BACKUP_STARTED"))
+                        lambda *args:calls.append("BACKUP_STARTED"))
     args=SimpleNamespace(name="qa",quelle=str(candidate),ordner="StrongholdEuropeDE")
-    with pytest.raises(SystemExit,match="API_SHARED_MIN_SE"):
+    with pytest.raises(SystemExit,match="RUNTIME_ABI_PIN_MISMATCH"):
         manager.cmd_mod_installieren(args)
     assert calls==[]
+
+
 
 def test_installer_never_replaces_known_community_plugin_dirs(setup,monkeypatch):
     project,game,candidate=setup
@@ -161,19 +187,21 @@ def test_installer_never_replaces_known_community_plugin_dirs(setup,monkeypatch)
             manager.cmd_mod_installieren(
                 SimpleNamespace(name="qa",quelle=str(candidate),ordner=name))
 
-def test_outdated_se211_auto_install_is_blocked_without_backup(setup,monkeypatch):
+def test_newer_installed_se_is_accepted_without_downgrade_or_backup(setup,monkeypatch):
     project,game,_=setup
     monkeypatch.setattr(manager,"PROJECT_ROOT",project)
     monkeypatch.setattr(manager,"safe_target",lambda _name:game)
     monkeypatch.setattr(manager,"resolve",lambda name:(name,game))
     monkeypatch.setattr(manager,"game_running",lambda:False)
-    # The generated dummy DLL has no real PE version; supply the matching
-    # historical metadata so the community minimum-version gate is reached.
-    monkeypatch.setattr(manager,"file_version",lambda _path:"2.11.0.0")
+    monkeypatch.setattr(manager,"file_version",lambda _path:"3.7.19.0")
     monkeypatch.setattr(manager,"make_backup",
                         lambda *_:pytest.fail("Do not start a backup/write"))
-    with pytest.raises(SystemExit,match="zu alt"):
-        manager.cmd_se_installieren(SimpleNamespace(name="qa",zip=None))
+    monkeypatch.setattr(manager,"se_zip",
+                        lambda *_:pytest.fail("Do not downgrade newer SE"))
+    assert manager.cmd_se_installieren(SimpleNamespace(name="qa",zip=None))==0
+    assert not (game/"_suite-sicherungen").exists()
+
+
 
 def test_tool_formats_are_not_silently_interchangeable():
     contract=compat.load_json(ROOT/"config/shcde-community-compat-20261022.json")
@@ -241,15 +269,16 @@ def test_historic_restore_index_cannot_write_foreign_plugin(setup,monkeypatch):
     assert not (game/"BepInEx/plugins/APIShared_Serp").exists()
 
 
-def test_unknown_nested_plugin_without_manifest_blocks_unverified_hooks(setup):
+def test_unknown_nested_plugin_is_reported_without_blanket_denial(setup):
     project,game,candidate=setup
     unknown=game/"BepInEx/plugins/UnknownProvider/lib"
     unknown.mkdir(parents=True)
     (unknown/"UnknownProvider.dll").write_bytes(b"unknown hooks")
     result=compat.check(game,candidate,project=project)
     assert "PLUGIN_WITHOUT_MANIFEST" in {x["code"] for x in result["issues"]}
-    with pytest.raises(compat.CompatibilityError,match="PLUGIN_WITHOUT_MANIFEST"):
-        compat.require_safe_to_install(game,candidate,project=project)
+    assert not codes(result)
+    assert compat.require_safe_to_install(game,candidate,project=project)
+
 
 
 def test_package_id_and_runtime_plugin_id_are_two_distinct_contracts(setup):
@@ -280,17 +309,19 @@ def test_runtime_identity_mismatch_never_reaches_plugin_install(setup):
         compat.require_safe_to_install(game,candidate,project=project)
 
 
-def test_packaged_se_144_vs_tested_source_211_is_blocking(setup):
+def test_legacy_package_se_label_is_reviewed_not_denied(setup):
     project,game,candidate=setup
     file=candidate/"Runtime/audio-profile.tsv"
     file.write_text(file.read_text(encoding="utf-8").replace(
         "2.11.0.0", "1.44.0.0"
     ),encoding="utf-8")
     result=compat.check(game,candidate,project=project)
-    assert "PACKAGE_SE_ATTESTATION_MISMATCH" in codes(result)
-    assert "PACKAGE_INSTALLED_SE_MISMATCH" in codes(result)
-    with pytest.raises(compat.CompatibilityError,match="PACKAGE_SE_ATTESTATION_MISMATCH"):
-        compat.require_safe_to_install(game,candidate,project=project)
+    review={x["code"] for x in result["issues"] if x["severity"]=="REVIEW"}
+    assert {"PACKAGE_SE_ATTESTATION_MISMATCH",
+            "PACKAGE_INSTALLED_SE_MISMATCH"}.issubset(review)
+    assert not codes(result)
+    assert compat.require_safe_to_install(game,candidate,project=project)
+
 
 
 def test_missing_or_duplicate_runtime_identity_is_blocked(setup):

@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from hashlib import sha256
 import gzip
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -48,50 +49,85 @@ def mapping_target_build_id(mapping: Path) -> str:
         raise TargetSelectionError("Mapping-Zielversion nicht nachgewiesen")
     return match.group(1)
 
-def verify_target(game_root: str|Path, builds_file: str|Path,
-                  mapping_file: str|Path) -> TargetAttestation:
-    root=Path(game_root).resolve(strict=False)
-    if root.name==DATA:root=root.parent
-    data=root/DATA
+def inspect_target(game_root: str | Path, builds_file: str | Path) -> TargetAttestation:
+    """Fingerprint any intact SHCDE generation, with no version allowlist.
+
+    Historical installations retain their original IDs. New builds use the
+    exact content-derived ID produced by the regular SpriteSuite builder.
+    """
+    raw = Path(game_root)
+    root = raw.resolve(strict=False)
+    if root.name == DATA:
+        root = root.parent
+    data = root / DATA
     if not data.is_dir():
-        raise TargetSelectionError(f"Kein vollständiges SHCDE-Spiel: {root}")
-    if root.is_symlink() or data.is_symlink():
-        raise TargetSelectionError("Verknüpfte Spielziele werden nicht aktiviert")
+        raise TargetSelectionError(f"SHCDE game directory missing: {root}")
+    if raw.is_symlink() or root.is_symlink() or data.is_symlink():
+        raise TargetSelectionError("Symlinked game directories are not allowed")
     try:
-        builds=json.loads(Path(builds_file).read_text(encoding="utf-8"))
-        references=builds["target_builds"]
-    except (OSError,UnicodeError,ValueError,KeyError,TypeError) as exc:
-        raise TargetSelectionError(f"Freigabe-Pins nicht lesbar: {exc}") from exc
-    mapping_build=mapping_target_build_id(Path(mapping_file))
-    reference=next((b for b in references if b.get("id")==mapping_build),None)
-    if reference is None:
-        raise TargetSelectionError(
-            f"Mapping-Ziel {mapping_build} ist nicht in supported-builds freigegeben")
-    entries={record.get("relative_path"):record for record in reference.get("files",[])}
-    if set(entries)!=set(CANONICAL):
-        raise TargetSelectionError("Freigabe-Pins sind nicht vollständig")
-    # Fast size rejection prevents hashing GB-sized assets for a wrong build.
+        doc = json.loads(Path(builds_file).read_text(encoding="utf-8"))
+        references = doc["target_builds"]
+        if not isinstance(references, list):
+            raise ValueError("target_builds must be a list")
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError) as exc:
+        raise TargetSelectionError(f"Reference-build list unreadable: {exc}") from exc
+    actual = []
     for relative in CANONICAL:
-        candidate=data/relative
-        if candidate.is_symlink() or not candidate.is_file():
-            raise TargetSelectionError(f"Quelldatei fehlt oder ist verknüpft: {relative}")
-        if candidate.stat().st_size!=entries[relative].get("size"):
-            raise TargetSelectionError(
-                f"Falsche SHCDE-Version für Mapping {mapping_build}: "
-                f"{relative} hat eine abweichende Dateigröße")
-    for relative in CANONICAL:
-        candidate=data/relative
-        digest=sha256()
+        path = data / relative
+        if path.is_symlink() or not path.is_file():
+            raise TargetSelectionError(f"Required game file missing or symlinked: {relative}")
+        before = path.stat()
+        digest = sha256()
         try:
-            with candidate.open("rb") as handle:
-                for chunk in iter(lambda:handle.read(4<<20),b""):
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(4 << 20), b""):
                     digest.update(chunk)
         except OSError as exc:
-            raise TargetSelectionError(f"Zieldatei nicht lesbar: {exc}") from exc
-        if digest.hexdigest()!=entries[relative]["sha256"]:
-            raise TargetSelectionError(
-                f"Falscher SHA-256 in {relative}: Ziel ist NICHT freigegeben")
-    return TargetAttestation(root,data,mapping_build,mapping_build,len(CANONICAL))
+            raise TargetSelectionError(f"Game file cannot be read: {exc}") from exc
+        after = path.stat()
+        if (before.st_size, before.st_mtime_ns) != (
+            after.st_size, after.st_mtime_ns
+        ):
+            raise TargetSelectionError(f"Game file changed during hashing: {relative}")
+        actual.append((relative, after.st_size, digest.hexdigest()))
+    keys = set(actual)
+    for reference in references:
+        if not isinstance(reference, dict):
+            continue
+        try:
+            expected = {
+                (str(entry["relative_path"]), int(entry["size"]),
+                 str(entry["sha256"]).lower())
+                for entry in reference["files"]
+            }
+        except (KeyError, ValueError, TypeError):
+            continue
+        if expected == keys:
+            identity = str(reference["id"])
+            return TargetAttestation(root, data, identity, identity, len(actual))
+    serialized = json.dumps(sorted(keys), separators=(",", ":")).encode("utf-8")
+    identity = "installed-target-" + hashlib.sha256(serialized).hexdigest()
+    return TargetAttestation(root, data, identity, identity, len(actual))
+
+
+def verify_target(
+    game_root: str | Path, builds_file: str | Path,
+    mapping_file: str | Path,
+) -> TargetAttestation:
+    """Accept every game build, but never apply a mismatched sprite mapping."""
+    attestation = inspect_target(game_root, builds_file)
+    mapping_build = mapping_target_build_id(Path(mapping_file))
+    if mapping_build != attestation.build_id:
+        raise TargetSelectionError(
+            "Mapping belongs to a different game build: "
+            f"mapping={mapping_build}, game={attestation.build_id}. "
+            "Re-import the games; no game version is categorically blocked."
+        )
+    return TargetAttestation(
+        attestation.game_dir, attestation.data_dir, attestation.build_id,
+        mapping_build, attestation.files_checked,
+    )
+
 
 def verify_registered(name, *, root:Path):
     registry=root/"config"/"ziele.json"
@@ -119,39 +155,30 @@ def verify_active(*, root:Path):
     attestation=verify_registered(name,root=root)
     if Path(record["target"]["game_dir"]).resolve()!=attestation.game_dir:
         raise TargetSelectionError("Aktives Ziel und Installationskonfiguration widersprechen sich")
-    if record.get("policy",{}).get("allow_unknown_builds") is not False:
-        raise TargetSelectionError("Unsichere Policy: unbekannte Builds müssen verboten sein")
+    # Unknown game version strings never invalidate an explicitly chosen target.
     return name,attestation
 
-def verify_source(source_data: str|Path, builds_file: str|Path) -> Path:
-    """Exact SH1DE build, independently from target and its mapping."""
-    path=Path(source_data).resolve(strict=False)
-    if path.name=="Stronghold 1 Definitive Edition_Data":
-        data=path
-    else:
-        data=path/"Stronghold 1 Definitive Edition_Data"
-    if not data.is_dir():
-        raise TargetSelectionError("SH1DE-Quelldatenordner fehlt")
-    try:
-        builds=json.loads(Path(builds_file).read_text(encoding="utf-8"))
-        references=builds["source_builds"]
-    except (ValueError,OSError,KeyError,TypeError) as exc:
-        raise TargetSelectionError(f"SH1DE-Quellpins fehlen: {exc}") from exc
-    for reference in references:
-        pins={obj.get("relative_path"):obj for obj in reference["files"]}
-        if set(pins)!=set(CANONICAL):continue
-        if not all((data/rel).is_file() and not (data/rel).is_symlink() and
-                   (data/rel).stat().st_size==pins[rel]["size"]
-                   for rel in CANONICAL):
-            continue
-        matches=True
-        for rel in CANONICAL:
-            digest=sha256()
-            with (data/rel).open("rb") as stream:
-                for chunk in iter(lambda:stream.read(4<<20),b""):
+def verify_source(source_data: str | Path, builds_file: str | Path) -> Path:
+    """Accept any intact SH1DE build; the game directory is read-only."""
+    raw = Path(source_data)
+    resolved = raw.resolve(strict=False)
+    data = (resolved if resolved.name == "Stronghold 1 Definitive Edition_Data"
+            else resolved / "Stronghold 1 Definitive Edition_Data")
+    if not data.is_dir() or raw.is_symlink() or data.is_symlink():
+        raise TargetSelectionError("SH1DE source directory missing or symlinked")
+    for relative in CANONICAL:
+        path = data / relative
+        if path.is_symlink() or not path.is_file():
+            raise TargetSelectionError(f"SH1DE source file missing or symlinked: {relative}")
+        before = path.stat()
+        digest = sha256()
+        try:
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(4 << 20), b""):
                     digest.update(chunk)
-            if digest.hexdigest()!=pins[rel]["sha256"]:
-                matches=False
-                break
-        if matches:return data
-    raise TargetSelectionError("SH1DE-Quellversion stimmt nicht mit supported-builds überein")
+        except OSError as exc:
+            raise TargetSelectionError(f"SH1DE source not readable: {exc}") from exc
+        after = path.stat()
+        if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+            raise TargetSelectionError(f"SH1DE source changed during hashing: {relative}")
+    return data

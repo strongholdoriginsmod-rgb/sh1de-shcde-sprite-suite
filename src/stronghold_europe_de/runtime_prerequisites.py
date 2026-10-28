@@ -422,28 +422,25 @@ def _validated_config(
             f"Unsupported companion target framework: {target_framework!r}; "
             "expected 'net481'"
         )
-    if not adaptive and extender_version != "2.11.0":
+    # Historic v2 pins identify exact assembly bytes and MVID below, not an
+    # exclusive SE display version. Adaptive v3 independently captures the
+    # installed assembly identity for arbitrary source-compatible SE builds.
+    # Exact assembly identity applies to all contract schemas. Any numeric
+    # SE major/minor/patch may be used when the installed bytes are verified.
+    if re.fullmatch(r"[0-9]+[.][0-9]+[.][0-9]+", extender_version) is None:
         raise RuntimePrerequisiteError(
-            f"Unsupported historic SHCDE-SE version: {extender_version!r}; "
-            "expected '2.11.0'"
+            "SE version label must reflect the selected managed assembly"
         )
-    if adaptive:
-        version_match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", extender_version)
-        if version_match is None:
-            raise RuntimePrerequisiteError(
-                "Adaptive SE assembly version must be numeric and consistent "
-                "with the selected installed DLL"
-            )
-        shcdese = next(
-            (entry for entry in config["files"]
-             if isinstance(entry, Mapping) and entry.get("id") == "shcdese"),
-            None,
+    shcdese = next(
+        (entry for entry in config["files"]
+         if isinstance(entry, Mapping) and entry.get("id") == "shcdese"),
+        None,
+    )
+    if (not isinstance(shcdese, Mapping)
+            or shcdese.get("assembly_version") != extender_version + ".0"):
+        raise RuntimePrerequisiteError(
+            "Pinned identity: SE version label does not match the actual assembly identity"
         )
-        if (not isinstance(shcdese, Mapping)
-                or shcdese.get("assembly_version") != extender_version + ".0"):
-            raise RuntimePrerequisiteError(
-                "Adaptive SE version does not match the pinned assembly identity"
-            )
     return (
         config_id,
         runtime_id,

@@ -11,6 +11,11 @@ Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusad
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 
 Game graphics are **not** distributed. They are created from your own installed games when reading and building.
+**No SH1DE, SHCDE or Script Extender version number is a blanket access gate.**
+Previously unknown games can be fingerprinted and registered. A write-capable
+target still requires a mapping for that exact game fingerprint, and native
+C# operations still require matching API/ABI evidence.
+[Version-neutral workflow and safety contract](docs/VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
 
 ## Setup
 

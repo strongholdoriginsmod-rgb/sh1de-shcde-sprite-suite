@@ -62,8 +62,14 @@ Spielabstürze oder beschädigte Spielstände riskieren. Siehe
 
 Historische SE-Installationsskripte bleiben nur für dokumentierte
 Altstände und Rücknahme im Quellcode, sind aber **nicht mehr in der
-Universal-Suite-Oberfläche aufrufbar** und dürfen keine neuere
-oder fremde SE-DLL überschreiben.
+Universal-Suite-Oberfläche aufrufbar**. Der alte SE-2.11-Installer
+**behält jede bereits vorhandene neuere oder nicht lesbare SE-Version bei**,
+statt sie zurückzustufen oder deshalb den gesamten Suite-Zugang zu sperren.
+Bei höherer APIShared-Mindestversion bleibt die Installation ebenfalls
+unverändert. Der allgemeine Grafik- und HUD-Workflow funktioniert weiterhin
+mit beliebiger installierter SE-Version.
+
+[Versionsoffene SH1DE-/SHCDE-/SE-Verarbeitung](VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
 
 Quellen:
 - https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/docs/guides/mod-types.html

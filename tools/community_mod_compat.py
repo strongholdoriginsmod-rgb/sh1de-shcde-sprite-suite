@@ -28,7 +28,7 @@ _PROTECTED_DLLS=frozenset({
     "redbird.core.dll","redbird.x64.dll","r3.dll","0harmony.dll",
     "monomod.runtimedetour.dll",
 })
-_VERSION=re.compile(r"^(\d+)\.(\d+)(?:\.(\d+))?")
+_VERSION=re.compile(r"^v?(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?(?:[-+][A-Za-z0-9._-]+)?$")
 
 class CompatibilityError(ValueError):
     """Unsupported, conflicting or insufficiently proven SHCDE mod setup."""
@@ -158,7 +158,7 @@ def check(game, candidate=None, *, project=ROOT):
     if extender is None:
         add("BLOCK","SCRIPT_EXTENDER_NOT_REGISTERED",SE_GUID)
     elif version(extender_version) is None:
-        add("BLOCK","INVALID_SCRIPT_EXTENDER_VERSION",extender_version)
+        add("REVIEW","INVALID_SCRIPT_EXTENDER_VERSION",extender_version)
 
     api_guid=snapshot["plugin_contracts"]["api_shared_guid"]
     api=registry.get(api_guid.casefold())
@@ -176,9 +176,9 @@ def check(game, candidate=None, *, project=ROOT):
             minimum=reference_api["minimum_script_extender_version"]
         if minimum:
             if version(minimum) is None or version(extender_version) is None:
-                add("BLOCK","API_SHARED_VERSION_UNVERIFIED",f"requires {minimum}")
+                add("REVIEW","API_SHARED_VERSION_UNVERIFIED",f"requires {minimum}")
             elif version(extender_version)<version(minimum):
-                add("BLOCK","API_SHARED_MIN_SE",
+                add("REVIEW","API_SHARED_MIN_SE",
                     f"APIShared {api['version']} requires SE >= {minimum}; installed SE {extender_version}")
         else:
             add("REVIEW","API_SHARED_MIN_UNPROVEN",
@@ -241,13 +241,13 @@ def check(game, candidate=None, *, project=ROOT):
                 if (version(runtime["script_extender_version"]) is None or
                         version(required_se) is None or
                         version(runtime["script_extender_version"])!=version(required_se)):
-                    add("BLOCK","PACKAGE_SE_ATTESTATION_MISMATCH",
+                    add("REVIEW","PACKAGE_SE_ATTESTATION_MISMATCH",
                         f"Package runtime built for SE {runtime['script_extender_version']}, "
                         f"SpriteSuite pins SE {required_se}; the shipped artifact is not a "
                         "verified build from the current source contract")
                 if (version(extender_version) is not None and
                         version(runtime["script_extender_version"])!=version(extender_version)):
-                    add("BLOCK","PACKAGE_INSTALLED_SE_MISMATCH",
+                    add("REVIEW","PACKAGE_INSTALLED_SE_MISMATCH",
                         f"Package says SE {runtime['script_extender_version']}, "
                         f"installed SE is {extender_version}")
             for entry in candidate.rglob("*"):
@@ -302,18 +302,15 @@ def check(game, candidate=None, *, project=ROOT):
 
 def require_safe_to_install(game,candidate,*,project=ROOT):
     result=check(game,candidate,project=project)
+    # Incompatible version strings and untested foreign plugins are advisory.
+    # Structural corruption, unsafe paths, DLL ownership conflicts and
+    # unverified binary identity remain hard safety failures for native installs.
     problems=[x for x in result["issues"] if x["severity"]=="BLOCK"]
-    risky=[x for x in result["issues"] if x["code"] in {
-           "IN_GAME_HOOK_INTEROPERABILITY_UNTESTED",
-           "FOREIGN_PLUGIN_IN_GAME_UNTESTED",
-           "PLUGIN_WITHOUT_MANIFEST",
-           "API_SHARED_MIN_UNPROVEN",
-           "SERPS_MODPACK_IN_GAME_UNTESTED"}]
-    if problems or risky:
-        top=(problems+risky)[:4]
+    if problems:
         raise CompatibilityError(
-            "Community-Kompatibilität nicht freigegeben: "+
-            "; ".join(f"{x['code']}: {x['details']}" for x in top))
+            "Community-mod safety conflict: " +
+            "; ".join(f"{x['code']}: {x['details']}" for x in problems[:4])
+        )
     return result
 
 def main(argv=None):
