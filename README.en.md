@@ -2,11 +2,22 @@
 
 Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Static GUI/sprite packages use **no fixed SE version and no C# DLL**; optional C# runtimes retain separate ABI safety checks. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
 
+## Redesigned interface
+
+SpriteSuite now opens with a persistent sidebar, direct task shortcuts
+and a simpler **HUD & menus** workflow: open an image, edit pixels,
+arrange the layout and prepare the export. Specialist tools, technical
+paths and full logs are available on demand, rather than crowding the
+main screen. The layout editor separates layer editing from saving
+and exporting.
+
+[Updated interface guide](docs/SPRITESUITE_UI_QUICKSTART_EN_2026-10-28.md).
+
 ## Download
 
 | Variant | Contents | How |
 |---|---|---|
-| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Releases](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases) → `SpriteSuite-Windows-Portable-2026-10-28.zip` |
+| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-neue-oberflaeche-2026-10-28) → `SpriteSuite-Windows-Portable-Neue-Oberflaeche-2026-10-28.zip` |
 | **Source ZIP** | full application code and tools, but **without** the Python runtime | branch `main` → *Code* → *Download ZIP* |
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 

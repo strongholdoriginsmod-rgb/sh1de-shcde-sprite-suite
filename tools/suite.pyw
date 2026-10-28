@@ -184,8 +184,9 @@ class ImagePreview(ttk.Frame):
 
         bar = ttk.Frame(self)
         bar.pack(fill="x", pady=(3, 4))
-        self.title = ttk.Label(bar, text=empty_text, style="Head.TLabel")
-        self.title.pack(side="left", padx=(4, 8))
+        self.title = ttk.Label(bar, text=empty_text, style="Head.TLabel",
+                               wraplength=230)
+        self.title.pack(side="left", fill="x", expand=True, padx=(4, 8))
         self.zoom = ttk.Combobox(
             bar, values=self.ZOOMS, state="readonly", width=11
         )
@@ -198,7 +199,7 @@ class ImagePreview(ttk.Frame):
         )
 
         self.detail = ttk.Label(
-            self, text="", style="Muted.TLabel", justify="left", wraplength=900
+            self, text="", style="Muted.TLabel", justify="left", wraplength=280
         )
         self.detail.pack(fill="x", padx=4, pady=(0, 4))
 
@@ -226,6 +227,7 @@ class ImagePreview(ttk.Frame):
         self.canvas.delete("all")
         self.canvas.create_text(
             18, 18, anchor="nw", text=message or self._empty_text,
+            width=max(145, self.canvas.winfo_width()-36),
             fill=MUTED, font=("Segoe UI", 10),
         )
         self.canvas.configure(scrollregion=(0, 0, 1, 1))
@@ -670,6 +672,24 @@ class HomeTab(ttk.Frame):
         self.guide_sections.add(readiness, text="Projektbereitschaft")
 
         ttk.Label(workflow, text="Wähle deine Aufgabe", style="Head.TLabel").pack(anchor="w")
+        # Der Einstieg enthält die vier meistbenutzten Tätigkeiten; die
+        # vollständigen, historischen sieben Schritte bleiben darunter.
+        # Hier findet keine Dateibearbeitung ohne einen weiteren Klick statt.
+        shortcuts=ttk.Frame(workflow)
+        shortcuts.pack(fill="x",pady=(5,7))
+        self.quick_buttons={}
+        quick_tasks=(
+            ("Bild bearbeiten","Edit image","hud_menu_tab"),
+            ("Layout gestalten","Arrange layout","designer"),
+            ("Spielvorschau","Game preview","sandbox_tab"),
+            ("Paket bauen","Build package","bc7_page"),
+        )
+        for german,english,target in quick_tasks:
+            button=ttk.Button(shortcuts,text=german,
+                style="GuideStep.TButton",
+                command=lambda destination=target:self.open_shortcut(destination))
+            button.pack(side="left",padx=(0,5))
+            self.quick_buttons[target]=(button,german,english)
         # Destination attributes are resolved *on click*: the standalone
         # Workshop constructs HomeTab before Universal creates its modern
         # catalogue/sandbox/build pages. Never trigger actions on display.
@@ -701,7 +721,7 @@ class HomeTab(ttk.Frame):
             # Show all seven essential actions above the fold at the Suite's
             # supported 1020x680 minimum. Long copy remains vertically
             # scrollable in smaller accessibility/high-DPI environments.
-            row.pack(fill="x", pady=(5, 1))
+            row.pack(fill="x", pady=(2, 0))
             ttk.Label(row, text=number, style="Step.TLabel", width=3).pack(side="left", anchor="n")
             copy = ttk.Frame(row)
             copy.pack(side="left", fill="x", expand=True)
@@ -751,6 +771,22 @@ class HomeTab(ttk.Frame):
             justify="left",
         ).pack(anchor="w", pady=(6, 0))
         self.guide_scroll.bind_mousewheel()
+
+    def open_shortcut(self, destination: str) -> None:
+        """Direkter Arbeitsweg: immer erst den passenden Bereich öffnen."""
+        if destination == "designer":
+            target=getattr(self.app, "hud_menu_tab", None)
+            if target is not None:
+                self.app.open_tab(target)
+                target.open_layout()
+            else:
+                self.app.open_tab(self.app.tab_art)
+        else:
+            self.open_workflow(destination)
+
+    def refresh_quick_language(self, english: bool) -> None:
+        for button,de,en in self.quick_buttons.values():
+            button.configure(text=en if english else de)
 
     def open_workflow(self, destination: str) -> None:
         """Go to a workspace without accidentally running a build/import."""

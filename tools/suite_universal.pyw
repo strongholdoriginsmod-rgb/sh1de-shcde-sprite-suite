@@ -2679,6 +2679,8 @@ class Universal(center.Center):
         # guided home, now promoted to a primary, always-visible workspace.
         self.notebook.insert(0, self.tab_home)
         self._build_quick_navigation()
+        from suite_modern_shell import ModernShell
+        self.modern_shell = ModernShell(self)
         self.open_tab(self.tab_home)
         self._command_search = None
         self.bind_all("<Control-k>", self._command_search_shortcut, add="+")
@@ -2687,6 +2689,7 @@ class Universal(center.Center):
                  "'Streng' oben rechts schaltet um. / Lenient mode is the default: deviations are "
                  "reported, not blocked. 'Strict' at the top right switches.", "muted")
         os.environ["SEDE_SPRACHE"] = LANG.code
+        self.tab_home.refresh_quick_language(LANG.code == "en")
         self.after(200, lambda: LANG.apply(self))
 
     def _build_quick_navigation(self):
@@ -2857,6 +2860,9 @@ class Universal(center.Center):
             )
         finally:
             self._strip_refreshing = False
+        shell = getattr(self, "modern_shell", None)
+        if shell is not None:
+            shell.update_tab_style()
 
     def open_tab(self, tab):
         if (str(tab) in getattr(self, "extra_tabs", ())
@@ -2903,6 +2909,10 @@ class Universal(center.Center):
         os.environ["SEDE_SPRACHE"] = LANG.code
         LANG.apply(self)
         self._refresh_quick_navigation()
+        shell = getattr(self, "modern_shell", None)
+        if shell is not None:
+            shell.refresh_language()
+        self.tab_home.refresh_quick_language(LANG.code == "en")
         finder=getattr(self,"_command_search",None)
         if finder is not None and finder.winfo_exists():
             finder.set_language(LANG.code)
@@ -2942,8 +2952,14 @@ class Universal(center.Center):
             os.environ.pop("SEDE_STRENG", None)
 
     def open_guide(self):
-        name = "UNIVERSAL_SUITE_EN.md" if LANG.code == "en" else "UNIVERSAL_SUITE_DE.md"
+        name = ("SPRITESUITE_UI_QUICKSTART_EN_2026-10-28.md"
+                if LANG.code == "en" else
+                "SPRITESUITE_NEUE_OBERFLAECHE_2026-10-28.md")
         path = ROOT / "docs" / name
+        if not path.is_file():
+            path = ROOT / "docs" / (
+                "UNIVERSAL_SUITE_EN.md" if LANG.code == "en"
+                else "UNIVERSAL_SUITE_DE.md")
         if path.is_file():
             os.startfile(path)
 

@@ -113,9 +113,18 @@ class HudMenuLayoutEditor(tk.Toplevel):
         return self.history.scene
 
     def _show_ui(self):
-        top=ttk.Frame(self,padding=7)
+        intro=ttk.Frame(self,padding=(10,8,10,2))
+        intro.pack(fill="x")
+        ttk.Label(intro,text="Layout bearbeiten",
+                  font=("Segoe UI",16,"bold")).pack(side="left")
+        ttk.Label(intro,
+                  text="Bild einfügen  →  auf der Fläche bearbeiten  →  speichern  →  PNG exportieren",
+                  ).pack(side="left",padx=14)
+        ttk.Button(intro,text="Hilfe",command=self.show_layout_help
+                   ).pack(side="right",padx=3)
+        top=ttk.Frame(self,padding=(7,4,7,1))
         top.pack(fill="x")
-        ttk.Label(top,text="Layout:",font=("Segoe UI",10,"bold")).pack(side="left")
+        ttk.Label(top,text="Projekt:",font=("Segoe UI",10,"bold")).pack(side="left")
         self.scene_picker = ttk.Combobox(
             top,textvariable=self.scene_name,width=24,state="readonly")
         self.scene_picker.pack(side="left",padx=(6,4))
@@ -124,20 +133,22 @@ class HudMenuLayoutEditor(tk.Toplevel):
         ttk.Button(top,text="Speichern · Strg+S",command=self.save).pack(side="left",padx=2)
         ttk.Button(top,text="Rückgängig",command=self.undo).pack(side="left",padx=(14,2))
         ttk.Button(top,text="Wiederholen",command=self.redo).pack(side="left",padx=2)
-        ttk.Button(top,text="Voransicht einpassen",command=self.fit).pack(side="left",padx=(14,2))
-        ttk.Button(top,text="−",width=3,command=lambda:self.zoom_step(-1)).pack(side="left")
-        ttk.Label(top,text="Zoom").pack(side="left",padx=3)
+        viewbar=ttk.Frame(self,padding=(7,0,7,2))
+        viewbar.pack(fill="x")
+        ttk.Button(viewbar,text="Voransicht einpassen",command=self.fit).pack(side="left",padx=(0,2))
+        ttk.Button(viewbar,text="−",width=3,command=lambda:self.zoom_step(-1)).pack(side="left")
+        ttk.Label(viewbar,text="Zoom").pack(side="left",padx=3)
         self.zoom_spin = ttk.Spinbox(
-            top,from_=0.05,to=3.,increment=.1,width=6,
+            viewbar,from_=0.05,to=3.,increment=.1,width=6,
             textvariable=self.zoom,command=self._schedule_draw)
         self.zoom_spin.pack(side="left")
         self.zoom_spin.bind("<Return>",lambda _:self._schedule_draw())
-        ttk.Button(top,text="+",width=3,command=lambda:self.zoom_step(1)).pack(side="left")
-        ttk.Checkbutton(top,text="Raster / Snap",variable=self.snap,
+        ttk.Button(viewbar,text="+",width=3,command=lambda:self.zoom_step(1)).pack(side="left")
+        ttk.Checkbutton(viewbar,text="Raster / Snap",variable=self.snap,
                         command=self._schedule_draw).pack(side="left",padx=(10,2))
-        ttk.Combobox(top,textvariable=self.snap_step,values=(1,2,4,8,16,32),
+        ttk.Combobox(viewbar,textvariable=self.snap_step,values=(1,2,4,8,16,32),
                      width=3,state="readonly").pack(side="left")
-        ttk.Checkbutton(top,text="Proportionen",
+        ttk.Checkbutton(viewbar,text="Proportionen",
                         variable=self.proportional).pack(side="left",padx=5)
 
         actions=ttk.Frame(self,padding=(7,1,7,5))
@@ -146,6 +157,8 @@ class HudMenuLayoutEditor(tk.Toplevel):
         first_row.pack(fill="x")
         second_row=ttk.Frame(actions)
         second_row.pack(fill="x",pady=(3,0))
+        third_row=ttk.Frame(actions)
+        third_row.pack(fill="x",pady=(3,0))
         for parent,entries in (
             (first_row,(
                 ("Bild einfügen",self.add_asset),
@@ -160,6 +173,8 @@ class HudMenuLayoutEditor(tk.Toplevel):
                 ("Ebene ↓",lambda:self.change_order(-1)),
                 ("Original-Pixeleditor",self.open_pixel_editor),
                 ("Layout → PNG + Positionsdaten",self.export),
+            )),
+            (third_row,(
                 ("Asset-Mod-Paket bauen",self.build_mod),
                 ("Spieloberfläche anbinden (Noesis)",self.bind_noesis),
             )),
@@ -281,6 +296,27 @@ class HudMenuLayoutEditor(tk.Toplevel):
         # On smaller displays the full layer/transform inspector stays
         # scrollable instead of clipping lower controls out of the window.
         self.inspector_scroll.bind_mousewheel()
+
+    def show_layout_help(self):
+        messagebox.showinfo(
+            "Layout bearbeiten",
+            "1. Rechts oben eine vorhandene PNG auswählen und »Bild einfügen« "
+            "anklicken. Alternativ »PNG importieren« verwenden.\n\n"
+            "2. Auf der Arbeitsfläche ein Bild anklicken und ziehen. "
+            "Die gelben Griffe verändern die Größe, der grüne Griff "
+            "dreht das Bild. Die rechte Seitenleiste enthält genaue "
+            "Positionen und eine Ebenenliste.\n\n"
+            "3. »Speichern · Strg+S« bewahrt alle Ebenen, "
+            "Positionen und Drehungen für den nächsten Programmstart.\n\n"
+            "4. »Layout → PNG + Positionsdaten« berechnet das fertige "
+            "Bild für den Export. Bei jeder späteren Änderung muss "
+            "dieser Export wiederholt werden.\n\n"
+            "5. »Spieloberfläche anbinden (Noesis)« verknüpft "
+            "die fertig exportierte Grafik mit einer passenden "
+            "XAML-Datei des ausgewählten Spiels. "
+            "Das ist keine automatische Verschiebung vorhandener Spielknöpfe.",
+            parent=self,
+        )
 
     def _update_scene_names(self):
         names=sorted(p.name.removesuffix(".scene.json") for p in

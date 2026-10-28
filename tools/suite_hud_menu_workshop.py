@@ -48,15 +48,34 @@ class HudMenuWorkshop(ttk.Frame):
 
     def _build(self):
         header=ttk.Frame(self)
-        header.pack(fill="x",padx=9,pady=(7,3))
-        ttk.Label(header,text="HUD & Menüs · freie Grafikwerkstatt",
-                  style="Title.TLabel").pack(side="left")
-        ttk.Label(header,text="Bild, Maske, Alpha, XAML und Noesis-Atlanten · "
-                  "Änderungen nur unter work/",style="Muted.TLabel"
-                  ).pack(side="left",padx=16)
+        header.pack(fill="x",padx=12,pady=(9,2))
+        ttk.Label(header,text="HUD & Menüs",style="SectionTitle.TLabel"
+                  ).pack(anchor="w")
+        ttk.Label(header,
+                  text="Grafiken öffnen, bearbeiten und frei auf einer Fläche anordnen.",
+                  style="Description.TLabel").pack(anchor="w",pady=(2,5))
+        journey=ttk.Frame(self)
+        journey.pack(fill="x",padx=12,pady=(3,8))
+        for label,callback in (
+            ("1  Bild öffnen",self.import_images),
+            ("2  Pixel bearbeiten",self.edit_selected),
+            ("3  Layout gestalten",self.open_layout),
+            ("4  Export vorbereiten",self.export_help),
+        ):
+            ttk.Button(journey,text=label,style="GuideStep.TButton",
+                       command=callback).pack(side="left",padx=(0,5))
 
+        project_toggle_row=ttk.Frame(self)
+        project_toggle_row.pack(fill="x",padx=12,pady=(0,2))
+        self.project_toggle=ttk.Button(project_toggle_row,
+            text="Arbeitsordner anzeigen",command=self.toggle_project)
+        self.project_toggle.pack(side="left")
+        ttk.Label(project_toggle_row,
+            text="Bilder und Projekte werden nur in der SpriteSuite gespeichert.",
+            style="Muted.TLabel").pack(side="left",padx=10)
         project=ttk.Frame(self)
-        project.pack(fill="x",padx=10,pady=3)
+        project.pack(fill="x",padx=12,pady=3)
+        self.project_row=project
         ttk.Label(project,text="Werkstattordner:").pack(side="left")
         ttk.Entry(project,textvariable=self.project_var).pack(
             side="left",fill="x",expand=True,padx=6)
@@ -64,13 +83,17 @@ class HudMenuWorkshop(ttk.Frame):
         ttk.Button(project,text="Ordner …",command=self.pick_project).pack(side="left",padx=2)
         ttk.Button(project,text="Ordner öffnen",command=self.open_folder
                   ).pack(side="left",padx=2)
+        project.pack_forget()  # Nur auf Wunsch den technischen Pfad einblenden.
 
         row=ttk.Frame(self)
-        row.pack(fill="x",padx=10,pady=4)
-        ttk.Label(row,text="Neue Grafik in:").pack(side="left")
+        row.pack(fill="x",padx=12,pady=(2,1))
+        self.import_row=row
+        ttk.Label(row,text="Bildkategorie:").pack(side="left")
         ttk.Combobox(row,textvariable=self.kind_var,values=list(CATEGORIES),
-                     state="readonly",width=23).pack(side="left",padx=6)
-        actions=CompactActionBar(row,primary=[
+                     state="readonly",width=20).pack(side="left",padx=6)
+        ttk.Button(row,text="Transparentes PNG erstellen",
+                   command=self.new_png).pack(side="left",padx=7)
+        actions=CompactActionBar(self,primary=[
             ("Bilder importieren …",self.import_images),
             ("Neues transparentes PNG …",self.new_png),
             ("Ausgewählte Grafik bearbeiten",self.edit_selected),
@@ -83,10 +106,18 @@ class HudMenuWorkshop(ttk.Frame):
             ("Resource-Key kopieren",self.copy_key),
             ("PNG extern bearbeiten",self.external_edit),
         ],overflow_label="Bearbeitungswerkzeuge ▾")
-        actions.pack(side="left",fill="x",expand=True)
+        self.actions_row=actions
+        actions.pack(fill="x",padx=12,pady=(2,5))
+        actions.pack_forget()
 
+        tool_toggle=ttk.Frame(self)
+        tool_toggle.pack(fill="x",padx=12,pady=(2,3))
+        self.tools_toggle=ttk.Button(tool_toggle,text="Weitere Grafikwerkzeuge anzeigen",
+                  command=self.toggle_tools)
+        self.tools_toggle.pack(side="left")
         toolstrip=ttk.Frame(self)
-        toolstrip.pack(fill="x",padx=10,pady=(0,5))
+        toolstrip.pack(fill="x",padx=12,pady=(0,5))
+        self.tools_row=toolstrip
         CompactActionBar(
             toolstrip,
             primary=[
@@ -100,9 +131,11 @@ class HudMenuWorkshop(ttk.Frame):
             ],
             overflow_label="Weitere Grafikwerkzeuge ▾",
         ).pack(fill="x")
+        toolstrip.pack_forget()  # SH1 HUD, ORIGINS und Spezialwerkzeuge bleiben erreichbar.
 
         pipeline=ttk.Frame(self)
-        pipeline.pack(fill="x",padx=10,pady=(1,6))
+        self.pipeline=pipeline
+        pipeline.pack(fill="x",padx=12,pady=(1,7))
         ttk.Button(
             pipeline,text="Layout-Designer · direkt ziehen & skalieren",
             command=self.open_layout,
@@ -111,16 +144,17 @@ class HudMenuWorkshop(ttk.Frame):
                   ).pack(side="left",padx=3)
         ttk.Button(pipeline,text="2 · DLL-freies HUD-/Menüpaket bauen",
                    command=self.build).pack(side="left",padx=4)
-        ttk.Label(pipeline,text="Keine automatische Spielinstallation / "
-                  "keine SE-Versionssperre",style="Muted.TLabel"
-                  ).pack(side="right")
+        ttk.Label(pipeline,text="Paketbau verändert kein installiertes Spiel.",
+                  style="Muted.TLabel").pack(anchor="w",pady=(4,0))
+        pipeline.pack_forget()  # Nur in "Weitere Grafikwerkzeuge" anzeigen.
 
         panes=ttk.PanedWindow(self,orient="horizontal")
+        self.panes=panes
         panes.pack(fill="both",expand=True,padx=10,pady=3)
         left=ttk.Frame(panes);right=ttk.Frame(panes)
         panes.add(left,weight=3);panes.add(right,weight=2)
         filters=ttk.Frame(left);filters.pack(fill="x",pady=(0,4))
-        ttk.Label(filters,text="Filter / Schlüssel:").pack(side="left")
+        ttk.Label(filters,text="Suche:").pack(side="left")
         search=ttk.Entry(filters,textvariable=self.filter_var)
         search.pack(side="left",fill="x",expand=True,padx=5)
         search.bind("<Escape>",lambda _:self.filter_var.set(""))
@@ -132,11 +166,11 @@ class HudMenuWorkshop(ttk.Frame):
             listing,columns=("kind","status","size"),
             show="tree headings",selectmode="browse",height=13)
         self.tree.heading("#0",text="Menü-/HUD-Resource-Key")
-        self.tree.column("#0",width=325,minwidth=190,stretch=True)
+        self.tree.column("#0",width=165,minwidth=115,stretch=True)
         for code,title,width in (
-            ("kind","Bereich",138),("status","Stand",110),("size","Bytes",75)):
+            ("kind","Bereich",84),("status","Stand",65),("size","Bytes",50)):
             self.tree.heading(code,text=title)
-            self.tree.column(code,width=width,minwidth=60,stretch=False)
+            self.tree.column(code,width=width,minwidth=46,stretch=False)
         scroll=ttk.Scrollbar(listing,command=self.tree.yview)
         self.tree.configure(yscrollcommand=scroll.set)
         scroll.pack(side="right",fill="y")
@@ -151,17 +185,18 @@ class HudMenuWorkshop(ttk.Frame):
         self.tabs=ttk.Notebook(right)
         self.tabs.pack(fill="both",expand=True)
         preview_work=ttk.Frame(self.tabs);preview_original=ttk.Frame(self.tabs)
-        self.tabs.add(preview_work,text="Bearbeitung")
-        self.tabs.add(preview_original,text="Importbasis / Vorher")
+        self.tabs.add(preview_work,text="Bild")
+        self.tabs.add(preview_original,text="Original")
+        # Der frühere Reiter "Layout · Live-Vorschau" heißt nun kurz "Layout".
         live_frame=ttk.Frame(self.tabs)
-        self.tabs.add(live_frame,text="Layout · Live-Vorschau")
+        self.tabs.add(live_frame,text="Layout")
         ttk.Label(
             live_frame,
             text="Elemente direkt auf einer interaktiven Gesamtvorschau "
                  "ziehen, skalieren, drehen und exakt positionieren. "
                  "Die Ebenen, Anker, Pivots und Koordinaten bleiben dauerhaft "
                  "gespeichert; der Export verarbeitet dieselben Werte.",
-            wraplength=560,justify="left",
+            wraplength=290,justify="left",
         ).pack(fill="x",padx=12,pady=(20,14))
         ttk.Button(
             live_frame,
@@ -175,9 +210,52 @@ class HudMenuWorkshop(ttk.Frame):
             preview_original,empty_text="Geprüfte Importbasis für Vorher/Nachher.")
         self.original.pack(fill="both",expand=True)
         ttk.Label(right,textvariable=self.detail,style="Muted.TLabel",
-                  wraplength=580,justify="left").pack(fill="x",pady=(4,2))
+                  wraplength=285,justify="left").pack(fill="x",pady=(4,2))
         ttk.Label(self,textvariable=self.message,style="Muted.TLabel",
                   wraplength=1400,justify="left").pack(fill="x",padx=12,pady=4)
+
+    def toggle_project(self):
+        """Technische Arbeitsordner-Pfade bei Bedarf sichtbar machen."""
+        if self.project_row.winfo_manager() == "pack":
+            self.project_row.pack_forget()
+            self.project_toggle.configure(text="Arbeitsordner anzeigen")
+        else:
+            self.project_row.pack(before=self.import_row,fill="x",padx=12,pady=3)
+            self.project_toggle.configure(text="Arbeitsordner verbergen")
+
+    def toggle_tools(self):
+        """Zusätzliche Werkzeugleisten und den Rohbild-Paketbau aufklappen."""
+        if self.tools_row.winfo_manager() == "pack":
+            for widget in (self.actions_row,self.tools_row,self.pipeline):
+                widget.pack_forget()
+            self.tools_toggle.configure(text="Weitere Grafikwerkzeuge anzeigen")
+        else:
+            self.actions_row.pack(before=self.panes,fill="x",
+                                  padx=12,pady=(1,4))
+            self.tools_row.pack(before=self.panes,fill="x",
+                                padx=12,pady=(0,4))
+            self.pipeline.pack(before=self.panes,fill="x",
+                                padx=12,pady=(0,6))
+            self.tools_toggle.configure(text="Weitere Grafikwerkzeuge verbergen")
+
+    def export_help(self):
+        """Erklärt die beiden unterschiedlichen Paketarten vor dem Export."""
+        window=self.open_layout()
+        if window is None:
+            return
+        messagebox.showinfo(
+            "Layout exportieren",
+            "Im Layout-Designer zunächst mindestens ein Bild einfügen, "
+            "dann Position und Größe einstellen.\n\n"
+            "1. »Speichern · Strg+S« sichert alle Ebenen und Positionen.\n"
+            "2. »Layout → PNG + Positionsdaten« erstellt das fertige Bild.\n"
+            "3. »Spieloberfläche anbinden (Noesis)« verknüpft diese Grafik "
+            "mit einem tatsächlich vorhandenen Spielmenü.\n\n"
+            "»DLL-freies HUD-/Menüpaket bauen« hier im Hauptfenster ist "
+            "dagegen für die vorhandenen einzelnen Werkstattdateien gedacht. "
+            "Es verschiebt keine Schaltflächen im Spiel.",
+            parent=window,
+        )
 
     def _project(self,create=False):
         return workspace(self.project_var.get().strip() or DEFAULT,create=create)
