@@ -40,14 +40,25 @@ BC7, Shader und Noesis-Patching können sich unterscheiden.
 
 ## Optionale C#-Runtime
 
-Die historische Stronghold-Europe-/Origins-C#-Runtime bleibt im
-aktuellen Quellstand auf bestimmte SHCDE-SE-2.11-DLLs, MVIDs,
-Game-Assembly-Identitäten und native API-Layouts ausgelegt.
-Ein DLL-freies Asset-Mod braucht diese Komponenten **nicht**.
-Eine C#-Runtime mit abweichendem SE darf erst nach Neubau und
-nachgewiesener API-/ABI-Kompatibilität freigegeben werden.
-Das Entfernen dieses internen Schutzes könnte Abstürze oder
-beschädigte Spielstände verursachen.
+Die C#-Runtime besitzt **keine feste SE-Mindest-, Höchst- oder
+Versionsnummernsperre mehr**. Sie verlangt nur, dass der Script
+Extender als Plugin vorhanden ist. Beim Bauen erfasst sie die
+konkreten Referenz-DLLs des gewählten Spiels mit SHA-256, MVID und
+Feldlayout. Der neuere Source-Code ließ sich gegen SE 2.10.4 und
+SE 2.14.3 kompilieren.
+
+Das bedeutet **nicht**, dass alle SE-Versionen dieselbe native
+Schnittstelle oder dass alle Gameplay-Funktionen in jeder Version
+dieselbe Semantik besitzen. Gefährliche native Zugriffe mit
+abweichendem oder unbekanntem Layout bleiben deaktiviert,
+während andere verfügbare Funktionen erhalten bleiben.
+Insbesondere ist ein vollständiger SE-1.x-/Ingame-Nachweis
+nicht erbracht. Für beliebige SE-Versionen kann weiterhin
+das DLL-freie HUD-/Sprite-Assetpaket erstellt werden.
+
+Das Entfernen von Speicher- und DLL-Integritätsprüfungen würde
+Spielabstürze oder beschädigte Spielstände riskieren. Siehe
+[Runtimes und ABI-Matrix](RUNTIME_SE_ABI_MATRIX_2026-10-28.md).
 
 Historische SE-Installationsskripte bleiben nur für dokumentierte
 Altstände und Rücknahme im Quellcode, sind aber **nicht mehr in der

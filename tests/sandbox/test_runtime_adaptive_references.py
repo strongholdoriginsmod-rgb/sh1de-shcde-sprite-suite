@@ -100,16 +100,24 @@ def test_never_accepts_symlinked_reference(reference_set, tmp_path):
         capture.capture_runtime_references(template, root)
 
 
-def test_rejects_legacy_pre_redbird_extender(reference_set, monkeypatch):
+def test_legacy_version_is_not_rejected_if_required_apis_are_present(reference_set, monkeypatch):
+    # Synthetic evidence: version 1.x is *not* denied by its number. This
+    # does not claim that the actual 1.44 release contains RedBird APIs.
     template, root, se, _references = reference_set
     original = capture._read_managed_assembly_metadata
-    monkeypatch.setattr(
-        capture, "_read_managed_assembly_metadata",
-        lambda p: ("SHCDESE", "1.44.0.0", template["files"][0]["mvid"])
-        if Path(p).resolve() == se.resolve() else original(p),
-    )
-    with pytest.raises(capture.RuntimeReferenceCaptureError, match="SE 1.x"):
-        capture.capture_runtime_references(template, root)
+
+    def metadata(path):
+        name, version, mvid = original(path)
+        if Path(path).resolve() == se.resolve():
+            return name, "1.44.0.0", mvid
+        return name, version, mvid
+
+    monkeypatch.setattr(capture, "_read_managed_assembly_metadata", metadata)
+    monkeypatch.setattr(prereq, "_read_managed_assembly_metadata", metadata)
+    contract, layout = capture.capture_runtime_references(template, root)
+    assert contract["script_extender_version"] == "1.44.0"
+    assert layout == "modern"
+    assert len(prereq.verify_runtime_prerequisites(contract, root).files) == 16
 
 
 def test_unknown_layout_is_not_approved(reference_set, monkeypatch):
@@ -190,3 +198,58 @@ def test_known_layouts_are_version_independent_not_magic_number(monkeypatch, tmp
     fake.stdout = "unknown"
     with pytest.raises(capture.RuntimeReferenceCaptureError, match="Unbekannte"):
         capture.attest_native_layout(tmp_path/"newer.dll")
+
+
+@pytest.mark.parametrize("se_version", [
+    "1.44.0",
+    "2.10.4",
+    "2.14.3",
+    "3.1.9",
+])
+def test_no_se_major_minor_or_patch_version_gate(reference_set, monkeypatch, se_version):
+    """Any version is eligible when its real identities and layout satisfy API contracts."""
+    template, root, se, _references = reference_set
+    original = capture._read_managed_assembly_metadata
+
+    def current_reference(path):
+        name, version, mvid = original(path)
+        return (name, se_version + ".0", mvid) if Path(path).resolve() == se.resolve() else (name, version, mvid)
+
+    monkeypatch.setattr(capture, "_read_managed_assembly_metadata", current_reference)
+    monkeypatch.setattr(prereq, "_read_managed_assembly_metadata", current_reference)
+    doc, abi = capture.capture_runtime_references(template, root)
+    assert doc["script_extender_version"] == se_version
+    assert abi == "modern"
+    verified = prereq.verify_runtime_prerequisites(doc, root)
+    assert verified.script_extender_version == se_version
+    assert len(verified.files) == 16
+
+
+def test_csharp_runtime_plugin_has_no_minimum_se_version():
+    plugin = (
+        ROOT / "runtime/StrongholdEuropeDE.Runtime/StrongholdEuropeRuntimePlugin.cs"
+    ).read_text(encoding="utf8")
+    assert '[BepInDependency("000shcdese")]' in plugin
+    assert '[BepInDependency("000shcdese", "2.0.0")]' not in plugin
+    assert "per-feature API/layout probes" in plugin
+
+
+def test_no_major_version_gate_does_not_disable_native_layout_safety(reference_set, monkeypatch):
+    template, root, se, _refs = reference_set
+    old = capture._read_managed_assembly_metadata
+
+    def legacy_version(path):
+        name, version, mvid = old(path)
+        if Path(path).resolve() == se.resolve():
+            return name, "1.44.0.0", mvid
+        return name, version, mvid
+
+    monkeypatch.setattr(capture, "_read_managed_assembly_metadata", legacy_version)
+    monkeypatch.setattr(
+        capture, "attest_native_layout",
+        lambda _path: (_ for _ in ()).throw(
+            capture.RuntimeReferenceCaptureError("Native layout not verified")
+        ),
+    )
+    with pytest.raises(capture.RuntimeReferenceCaptureError, match="not verified"):
+        capture.capture_runtime_references(template, root)

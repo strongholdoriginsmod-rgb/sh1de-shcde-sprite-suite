@@ -429,10 +429,10 @@ def _validated_config(
         )
     if adaptive:
         version_match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", extender_version)
-        if (version_match is None or int(version_match.group(1)) < 2):
+        if version_match is None:
             raise RuntimePrerequisiteError(
-                "Adaptive native runtime requires RedBird-generation SE 2.x "
-                "or newer with a verified interface layout"
+                "Adaptive SE assembly version must be numeric and consistent "
+                "with the selected installed DLL"
             )
         shcdese = next(
             (entry for entry in config["files"]

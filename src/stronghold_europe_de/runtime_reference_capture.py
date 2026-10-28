@@ -235,11 +235,14 @@ def capture_runtime_references(
     version_match = re.fullmatch(
         r"(\d+)\.(\d+)\.(\d+)\.0", extender["assembly_version"]
     )
-    if version_match is None or int(version_match.group(1)) < 2:
+    if version_match is None:
         raise RuntimeReferenceCaptureError(
-            "Die native C#-Runtime unterstützt nur geprüfte RedBird-SE-2.x-APIs; "
-            "SE 1.x hat eine andere Hook-/Assembly-Generation"
+            "Assembly version must contain three numeric components"
         )
+    # No SE major/minor/version gate. Native field-layout evidence, not the
+    # display version, determines which C# operations can be compiled safely.
+    # Older Zhuqiaomon installations may still lack required RedBird APIs;
+    # those cannot be treated as ABI-compatible by altering a version string.
     abi_layout = attest_native_layout(_inside(
         root, _REQUIRED_DEPENDENCIES["shcdese"][0]
     ))

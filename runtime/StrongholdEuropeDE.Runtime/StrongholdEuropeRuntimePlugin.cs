@@ -16,9 +16,10 @@ namespace StrongholdEuropeDE.Runtime
         GeneratedAudioContract.PluginId,
         "Stronghold Europe DE Runtime (Private)",
         "0.2.0")]
-    // Lower bound of the RedBird generation this DLL binds to. Newer or
-    // unverified SE builds load; the capability report says so in one line.
-    [BepInDependency("000shcdese", "2.0.0")]
+    // Never reject an installed Script Extender solely because of its
+    // version number. The hard dependency guarantees load order/presence;
+    // per-feature API/layout probes decide which native operations are safe.
+    [BepInDependency("000shcdese")]
     [BepInDependency(
         "fixes",
         BepInDependency.DependencyFlags.SoftDependency)]
