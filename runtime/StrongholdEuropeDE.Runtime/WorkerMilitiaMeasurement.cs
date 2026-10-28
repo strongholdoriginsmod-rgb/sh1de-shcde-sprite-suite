@@ -63,7 +63,7 @@ namespace StrongholdEuropeDE.Runtime
                     CultureInfo.InvariantCulture)
                 + " facing=" + ((int)u.r_MovementDirection).ToString(
                     CultureInfo.InvariantCulture)
-                + " cmd=" + u.N000000A7.ToString(CultureInfo.InvariantCulture)
+                + " cmd=" + SeInteropFieldAliases.CommandMode(ref u).ToString(CultureInfo.InvariantCulture)
                 + " moving=" + u.r_MovementSubstep.ToString(
                     CultureInfo.InvariantCulture)
                 + " path=" + u.r_PathPlanStateBitFlags.ToString(

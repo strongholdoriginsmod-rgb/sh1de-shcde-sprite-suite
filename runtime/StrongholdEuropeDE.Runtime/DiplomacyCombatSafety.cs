@@ -2842,7 +2842,7 @@ namespace StrongholdEuropeDE.Runtime
                         "AI diplomacy target resources are unavailable for player "
                         + sourcePlayer.ToString(CultureInfo.InvariantCulture));
                 }
-                uint rawTarget = resources->r_AISiegePlayerIdTarget;
+                uint rawTarget = SeInteropFieldAliases.SiegeTarget(resources);
                 if (rawTarget < 1 || rawTarget > 8
                     || !PartitionAllies(
                         targetPartition,
@@ -2851,8 +2851,8 @@ namespace StrongholdEuropeDE.Runtime
                 {
                     continue;
                 }
-                resources->r_AISiegePlayerIdTarget = 0;
-                if (resources->r_AISiegePlayerIdTarget != 0)
+                SeInteropFieldAliases.SiegeTarget(resources) = 0;
+                if (SeInteropFieldAliases.SiegeTarget(resources) != 0)
                 {
                     throw new InvalidOperationException(
                         "AI diplomacy target clear was rejected for player "

@@ -1051,19 +1051,44 @@ def _runtime_fortification_metadata_matches(
     )
 
 
-def _runtime_prerequisite_mvids_valid(value: object) -> bool:
+def _runtime_prerequisite_mvids_valid(
+    value: object, *, adaptive: bool = False
+) -> bool:
+    expected = set(RUNTIME_PREREQUISITE_MVIDS)
+    if adaptive:
+        expected.add("unsafe")
     return (
         isinstance(value, dict)
-        and set(value) == set(RUNTIME_PREREQUISITE_MVIDS)
+        and set(value) == expected
         and all(isinstance(mvid, str) and re.fullmatch(
             r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", mvid
         ) is not None for mvid in value.values())
     )
 
 
+def _runtime_identity_contract_valid(metadata: object) -> bool:
+    """Validate legacy exact pins or reviewed measured ABI v3 identity.
+
+    A measured pin must contain exactly the same dependency IDs as the
+    historical contract, and its per-source MVIDs are checked again
+    against the embedded C# assembly attestation.
+    """
+    if not isinstance(metadata, dict):
+        return False
+    contract = metadata.get("runtime_prerequisite_config_id")
+    identity = metadata.get("runtime_prerequisite_mvids")
+    if contract == "local-shcde-2.80-shcdese-2.11-net481-win-x64":
+        return identity == RUNTIME_PREREQUISITE_MVIDS
+    if (isinstance(contract, str)
+            and re.fullmatch(r"measured-se-abi-[0-9a-f]{20}", contract)):
+        return _runtime_prerequisite_mvids_valid(identity, adaptive=True)
+    return False
+
+
 def _runtime_assembly_attestation_expected(
     *,
     manifest_sha256: str | None,
+    prerequisite_config_id: str | None = None,
     source_build_id: str,
     target_build_id: str,
     roster_enabled: bool,
@@ -1086,7 +1111,9 @@ def _runtime_assembly_attestation_expected(
         "StrongholdEurope.SourceBuildId": source_build_id,
         "StrongholdEurope.TargetBuildId": target_build_id,
         "StrongholdEurope.RuntimePrerequisiteConfigId": (
-            "local-shcde-2.80-shcdese-2.11-net481-win-x64"
+            prerequisite_config_id
+            if prerequisite_config_id is not None
+            else "local-shcde-2.80-shcdese-2.11-net481-win-x64"
         ),
         "StrongholdEurope.RuntimeSourceSetSha256": runtime_source_sha256,
         "StrongholdEurope.UnitRosterEnabled": str(roster_enabled).lower(),
@@ -5322,10 +5349,7 @@ def validate_mod(
                 and runtime_metadata.get("assembly_name") == RUNTIME_ASSEMBLY_NAME
                 and runtime_metadata.get("assembly_version") == RUNTIME_ASSEMBLY_VERSION
                 and runtime_metadata.get("target_framework") == "net481"
-                and runtime_metadata.get("runtime_prerequisite_config_id")
-                == "local-shcde-2.80-shcdese-2.11-net481-win-x64"
-                and runtime_metadata.get("runtime_prerequisite_mvids")
-                == RUNTIME_PREREQUISITE_MVIDS
+                and _runtime_identity_contract_valid(runtime_metadata)
                 and runtime_metadata.get("manifest_sha256")
                 == runtime_contract_digest
                 and isinstance(runtime_metadata.get("unit_roster_names"), bool)
@@ -5372,6 +5396,12 @@ def validate_mod(
             )
             expected_attestation = _runtime_assembly_attestation_expected(
                 manifest_sha256=runtime_contract_digest,
+                prerequisite_config_id=runtime_metadata.get(
+                    "runtime_prerequisite_config_id"
+                ),
+                prerequisite_mvids=runtime_metadata.get(
+                    "runtime_prerequisite_mvids"
+                ),
                 source_build_id=(
                     "local-sh1de-unity-2021.3.27f1-2025-01-20"
                 ),

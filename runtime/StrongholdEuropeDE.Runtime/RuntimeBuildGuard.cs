@@ -153,6 +153,9 @@ namespace StrongholdEuropeDE.Runtime
             VerifyLoadedAssemblyIfPresent("keralua");
             VerifyLoadedAssemblyIfPresent("noesis_gui");
             VerifyLoadedAssembly(typeof(ReadOnlyMemory<byte>).Assembly, "system_memory");
+            // The native-field adapter uses Unsafe.As/Add for verified
+            // offsets, so do not bind to an untrusted foreign copy.
+            VerifyLoadedAssemblyIfPresent("unsafe");
             VerifyLoadedAssembly(typeof(BaseUnityPlugin).Assembly, "bepinex_core");
             VerifyLoadedAssembly(typeof(Harmony).Assembly, "harmony");
             VerifyLoadedAssembly(typeof(Material).Assembly, "unity_engine_core_module");

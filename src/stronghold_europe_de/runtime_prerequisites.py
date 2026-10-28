@@ -167,6 +167,17 @@ _REQUIRED_DEPENDENCIES: dict[str, tuple[str, str, str, str]] = {
 }
 
 
+# The managed Unsafe.As/Add adapter must use the same official runtime copy
+# as the chosen SE. v3 dynamically verifies this additional 16th dependency;
+# original v2 validation remains backward compatible.
+_ADAPTIVE_EXTRA_DEPENDENCIES: dict[str, tuple[str, str]] = {
+    "unsafe": (
+        "BepInEx/plugins/000shcdese/System.Runtime.CompilerServices.Unsafe.dll",
+        "System.Runtime.CompilerServices.Unsafe",
+    )
+}
+
+
 @dataclass(frozen=True)
 class _ExpectedFile:
     id: str
@@ -263,7 +274,9 @@ def _relative_path(value: object, label: str) -> str:
     return raw
 
 
-def _expected_files(config: Mapping[str, Any]) -> tuple[_ExpectedFile, ...]:
+def _expected_files(
+    config: Mapping[str, Any], *, adaptive: bool = False
+) -> tuple[_ExpectedFile, ...]:
     raw_files = config["files"]
     if not isinstance(raw_files, list) or not raw_files:
         raise RuntimePrerequisiteError("files must be a non-empty list")
@@ -340,11 +353,27 @@ def _expected_files(config: Mapping[str, Any]) -> tuple[_ExpectedFile, ...]:
         )
 
     by_id = {entry.id: entry for entry in parsed}
-    missing = sorted(set(_REQUIRED_DEPENDENCIES) - set(by_id))
+    required = set(_REQUIRED_DEPENDENCIES)
+    if adaptive:
+        required |= set(_ADAPTIVE_EXTRA_DEPENDENCIES)
+    missing = sorted(required - set(by_id))
     if missing:
         raise RuntimePrerequisiteError(
             f"Required companion dependencies are missing: {missing}"
         )
+    if adaptive and set(by_id) != required:
+        raise RuntimePrerequisiteError(
+            "Unexpected adaptive runtime dependencies: "
+            + repr(sorted(set(by_id) - required))
+        )
+    for dependency_id, identity in _ADAPTIVE_EXTRA_DEPENDENCIES.items():
+        if not adaptive:
+            break
+        entry = by_id[dependency_id]
+        if (entry.relative_path, entry.assembly_name) != identity:
+            raise RuntimePrerequisiteError(
+                "Pinned identity mismatch for " + dependency_id
+            )
     for dependency_id, identity in _REQUIRED_DEPENDENCIES.items():
         entry = by_id[dependency_id]
         expected_path, expected_name, expected_version, expected_mvid = identity
@@ -354,7 +383,8 @@ def _expected_files(config: Mapping[str, Any]) -> tuple[_ExpectedFile, ...]:
             entry.assembly_version,
             entry.mvid,
         )
-        if actual_identity != identity:
+        if (actual_identity[:2] != identity[:2] if adaptive
+                else actual_identity != identity):
             raise RuntimePrerequisiteError(
                 f"Pinned identity mismatch for {dependency_id}: "
                 f"expected={(expected_path, expected_name, expected_version, expected_mvid)!r}, "
@@ -369,10 +399,12 @@ def _validated_config(
     if not isinstance(config, Mapping):
         raise RuntimePrerequisiteError("config must be a mapping loaded from JSON")
     _require_exact_keys(config, _TOP_LEVEL_KEYS, "runtime prerequisite config")
-    if config["schema_version"] != 2:
+    schema = config["schema_version"]
+    if isinstance(schema, bool) or schema not in (2, 3):
         raise RuntimePrerequisiteError(
-            f"Unsupported runtime prerequisite schema: {config['schema_version']!r}"
+            f"Unsupported runtime prerequisite schema: {schema!r}"
         )
+    adaptive = schema == 3
     config_id = _require_string(config["config_id"], "config_id")
     runtime_id = _require_string(config["runtime_id"], "runtime_id")
     target_framework = _require_string(
@@ -390,16 +422,34 @@ def _validated_config(
             f"Unsupported companion target framework: {target_framework!r}; "
             "expected 'net481'"
         )
-    if extender_version != "2.11.0":
+    if not adaptive and extender_version != "2.11.0":
         raise RuntimePrerequisiteError(
-            f"Unsupported SHCDE-SE version: {extender_version!r}; expected '2.11.0'"
+            f"Unsupported historic SHCDE-SE version: {extender_version!r}; "
+            "expected '2.11.0'"
         )
+    if adaptive:
+        version_match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", extender_version)
+        if (version_match is None or int(version_match.group(1)) < 2):
+            raise RuntimePrerequisiteError(
+                "Adaptive native runtime requires RedBird-generation SE 2.x "
+                "or newer with a verified interface layout"
+            )
+        shcdese = next(
+            (entry for entry in config["files"]
+             if isinstance(entry, Mapping) and entry.get("id") == "shcdese"),
+            None,
+        )
+        if (not isinstance(shcdese, Mapping)
+                or shcdese.get("assembly_version") != extender_version + ".0"):
+            raise RuntimePrerequisiteError(
+                "Adaptive SE version does not match the pinned assembly identity"
+            )
     return (
         config_id,
         runtime_id,
         target_framework,
         extender_version,
-        _expected_files(config),
+        _expected_files(config, adaptive=adaptive),
     )
 
 
@@ -441,6 +491,9 @@ def verify_runtime_prerequisites(
             f"SHCDE game root is not a directory: {game_root}"
         )
 
+    # Dynamic schema v3 must always verify exact bytes/MVID, even when the
+    # user selected lenient diagnostic mode. A compiler ABI is not a warning.
+    adaptive_exact = config["schema_version"] == 3
     verified: list[VerifiedRuntimePrerequisite] = []
     failures: list[str] = []
     warnings: list[str] = []
@@ -466,7 +519,7 @@ def verify_runtime_prerequisites(
                 f"{entry.id}: size mismatch for {entry.relative_path}: "
                 f"expected={entry.size} actual={before.st_size}"
             )
-            if not _nachsicht():
+            if adaptive_exact or not _nachsicht():
                 failures.append(message)
                 continue
             warnings.append(message)
@@ -491,7 +544,7 @@ def verify_runtime_prerequisites(
                 f"{entry.id}: SHA-256 mismatch for {entry.relative_path}: "
                 f"expected={entry.sha256} actual={digest}"
             )
-            if not _nachsicht():
+            if adaptive_exact or not _nachsicht():
                 failures.append(message)
                 continue
             warnings.append(message)
@@ -526,7 +579,7 @@ def verify_runtime_prerequisites(
                 f"{entry.relative_path}: expected={expected_metadata!r} "
                 f"actual={actual_metadata!r}"
             )
-            if not _nachsicht():
+            if adaptive_exact or not _nachsicht():
                 failures.append(message)
                 continue
             warnings.append(message)

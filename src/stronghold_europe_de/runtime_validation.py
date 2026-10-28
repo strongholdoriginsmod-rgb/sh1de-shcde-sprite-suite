@@ -87,6 +87,7 @@ from .validation import (
     _pe_clr_header,
     _runtime_assembly_attestation_expected,
     _runtime_prerequisite_mvids_valid,
+    _runtime_identity_contract_valid,
     _runtime_fortification_contract_expected,
     _runtime_fortification_metadata_matches,
     _runtime_streaming_metadata_ok,
@@ -1803,10 +1804,7 @@ def _runtime_artifact_checks(
             and dll_metadata.get("assembly_name") == RUNTIME_ASSEMBLY_NAME
             and dll_metadata.get("assembly_version") == RUNTIME_ASSEMBLY_VERSION
             and dll_metadata.get("target_framework") == "net481"
-            and dll_metadata.get("runtime_prerequisite_config_id")
-            == "local-shcde-2.80-shcdese-2.11-net481-win-x64"
-            and dll_metadata.get("runtime_prerequisite_mvids")
-            == RUNTIME_PREREQUISITE_MVIDS
+            and _runtime_identity_contract_valid(dll_metadata)
             and dll_metadata.get("manifest_sha256") == contract_digest
             and isinstance(dll_metadata.get("unit_roster_names"), bool)
             and isinstance(dll_metadata.get("farm_placement"), bool)
@@ -1848,6 +1846,9 @@ def _runtime_artifact_checks(
         attestation = _managed_assembly_attestation(dll_path) if pe_clr_ok else None
         expected_attestation = _runtime_assembly_attestation_expected(
             manifest_sha256=contract_digest,
+            prerequisite_config_id=dll_metadata.get(
+                "runtime_prerequisite_config_id"
+            ),
             source_build_id=source_build_id,
             target_build_id=target_build_id,
             prerequisite_mvids=dll_metadata.get("runtime_prerequisite_mvids"),

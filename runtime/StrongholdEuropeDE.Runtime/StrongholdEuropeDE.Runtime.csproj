@@ -29,6 +29,7 @@
     <Error Condition="!Exists('$(SHCDESEReference)')" Text="SHCDESEReference is missing: $(SHCDESEReference)" />
     <Error Condition="!Exists('$(RedBirdCoreReference)')" Text="RedBirdCoreReference is missing: $(RedBirdCoreReference)" />
     <Error Condition="!Exists('$(SystemMemoryReference)')" Text="SystemMemoryReference is missing: $(SystemMemoryReference)" />
+    <Error Condition="!Exists('$(UnsafeReference)')" Text="UnsafeReference is missing: $(UnsafeReference)" />
     <Error Condition="!Exists('$(R3Reference)')" Text="R3Reference is missing: $(R3Reference)" />
     <Error Condition="!Exists('$(AssemblyCSharpReference)')" Text="AssemblyCSharpReference is missing: $(AssemblyCSharpReference)" />
     <Error Condition="!Exists('$(NoesisReference)')" Text="NoesisReference is missing: $(NoesisReference)" />
@@ -62,6 +63,10 @@
     </Reference>
     <Reference Include="System.Memory">
       <HintPath>$(SystemMemoryReference)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>$(UnsafeReference)</HintPath>
       <Private>false</Private>
     </Reference>
     <!-- The extender surfaces its native detours as R3 observables; the farm

@@ -916,12 +916,12 @@ namespace StrongholdEuropeDE.Runtime
                 }
                 // Box selection (0x19043E) needs +0x2A0 != 0; soldiers set it
                 // themselves, workers never do.
-                if (unit.N000000A7 == 0)
+                if (SeInteropFieldAliases.CommandMode(ref unit) == 0)
                 {
-                    unit.N000000A7 = SelectableMarker;
+                    SeInteropFieldAliases.CommandMode(ref unit) = SelectableMarker;
                 }
                 // A worker inside its hut (+0x29C set) sees nothing.
-                if (unit.N0000019A != 0 || InCooldownLocked(id))
+                if (SeInteropFieldAliases.SelectionBlocker(ref unit) != 0 || InCooldownLocked(id))
                 {
                     continue;
                 }
@@ -1786,9 +1786,9 @@ namespace StrongholdEuropeDE.Runtime
                     fixed (GameUnit* raw = &unit)
                     {
                         byte* p = (byte*)raw;
-                        if (unit.N0000019A != 0) inside++;
+                        if (SeInteropFieldAliases.SelectionBlocker(ref unit) != 0) inside++;
                         else if (unit.r_AIState == 0x6D) busy6D++;
-                        else if (unit.N000000A7 == 0) marker++;
+                        else if (SeInteropFieldAliases.CommandMode(ref unit) == 0) marker++;
                         else if (*(ushort*)(p + 0x354) != 0) blocked354++;
                         else if (*(ushort*)(p + 0xAC) != 0) init++;
                     }

@@ -1878,7 +1878,7 @@ namespace StrongholdEuropeDE.Runtime
                         {
                             failure = "local player no longer owns the class lease";
                         }
-                        else if (unit.N000000A7 != 1)
+                        else if (SeInteropFieldAliases.CommandMode(ref unit) != 1)
                         {
                             failure = "worker command mode changed outside its lease";
                         }
@@ -3321,7 +3321,7 @@ namespace StrongholdEuropeDE.Runtime
             }
             ref GameUnit selectedUnit = ref pointer.AsRef();
             if (!SelectionLeaseMatches(lease, ref selectedUnit)
-                || selectedUnit.N000000A7 != 1
+                || SeInteropFieldAliases.CommandMode(ref selectedUnit) != 1
                 || selectedUnit.r_UnitHover != 1
                 || selectedUnit.r_UnitSelected != lease.Owner)
             {
@@ -4001,7 +4001,7 @@ namespace StrongholdEuropeDE.Runtime
                 + " released=" + (gesture.Released ? "true" : "false")
                 + " alive=" + unit.r_AliveState.ToString()
                 + " ai_state=" + unit.r_AIState.ToString(CultureInfo.InvariantCulture)
-                + " command_mode=" + unit.N000000A7.ToString(CultureInfo.InvariantCulture)
+                + " command_mode=" + SeInteropFieldAliases.CommandMode(ref unit).ToString(CultureInfo.InvariantCulture)
                 + " selected_marker=" + unit.r_UnitHover.ToString(CultureInfo.InvariantCulture)
                 + " selection_owner=" + unit.r_UnitSelected.ToString(CultureInfo.InvariantCulture)
                 + " tribe=" + GameUnitManagerAPI.Instance.GetTribe(lease.UnitId)
@@ -4949,7 +4949,7 @@ namespace StrongholdEuropeDE.Runtime
                 && unchecked((int)unit.r_GlobalId) == command.WorkerGlobalId
                 && unit.r_ControllableForPlayerId == command.WorkerOwner
                 && unit.r_UnitChimp == command.WorkerType
-                && unit.N000000A7 == 1;
+                && SeInteropFieldAliases.CommandMode(ref unit) == 1;
         }
 
         /// <summary>
@@ -5294,7 +5294,7 @@ namespace StrongholdEuropeDE.Runtime
             }
             if (command.OwnsCommandMode)
             {
-                if (unit.N000000A7 == 1)
+                if (SeInteropFieldAliases.CommandMode(ref unit) == 1)
                 {
                     return true;
                 }
@@ -5308,7 +5308,7 @@ namespace StrongholdEuropeDE.Runtime
             bool ownedBySelection = selection != null
                 && selection.UnitId == command.WorkerUnitId
                 && SelectionLeaseMatches(selection, ref unit)
-                && unit.N000000A7 == 1;
+                && SeInteropFieldAliases.CommandMode(ref unit) == 1;
             if (ownedBySelection)
             {
                 command.OriginalCommandModeValue =
@@ -5316,7 +5316,7 @@ namespace StrongholdEuropeDE.Runtime
                 command.OwnsCommandMode = true;
                 return true;
             }
-            if (allowPersistedOwnedValue && unit.N000000A7 == 1)
+            if (allowPersistedOwnedValue && SeInteropFieldAliases.CommandMode(ref unit) == 1)
             {
                 if (command.OriginalCommandModeValue != 0)
                 {
@@ -5325,15 +5325,15 @@ namespace StrongholdEuropeDE.Runtime
                 command.OwnsCommandMode = true;
                 return true;
             }
-            if (unit.N000000A7 != 0)
+            if (SeInteropFieldAliases.CommandMode(ref unit) != 0)
             {
                 return false;
             }
-            command.OriginalCommandModeValue = unit.N000000A7;
-            unit.N000000A7 = 1;
-            if (unit.N000000A7 != 1)
+            command.OriginalCommandModeValue = SeInteropFieldAliases.CommandMode(ref unit);
+            SeInteropFieldAliases.CommandMode(ref unit) = 1;
+            if (SeInteropFieldAliases.CommandMode(ref unit) != 1)
             {
-                unit.N000000A7 = command.OriginalCommandModeValue;
+                SeInteropFieldAliases.CommandMode(ref unit) = command.OriginalCommandModeValue;
                 return false;
             }
             command.OwnsCommandMode = true;
@@ -5380,15 +5380,15 @@ namespace StrongholdEuropeDE.Runtime
                 && selection.UnitId == command.WorkerUnitId
                 && SelectionLeaseIdentityMatches(selection, ref unit)
                 && !selection.TemporarilySuppressed
-                && unit.N000000A7 == 1)
+                && SeInteropFieldAliases.CommandMode(ref unit) == 1)
             {
                 // The selection lease will restore the shared flag after the
                 // native deselection. Do not pull it out from under that path.
                 return;
             }
-            if (unit.N000000A7 != command.OriginalCommandModeValue)
+            if (SeInteropFieldAliases.CommandMode(ref unit) != command.OriginalCommandModeValue)
             {
-                if (unit.N000000A7 != 1)
+                if (SeInteropFieldAliases.CommandMode(ref unit) != 1)
                 {
                     command.OwnsCommandMode = false;
                     _warning(
@@ -5396,9 +5396,9 @@ namespace StrongholdEuropeDE.Runtime
                         + reason + "; the foreign value was preserved.");
                     return;
                 }
-                unit.N000000A7 = command.OriginalCommandModeValue;
+                SeInteropFieldAliases.CommandMode(ref unit) = command.OriginalCommandModeValue;
             }
-            if (unit.N000000A7 != command.OriginalCommandModeValue)
+            if (SeInteropFieldAliases.CommandMode(ref unit) != command.OriginalCommandModeValue)
             {
                 // The write did not hold. Ownership is dropped either way, so
                 // this feature stops writing to that unit; the engine keeps
@@ -5409,7 +5409,7 @@ namespace StrongholdEuropeDE.Runtime
                     _warning(
                         "Worker militia could not restore a command mode during "
                         + reason + " (live="
-                        + unit.N000000A7.ToString(CultureInfo.InvariantCulture)
+                        + SeInteropFieldAliases.CommandMode(ref unit).ToString(CultureInfo.InvariantCulture)
                         + " expected="
                         + command.OriginalCommandModeValue.ToString(
                             CultureInfo.InvariantCulture)
@@ -5886,7 +5886,7 @@ namespace StrongholdEuropeDE.Runtime
                     out var resumedPointer))
             {
                 ref GameUnit resumedUnit = ref resumedPointer.AsRef();
-                liveCommandMode = resumedUnit.N000000A7;
+                liveCommandMode = SeInteropFieldAliases.CommandMode(ref resumedUnit);
                 commandModeRestored = liveCommandMode
                     == command.OriginalCommandModeValue;
             }
@@ -6504,7 +6504,7 @@ namespace StrongholdEuropeDE.Runtime
                 || unit.r_UnitChimp != command.WorkerType
                 || unchecked((int)unit.r_GlobalId) != command.WorkerGlobalId
                 || unit.r_ControllableForPlayerId != command.WorkerOwner
-                || unit.N000000A7 != 1)
+                || SeInteropFieldAliases.CommandMode(ref unit) != 1)
             {
                 return false;
             }
@@ -6732,7 +6732,7 @@ namespace StrongholdEuropeDE.Runtime
                 // branches on it in the per-unit update (CrusaderDE.dll
                 // 0x184C19/0x184C66), so a walking reference worker showing 0
                 // here would explain the frozen sprite of a commanded one.
-                + " cmd=" + unit.N000000A7.ToString(CultureInfo.InvariantCulture)
+                + " cmd=" + SeInteropFieldAliases.CommandMode(ref unit).ToString(CultureInfo.InvariantCulture)
                 + " path=" + unit.r_PathPlanStateBitFlags.ToString(
                     CultureInfo.InvariantCulture)
                 + " moving=" + unit.r_MovementSubstep.ToString(
@@ -6994,7 +6994,7 @@ namespace StrongholdEuropeDE.Runtime
                     + " anim=" + unit.r_AnimationFrame.ToString(
                         CultureInfo.InvariantCulture)
                     + " dir=" + unit.r_Direction.ToString()
-                    + " cmd=" + unit.N000000A7.ToString(CultureInfo.InvariantCulture)
+                    + " cmd=" + SeInteropFieldAliases.CommandMode(ref unit).ToString(CultureInfo.InvariantCulture)
                     + " moving=" + unit.r_MovementSubstep.ToString(
                         CultureInfo.InvariantCulture)
                     + ".");
@@ -7329,7 +7329,7 @@ namespace StrongholdEuropeDE.Runtime
                 || unit.r_UnitChimp != type
                 || unchecked((int)unit.r_GlobalId) != command.WorkerGlobalId
                 || unit.r_ControllableForPlayerId != command.WorkerOwner
-                || unit.N000000A7 != 1
+                || SeInteropFieldAliases.CommandMode(ref unit) != 1
                 || unit.r_CurrentSpriteAnimationFrame == (uint)spriteBase)
             {
                 return;
@@ -7417,7 +7417,7 @@ namespace StrongholdEuropeDE.Runtime
                 || unchecked((int)unit.r_GlobalId)
                     != command.WorkerGlobalId
                 || unit.r_ControllableForPlayerId != command.WorkerOwner
-                || unit.N000000A7 != 1
+                || SeInteropFieldAliases.CommandMode(ref unit) != 1
                 || unit.r_AIState == walkState)
             {
                 return;
@@ -9287,7 +9287,7 @@ namespace StrongholdEuropeDE.Runtime
             }
             ref GameUnit unit = ref pointer.AsRef();
             if (!SelectionLeaseMatches(lease, ref unit)
-                || unit.N000000A7 != 1
+                || SeInteropFieldAliases.CommandMode(ref unit) != 1
                 || unit.r_UnitHover == 0
                 || unit.r_UnitSelected != lease.Owner
                 || ReadExposedUnitInt(
@@ -10140,16 +10140,16 @@ namespace StrongholdEuropeDE.Runtime
                 return false;
             }
             ref GameUnit unit = ref pointer.AsRef();
-            if (unit.N000000A7 == saved.OriginalCommandModeValue)
+            if (SeInteropFieldAliases.CommandMode(ref unit) == saved.OriginalCommandModeValue)
             {
                 return true;
             }
-            if (unit.N000000A7 != 1)
+            if (SeInteropFieldAliases.CommandMode(ref unit) != 1)
             {
                 return false;
             }
-            unit.N000000A7 = saved.OriginalCommandModeValue;
-            bool released = unit.N000000A7
+            SeInteropFieldAliases.CommandMode(ref unit) = saved.OriginalCommandModeValue;
+            bool released = SeInteropFieldAliases.CommandMode(ref unit)
                 == saved.OriginalCommandModeValue;
             if (released)
             {
@@ -10324,7 +10324,7 @@ namespace StrongholdEuropeDE.Runtime
                 : saved.OriginalCommandModeValue;
             bool nativeSelectionAlreadyReset = unit.r_UnitHover == 0
                 && unit.r_UnitSelected == saved.OriginalSelectionOwnerValue
-                && unit.N000000A7 == expectedCommandMode;
+                && SeInteropFieldAliases.CommandMode(ref unit) == expectedCommandMode;
             if (nativeSelectionAlreadyReset)
             {
                 _warning(
@@ -10333,8 +10333,8 @@ namespace StrongholdEuropeDE.Runtime
                 return;
             }
             bool ownsPersistedFields =
-                (unit.N000000A7 == 1
-                    || unit.N000000A7 == saved.OriginalCommandModeValue)
+                (SeInteropFieldAliases.CommandMode(ref unit) == 1
+                    || SeInteropFieldAliases.CommandMode(ref unit) == saved.OriginalCommandModeValue)
                 && (unit.r_UnitSelected == saved.Owner
                     || unit.r_UnitSelected
                         == saved.OriginalSelectionOwnerValue)
@@ -11562,7 +11562,7 @@ namespace StrongholdEuropeDE.Runtime
                     || !SelectionLeaseIdentityMatches(lease, ref unit)
                     || unit.r_UnitHover != 1
                     || unit.r_UnitSelected != lease.Owner
-                    || unit.N000000A7 != 1)
+                    || SeInteropFieldAliases.CommandMode(ref unit) != 1)
                 {
                     return false;
                 }
@@ -12412,7 +12412,7 @@ namespace StrongholdEuropeDE.Runtime
                     || !SelectionLeaseIdentityMatches(lease, ref unit)
                     || unit.r_UnitHover != 1
                     || unit.r_UnitSelected != lease.Owner
-                    || unit.N000000A7 != 1)
+                    || SeInteropFieldAliases.CommandMode(ref unit) != 1)
                 {
                     return false;
                 }
@@ -12566,11 +12566,11 @@ namespace StrongholdEuropeDE.Runtime
                     || !SelectionLeaseIdentityMatches(lease, ref unit)
                     || unit.r_UnitHover != 1
                     || unit.r_UnitSelected != lease.Owner
-                    || unit.N000000A7 != 1)
+                    || SeInteropFieldAliases.CommandMode(ref unit) != 1)
                 {
                     return false;
                 }
-                packedName = unit.N000000D0;
+                packedName = SeInteropFieldAliases.WorkerName(ref unit);
             }
 
             Translate translate = Translate.Instance;
@@ -13320,8 +13320,8 @@ namespace StrongholdEuropeDE.Runtime
                     {
                         return false;
                     }
-                    return unit.N0000019A == 0
-                        && unit.N000000A7 == 1
+                    return SeInteropFieldAliases.SelectionBlocker(ref unit) == 0
+                        && SeInteropFieldAliases.CommandMode(ref unit) == 1
                         && (unit.r_UnitSelected == 0
                             || unit.r_UnitSelected == localPlayer);
                 }
@@ -13396,12 +13396,12 @@ namespace StrongholdEuropeDE.Runtime
                     ? (ushort)1
                     : (ushort)0;
                 if (unit.r_UnitHover != 0
-                    || unit.N0000019A != 0
+                    || SeInteropFieldAliases.SelectionBlocker(ref unit) != 0
                     || unit.N0000011E != 0
-                    || unit.r_SelectionRelevant3 != 0
+                    || SeInteropFieldAliases.SelectionRelevant(ref unit) != 0
                     || unit.r_AIState == 109
                     || unit.r_AIState == 110
-                    || unit.N000000A7 != expectedCommandMode
+                    || SeInteropFieldAliases.CommandMode(ref unit) != expectedCommandMode
                     || unit.r_UnitSelected != 0)
                 {
                     _warning(
@@ -13409,7 +13409,7 @@ namespace StrongholdEuropeDE.Runtime
                         + "unit_id=" + unitId.ToString(CultureInfo.InvariantCulture)
                         + " selected_state=" + unit.r_UnitHover.ToString(
                             CultureInfo.InvariantCulture)
-                        + " blocker=" + unit.N0000019A.ToString(
+                        + " blocker=" + SeInteropFieldAliases.SelectionBlocker(ref unit).ToString(
                             CultureInfo.InvariantCulture)
                         + " auxiliary=" + unit.N0000011E.ToString(
                             CultureInfo.InvariantCulture)
@@ -13417,11 +13417,11 @@ namespace StrongholdEuropeDE.Runtime
                         + unit.r_UnitSelected.ToString(
                             CultureInfo.InvariantCulture)
                         + " selection_relevant="
-                        + unit.r_SelectionRelevant3.ToString(
+                        + SeInteropFieldAliases.SelectionRelevant(ref unit).ToString(
                             CultureInfo.InvariantCulture)
                         + " ai_state=" + unit.r_AIState.ToString(
                             CultureInfo.InvariantCulture)
-                        + " command_mode=" + unit.N000000A7.ToString(
+                        + " command_mode=" + SeInteropFieldAliases.CommandMode(ref unit).ToString(
                             CultureInfo.InvariantCulture) + ".");
                     return false;
                 }
@@ -13434,7 +13434,7 @@ namespace StrongholdEuropeDE.Runtime
                     Type = unit.r_UnitChimp,
                     OriginalCommandModeValue = commandOwnsMode
                         ? activeCommand.OriginalCommandModeValue
-                        : unit.N000000A7,
+                        : SeInteropFieldAliases.CommandMode(ref unit),
                     OriginalSelectionOwnerValue = unit.r_UnitSelected,
                     OriginalTribeId = commandOwnsMode
                         ? activeCommand.OriginalTribeId
@@ -13468,14 +13468,14 @@ namespace StrongholdEuropeDE.Runtime
                     }
                     return false;
                 }
-                unit.N000000A7 = 1;
-                if (unit.N000000A7 != 1 || unit.r_UnitSelected != 0)
+                SeInteropFieldAliases.CommandMode(ref unit) = 1;
+                if (SeInteropFieldAliases.CommandMode(ref unit) != 1 || unit.r_UnitSelected != 0)
                 {
                     // Der eigene Schreibversuch hat nicht getragen. Das ist
                     // ein misslungener Anlauf, kein Vertragsbruch - und dies
                     // ist ein Try-Verfahren. Der Vorwert steht schon wieder;
                     // der Klick geht verloren, das Merkmal laeuft weiter.
-                    unit.N000000A7 = expectedCommandMode;
+                    SeInteropFieldAliases.CommandMode(ref unit) = expectedCommandMode;
                     EndCommandClassLease(
                         lease,
                         "command-mode readback failed while arming selection");
@@ -13492,7 +13492,7 @@ namespace StrongholdEuropeDE.Runtime
                             + "the command-mode write did not hold (unit_id="
                             + unitId.ToString(CultureInfo.InvariantCulture)
                             + " command_mode="
-                            + unit.N000000A7.ToString(CultureInfo.InvariantCulture)
+                            + SeInteropFieldAliases.CommandMode(ref unit).ToString(CultureInfo.InvariantCulture)
                             + " selection_owner="
                             + unit.r_UnitSelected.ToString(
                                 CultureInfo.InvariantCulture)
@@ -13555,8 +13555,8 @@ namespace StrongholdEuropeDE.Runtime
             }
             ref GameUnit unit = ref pointer.AsRef();
             if (!SelectionLeaseMatches(lease, ref unit)
-                || unit.N0000019A != 0
-                || unit.N000000A7 != lease.OriginalCommandModeValue
+                || SeInteropFieldAliases.SelectionBlocker(ref unit) != 0
+                || SeInteropFieldAliases.CommandMode(ref unit) != lease.OriginalCommandModeValue
                 || unit.r_UnitSelected
                     != lease.OriginalSelectionOwnerValue)
             {
@@ -13570,9 +13570,9 @@ namespace StrongholdEuropeDE.Runtime
                     + "foreign state was preserved.");
                 return;
             }
-            unit.N000000A7 = 1;
+            SeInteropFieldAliases.CommandMode(ref unit) = 1;
             unit.r_UnitSelected = checked((ushort)lease.Owner);
-            if (unit.N000000A7 != 1
+            if (SeInteropFieldAliases.CommandMode(ref unit) != 1
                 || unit.r_UnitSelected != lease.Owner)
             {
                 // Wie oben: der Schreibversuch trug nicht. Die Auswahl bleibt
@@ -13979,19 +13979,19 @@ namespace StrongholdEuropeDE.Runtime
                 && activeCommand.WorkerType == lease.Type;
             if (retainCommandMode
                 && lease.TemporarilySuppressed
-                && unit.N000000A7 == lease.OriginalCommandModeValue)
+                && SeInteropFieldAliases.CommandMode(ref unit) == lease.OriginalCommandModeValue)
             {
-                unit.N000000A7 = 1;
+                SeInteropFieldAliases.CommandMode(ref unit) = 1;
             }
             bool restoredCommandMode = retainCommandMode
-                ? unit.N000000A7 == 1
-                : unit.N000000A7 == lease.OriginalCommandModeValue;
+                ? SeInteropFieldAliases.CommandMode(ref unit) == 1
+                : SeInteropFieldAliases.CommandMode(ref unit) == lease.OriginalCommandModeValue;
             if (!retainCommandMode
                 && !restoredCommandMode
-                && unit.N000000A7 == ownedCommandModeValue)
+                && SeInteropFieldAliases.CommandMode(ref unit) == ownedCommandModeValue)
             {
-                unit.N000000A7 = lease.OriginalCommandModeValue;
-                restoredCommandMode = unit.N000000A7
+                SeInteropFieldAliases.CommandMode(ref unit) = lease.OriginalCommandModeValue;
+                restoredCommandMode = SeInteropFieldAliases.CommandMode(ref unit)
                     == lease.OriginalCommandModeValue;
             }
             bool restoredSelectionOwner = unit.r_UnitSelected

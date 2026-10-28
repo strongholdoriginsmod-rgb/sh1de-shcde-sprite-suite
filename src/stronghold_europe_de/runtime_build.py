@@ -319,6 +319,7 @@ _PREREQUISITE_ORDER = (
     "unity_engine_asset_bundle_module",
     "unity_engine_audio_module",
     "unity_engine_image_conversion_module",
+    "unsafe",
 )
 _RUNTIME_SOURCE_SUPPORT_FILES = (
     "assets/xaml/HUD_Main.dock.xaml",
@@ -333,6 +334,7 @@ _RUNTIME_SOURCE_SUPPORT_FILES = (
     "src/stronghold_europe_de/roster_text.py",
     "src/stronghold_europe_de/runtime_build.py",
     "src/stronghold_europe_de/runtime_prerequisites.py",
+    "src/stronghold_europe_de/runtime_reference_capture.py",
 )
 _MSBUILD_ANCESTOR_INPUT_NAMES = (
     "Directory.Build.props",
@@ -2093,9 +2095,22 @@ def _verify_prerequisites(config: BuilderConfig) -> RuntimePrerequisiteVerificat
     config_path = config.project_root / "config" / "runtime-prerequisites.json"
     try:
         prerequisite_config = json.loads(config_path.read_text(encoding="utf-8"))
-        verification = verify_runtime_prerequisites(
-            prerequisite_config,
-            config.target.reference_root or config.target.game_dir,
+        # The historical v2 file defines only approved dependency paths and
+        # roles. Its old 2.11 byte pins must not block or falsely certify newer
+        # local game/SE combinations. Capture and enforce exact v3 byte+MVID
+        # evidence for the *selected* reference root instead.
+        from .runtime_reference_capture import capture_runtime_references
+        reference_root = config.target.reference_root or config.target.game_dir
+        measured, abi_layout = capture_runtime_references(
+            prerequisite_config, reference_root
+        )
+        verification = verify_runtime_prerequisites(measured, reference_root)
+        print(
+            "[runtime] Exact source-assembly proof: SE "
+            + verification.script_extender_version
+            + ", native layout=" + abi_layout
+            + ", SHA256/MVID checked for "
+            + str(len(verification.files)) + " DLLs"
         )
     except (OSError, UnicodeError, json.JSONDecodeError, RuntimePrerequisiteError) as exc:
         raise RuntimeBuildError(
@@ -2178,6 +2193,15 @@ def _build_companion(
     obj = runtime_work / "obj"
     packages = (config.output.cache_dir / "dotnet-packages").resolve()
     by_id = {entry.id: entry for entry in prerequisites.files}
+    # The byref-safe native-struct field adapter uses Unsafe.As/Add, which
+    # ships alongside the installed Script Extender's System.Memory.dll.
+    # Never fetch or substitute an assembly from another game installation.
+    unsafe_reference = by_id["unsafe"].path
+    if not unsafe_reference.is_file() or unsafe_reference.is_symlink():
+        raise RuntimeBuildError(
+            "Pinned extender's System.Runtime.CompilerServices.Unsafe.dll "
+            "is required for native-interoperability adapters"
+        )
     command = [
         dotnet,
         "build",
@@ -2195,6 +2219,7 @@ def _build_companion(
         f"-p:SHCDESEReference={by_id['shcdese'].path}",
         f"-p:RedBirdCoreReference={by_id['redbird_core'].path}",
         f"-p:SystemMemoryReference={by_id['system_memory'].path}",
+        f"-p:UnsafeReference={unsafe_reference}",
         f"-p:R3Reference={by_id['r3'].path}",
         f"-p:AssemblyCSharpReference={by_id['assembly_csharp'].path}",
         f"-p:NoesisReference={by_id['noesis_gui'].path}",
