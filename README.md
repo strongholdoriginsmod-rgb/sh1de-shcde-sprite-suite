@@ -35,6 +35,14 @@ diese Transformationen; das Modpaket übernimmt nur die geprüfte
 Komposition und auf Wunsch eigene XAML-Patches.
 [Layout-Designer und Exportvertrag](docs/HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
 
+**Spielbezogene Noesis-Anbindung:** Der Layout-Designer kann jetzt
+installierte HUD-/Menü-XAML-Dateien lesen, einen echten Container per
+SHA-256 nachweisen, ein statisches XAML-Add-Patch zusammen mit der
+komponierten PNG als DLL-freies Modpaket exportieren und die Mod nur
+in einer ausdrücklich gekennzeichneten QA-Spielkopie mit
+kontrollierbarem Rückbau testen.
+[Anleitung: Noesis-HUD-/Menüanbindung](docs/NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
+
 ## Stronghold 1 DE: HUD im Sprite Suite Editor bearbeiten
 
 Dieser Zweig erweitert **Oberfläche** um einen eigenen Stronghold-1-HUD-Editor: 1.391 original benannte und pixelgenau editierbare UI-Ausschnitte, sichere Größen-/Quellprüfungen, drei rückbaubare PNG-Atlanten und eine **isoliert erzeugte Unity-Kandidatendatei** mit den bearbeiteten Bildern. Die originale Spielinstallation wird nicht verändert. Die Spielgrafiken bleiben auf dem jeweiligen Rechner und werden mit `tools/ui_sh1_hud.py export` aus der eigenen Installation gewonnen.

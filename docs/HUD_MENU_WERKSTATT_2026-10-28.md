@@ -37,6 +37,12 @@ an das tatsächliche Zielspiel anzupassen.
 
 [Ausführliche Anleitung: Layout-Designer und Positionsexport](HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
 
+Um die fertige Grafik in einem realen SHCDE-Menü anzuzeigen,
+**Spieloberfläche anbinden (Noesis)** im Designer öffnen, das
+installierte Spiel und ein verifiziertes Grid wählen und das
+statische Modpaket erzeugen.
+[Anleitung zur nachgewiesenen Noesis-XAML-Anbindung](NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
+
 ## Schritt für Schritt
 
 1. **Suite starten.cmd → HUD & Menüs**. Auch über Strg+K erreichbar.

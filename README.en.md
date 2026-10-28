@@ -35,6 +35,13 @@ manifest. Only the verified composite and optional XAML patches enter the
 DLL-free package.
 [Layout designer / exact export documentation](docs/HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
 
+**Game-targeted Noesis output:** The layout designer now identifies a
+real, uniquely named container in installed HUD/menu XAML, pins its
+SHA-256, generates a static Add patch alongside the composed PNG,
+and packages both as a DLL-free asset mod. Optional QA-only
+installation and hash-verified rollback never alter original games.
+[Noesis in-game attachment guide](docs/NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
+
 ## Setup
 
 1. Extract to a **short path**, e.g. `D:\SU` (Unity creates deep paths).

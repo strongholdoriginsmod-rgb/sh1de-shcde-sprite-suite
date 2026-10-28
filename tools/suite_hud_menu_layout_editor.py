@@ -161,6 +161,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
                 ("Original-Pixeleditor",self.open_pixel_editor),
                 ("Layout → PNG + Positionsdaten",self.export),
                 ("Asset-Mod-Paket bauen",self.build_mod),
+                ("Spieloberfläche anbinden (Noesis)",self.bind_noesis),
             )),
         ):
             for label,callback in entries:
@@ -344,8 +345,9 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.visible_var.set(layer.visible)
         self.locked_var.set(layer.locked)
 
-    def _apply_initial_language(self):
-        """Use the already selected Suite language for new editor windows."""
+    def _apply_initial_language(self, window=None):
+        """Use the Suite language for this editor or a related child dialog."""
+        target=window if window is not None else self
         app=getattr(self.master,"app",None)
         if app is None or not hasattr(app,"language"):
             return
@@ -354,14 +356,14 @@ class HudMenuLayoutEditor(tk.Toplevel):
         module=sys.modules.get(type(app).__module__)
         language=getattr(module,"LANG",None) if module else None
         if language is not None and hasattr(language,"apply"):
-            language.apply(self)
+            language.apply(target)
             return
         # Fallback for a test-loaded .pyw module not in sys.modules.
         from pathlib import Path
         root=Path(__file__).resolve().parents[1]
         data=json.loads((root/"config/suite-sprachen.json").read_text("utf8"))
         table=data.get("en",{})
-        queue=[self]
+        queue=[target]
         while queue:
             widget=queue.pop()
             queue.extend(widget.winfo_children())
@@ -1009,6 +1011,31 @@ class HudMenuLayoutEditor(tk.Toplevel):
             return result
         except (OSError,ValueError) as exc:
             messagebox.showerror("Layout-Export",str(exc),parent=self)
+            return None
+
+    def bind_noesis(self):
+        """Choose an existing game/XAML Grid and package its static overlay.
+
+        No anonymous XPath guess or write to the installed game is allowed.
+        """
+        try:
+            if self.is_dirty() or self._save_hash is None:
+                raise WorkshopError(
+                    "Layout speichern und die aktuelle PNG zunächst exportieren"
+                )
+            audit_export(self.scene,self.project,scene_sha256=self._save_hash)
+            old=getattr(self,"_noesis_binding_window",None)
+            if old is not None and old.winfo_exists():
+                old.lift()
+                old.focus_set()
+                return old
+            from suite_hud_menu_noesis_dialog import NoesisBindingDialog
+            window=NoesisBindingDialog(self,self)
+            self._noesis_binding_window=window
+            window.focus_set()
+            return window
+        except (OSError,ValueError) as exc:
+            messagebox.showerror("Spieloberfläche anbinden",str(exc),parent=self)
             return None
 
     def build_mod(self):

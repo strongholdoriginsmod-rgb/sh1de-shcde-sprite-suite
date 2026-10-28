@@ -80,6 +80,17 @@ gehören sowohl die Werkstattbilder als auch diese Metadaten.
 Eine exportierte PNG enthält die sichtbaren Transformationen,
 ist jedoch kein verlustfrei editierbares Ebenenprojekt.
 
+## An tatsächliche Noesis-Spieloberfläche anbinden
+
+Neu über **Spieloberfläche anbinden (Noesis)**: Eine installierte
+SHCDE-/Script-Extender-XAML-Quelle auswählen, eindeutiges
+Menü-/HUD-Grid bestimmen und die gespeicherte Komposition
+mittels echtem XAML-Add-Patch als statisches GUI-Modpaket erzeugen.
+Die XAML-Datei wird gegen ihre SHA-256-Quelle geprüft, keine
+Version pauschal ausgeschlossen. Für eine ausgewiesene
+QA-Spielkopie gibt es Installation, Start und überprüfbaren Rückbau.
+[Noesis-Spielanbindung und Grenzen](NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
+
 ## Grenzen und Sicherheit
 
 - Eine zusammengesetzte Grafik ist ein echtes PNG. Für neue

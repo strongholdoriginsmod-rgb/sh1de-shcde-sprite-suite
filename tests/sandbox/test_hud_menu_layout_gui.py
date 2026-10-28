@@ -286,3 +286,147 @@ def test_windows_image_clipboard_inserts_separate_editable_layer(designer,monkey
     editor.reload_scene()
     assert editor.scene.layers[0].asset==item.asset
     assert source.read_bytes()==before
+
+
+def test_designer_selects_real_noesis_grid_and_builds_bound_game_mod(
+    designer,monkeypatch
+):
+    import suite_hud_menu_noesis_dialog as binding_ui
+    import hud_menu_noesis_integration as binding
+    import zipfile
+    import json
+    root,editor,project,owned,owned_content=designer
+    # Synthetic install with the same layout as the local read-only QA game.
+    gamedir=project.parent.parent/"SyntheticGame"
+    plugin=gamedir/"BepInEx/plugins/000shcdese"
+    xaml=plugin/"Override/Assets/GUI/XAML"
+    xaml.mkdir(parents=True)
+    (plugin/"info.json").write_text(
+        json.dumps({"GUID":"000shcdese","Version":"3.0.0"}),
+        encoding="utf8",
+    )
+    sample=xaml/"MainHUD.xaml"
+    sample.write_text(
+        '<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" '
+        'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">'
+        '<Grid x:Name="HUD_Main"><TextBlock Text="demo"/></Grid>'
+        '</UserControl>',encoding="utf8")
+    original_xaml=sample.read_bytes()
+    monkeypatch.setattr(binding,"WORK",project.parent)
+    editor.add_asset()
+    monkeypatch.setattr(gui.simpledialog,"askstring",
+                        lambda *args,**kwargs:"NativeGameImage")
+    monkeypatch.setattr(gui.messagebox,"showinfo",lambda *a,**kw:None)
+    assert editor.export()
+    window=editor.bind_noesis()
+    assert window is not None and window.winfo_exists()
+    window.source.set(str(gamedir))
+    window.scan()
+    candidates=[label for label,item in window.targets.items()
+                if item.xaml_document=="MainHUD.xaml" and
+                   item.grid_name=="HUD_Main"]
+    assert len(candidates)==1  # The anonymous root is also an eligible target.
+    window.target_choice.set(candidates[0])
+    assert window.preview_patch()
+    window.guid.set("native_ui_test")
+    window.name.set("Native target static XAML")
+    monkeypatch.setattr(binding_ui.messagebox,"askyesno",lambda *a,**kw:True)
+    monkeypatch.setattr(binding_ui.messagebox,"showinfo",lambda *a,**kw:None)
+    built=window.build()
+    assert built is not None
+    with zipfile.ZipFile(built["zip"]) as archive:
+        files=archive.namelist()
+        assert len(files)==3
+        assert any(name.endswith("Patches/Assets/GUI/XAML/MainHUD.xaml")
+                   for name in files)
+        assert any(name.endswith("/Images/NativeGameImage.png") for name in files)
+    assert built["target"]["installed_extender_version"]=="3.0.0"
+    assert built["target"]["target_grid"]=="HUD_Main"
+    assert built["target"]["ingame_rendering_verified"] is False
+    assert sample.read_bytes()==original_xaml
+    assert owned.read_bytes()==owned_content
+    window.destroy()
+
+
+def test_designer_refuses_noesis_without_saved_composite(designer,monkeypatch):
+    root,editor,project,owned,owned_content=designer
+    errors=[]
+    monkeypatch.setattr(gui.messagebox,"showerror",
+                        lambda title,message,**kw:errors.append(message))
+    editor.add_asset()
+    assert editor.bind_noesis() is None
+    assert errors
+    assert not list(project.rglob("*.xaml"))
+    assert owned.read_bytes()==owned_content
+
+
+def test_noesis_dialog_qa_install_launch_and_verified_rollback(
+    designer,monkeypatch
+):
+    import suite_hud_menu_noesis_dialog as binding_ui
+    import hud_menu_noesis_integration as binding
+    import hud_menu_noesis_qa as qa
+    import json
+    root,editor,project,owned,owned_content=designer
+    gamedir=project.parent.parent/"SyntheticGame"
+    plugin=gamedir/"BepInEx/plugins/000shcdese"
+    xaml=plugin/"Override/Assets/GUI/XAML"
+    xaml.mkdir(parents=True)
+    (gamedir/qa.MARKER).write_text("explicit QA game",encoding="utf8")
+    (gamedir/"Stronghold Crusader Definitive Edition.exe").write_bytes(b"qa-exe")
+    (plugin/"info.json").write_text(
+        json.dumps({"GUID":"000shcdese","Version":"0.0.1"}),
+        encoding="utf8",
+    )
+    source=xaml/"FrontendMenus.xaml"
+    source.write_text(
+        '<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" '
+        'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">'
+        '<Grid x:Name="MainMenu"/></UserControl>',encoding="utf8")
+    base_hash=source.read_bytes()
+    monkeypatch.setattr(binding,"WORK",project.parent)
+    monkeypatch.setattr(qa,"_game_running",lambda:False)
+    editor.add_asset()
+    monkeypatch.setattr(gui.simpledialog,"askstring",
+                        lambda *args,**kwargs:"MenuQAComposite")
+    monkeypatch.setattr(gui.messagebox,"showinfo",lambda *a,**kw:None)
+    assert editor.export()
+    dialog=editor.bind_noesis()
+    assert dialog is not None
+    dialog.source.set(str(gamedir))
+    dialog.scan()
+    label=next(k for k in dialog.targets if "MainMenu" in k)
+    dialog.target_choice.set(label)
+    dialog.guid.set("qa_dialog_test")
+    monkeypatch.setattr(binding_ui.messagebox,"askyesno",lambda *a,**kw:True)
+    monkeypatch.setattr(binding_ui.messagebox,"showinfo",lambda *a,**kw:None)
+    assert dialog.build()
+    installed=gamedir/"BepInEx/plugins/qa_dialog_test"
+    errors=[]
+    monkeypatch.setattr(binding_ui.messagebox,"showerror",
+                        lambda *args,**kw:errors.append(args))
+    editor.scene.layers[0].x+=4
+    assert dialog.install_qa() is None
+    assert errors and not installed.exists()
+    editor.scene.layers[0].x-=4
+    source.write_bytes(base_hash+b"\n")
+    assert dialog.install_qa() is None
+    assert not installed.exists()
+    source.write_bytes(base_hash)
+    assert dialog.start_qa_game() is None  # No tracked QA mod installed yet.
+    assert not installed.exists()
+    assert dialog.install_qa()
+    assert installed.is_dir()
+    started=[]
+    monkeypatch.setattr(binding_ui.os,"startfile",
+                        lambda p,**kw:started.append((p,kw)))
+    assert dialog.start_qa_game()
+    assert len(started)==1
+    assert started[0][0].endswith("Stronghold Crusader Definitive Edition.exe")
+    assert started[0][1]["cwd"]==str(gamedir)
+    receipt=dialog.remove_qa()
+    assert receipt and receipt["removed_guid"]=="qa_dialog_test"
+    assert not installed.exists()
+    assert source.read_bytes()==base_hash
+    assert owned.read_bytes()==owned_content
+    dialog.destroy()
