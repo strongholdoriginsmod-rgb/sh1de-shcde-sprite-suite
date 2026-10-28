@@ -1,6 +1,6 @@
 # SH1DE → SHCDE Universal-Suite 2.0 (Stronghold Europe / ORIGINS)
 
-Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Mit **read-only SHCDE Script Extender v2.14.3-Prüfung**; die historische C#-Runtime bleibt an SE 2.11.0 gebunden. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
+Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Statische HUD-/Sprite-Pakete entstehen **ohne feste SE-Version und ohne eigene C#-DLL**; für optionale C#-Plugins gelten getrennte ABI-Schutzprüfungen. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
 ## Herunterladen
 
@@ -19,7 +19,7 @@ Spielgrafik wird **nicht** verteilt. Sie entsteht beim Einlesen und Bauen aus de
    - *Komplett:* startet sofort.
    - *Nackte Suite:* beim ersten Start legt `setup.ps1` die Python-Umgebung aus einem installierten **Python 3.13** an (Pakete hashgeprüft aus `requirements-py313-win_amd64.lock`).
 3. Für den BC7-Paketbau: **Unity 2021.3.45f2** über Unity Hub installieren (`unityhub://2021.3.45f2/88f88f591b2e`) und ein **.NET SDK ab 8** (empfohlen 10). Im Reiter *Einrichten* eintragen.
-4. Den bereits vorhandenen **SHCDE Script Extender** über **Ziel & SE 2.11 → Script Extender 2.14.3 prüfen (nur lesen)** prüfen. v2.14.3 ist der jüngste bestätigte Release (19.10.2026). Kein automatisches Upgrade; der historische SE-2.11-Installer ist **kein** aktueller Updater und verhindert ein Downgrade. Die eigene Runtime erfordert einen getrennten ABI-/Ingame-Test.
+4. Den **vorhandenen Script Extender** beibehalten. Unter **Editor & Austausch** eigene Grafiken als **DLL-freies Asset-Modpaket** bauen. Kein separater Versionschecker, kein automatischer SE-Wechsel. Für Gameplay-C#-Mods bleiben API-/ABI-Schutzprüfungen bestehen.
 5. *Einrichten* → Spielordner eintragen → *Pfade speichern* → *Spiele einlesen*.
 
 Oben rechts: **Sprache / Language** und **Streng**. Die diagnostische Einrichtungskontrolle kann im Nachsichtmodus Warnungen melden, während *Streng* dort blockiert. Beim **Paketbau** gilt unabhängig davon: neue Bauvoraussetzungen müssen erfüllt sein, der Benutzer bestätigt den Start und die abschließende Buildvalidierung muss erfolgreich sein.
@@ -33,7 +33,7 @@ Oben rechts: **Sprache / Language** und **Streng**. Die diagnostische Einrichtun
 | **Diagnose & Reparatur** | prüft bekannte Fehlerklassen: Kantenanker (verschobene Zinnen), teilweise umgelenkte Kachelobjekte, Spender-Identität, Frame-Drift zwischen Spielständen, Leinwände, Bundle-Integrität |
 | **Sandkasten** | **Vollständig eingebettetes Sandbox Studio im gleichen Sprite-Suite-Hauptfenster** (Tk/Qt unter Windows): echte Originalkarten-Enginegrafiken, interaktives Platzieren, Grafikkatalog-Verknüpfung, Pixeleditor, Live-Reload, Minikarte und Spiel-HUDs im vorhandenen Reiter. Kein separater GUI-Prozess. Details: `docs/SANDBOX_MAIN_SUITE_INTEGRATION.md`. Vollständige Unity-Shader-/Gameplay-HUD-Parität bleibt offen. |
 | **Editor & Austausch** | HTML-Sprite-Editor hin und zurück, SE-Atlas mit dem AtlasBuilder (`Override/Atlas`, PNG oder BC7-DDS), Gebäude als Ebenen (ORA) |
-| **Ziel & SE 2.11** | mehrere Spielinstallationen, SE 2.11.0 und Mods installieren – jeweils mit Sicherung und Zurückspielen |
+| **Ziele & Mods** | Spielziele verwalten und eigene Mods installieren – jeweils mit Sicherung und Zurückspielen |
 | **Sprites bearbeiten / Paket bauen** | Europa-BC7-Paket über Unity, inkrementeller Gruppencache |
 
 ## Drei Lieferwege
@@ -66,4 +66,4 @@ Eingabe und Pfeiltasten wählen Ergebnisse, **Enter navigiert**, **Esc schließt
 Die Suche verändert keine Dateien und startet keine Builds oder Installationen.
 Deutsch/Englisch kann während des geöffneten Suchfensters umgestellt werden.
 
-Weitere Einschränkungen und Testgrenzen: [Script Extender v2.14.3](SCRIPT_EXTENDER.md).
+Weitere Einschränkungen und Testgrenzen: [Script Extender und Asset-Mods](SCRIPT_EXTENDER.md).

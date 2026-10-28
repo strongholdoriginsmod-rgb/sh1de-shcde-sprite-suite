@@ -53,47 +53,15 @@ Strukturlayouts müssen weiterhin vorhanden sein. Ändert ein Spielupdate diese
 Strukturen, nennt der betroffene Schritt die fehlende Voraussetzung. Eine
 Versionsnummer allein wird weder als Fehler noch als Funktionsnachweis behandelt.
 
-## Script Extender v2.14.3 (27. Oktober 2026)
+## Script Extender: statische Asset-Ausgabe ohne Versionsbindung
 
-**Offizieller letzter GitLab-Tag:** `v2.14.3`, veröffentlicht am
-19. Oktober 2026; Quellcommit
-`4014ca67c96974a5e6d697665baf5351cbfebde6`.
+Der separate Versionschecker wurde entfernt. HUD-/GUI- und Sprite-Overrides
+sowie statische XAML-Patches werden als `Manifest: 0`-Asset-Mod ohne C#-DLL
+und ohne SE-Versionsangabe gebaut. Für diesen Weg prüft die Suite
+Dateiformate, XAML-Syntax, sichere Pfade und Paketstruktur,
+aber keine Versionsnummer des installierten Extenders.
 
-Das ursprüngliche **Stronghold-1-DE-HUD** benötigt den Crusader Script
-Extender nicht. Erst der SH1-zu-SHCDE-Atlas- und Modpaketweg verwendet ihn.
-
-Die **read-only** Vorprüfung wird im Reiter Ziel & SE 2.11 über
-**Script Extender 2.14.3 prüfen (nur lesen)** gestartet oder per:
-
-```powershell
-.venv\Scripts\python.exe tools\shcdese_compat_check.py --game "D:\Games\Stronghold Crusader Definitive Edition"
-```
-
-Sie liest ausschließlich den tatsächlich installierten PE-DLL-Stand, das
-SE-`info.json`, BepInEx 5, einen Spiel-Build-Hash, die vom Extender
-deklarierten Spielversionen sowie die Sicherheitsoption
-`RequireSignedBepInExPlugins`. `--require-latest` lehnt
-jede Version außer v2.14.3 ab. Kein Download, keine Installation.
-
-**Statische Noesis-HUD-Kompatibilität:** Der geprüfte offizielle
-v2.14.3-Code verarbeitet die bisherigen XAML-Patch-Wurzeln
-`<Patch>` und `<XamlPatch>` mit
-`<Operation>` und die bestehenden Sprite-Override-Pfade.
-Das ist kein Nachweis eines erfolgreichen Spielstarts.
-
-**Runtime-ABI noch offen:** Der bisherige C#-Runtime-Bau in dieser
-Repository-Fassung ist auf die SE-2.11.0-DLL mit konkreten
-MVID-/SHA-256-Werten gepinnt. Für SE v2.14.3 muss die eigene Runtime
-gegen die echte neue DLL neu kompiliert und im Spiel getestet werden.
-Eine Versionsnummer oder ein erfolgreicher HUD-PNG-Export reicht nicht.
-
-Die alte SE-2.11-Installationsfunktion ist nur noch ein
-**historisches Werkzeug**. Ein abweichender Paket-Hash und das
-unbeabsichtigte Downgrade einer neueren Installation werden verweigert.
-Die seit v2.13 optionale Signaturpflicht für BepInEx-Plugins lässt
-sich nicht anhand vorhandener Manifestdateien allein freigeben.
-
-Quellen:
-- https://gitlab.com/rawra-stronghold-crusader/shcde-script-extender/-/releases/v2.14.3
-- https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/docs/guides/bepinex-mod-guide.html
-- https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/docs/guides/mod-types.html
+Das ist **keine Zusage**, dass alle früheren und späteren Extender
+dieselben Asset-/Noesis-/Atlas-APIs haben. Optionale native C#-Funktionen
+bleiben durch ihre ABI- und Game-Assembly-Pins geschützt.
+Siehe [Script Extender und Asset-Mods](SCRIPT_EXTENDER.md).

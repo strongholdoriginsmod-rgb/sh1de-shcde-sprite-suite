@@ -1,7 +1,7 @@
 """SE-Atlas-Mods mit Serpens66s AtlasBuilder erzeugen (Override/Atlas, SE >= 2.4, BC7-DDS ab SE 2.8).
 
 Dritter Lieferweg neben dem Europa-BC7-Paket und den Einzelbildern: der
-Script Extender 2.11 laedt ``Override/Atlas/<Gruppe>/atlas.png|dds`` selbst -
+Der vorhandene Script Extender laedt ``Override/Atlas/<Gruppe>/atlas.png|dds`` selbst -
 ohne eigene Laufzeit-DLL und ohne index-Pin. Geeignet fuer einzelne Gruppen,
 eigene Aenderungen und schnelles Ausprobieren.
 
@@ -126,7 +126,7 @@ def cmd_bauen(args) -> int:
     code = run_builder(["--build-project", str(project), output])
     if code == 0:
         say(f"SE-Atlas-Mod gebaut: {output}")
-        say("Installieren: Reiter 'Ziel & SE 2.11' -> Mod installieren (mit Sicherung).")
+        say("Modinstallation: Reiter 'Ziele & Mods' -> Mod installieren (mit Sicherung).")
     return code
 
 

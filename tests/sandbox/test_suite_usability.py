@@ -552,7 +552,9 @@ def test_target_short_actions_and_scroll_does_not_execute_installs(app_fixture):
     assert set(target.actions.buttons)=={
         "Ziel hinzufügen ...","Aktivieren","Aktualisieren",
     }
-    assert len(target.actions.menu_names())==4
+    assert len(target.actions.menu_names()) == 3
+    assert all("SE 2.11" not in name and "Script Extender" not in name
+               for name in target.actions.menu_names())
     assert "mit Sicherung" in target.actions.menu_names()[0]
     assert _inside(target.actions.more_button,target)
     assert target.table_scroll_x.winfo_ismapped()

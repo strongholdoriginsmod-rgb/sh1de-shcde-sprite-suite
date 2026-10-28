@@ -1,4 +1,4 @@
-"""Stronghold Europe / ORIGINS - Universal-Suite (Grafik SH1DE -> SHCDE, ausgerichtet auf SE 2.11.0).
+"""Stronghold Europe / ORIGINS - Universal-Suite (Grafik SH1DE -> SHCDE, arbeitet mit dem vorhandenen Script Extender).
 
 Baut auf der Suite-Zentrale (tools/suite_center.pyw) und der Werkstatt
 (tools/suite.pyw) auf und ergaenzt:
@@ -9,7 +9,7 @@ Baut auf der Suite-Zentrale (tools/suite_center.pyw) und der Werkstatt
   Diagnose & Reparatur  die bekannten Fehlerklassen mechanisch pruefen
   Sandkasten            Aenderungen auf einer kleinen Karte mit Spielleiste sehen
   Editor & Austausch    HTML-Sprite-Editor, AtlasBuilder (SE-Atlas), ORA-Objekte
-  Ziel & SE 2.11        Zielspiele, SE 2.11.0 installieren, Mods, Sicherungen
+  Ziele & Mods          Spielziele, statische Assetpakete, Modinstallation und Sicherungen
 
 Nachsicht ist Standard: Werkzeuge warnen statt zu blockieren. Der Schalter
 "Streng" oben rechts stellt das blockierende Verhalten fuer alle Aufrufe her.
@@ -2163,7 +2163,7 @@ class ExchangeTab(ttk.Frame):
         ttk.Button(html_actions, text="Ergebnis zurueckholen ...", command=self.import_result).pack(side="left", padx=3)
         ttk.Button(html_actions, text="Ordner work/editor", command=lambda: os.startfile(self._ensure(ROOT / "work" / "editor"))).pack(side="left", padx=3)
 
-        f = section("SE-Atlas mit AtlasBuilder (Override/Atlas, SE 2.11, PNG oder BC7-DDS)",
+        f = section("SE-Atlas mit AtlasBuilder (Override/Atlas, PNG oder BC7-DDS)",
                     "Lieferweg ohne eigene DLL: der Script Extender laedt die Atlanten selbst. Gruppen kommagetrennt.")
         self.atlas_groups = labelled_entry(f, "Gruppen", "", 30)
         self.atlas_source = tk.StringVar(value="arbeit")
@@ -2176,6 +2176,17 @@ class ExchangeTab(ttk.Frame):
         self.atlas_name = labelled_entry(atlas_options, "Mod-Name", "EuropaSEAtlas", 16)
         self.only_changed = tk.BooleanVar(value=True)
         ttk.Checkbutton(atlas_options, text="nur geaenderte Frames", variable=self.only_changed).pack(side="left", padx=4)
+        asset_row = section(
+            "Statisches HUD-/GUI-Assetpaket (ohne SE-Versionsbindung)",
+            "Erstellt ein Asset-Mod mit Manifest 0, ohne eigene Runtime-DLL, "
+            "ohne SE-Installation und ohne feste Script-Extender-Version. "
+            "Die Dateien müssen zuvor unter work/<Ordner>/Override oder "
+            "work/<Ordner>/Patches bearbeitet worden sein."
+        )
+        ttk.Button(
+            asset_row, text="DLL-freies Asset-Modpaket bauen ...",
+            command=self.asset_mod_build,
+        ).pack(side="left", padx=5)
         p = section(
             "Pivot-Vermessung aus dem Spiel (Zinnenlineal)",
             "Messwerte der laufenden Spielprobe mit aktuellen Sprite-Indizes "
@@ -2245,6 +2256,42 @@ class ExchangeTab(ttk.Frame):
         path = filedialog.askopenfilename(parent=self, filetypes=[("Editor-Ergebnis", "*.zip;*.semod;*.shsprite;*.png")])
         if path:
             self.app.run([tool("editor_bruecke.py"), "import", path], "Editor-Ergebnis zurueckholen")
+
+    def asset_mod_build(self):
+        """Build a static GUI/sprite mod, never install a Script Extender."""
+        source = filedialog.askdirectory(
+            parent=self, initialdir=str(ROOT / "work"),
+            title="Asset-Mod-Ordner mit Override/ und Patches/ unter work/ wählen",
+        )
+        if not source:
+            return
+        guid = simpledialog.askstring(
+            "Asset-Mod GUID", "Eindeutige Mod-ID (z. B. europe_gui):",
+            parent=self,
+        )
+        if not guid:
+            return
+        name = simpledialog.askstring(
+            "Asset-Mod", "Anzeigename des Modpakets:", parent=self,
+            initialvalue=guid,
+        )
+        if not name:
+            return
+        if not messagebox.askyesno(
+            "Asset-Modpaket ohne Runtime-DLL",
+            "Nur PNG/JPG/DDS/JSON und statische XAML-Patches werden "
+            "in einen getrennten Ordner und ein ZIP unter work/ verpackt. "
+            "Der Script Extender und das Spiel werden nicht geändert. "
+            "Paket erzeugen?",
+            parent=self,
+            default="no",
+        ):
+            return
+        self.app.run(
+            [tool("se_asset_package.py"), "--source", source,
+             "--guid", guid, "--name", name],
+            "DLL-freies HUD-/GUI-Assetpaket für vorhandenen Script Extender",
+        )
 
     def atlas_project(self):
         groups = self.atlas_groups.get().strip()
@@ -2335,14 +2382,15 @@ class TargetTab(ttk.Frame):
     def __init__(self, parent, app):
         super().__init__(parent)
         self.app = app
-        ttk.Label(self, text="Ziel & SE 2.11", style="Title.TLabel").pack(anchor="w", padx=8, pady=(12, 2))
+        ttk.Label(self, text="Ziele & Mods", style="Title.TLabel").pack(anchor="w", padx=8, pady=(12, 2))
         ttk.Label(self, text=(
             "Jedes Ziel wird gegen alle fünf SHA-256-Dateipins von supported-builds.json "
             "und die genaue Zielversion des aktuell geladenen Mappings geprüft. "
             "Registrieren aktiviert niemals automatisch. Aktivieren benötigt außerdem eine "
             "verifizierte Stronghold-1-DE-Quelle und eine ausdrückliche Bestätigung. "
-            "Es wird dadurch nichts installiert. SE/Mod/Restore sind nur für das "
-            "verifizierte aktive Ziel freigeschaltet; das Spiel muss geschlossen sein."), style="Muted.TLabel", wraplength=1150,
+            "Dadurch wird nichts installiert. Mod-Installation und "
+            "Sicherungswiederherstellung bleiben ans ausdrücklich aktivierte "
+            "Ziel gebunden. Der vorhandene Script Extender wird nicht getauscht."), style="Muted.TLabel", wraplength=1150,
             justify="left").pack(anchor="w", padx=8)
         self.actions = CompactActionBar(
             self,
@@ -2352,7 +2400,6 @@ class TargetTab(ttk.Frame):
                 ("Aktualisieren", self.load),
             ),
             more=(
-                ("SE 2.11.0 installieren (mit Sicherung)", self.install_se),
                 ("Mod installieren ... (mit Sicherung)", self.install_mod),
                 ("Mod entfernen (mit Sicherung)", self.remove_mod),
                 ("Sicherungen anzeigen / zurückspielen", self.backups),
@@ -2360,10 +2407,6 @@ class TargetTab(ttk.Frame):
             overflow_label="Installation & Sicherungen ▾",
         )
         self.actions.pack(fill="x", padx=8, pady=(5, 3))
-        ttk.Button(
-            self, text="Script Extender 2.14.3 prüfen (nur lesen)",
-            command=self.check_se,
-        ).pack(anchor="w", padx=9, pady=(0, 4))
         self.target_status = tk.StringVar(
             value=LANG.tr("Zielspiele werden eingelesen …")
         )
@@ -2449,7 +2492,7 @@ class TargetTab(ttk.Frame):
                 row = ziel_se211.describe(name, spec)
             except Exception as exc:
                 row = {"spiel": spec.get("spiel"), "se": f"? ({exc})"}
-            se = (row.get("se") or "kein SE") + ("" if row.get("se_2_11") else "  ⚠")
+            se = row.get("se") or "kein SE"
             self.table.insert("", "end", iid=name, text=name, values=(
                 "●" if name == data.get("aktiv") else "", row.get("spielstand", "?"), se,
                 row.get("europa_mod") or "-", row.get("sicherungen", 0), row.get("spiel")))
@@ -2532,45 +2575,6 @@ class TargetTab(ttk.Frame):
         self.app.run([tool("ziel_se211.py"),"aktivieren",name,
                       "--source-data",source],f"Ziel {name} verifiziert aktivieren")
 
-    def check_se(self):
-        """Read the selected Crusader game or ask for one, never install SE."""
-        import ziel_se211
-        selected = self.table.selection()
-        folder = None
-        if selected:
-            registry = ziel_se211.targets().get("ziele", {})
-            spec = registry.get(selected[0])
-            if isinstance(spec, dict):
-                folder = spec.get("spiel")
-        if not folder:
-            folder = filedialog.askdirectory(
-                parent=self, title="SHCDE-Spielordner für SE-2.14.3-Prüfung auswählen",
-                initialdir=str(ROOT),
-            )
-        if not folder:
-            return
-        game = Path(folder)
-        if not game.is_dir() or not (
-            game / "Stronghold Crusader Definitive Edition_Data"
-        ).is_dir():
-            messagebox.showwarning(
-                "Crusader-Spielordner",
-                "Bitte das Wurzelverzeichnis von Stronghold Crusader "
-                "Definitive Edition auswählen. Stronghold 1 ist kein SE-Ziel.",
-                parent=self,
-            )
-            return
-        self.app.run(
-            [tool("shcdese_compat_check.py"), "--game", str(game)],
-            "Script Extender 2.14.3: Noesis, ABI und Signaturpflicht prüfen",
-        )
-
-    def install_se(self):
-        name = self.current()
-        if name and messagebox.askyesno("SE 2.11.0", f"SHCDE-SE 2.11.0 in '{name}' installieren?\n"
-                                        "Der bisherige Stand wird vorher gesichert.", parent=self):
-            self.app.run([tool("ziel_se211.py"), "se-installieren", name], "SE 2.11.0 installieren")
-
     def install_mod(self):
         name = self.current()
         if not name:
@@ -2630,7 +2634,7 @@ class Universal(center.Center):
         )
         self._save_advanced_preference = True
         self.show_advanced()
-        self.title("Stronghold Europe / ORIGINS - Universal-Suite (SE 2.11)")
+        self.title("Stronghold Europe / ORIGINS - Universal-Suite")
         LANG.patch_dialogs()
         self.language = tk.StringVar(value=LANG.code.upper())
         lang_box = ttk.Combobox(self.command_bar, values=["DE", "EN"], textvariable=self.language, state="readonly", width=4)
@@ -2657,7 +2661,7 @@ class Universal(center.Center):
         self.notebook.insert(4, self.exchange_tab, text="Editor & Austausch")
         self.notebook.insert(5, self.hud_tab, text="SH1 HUD-Studio")
         self.notebook.insert(6, self.origins_graphics_tab, text="ORIGINS Grafiken")
-        self.notebook.insert(7, self.target_tab, text="Ziel & SE 2.11")
+        self.notebook.insert(7, self.target_tab, text="Ziele & Mods")
         ttk.Button(
             self.command_bar, text="HUD-Studio",
             command=lambda: self.open_tab(self.hud_tab)
@@ -2688,7 +2692,7 @@ class Universal(center.Center):
             ("Editor & Austausch", "Editor and exchange", self.exchange_tab),
             ("SH1 HUD-Studio", "SH1 HUD Studio", self.hud_tab),
             ("ORIGINS Grafiken", "ORIGINS graphics", self.origins_graphics_tab),
-            ("Ziel & SE 2.11", "Targets and SE 2.11", self.target_tab),
+            ("Ziele & Mods", "Targets and mods", self.target_tab),
             ("Paket bauen", "Build packages", self.bc7_page),
             ("Start & Anleitung", "Start and guide", self.tab_home),
             ("Sprite-Gruppen", "Sprite groups", self.tab_groups),

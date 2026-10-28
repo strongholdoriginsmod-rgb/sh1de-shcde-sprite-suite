@@ -174,7 +174,6 @@ def describe(name: str, spec: dict) -> dict:
         info["spielstand"] = KNOWN_GAMES.get(digest[:8], f"unbekannt ({digest[:8]})")
     se = game / "BepInEx" / "plugins" / "000shcdese" / "SHCDESE.dll"
     info["se"] = file_version(se) if se.is_file() else None
-    info["se_2_11"] = bool(info["se"] and info["se"].startswith("2.11"))
     manifest = load_json(game / "BepInEx" / "plugins" / "StrongholdEuropeDE" / "build-manifest.json", None)
     info["europa_mod"] = manifest.get("profile_id") if isinstance(manifest, dict) else None
     info["sicherungen"] = len(load_json(backup_root(game) / "sicherungen.json", {"eintraege": []})["eintraege"])
@@ -259,7 +258,7 @@ def cmd_liste(args) -> int:
     for row in rows:
         mark = "*" if row["aktiv"] else " "
         se = row["se"] or "kein SE"
-        hint = "" if row["se_2_11"] else "  <- nicht SE 2.11"
+        hint = ""
         say(f"{mark} {row['name']:<14} {row.get('spielstand', '?'):<16} SE {se:<12} Europa-Mod: {row['europa_mod'] or '-':<28}"
             f" Sicherungen: {row['sicherungen']}{hint}")
         say(f"    {row['spiel']}")
@@ -375,9 +374,11 @@ def cmd_se_installieren(args) -> int:
     if previous.is_symlink():
         raise SystemExit("Verlinkte Extender-DLL: Abbruch")
     if previous.exists():
-        from shcdese_compat_check import version as parse_se_version
+        # Historic CLI only: preserve downgrade protection without importing
+        # an interactive SE-version checker or requiring a particular version.
         old_version = file_version(previous)
-        old_parsed = parse_se_version(old_version)
+        match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:\.0)?", old_version or "")
+        old_parsed = tuple(map(int, match.groups())) if match else None
         if old_parsed is None:
             raise SystemExit("Vorhandene SE-DLL-Version konnte nicht geprüft werden")
         if old_parsed > (2, 11, 0):

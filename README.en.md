@@ -1,6 +1,6 @@
 # SH1DE → SHCDE Universal Suite 2.0 (Stronghold Europe / ORIGINS)
 
-Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Includes a **read-only SHCDESE v2.14.3 compatibility check**; the historical C# runtime remains pinned to SE 2.11.0. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
+Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Static GUI/sprite packages use **no fixed SE version and no C# DLL**; optional C# runtimes retain separate ABI safety checks. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
 
 ## Download
 
@@ -19,7 +19,7 @@ Game graphics are **not** distributed. They are created from your own installed 
    - *Complete:* starts immediately.
    - *Bare suite:* on first start `setup.ps1` creates the Python environment from an installed **Python 3.13** (packages hash-checked from `requirements-py313-win_amd64.lock`).
 3. For BC7 package builds: install **Unity 2021.3.45f2** via Unity Hub (`unityhub://2021.3.45f2/88f88f591b2e`) and a **.NET SDK 8 or newer** (10 recommended). Enter them in the *Setup* tab.
-4. Use **Target & SE 2.11 → Script Extender 2.14.3 prüfen (nur lesen)** to inspect an existing installation. Latest confirmed upstream tag v2.14.3 (19 October 2026). No automatic updates; the historical SE 2.11 installer cannot downgrade a newer version. A new C# runtime build and in-game ABI validation remain necessary.
+4. Keep the **existing Script Extender**. Use **Editor & exchange** to build **DLL-free asset mods** from edited HUD/GUI assets. No standalone version checker or automatic extender changes. C# runtimes still need ABI checks.
 5. *Setup* → enter game folders → *Save paths* → *Read games*.
 
 Top right: **Sprache / Language** and **Strict**. The default is **lenient mode**: deviations (versions, reference hashes, placement proofs) are reported and logged and the workflow continues; *Adopt proofs* writes the measured values. *Strict* blocks as before.
@@ -48,7 +48,7 @@ Long action rows have named overflow menus and editor/build forms can scroll.
 | **Diagnosis & repair** | checks known error classes: edge anchors (shifted battlements), partially redirected tile objects, donor identity, frame drift between game versions, canvases, bundle integrity |
 | **Sandbox** | **Fully embedded Sandbox Studio in the existing Sprite Suite window** (Tk + Qt on Windows): real map-engine sprite frames, interactive placement, shared asset catalogue navigation, pixel editor, live refresh, minimap and HUD tools in the same tab. No separate GUI process. See `docs/SANDBOX_MAIN_SUITE_INTEGRATION.md`. Full Unity shader/gameplay HUD parity remains work in progress. |
 | **Editor & exchange** | HTML sprite editor out and back, SE atlas with the AtlasBuilder (`Override/Atlas`, PNG or BC7 DDS), buildings as layers (ORA) |
-| **Target & SE 2.11** | several game installations, install SE 2.11.0 and mods – each with a backup and restore |
+| **Targets and mods** | manage game targets and install own mods – each with a backup and restore |
 | **Edit sprites / Build package** | Europe BC7 package via Unity, incremental group cache |
 
 **Integrated sandbox:** The tab now has **Open map**, **Palette**,
