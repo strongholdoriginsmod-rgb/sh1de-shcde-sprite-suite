@@ -6,8 +6,8 @@ Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Defini
 
 | Variante | Inhalt | Wie |
 |---|---|---|
-| **Nackte Suite** (Standard) | Quelltext, alle Grafikwerkzeuge, Profile, Oberfläche, Editor – etwa 11 MB | Zweig `main` → *Code* → *Download source code (zip)* |
-| **Komplett (Windows)** | wie oben, zusätzlich fertiges Python 3.13 mit allen Paketen und der BC7-Encoder für SE-Atlanten – kein Einrichten nötig | Zweig `komplett` herunterladen |
+| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Releases](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases) → `SpriteSuite-Windows-Portable-2026-10-28.zip` |
+| **Quellcode** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | `main` → *Code* → *Download ZIP* |
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 
 Spielgrafik wird **nicht** verteilt. Sie entsteht beim Einlesen und Bauen aus den eigenen, installierten Spielen.
@@ -53,8 +53,9 @@ Dieser Zweig erweitert **Oberfläche** um einen eigenen Stronghold-1-HUD-Editor:
 
 1. Ordner an einen **kurzen Pfad** entpacken, z. B. `D:\SU` (Unity legt tiefe Pfade an).
 2. **`Suite starten.cmd`** doppelklicken.
-   - *Komplett:* startet sofort.
-   - *Nackte Suite:* beim ersten Start legt `setup.ps1` die Python-Umgebung aus einem installierten **Python 3.13** an (Pakete hashgeprüft aus `requirements-py313-win_amd64.lock`).
+   - *Windows Portable:* Python und sämtliche GUI-Pakete sind bereits im entpackten Ordner. **Kein Python, pip oder Setup auf dem PC nötig.**
+   - *Quellcode-ZIP:* für Entwickler mit Python **3.13 oder 3.14**; `setup.ps1` verwendet automatisch den passenden hashgeprüften Lock. Fehlt Python, die Portable-Ausgabe aus den Releases laden.
+   - [Anleitung für den portablen Windows-Start](docs/SPRITESUITE_WINDOWS_PORTABLE_2026-10-28.md).
 3. Für den BC7-Paketbau: **Unity 2021.3.45f2** über Unity Hub installieren (`unityhub://2021.3.45f2/88f88f591b2e`) und ein **.NET SDK ab 8** (empfohlen 10). Im Reiter *Einrichten* eintragen.
 4. Den **vorhandenen Script Extender** beibehalten. Unter **Editor & Austausch** eigene Grafiken als **DLL-freies Asset-Modpaket** bauen. Kein separater Versionschecker, kein automatischer SE-Wechsel. Für Gameplay-C#-Mods bleiben API-/ABI-Schutzprüfungen bestehen.
 5. *Einrichten* → Spielordner eintragen → *Pfade speichern* → *Spiele einlesen*.

@@ -89,7 +89,37 @@ def fix_toolchains() -> None:
                   file=sys.stderr)
 
 
+def portable_self_test() -> int:
+    """Validate the bundled interpreter without opening the GUI or a game."""
+    import subprocess
+    fix_venv()
+    executable = VENV / "Scripts" / "python.exe"
+    if not executable.is_file():
+        print("PORTABLE_ERROR: Bundled .venv/Scripts/python.exe is missing", file=sys.stderr)
+        return 3
+    code = (
+        "import sys, tkinter, PIL, UnityPy, PySide6; "
+        "from stronghold_europe_de.sdk_toolchain import find_dotnet_sdk; "
+        "assert sys.version_info[:2] == (3, 13); "
+        "print('PORTABLE_READY=1'); "
+        "print('PYTHON='+sys.version.split()[0]); "
+        "print('PIL='+PIL.__version__)"
+    )
+    env = dict(os.environ, PYTHONPATH=str(PROJECT / "src"),
+               PYTHONDONTWRITEBYTECODE="1")
+    try:
+        return subprocess.run(
+            [str(executable), "-c", code], cwd=PROJECT, env=env,
+            timeout=45, check=False,
+        ).returncode
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        print("PORTABLE_ERROR:", exc, file=sys.stderr)
+        return 4
+
+
 def main() -> int:
+    if "--self-test" in sys.argv:
+        return portable_self_test()
     if "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
         return 0

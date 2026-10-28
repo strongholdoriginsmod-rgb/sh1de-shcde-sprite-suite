@@ -6,8 +6,8 @@ Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusad
 
 | Variant | Contents | How |
 |---|---|---|
-| **Bare suite** (default) | source, all graphics tools, profiles, interface, editor – about 11 MB | branch `main` → *Code* → *Download source code (zip)* |
-| **Complete (Windows)** | as above plus a ready Python 3.13 with all packages and the BC7 encoder for SE atlases – no setup needed | download branch `komplett` |
+| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Releases](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases) → `SpriteSuite-Windows-Portable-2026-10-28.zip` |
+| **Source ZIP** | full application code and tools, but **without** the Python runtime | branch `main` → *Code* → *Download ZIP* |
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 
 Game graphics are **not** distributed. They are created from your own installed games when reading and building.
@@ -46,8 +46,9 @@ installation and hash-verified rollback never alter original games.
 
 1. Extract to a **short path**, e.g. `D:\SU` (Unity creates deep paths).
 2. Double-click **`Suite starten.cmd`**.
-   - *Complete:* starts immediately.
-   - *Bare suite:* on first start `setup.ps1` creates the Python environment from an installed **Python 3.13** (packages hash-checked from `requirements-py313-win_amd64.lock`).
+   - *Windows Portable:* Python and GUI packages are already bundled. **No separate Python, pip or setup is required.**
+   - *Source ZIP:* developers may use Python **3.13 or 3.14** with automatically selected hash-verified dependency locks.
+   - [Portable Windows startup guide](docs/SPRITESUITE_WINDOWS_PORTABLE_2026-10-28.md).
 3. For BC7 package builds: install **Unity 2021.3.45f2** via Unity Hub (`unityhub://2021.3.45f2/88f88f591b2e`) and a **.NET SDK 8 or newer** (10 recommended). Enter them in the *Setup* tab.
 4. Keep the **existing Script Extender**. Use **Editor & exchange** to build **DLL-free asset mods** from edited HUD/GUI assets. No standalone version checker or automatic extender changes. C# runtimes still need ABI checks.
 5. *Setup* → enter game folders → *Save paths* → *Read games*.
