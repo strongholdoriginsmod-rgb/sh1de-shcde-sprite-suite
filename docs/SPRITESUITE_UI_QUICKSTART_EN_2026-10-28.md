@@ -27,6 +27,16 @@ external paths or modify installed games. To switch projects, choose
 **Show workspace folder → Folder …**. **4 Prepare export** now
 opens the designer's next-step guidance directly without another popup.
 
+## Transfer an editable project
+
+Choose **Back up project…** in **HUD & menus** to export an editable
+project archive with image sources, all saved layouts and their metadata.
+Choose **Open project ZIP…** on the target computer. A new, unused
+project name is suggested; existing projects are never replaced.
+The archive excludes installed game files and QA installation receipts.
+
+[Complete German guide](PROJEKTARCHIVE_2026-10-29.md).
+
 ## Edit a menu image
 
 1. Open **HUD & menus**. Select a listed PNG or click **1 Open image**

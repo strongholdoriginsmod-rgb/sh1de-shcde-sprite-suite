@@ -2,6 +2,8 @@
   "schema": "stronghold-europe.suite-sprachen.v1",
   "hinweis": "Oberflaechentexte der Universal-Suite: deutscher Originaltext -> englische Fassung. Fehlt ein Eintrag, bleibt der deutsche Text stehen. Frei erweiterbar.",
   "en": {
+    "Projekt sichern …": "Back up project…",
+    "Projekt aus ZIP öffnen …": "Open project ZIP…",
     "Bildquelle auswählen": "Select image source",
     "Weitere Aktionen ▾": "More actions ▾",
     "Hinweis: Spielknöpfe bleiben separat.": "Note: Game buttons remain separate.",

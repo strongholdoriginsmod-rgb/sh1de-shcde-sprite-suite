@@ -181,15 +181,15 @@ def _write_new(path: Path, data: bytes) -> None:
 
 
 def _metadata_dir(root: Path) -> Path:
-    """Keep snapshots OUTSIDE the package source Override/Patches tree."""
-    base = WORK.resolve() / BASELINES
-    if base.is_symlink():
-        raise WorkshopError("Workspace metadata path is linked")
-    token = _sha(str(root).casefold().encode("utf-8"))[:24]
-    dest = base / token
-    if dest.is_symlink():
-        raise WorkshopError("Workspace metadata is linked")
-    return dest
+    """Return the relocatable metadata folder; preserve legacy files intact.
+
+    The directory identifier uses the project path relative to work/.
+    Legacy absolute-path metadata is copied and verified on first access;
+    game files and user artwork are never touched.
+    """
+    from hud_menu_metadata_paths import metadata_dir
+    return metadata_dir(root, work=WORK, folder=BASELINES,
+                        sha=_sha, error=WorkshopError)
 
 
 def _baseline(root: Path, relative: str) -> tuple[Path, Path]:

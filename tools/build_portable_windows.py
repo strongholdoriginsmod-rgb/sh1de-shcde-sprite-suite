@@ -25,7 +25,7 @@ PYTHON_FILES = (
 )
 PYTHON_DIRS = ("DLLs", "Lib", "tcl")
 VENV_DIRS = ("Scripts", "Lib")
-OUT_NAME = "SpriteSuite-Windows-Portable-Projektfortsetzung-2026-10-28.zip"
+OUT_NAME = "SpriteSuite-Windows-Portable-Projektarchive-2026-10-29.zip"
 
 
 def _ignore(directory: str, names: list[str]) -> list[str]:

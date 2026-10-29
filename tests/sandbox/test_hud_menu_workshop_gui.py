@@ -280,3 +280,87 @@ def test_project_switch_opens_even_if_recent_preference_cannot_be_written(
     root.update()
     assert view._project()==another
     assert "Projekt geöffnet" in view.message.get()
+
+
+def test_full_project_archive_backup_and_restore_via_visible_buttons(
+    workshop,monkeypatch,
+):
+    import hud_menu_project_transfer as transfers
+    suite,root,view,links,commands=workshop
+    project=view._project(create=True)
+    source=suite/"real-menu.png"
+    Image.new("RGBA",(24,18),(25,97,171,225)).save(source)
+    source_bytes=source.read_bytes()
+    imported=model.import_image(source,project=project)
+    view.refresh()
+    archive=suite/"MyProjectBackup.zip"
+    monkeypatch.setattr(gui.filedialog,"asksaveasfilename",
+                        lambda *args,**kwargs:str(archive))
+    monkeypatch.setattr(gui.messagebox,"showinfo",lambda *args,**kwargs:None)
+    monkeypatch.setattr(gui.messagebox,"showerror",
+                        lambda *args,**kwargs:pytest.fail(
+                            "Unexpected project archive error: "+repr(args)))
+    report=view.export_project_archive()
+    assert report is not None and archive.is_file()
+    assert transfers.archive_info(archive)["files"]>=2
+    assert source.read_bytes()==source_bytes
+
+    monkeypatch.setattr(gui.filedialog,"askopenfilename",
+                        lambda *args,**kwargs:str(archive))
+    monkeypatch.setattr(gui.simpledialog,"askstring",
+                        lambda *args,**kwargs:"ImportedMenu")
+    monkeypatch.setattr(gui.messagebox,"askyesno",
+                        lambda *args,**kwargs:True)
+    restored=view.import_project_archive()
+    root.update()
+    assert restored is not None
+    assert view._project().name=="ImportedMenu"
+    assert view.selected_asset().relative_path.endswith("real-menu.png")
+    assert view.selected_asset().baseline_path is not None
+    assert imported.is_file() and source.read_bytes()==source_bytes
+
+
+def test_gui_rejects_archive_import_over_existing_project_without_overwrite(
+    workshop,monkeypatch,
+):
+    suite,root,view,links,commands=workshop
+    source=suite/"existing-image.png"
+    Image.new("RGBA",(14,11),(42,33,24,255)).save(source)
+    original=source.read_bytes()
+    file=model.import_image(source,project=view._project(create=True))
+    view.refresh()
+    backup=suite/"backup.zip"
+    from hud_menu_project_transfer import create_archive
+    create_archive(view._project(),backup)
+    monkeypatch.setattr(gui.filedialog,"askopenfilename",
+                        lambda *a,**kw:str(backup))
+    monkeypatch.setattr(gui.simpledialog,"askstring",
+                        lambda *a,**kw:view._project().name)
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *a,**kw:True)
+    errors=[]
+    monkeypatch.setattr(gui.messagebox,"showerror",
+                        lambda *a,**kw:errors.append(a))
+    assert view.import_project_archive() is None
+    assert errors and "existieren" in str(errors[0])
+    assert view._project().is_dir()
+    assert file.read_bytes()==original
+
+
+def test_project_import_proposes_new_name_when_original_exists(workshop,monkeypatch):
+    from hud_menu_project_transfer import create_archive
+    suite,root,view,links,commands=workshop
+    project=view._project(create=True)
+    original=suite/"original.png"
+    Image.new("RGBA",(9,8),(90,80,70,255)).save(original)
+    model.import_image(original,project=project)
+    view.refresh()
+    zipfile=suite/"backup-name-suggestion.zip"
+    create_archive(project,zipfile)
+    suggested=[]
+    monkeypatch.setattr(gui.filedialog,"askopenfilename",
+                        lambda *a,**kw:str(zipfile))
+    monkeypatch.setattr(gui.simpledialog,"askstring",
+                        lambda *a,**kw:suggested.append(kw["initialvalue"]) or None)
+    assert view.import_project_archive() is None  # Cancel at name input.
+    assert suggested==["gui-assets-Kopie"]
+    assert not (suite/"work"/"gui-assets-Kopie").exists()

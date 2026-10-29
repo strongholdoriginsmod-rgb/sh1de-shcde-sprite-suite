@@ -19,11 +19,24 @@ workspace and metadata files.
 
 [Updated interface guide](docs/SPRITESUITE_UI_QUICKSTART_EN_2026-10-28.md).
 
+## Back up and transfer complete editable projects
+
+In **HUD & menus**, use **Back up project…** and
+**Open project ZIP…**. A project archive contains editable graphics,
+layers, exact positions, original imports, revisions and export manifests.
+It does not include an installed game or a QA installation receipt.
+Restoring uses a new project folder and never overwrites an existing
+project. Legacy metadata is safely copied to a relocatable folder on
+first use, leaving the original untouched.
+
+[Project transfer instructions (German)](docs/PROJEKTARCHIVE_2026-10-29.md).
+[Quality audit and remaining limits (German)](docs/QUALITAETSAUDIT_2026-10-29.md).
+
 ## Download
 
 | Variant | Contents | How |
 |---|---|---|
-| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-resume-project-2026-10-28) → `SpriteSuite-Windows-Portable-Projektfortsetzung-2026-10-28.zip` |
+| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-project-archive-2026-10-29) → `SpriteSuite-Windows-Portable-Projektarchive-2026-10-29.zip` |
 | **Source ZIP** | full application code and tools, but **without** the Python runtime | branch `main` → *Code* → *Download ZIP* |
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 

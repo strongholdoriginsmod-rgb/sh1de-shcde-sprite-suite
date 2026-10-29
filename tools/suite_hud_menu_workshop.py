@@ -18,6 +18,9 @@ from hud_menu_workspace import (
 )
 from suite_usability import CompactActionBar
 from suite_hud_menu_session import read_session, save_session
+from hud_menu_project_transfer import (
+    archive_info, create_archive, restore_archive, suggest_project_name,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
@@ -75,6 +78,10 @@ class HudMenuWorkshop(ttk.Frame):
 
         project_toggle_row=ttk.Frame(self)
         project_toggle_row.pack(fill="x",padx=12,pady=(0,2))
+        ttk.Button(project_toggle_row,text="Projekt aus ZIP öffnen …",
+                   command=self.import_project_archive).pack(side="right",padx=(4,0))
+        ttk.Button(project_toggle_row,text="Projekt sichern …",
+                   command=self.export_project_archive).pack(side="right",padx=(4,0))
         self.project_toggle=ttk.Button(project_toggle_row,
             text="Arbeitsordner anzeigen",command=self.toggle_project)
         self.project_toggle.pack(side="left")
@@ -353,6 +360,107 @@ class HudMenuWorkshop(ttk.Frame):
         else:
             self.preview.clear("XAML/JSON/DDS: Mit Texteditor oder externem Grafikprogramm bearbeiten.")
             self.original.clear("Kein automatisch geladener Pixelvergleich.")
+
+    def export_project_archive(self):
+        """Save the editable project plus metadata into a new, portable ZIP."""
+        try:
+            project=self._project(create=True)
+            # Suggest a location independent of the portable installation.
+            # A backup inside work/ might be lost when replacing the Suite.
+            default=Path.home()/"Documents"
+            if not default.is_dir():
+                default=Path.home()
+            selected=filedialog.asksaveasfilename(
+                parent=self,title="Bearbeitbares HUD-/Menüprojekt sichern",
+                initialdir=str(default),
+                initialfile="SpriteSuite-Projekt-"+project.name+".zip",
+                defaultextension=".zip",
+                filetypes=[("SpriteSuite-Projektarchiv","*.zip")],
+            )
+            if not selected:
+                return None
+            report=create_archive(project,selected)
+            self.message.set("Projektarchiv erstellt: "+report["archive"])
+            messagebox.showinfo(
+                "Projekt gesichert",
+                "Bearbeitbare Bilder, Layouts, gespeicherte Positionen, "
+                "Import-Originale und Revisionen sind gesichert.\n\n"
+                +report["archive"]+"\n\n"
+                "SHA-256: "+report["sha256"]+"\n\n"
+                "Keine Spielinstallation verändert. "
+                "QA-Installationsbelege werden nicht übertragen.",
+                parent=self,
+            )
+            return report
+        except (OSError,ValueError) as exc:
+            messagebox.showerror(
+                "Projekt nicht gesichert",
+                str(exc)+"\n\nBitte einen neuen, beschreibbaren ZIP-Namen wählen. "
+                "Vorhandene Dateien werden nicht überschrieben.",
+                parent=self,
+            )
+            return None
+
+    def import_project_archive(self):
+        """Restore a checked project ZIP into a NEW work/ directory."""
+        selected=filedialog.askopenfilename(
+            parent=self,title="Gesichertes SpriteSuite-Projekt auswählen",
+            filetypes=[("SpriteSuite-Projektarchiv","*.zip")],
+        )
+        if not selected:
+            return None
+        try:
+            report=archive_info(selected)
+            suggestion=suggest_project_name(report["project_name"])
+            name=simpledialog.askstring(
+                "Neues Projekt anlegen",
+                "Unter welchem NEUEN Projektnamen soll das Archiv "
+                "in SpriteSuite/work/ geöffnet werden?\n"
+                "Vorhandene Projekte werden nicht überschrieben.",
+                initialvalue=suggestion,parent=self,
+            )
+            if not name:
+                return None
+            if not messagebox.askyesno(
+                "Projekt aus ZIP öffnen",
+                f"Archiv: {Path(selected).name}\n"
+                f"Neues Projekt: {name}\n"
+                f"Dateien: {report['files']}\n\n"
+                "Nur eine neue Arbeitskopie unter work/ erstellen? "
+                "Kein bestehendes Projekt und kein Spiel verändern.",
+                parent=self,default="no",
+            ):
+                return None
+            restored=restore_archive(selected,project_name=name)
+            newproject=Path(restored["project"])
+            self._preferred_asset=None
+            self._loaded_project=None
+            self._assets=[]
+            self.filter_var.set("")
+            self.edited_only.set(False)
+            self.project_var.set(str(newproject))
+            self.refresh()
+            try:
+                save_session(newproject)
+            except (OSError,ValueError):
+                pass
+            self.message.set("Gesichertes Projekt geöffnet: "+str(newproject))
+            messagebox.showinfo(
+                "Projekt wiederhergestellt",
+                str(newproject)+"\n\n"
+                "Öffne jetzt den Layout-Designer. Deine gespeicherten "
+                "Positionen und Ebenen bleiben bearbeitbar.",
+                parent=self,
+            )
+            return restored
+        except (OSError,ValueError) as exc:
+            messagebox.showerror(
+                "Projektarchiv nicht geöffnet",
+                str(exc)+"\n\nEs wird nichts in vorhandene Projekte "
+                "oder Spielordner übernommen.",
+                parent=self,
+            )
+            return None
 
     def pick_project(self):
         folder=filedialog.askdirectory(

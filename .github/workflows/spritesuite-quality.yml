@@ -1,0 +1,66 @@
+name: SpriteSuite core quality
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/hud_menu_*.py'
+      - 'tools/suite_hud_menu_*.py'
+      - 'tests/sandbox/test_hud_menu_*.py'
+      - 'tests/sandbox/test_windows_portable_release.py'
+      - '.github/workflows/spritesuite-quality.yml'
+  pull_request:
+    paths:
+      - 'tools/hud_menu_*.py'
+      - 'tools/suite_hud_menu_*.py'
+      - 'tests/sandbox/test_hud_menu_*.py'
+      - 'tests/sandbox/test_windows_portable_release.py'
+      - '.github/workflows/spritesuite-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spritesuite-core-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  metadata-and-export:
+    name: Windows x64 / Python 3.13 / metadata and export
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          architecture: x64
+          cache: pip
+          cache-dependency-path: requirements-py313-win_amd64.lock
+      - name: Install testing dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "Pillow==12.3.0" "UnityPy==1.25.3" "pytest==8.4.2"
+          python -m pip check
+      - name: Compile source
+        run: python -m compileall -q tools src
+      - name: Run metadata, layout and security regressions
+        env:
+          PYTHONPATH: "${{ github.workspace }}\tools;${{ github.workspace }}\src"
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: >-
+          python -m pytest -q -p no:cacheprovider --maxfail=1
+          tests/sandbox/test_hud_menu_metadata_paths.py
+          tests/sandbox/test_hud_menu_project_transfer.py
+          tests/sandbox/test_hud_menu_workshop.py
+          tests/sandbox/test_hud_menu_layout.py
+          tests/sandbox/test_hud_menu_session.py
+          tests/sandbox/test_hud_menu_noesis_integration.py
+          tests/sandbox/test_windows_portable_release.py

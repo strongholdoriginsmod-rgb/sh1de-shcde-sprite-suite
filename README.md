@@ -24,7 +24,7 @@ zuletzt gespeicherte Layout erneut. Der Zustandsvermerk bleibt unter
 
 | Variante | Inhalt | Wie |
 |---|---|---|
-| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-resume-project-2026-10-28) → `SpriteSuite-Windows-Portable-Projektfortsetzung-2026-10-28.zip` |
+| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-project-archive-2026-10-29) → `SpriteSuite-Windows-Portable-Projektarchive-2026-10-29.zip` |
 | **Quellcode** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | `main` → *Code* → *Download ZIP* |
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 
@@ -34,6 +34,25 @@ Unbekannte Versionen können inventarisiert, als Ziel registriert und
 mit passendem Mapping bearbeitet werden. Native ABI-Integritätsprüfungen
 bleiben unabhängig von der Versionsnummer bestehen.
 [Details zur versionsoffenen Verarbeitung](docs/VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
+
+## Projekte vollständig sichern und auf einen anderen PC übertragen
+
+Unter **HUD & Menüs** stehen **Projekt sichern …** und
+**Projekt aus ZIP öffnen …** bereit. Das Archiv enthält die
+bearbeitbaren Arbeitsgrafiken, Ebenen, Positionen, Import-Originale,
+Revisionen und Positionsmanifeste. Es enthält **keine** Spieleinstallation
+oder QA-Installationsbelege. Beim Wiederherstellen wird ein neuer
+Projektname vorgeschlagen. Vorhandene Projekte werden niemals
+überschrieben.
+
+Alte Metadaten aus der bisherigen absoluten Installationspfadkennung
+werden beim ersten Zugriff kontrolliert in eine portable Ablage
+übernommen; das Original bleibt als Sicherung erhalten. Diese Übernahme
+sollte **vor dem Kopieren auf einen anderen PC** auf dem Ursprungsrechner
+durchgeführt werden.
+
+[Schritt-für-Schritt-Anleitung und Sicherheitsregeln für Projektarchive](docs/PROJEKTARCHIVE_2026-10-29.md).
+[Prüfstand und noch offene Grenzen](docs/QUALITAETSAUDIT_2026-10-29.md).
 
 ## HUD & Menüs – neue integrierte Grafikwerkstatt
 

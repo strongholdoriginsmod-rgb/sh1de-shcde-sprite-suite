@@ -54,6 +54,18 @@ einen anderen Installationspfad oder Computer übertragen möchte,
 muss diese Daten gesondert sichern; die Merkhilfe allein ist kein
 vollständiger Projektarchiv-Export.
 
+## Ein vollständiges Projekt auf einen anderen PC übernehmen
+
+**Projekt sichern …** erzeugt ein überprüftes ZIP mit Arbeitsbildern,
+Ebenen, Positionen, ursprünglichen Importzuständen, Revisionen und
+Exportmanifesten. **Projekt aus ZIP öffnen …** legt unter `work/`
+ein neues Projekt an; es schlägt bei Namensgleichheit automatisch
+`-Kopie` oder `-Kopie-2` vor. Vorhandene Daten werden nicht
+überschrieben. Zum vollständigen Übertragen ist das ZIP besser
+geeignet als nur `work/` zu kopieren.
+
+[Ausführliche Anleitung für Projektarchive](PROJEKTARCHIVE_2026-10-29.md).
+
 ## Erste Übung: NeuesMenuBild.png bearbeiten
 
 1. **HUD & Menüs** in der linken Leiste auswählen.

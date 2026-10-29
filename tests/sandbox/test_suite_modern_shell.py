@@ -138,3 +138,56 @@ def test_open_layout_guide_changes_language_without_restart(ui):
     app.update()
     assert "Bild öffnen" in editor.guide_heading.get()
     editor.close_editor()
+
+
+def test_project_archive_actions_are_visible_at_minimum_suite_width(ui):
+    from tkinter import ttk
+    _module, app=ui
+    app.geometry("1020x680+32+32")
+    app.open_tab(app.hud_menu_tab)
+    app.update()
+    root=app.hud_menu_tab
+    found={}
+    queue=[root]
+    while queue:
+        widget=queue.pop()
+        queue.extend(widget.winfo_children())
+        if isinstance(widget,ttk.Button):
+            label=widget.cget("text")
+            if label.startswith(("Projekt sichern", "Projekt aus ZIP")):
+                found[label]=widget
+    assert len(found)==2
+    right=app.winfo_rootx()+app.winfo_width()
+    for button in found.values():
+        assert button.winfo_ismapped()
+        assert button.winfo_rootx()>=app.winfo_rootx()
+        assert button.winfo_rootx()+button.winfo_width()<=right
+
+
+def test_project_archive_actions_translate_to_english(ui):
+    from tkinter import ttk
+    _module,app=ui
+    view=app.hud_menu_tab
+    app.set_language("en")
+    app.open_tab(view)
+    app.update()
+    labels=[]
+    pending=[view]
+    while pending:
+        widget=pending.pop()
+        pending.extend(widget.winfo_children())
+        if isinstance(widget,ttk.Button):
+            labels.append(widget.cget("text"))
+    assert "Back up project…" in labels
+    assert "Open project ZIP…" in labels
+    app.set_language("de")
+    app.update()
+    labels=[]
+    pending=[view]
+    while pending:
+        widget=pending.pop()
+        pending.extend(widget.winfo_children())
+        if isinstance(widget,ttk.Button):
+            labels.append(widget.cget("text"))
+    assert "Projekt sichern …" in labels
+    assert "Projekt aus ZIP öffnen …" in labels
