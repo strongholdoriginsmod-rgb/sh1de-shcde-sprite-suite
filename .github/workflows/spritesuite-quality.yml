@@ -52,7 +52,7 @@ jobs:
         run: python -m compileall -q tools src
       - name: Run metadata, layout and security regressions
         env:
-          PYTHONPATH: "${{ github.workspace }}\tools;${{ github.workspace }}\src"
+          PYTHONPATH: '${{ github.workspace }}\tools;${{ github.workspace }}\src'
           PYTHONDONTWRITEBYTECODE: '1'
           PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
         run: >-
