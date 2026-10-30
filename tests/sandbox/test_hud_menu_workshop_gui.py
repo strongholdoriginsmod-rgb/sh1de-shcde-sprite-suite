@@ -364,3 +364,152 @@ def test_project_import_proposes_new_name_when_original_exists(workshop,monkeypa
     assert view.import_project_archive() is None  # Cancel at name input.
     assert suggested==["gui-assets-Kopie"]
     assert not (suite/"work"/"gui-assets-Kopie").exists()
+
+
+def test_backup_refuses_unsaved_layout_until_explicit_save(workshop,monkeypatch):
+    from hud_menu_project_transfer import archive_info
+    suite,root,view,links,commands=workshop
+    src=suite/"unsaved-layout-source.png"
+    Image.new("RGBA",(20,18),(75,55,180,220)).save(src)
+    model.import_image(src,project=view._project(create=True))
+    view.refresh()
+    editor=view.open_layout()
+    editor.add_asset()
+    root.update()
+    assert editor.is_dirty()
+    project=view._project()
+    archive=suite/"archive-after-save.zip"
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *a,**kw:False)
+    monkeypatch.setattr(gui.filedialog,"asksaveasfilename",
+                        lambda *a,**kw:pytest.fail(
+                            "File picker must not open with unsaved edits"))
+    assert view.export_project_archive() is None
+    assert not archive.exists() and editor.is_dirty()
+
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *a,**kw:True)
+    monkeypatch.setattr(gui.filedialog,"asksaveasfilename",
+                        lambda *a,**kw:str(archive))
+    monkeypatch.setattr(gui.messagebox,"showinfo",lambda *a,**kw:None)
+    monkeypatch.setattr(gui.messagebox,"showwarning",
+                        lambda *a,**kw:pytest.fail("Save should succeed"))
+    report=view.export_project_archive()
+    assert report is not None
+    assert editor.is_dirty() is False
+    assert archive_info(archive)["files"]>=3
+    editor.close_editor()
+
+
+def test_backup_saves_pending_pixel_editor_only_after_approval(workshop,monkeypatch):
+    from suite_hud_menu_editor import HudMenuPixelEditor
+    from hud_menu_project_transfer import archive_info
+    suite,root,view,links,commands=workshop
+    src=suite/"pixel-original.png"
+    Image.new("RGBA",(20,18),(70,55,40,200)).save(src)
+    expected=src.read_bytes()
+    imported=model.import_image(src,project=view._project(create=True))
+    view.refresh()
+    view.edit_selected()
+    root.update()
+    editors=[w for w in view.winfo_children() if isinstance(w,HudMenuPixelEditor)]
+    assert len(editors)==1
+    painter=editors[0]
+    painter.image.putpixel((0,0),(11,22,33,255))
+    painter.dirty=True
+    dest=suite/"pixel-changes.zip"
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *a,**kw:True)
+    monkeypatch.setattr(gui.filedialog,"asksaveasfilename",lambda *a,**kw:str(dest))
+    monkeypatch.setattr(gui.messagebox,"showinfo",lambda *a,**kw:None)
+    report=view.export_project_archive()
+    assert report is not None and dest.is_file()
+    assert painter.dirty is False
+    assert archive_info(dest)["files"]>=2
+    with Image.open(imported) as changed:
+        assert changed.getpixel((0,0))==(11,22,33,255)
+    assert src.read_bytes()==expected
+    painter.close()
+
+
+def test_switching_projects_never_reuses_previous_layout_editor(workshop,monkeypatch):
+    suite,root,view,links,commands=workshop
+    src=suite/"scene-source.png"
+    Image.new("RGBA",(14,15),(35,42,70,245)).save(src)
+    model.import_image(src,project=view._project(create=True))
+    view.refresh()
+    old=view.open_layout()
+    assert old is not None
+    old.add_asset()
+    assert old.is_dirty()
+    other=model.workspace(suite/"work"/"new-workspace",create=True)
+    view.project_var.set(str(other))
+    view.refresh()
+    monkeypatch.setattr(old,"_can_discard",lambda:False)
+    assert view.open_layout() is None
+    assert old.winfo_exists()
+    monkeypatch.setattr(old,"_can_discard",lambda:True)
+    fresh=view.open_layout()
+    assert fresh is not None and fresh is not old
+    assert fresh.project==other
+    assert not old.winfo_exists()
+    fresh.close_editor()
+
+
+def test_backup_refuses_failed_editor_save_and_does_not_show_file_picker(workshop,monkeypatch):
+    suite,root,view,links,commands=workshop
+    source=suite/"failed-save.png"
+    Image.new("RGBA",(18,12),(20,30,40,255)).save(source)
+    model.import_image(source,project=view._project(create=True))
+    view.refresh()
+    editor=view.open_layout()
+    editor.add_asset()
+    assert editor.is_dirty()
+    warnings=[]
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *a,**kw:True)
+    monkeypatch.setattr(gui.messagebox,"showwarning",
+                        lambda *a,**kw:warnings.append(a))
+    monkeypatch.setattr(gui.filedialog,"asksaveasfilename",
+                        lambda *a,**kw:pytest.fail(
+                            "Archive dialog should not appear after failed save"))
+    monkeypatch.setattr(editor,"save",lambda:False)
+    assert view.export_project_archive() is None
+    assert warnings and editor.is_dirty()
+    editor.destroy()
+
+
+def test_restore_cannot_switch_away_from_unsaved_layout_without_approval(
+    workshop,monkeypatch,
+):
+    suite,root,view,links,commands=workshop
+    source=suite/"import-blocked.png"
+    Image.new("RGBA",(15,15),(85,46,51,255)).save(source)
+    model.import_image(source,project=view._project(create=True))
+    view.refresh()
+    editor=view.open_layout()
+    editor.add_asset()
+    assert editor.is_dirty()
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *a,**kw:False)
+    monkeypatch.setattr(gui.filedialog,"askopenfilename",
+                        lambda *a,**kw:pytest.fail(
+                            "Never open another project before resolving edits"))
+    assert view.import_project_archive() is None
+    assert editor.is_dirty()
+    editor.destroy()
+
+
+def test_folder_picker_refuses_switch_with_unsaved_editor(workshop,monkeypatch):
+    suite,root,view,links,commands=workshop
+    source=suite/"folder-unsaved.png"
+    Image.new("RGBA",(11,12),(65,65,85,255)).save(source)
+    model.import_image(source,project=view._project(create=True))
+    view.refresh()
+    editor=view.open_layout()
+    editor.add_asset()
+    assert editor.is_dirty()
+    previous=view._project()
+    alternate=model.workspace(suite/"work"/"next-project",create=True)
+    monkeypatch.setattr(gui.filedialog,"askdirectory",
+                        lambda *a,**kw:str(alternate))
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *a,**kw:False)
+    assert view.pick_project() is None
+    assert view._project()==previous
+    assert editor.is_dirty()
+    editor.destroy()

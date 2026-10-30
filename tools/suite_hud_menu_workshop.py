@@ -361,10 +361,78 @@ class HudMenuWorkshop(ttk.Frame):
             self.preview.clear("XAML/JSON/DDS: Mit Texteditor oder externem Grafikprogramm bearbeiten.")
             self.original.clear("Kein automatisch geladener Pixelvergleich.")
 
+    def _pending_project_edits(self, project):
+        """Find unsaved editors belonging to THIS project, including dialogs."""
+        from suite_hud_menu_editor import HudMenuPixelEditor, HudMenuTextEditor
+        from suite_hud_menu_layout_editor import HudMenuLayoutEditor
+        dirty=[]
+        pending=[self]
+        while pending:
+            parent=pending.pop()
+            for window in parent.winfo_children():
+                pending.append(window)
+                if not isinstance(window,tk.Toplevel) or not window.winfo_exists():
+                    continue
+                if getattr(window,"project",None)!=project:
+                    continue
+                if isinstance(window,HudMenuLayoutEditor):
+                    changed=window.is_dirty()
+                elif isinstance(window,HudMenuPixelEditor):
+                    changed=window.dirty
+                elif isinstance(window,HudMenuTextEditor):
+                    changed=window.editor.edit_modified()
+                else:
+                    changed=False
+                if changed:
+                    dirty.append(window)
+        # Save individual images before scene state. A saved source-image
+        # change can invalidate a previously exported composition.
+        dirty.sort(key=lambda w: isinstance(w,HudMenuLayoutEditor))
+        return dirty
+
+    def _save_pending_before_backup(self, project, *, action="das Projekt sichern"):
+        """Require explicit persistence of current editor buffers before handoff."""
+        pending=self._pending_project_edits(project)
+        if not pending:
+            return True
+        if not messagebox.askyesno(
+            "Ungespeicherte Änderungen im Projekt",
+            f"{len(pending)} Bearbeitungsfenster enthält noch Änderungen.\n\n"
+            "Diese Änderungen jetzt speichern und anschließend "
+            +action+"? Mit »Nein« wird der Vorgang abgebrochen.",
+            parent=self,default="no",
+        ):
+            return False
+        for window in pending:
+            if not window.winfo_exists():
+                continue
+            try:
+                result=window.save()
+            except (OSError,ValueError) as exc:
+                messagebox.showerror(
+                    "Projekt nicht gesichert",
+                    "Bearbeitung konnte nicht gespeichert werden: "+str(exc),
+                    parent=self,
+                )
+                return False
+            if (result is False or window in
+                    self._pending_project_edits(project)):
+                messagebox.showwarning(
+                    "Projekt nicht gesichert",
+                    "Ein Bearbeitungsfenster enthält weiterhin "
+                    "ungespeicherte Änderungen. Das ZIP wurde nicht erstellt.",
+                    parent=self,
+                )
+                window.lift()
+                return False
+        return True
+
     def export_project_archive(self):
         """Save the editable project plus metadata into a new, portable ZIP."""
         try:
             project=self._project(create=True)
+            if not self._save_pending_before_backup(project):
+                return None
             # Suggest a location independent of the portable installation.
             # A backup inside work/ might be lost when replacing the Suite.
             default=Path.home()/"Documents"
@@ -403,6 +471,15 @@ class HudMenuWorkshop(ttk.Frame):
 
     def import_project_archive(self):
         """Restore a checked project ZIP into a NEW work/ directory."""
+        try:
+            if not self._save_pending_before_backup(
+                self._project(create=True),
+                action="ein anderes Projekt aus ZIP öffnen",
+            ):
+                return None
+        except (OSError,ValueError) as exc:
+            messagebox.showerror("Projektwechsel nicht möglich",str(exc),parent=self)
+            return None
         selected=filedialog.askopenfilename(
             parent=self,title="Gesichertes SpriteSuite-Projekt auswählen",
             filetypes=[("SpriteSuite-Projektarchiv","*.zip")],
@@ -468,6 +545,12 @@ class HudMenuWorkshop(ttk.Frame):
             initialdir=str(ROOT/"work"))
         if folder:
             try:
+                selected=workspace(folder,create=False)
+                previous=self._loaded_project or self._project(create=True)
+                if selected != previous and not self._save_pending_before_backup(
+                    previous,action="den Arbeitsordner wechseln",
+                ):
+                    return None
                 selected=workspace(folder,create=True)
                 self._preferred_asset=None
                 self._assets=[]
@@ -584,10 +667,19 @@ class HudMenuWorkshop(ttk.Frame):
                     and selected.path.suffix.lower()==".png" else None)
             existing=getattr(self,"_layout_window",None)
             if existing is not None and existing.winfo_exists():
-                if source:existing.source_choice.set(source)
-                existing.lift()
-                existing.focus_set()
-                return existing
+                if existing.project != root:
+                    # The workspace changed while a designer was open.
+                    # Never show its old project as if it were the new one.
+                    if not existing._can_discard():
+                        existing.lift()
+                        return None
+                    existing.destroy()
+                    self._layout_window=None
+                else:
+                    if source:existing.source_choice.set(source)
+                    existing.lift()
+                    existing.focus_set()
+                    return existing
             from suite_hud_menu_layout_editor import HudMenuLayoutEditor
             window=HudMenuLayoutEditor(
                 self,project=root,source_asset=source,

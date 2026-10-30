@@ -7,6 +7,7 @@ on:
       - 'tools/hud_menu_*.py'
       - 'tools/suite_hud_menu_*.py'
       - 'tests/sandbox/test_hud_menu_*.py'
+      - 'tests/sandbox/test_suite_layout_guidance.py'
       - 'tests/sandbox/test_windows_portable_release.py'
       - '.github/workflows/spritesuite-quality.yml'
   pull_request:
@@ -14,6 +15,7 @@ on:
       - 'tools/hud_menu_*.py'
       - 'tools/suite_hud_menu_*.py'
       - 'tests/sandbox/test_hud_menu_*.py'
+      - 'tests/sandbox/test_suite_layout_guidance.py'
       - 'tests/sandbox/test_windows_portable_release.py'
       - '.github/workflows/spritesuite-quality.yml'
   workflow_dispatch:
@@ -50,6 +52,8 @@ jobs:
           python -m pip check
       - name: Compile source
         run: python -m compileall -q tools src
+      - name: Verify native Tk is available for GUI tests
+        run: python -c "import tkinter as tk; root=tk.Tk(); root.withdraw(); root.destroy(); print('WINDOWS_TK_READY=1')"
       - name: Run metadata, layout and security regressions
         env:
           PYTHONPATH: '${{ github.workspace }}\tools;${{ github.workspace }}\src'
@@ -60,6 +64,8 @@ jobs:
           tests/sandbox/test_hud_menu_metadata_paths.py
           tests/sandbox/test_hud_menu_project_transfer.py
           tests/sandbox/test_hud_menu_workshop.py
+          tests/sandbox/test_hud_menu_workshop_gui.py
+          tests/sandbox/test_suite_layout_guidance.py
           tests/sandbox/test_hud_menu_layout.py
           tests/sandbox/test_hud_menu_session.py
           tests/sandbox/test_hud_menu_noesis_integration.py

@@ -22,10 +22,12 @@ nicht automatisch eine funktionierende Spiel-Modinstallation.
 1. SpriteSuite starten und links **HUD & Menüs** öffnen.
 2. Oberhalb der Bildliste prüfen, dass bei **Aktives Projekt** der
    richtige Projektname steht.
-3. Falls aktuell Positionen geändert wurden: **3 Layout gestalten**
-   öffnen und **Layout speichern** wählen. Nur gespeicherte Ebenen
-   können vollständig archiviert werden.
-4. Zurück in **HUD & Menüs** auf **Projekt sichern …** klicken.
+3. Falls der Pixel-, Text- oder Layout-Designer noch geöffnet ist:
+   **Projekt sichern …** erkennt ungespeicherte Änderungen und fragt,
+   ob sie zuerst gespeichert werden sollen. **Ja** sichert die
+   Bearbeitungen vor dem ZIP. Bei **Nein** oder fehlgeschlagenem Speichern
+   wird **kein Archiv** erstellt.
+4. In **HUD & Menüs** auf **Projekt sichern …** klicken.
 5. Einen **neuen** ZIP-Dateinamen wählen. Bestehende ZIP-Dateien
    werden absichtlich nicht überschrieben.
 6. Den angezeigten Dateipfad und SHA-256-Wert aufbewahren. ZIP auf USB-Stick
@@ -36,6 +38,8 @@ nicht automatisch eine funktionierende Spiel-Modinstallation.
 1. Die Windows-Portable-SpriteSuite in einen neuen Ordner entpacken und
    mit **Suite starten.cmd** starten. Python muss nicht installiert werden.
 2. Links **HUD & Menüs** öffnen und **Projekt aus ZIP öffnen …** wählen.
+   Sind im aktuellen Projekt noch Bearbeitungen ungespeichert, wird
+   vor dem Projektwechsel ausdrücklich nach dem Speichern gefragt.
 3. Die zuvor gesicherte ZIP-Datei auswählen.
 4. Einen **neuen Projektnamen** eingeben, zum Beispiel `MeineMenues2`.
    Ein bereits vorhandener Projekt- und Metadatenordner kann nicht
@@ -61,6 +65,11 @@ nicht automatisch eine funktionierende Spiel-Modinstallation.
   den anderen Computer übertragen.
 - Import-Basisbilder bleiben unverändert; es werden keine externen
   Quellgrafiken oder Spieleinstallationen überschrieben.
+- Beim Archivieren prüft die Suite offene Bearbeitungsfenster und bietet
+  das Speichern der Änderungen an. Wird dies abgelehnt oder schlägt
+  es fehl, wird kein scheinbar vollständiges ZIP erzeugt.
+- Beim Wechsel des Arbeitsprojekts verwendet der Layout-Designer nie
+  das noch offene Fenster des vorherigen Projekts als neue Szene.
 
 ## Vorherige SpriteSuite-Versionen
 

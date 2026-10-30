@@ -24,7 +24,7 @@ zuletzt gespeicherte Layout erneut. Der Zustandsvermerk bleibt unter
 
 | Variante | Inhalt | Wie |
 |---|---|---|
-| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-project-archive-2026-10-29) → `SpriteSuite-Windows-Portable-Projektarchive-2026-10-29.zip` |
+| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) → `SpriteSuite-Windows-Portable-Sichere-Projektsicherung-2026-10-30.zip` |
 | **Quellcode** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | `main` → *Code* → *Download ZIP* |
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 
@@ -43,7 +43,9 @@ bearbeitbaren Arbeitsgrafiken, Ebenen, Positionen, Import-Originale,
 Revisionen und Positionsmanifeste. Es enthält **keine** Spieleinstallation
 oder QA-Installationsbelege. Beim Wiederherstellen wird ein neuer
 Projektname vorgeschlagen. Vorhandene Projekte werden niemals
-überschrieben.
+überschrieben. Vor der Sicherung werden offene Pixeleditoren, Texteditoren
+und Layouts auf ungespeicherte Änderungen geprüft; ein fehlgeschlagenes
+Speichern verhindert ein unvollständiges Projektarchiv.
 
 Alte Metadaten aus der bisherigen absoluten Installationspfadkennung
 werden beim ersten Zugriff kontrolliert in eine portable Ablage

@@ -26,7 +26,9 @@ In **HUD & menus**, use **Back up project…** and
 layers, exact positions, original imports, revisions and export manifests.
 It does not include an installed game or a QA installation receipt.
 Restoring uses a new project folder and never overwrites an existing
-project. Legacy metadata is safely copied to a relocatable folder on
+project. Unsaved changes in open pixel, text or layout editors must be
+saved before a project backup or project switch; failed saves abort the
+operation. Legacy metadata is safely copied to a relocatable folder on
 first use, leaving the original untouched.
 
 [Project transfer instructions (German)](docs/PROJEKTARCHIVE_2026-10-29.md).
@@ -36,7 +38,7 @@ first use, leaving the original untouched.
 
 | Variant | Contents | How |
 |---|---|---|
-| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-project-archive-2026-10-29) → `SpriteSuite-Windows-Portable-Projektarchive-2026-10-29.zip` |
+| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) → `SpriteSuite-Windows-Portable-Sichere-Projektsicherung-2026-10-30.zip` |
 | **Source ZIP** | full application code and tools, but **without** the Python runtime | branch `main` → *Code* → *Download ZIP* |
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 
