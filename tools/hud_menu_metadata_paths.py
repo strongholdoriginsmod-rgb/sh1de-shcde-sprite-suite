@@ -13,13 +13,11 @@ import shutil
 import tempfile
 from typing import Callable
 
+from suite_windows_paths import is_link_or_reparse as _linked
+
 
 MAX_FILES = 25000
 MAX_BYTES = 2 * 1024 ** 3
-
-
-def _linked(path: Path) -> bool:
-    return path.is_symlink() or path.is_junction()
 
 
 def _digest_file(path: Path) -> str:

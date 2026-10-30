@@ -406,3 +406,88 @@ def test_simple_selection_without_movement_preserves_exact_offgrid_positions(sce
     assert (a.x,a.y)==(x,y)
     layout.move_layer(scene,a.id,0,8,snap=8)
     assert a.x==x
+
+
+def test_failed_manifest_write_restores_previous_export_files(scene_project, monkeypatch):
+    project, scene, first, _second = setup_scene(scene_project)
+    scene.target_resource = "Override/Assets/GUI/Images/Recoverable.png"
+    _, old_token = layout.save_scene(scene, project)
+    exported = layout.export_composition(
+        scene, project, resource_name="Recoverable", scene_sha256=old_token)
+    png, meta = Path(exported["png"]), Path(exported["manifest"])
+    original_png, original_meta = png.read_bytes(), meta.read_bytes()
+    layout.set_geometry(scene, first.id, x=27)
+    _, new_token = layout.save_scene(scene, project, expected_hash=old_token)
+
+    atomic_save = layout._atomic_save
+    def reject_manifest(target, data, *, expected_hash):
+        if target == meta:
+            raise OSError("simulated manifest write failure")
+        return atomic_save(target, data, expected_hash=expected_hash)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(layout, "_atomic_save", reject_manifest)
+        with pytest.raises(OSError, match="simulated manifest"):
+            layout.export_composition(
+                scene, project, resource_name="Recoverable",
+                scene_sha256=new_token)
+    assert png.read_bytes() == original_png
+    assert meta.read_bytes() == original_meta
+    # A retry must work after the underlying filesystem issue is resolved.
+    repaired = layout.export_composition(
+        scene, project, resource_name="Recoverable", scene_sha256=new_token)
+    assert repaired["sha256"] != exported["sha256"]
+
+
+def test_failed_first_export_does_not_leave_untracked_png(scene_project, monkeypatch):
+    project, scene, _first, _second = setup_scene(scene_project)
+    scene.target_resource = "Override/Assets/GUI/Images/FirstExport.png"
+    _, scene_token = layout.save_scene(scene, project)
+    png = project / scene.target_resource
+    meta = assets._metadata_dir(project) / "exports" / "FirstExport.png.json"
+    atomic_save = layout._atomic_save
+
+    def reject_manifest(target, data, *, expected_hash):
+        if target == meta:
+            raise OSError("simulated new manifest write failure")
+        return atomic_save(target, data, expected_hash=expected_hash)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(layout, "_atomic_save", reject_manifest)
+        with pytest.raises(OSError, match="simulated new manifest"):
+            layout.export_composition(
+                scene, project, resource_name="FirstExport",
+                scene_sha256=scene_token)
+    assert not png.exists()
+    assert not meta.exists()
+
+
+def test_failed_after_manifest_write_rolls_back_both_files(scene_project, monkeypatch):
+    project, scene, first, _second = setup_scene(scene_project)
+    scene.target_resource = "Override/Assets/GUI/Images/PartialWrite.png"
+    _, old_token = layout.save_scene(scene, project)
+    exported = layout.export_composition(
+        scene, project, resource_name="PartialWrite", scene_sha256=old_token)
+    png, meta = Path(exported["png"]), Path(exported["manifest"])
+    original_png, original_meta = png.read_bytes(), meta.read_bytes()
+    layout.set_geometry(scene, first.id, x=33)
+    _, new_token = layout.save_scene(scene, project, expected_hash=old_token)
+    atomic_save = layout._atomic_save
+    injected = {"done": False}
+
+    def write_then_report_error(target, data, *, expected_hash):
+        result = atomic_save(target, data, expected_hash=expected_hash)
+        if target == meta and not injected["done"]:
+            injected["done"] = True
+            raise OSError("simulated postwrite I/O failure")
+        return result
+
+    with monkeypatch.context() as patch:
+        patch.setattr(layout, "_atomic_save", write_then_report_error)
+        with pytest.raises(OSError, match="postwrite"):
+            layout.export_composition(
+                scene, project, resource_name="PartialWrite",
+                scene_sha256=new_token)
+    assert injected["done"]
+    assert png.read_bytes() == original_png
+    assert meta.read_bytes() == original_meta

@@ -21,7 +21,7 @@ import uuid
 from PIL import Image, UnidentifiedImageError
 
 from hud_menu_workspace import (
-    WORK, WorkshopError, _existing, _metadata_dir, _relative, filename,
+    WORK, WorkshopError, _existing, _linked, _metadata_dir, _relative, filename,
     workspace,
 )
 
@@ -208,7 +208,7 @@ def scene_file(project: Path | str, name: str) -> Path:
 def load_scene(project: Path | str, name: str) -> tuple[Scene, str]:
     root = workspace(project)
     path = scene_file(root, name)
-    if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_SCENE_BYTES:
+    if _linked(path) or not path.is_file() or path.stat().st_size > MAX_SCENE_BYTES:
         raise WorkshopError("Saved layout missing, linked or too large")
     source = path.read_bytes()
     try:
@@ -230,21 +230,21 @@ def _safe_output_path(target: Path) -> None:
         raise WorkshopError("Output would escape SpriteSuite/work/")
     node = target
     while node != root and node != node.parent:
-        if node.is_symlink():
+        if _linked(node):
             raise WorkshopError("Linked output path or parent is not permitted")
         node = node.parent
 
 
 def _atomic_save(target: Path, data: bytes, *, expected_hash: str | None) -> str:
     _safe_output_path(target)
-    if target.is_symlink():
+    if _linked(target):
         raise WorkshopError("Linked output is not permitted")
     if target.exists():
         if expected_hash is None or _hash(target.read_bytes()) != expected_hash:
             raise WorkshopError("Output was edited externally; reload before replacing")
     elif expected_hash is not None:
         raise WorkshopError("Previously saved file disappeared")
-    if target.parent.is_symlink():
+    if _linked(target.parent):
         raise WorkshopError("Output directory is linked")
     target.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=".layout-", suffix=".tmp", dir=target.parent)
@@ -471,7 +471,7 @@ def _render_layer(layer: Layer, source: Path, scene_width: int,
                   scene_height: int) -> tuple[Image.Image, tuple[int,int]] | None:
     if not layer.visible:
         return None
-    if source.is_symlink() or not source.is_file():
+    if _linked(source) or not source.is_file():
         raise WorkshopError("Missing or linked layer image")
     with Image.open(source) as original:
         if original.width*original.height > MAX_PIXELS:
@@ -546,6 +546,27 @@ def _asset_hashes(scene: Scene, root: Path) -> list[dict]:
     return [{"path":key,"sha256":value} for key,value in sorted(found.items())]
 
 
+def _rollback_export_file(target: Path, previous: bytes | None,
+                          attempted: bytes) -> None:
+    """Undo only our own bytes; never erase a later external edit."""
+    _safe_output_path(target)
+    if _linked(target):
+        raise WorkshopError("Export recovery refuses a linked file")
+    if not target.exists():
+        if previous is not None:
+            raise WorkshopError("Export recovery cannot find its previous file")
+        return
+    current = target.read_bytes()
+    if previous is not None and current == previous:
+        return
+    if current != attempted:
+        raise WorkshopError("Export recovery refuses externally changed bytes")
+    if previous is None:
+        target.unlink()
+    else:
+        _atomic_save(target, previous, expected_hash=_hash(attempted))
+
+
 def export_composition(scene: Scene, project: Path | str, *,
                        resource_name: str, scene_sha256: str) -> dict:
     """Bake all layer transforms into a version-free, package-ready HUD PNG.
@@ -562,7 +583,7 @@ def export_composition(scene: Scene, project: Path | str, *,
     metadata = _metadata_dir(root) / "exports" / (name+".json")
     _safe_output_path(output)
     _safe_output_path(metadata)
-    if output.is_symlink() or metadata.is_symlink():
+    if _linked(output) or _linked(metadata):
         raise WorkshopError("Export destination is linked")
     old_manifest = None
     expected = None
@@ -597,13 +618,26 @@ def export_composition(scene: Scene, project: Path | str, *,
         "note": "Positions and transforms baked into PNG; XAML placement of the "
                 "composite resource must be mapped against the target game.",
     }
-    if output.exists():
-        _atomic_save(output,png,expected_hash=expected)
-    else:
-        _atomic_save(output,png,expected_hash=None)
     serialized=(json.dumps(manifest,indent=2,ensure_ascii=False)+"\n").encode("utf8")
-    old_meta_hash = (_hash(metadata.read_bytes()) if metadata.is_file() else None)
-    _atomic_save(metadata,serialized,expected_hash=old_meta_hash)
+    # The PNG and its provenance are separate files: preserve both previous
+    # versions if either write fails. A power outage between writes still
+    # requires manual recovery, but normal I/O errors do not strand exports.
+    old_png = output.read_bytes() if output.is_file() else None
+    old_metadata = metadata.read_bytes() if metadata.is_file() else None
+    old_meta_hash = _hash(old_metadata) if old_metadata is not None else None
+    try:
+        _atomic_save(output,png,expected_hash=expected)
+        _atomic_save(metadata,serialized,expected_hash=old_meta_hash)
+    except Exception:
+        try:
+            _rollback_export_file(metadata,old_metadata,serialized)
+            _rollback_export_file(output,old_png,png)
+        except (OSError,WorkshopError) as rollback_error:
+            raise WorkshopError(
+                "Export fehlgeschlagen; vorherige Dateien konnten nicht "
+                "vollständig wiederhergestellt werden. Bitte Export prüfen."
+            ) from rollback_error
+        raise
     return {"png":str(output),"manifest":str(metadata),
             "resource":relative,"sha256":_hash(png),
             "scene_sha256":scene_sha256, "layers":len(scene.layers)}
@@ -676,7 +710,7 @@ def prepare_package_source(
         if parent.exists():
             _safe_output_path(parent)
             for patch in sorted(parent.rglob("*.xaml")):
-                if patch.is_symlink():
+                if _linked(patch):
                     raise WorkshopError("Linked XAML patch")
                 rel = patch.relative_to(root).as_posix()
                 from hud_menu_workspace import _relative
@@ -696,7 +730,7 @@ def prepare_package_source(
 
     def validate_bundle(folder: Path) -> None:
         _safe_output_path(folder)
-        if folder.is_symlink() or not folder.is_dir():
+        if _linked(folder) or not folder.is_dir():
             raise WorkshopError("Invalid prepared package directory")
         paths=[p for p in folder.rglob("*") if p.is_file()]
         present={p.relative_to(folder).as_posix():p for p in paths}
@@ -705,7 +739,7 @@ def prepare_package_source(
         for name,recorded_hash in expected.items():
             file=present[name]
             _safe_output_path(file)
-            if file.is_symlink() or _hash(file.read_bytes()) != recorded_hash:
+            if _linked(file) or _hash(file.read_bytes()) != recorded_hash:
                 raise WorkshopError("Prepared package differs from recorded export")
         # The regular asset-packager validates actual formats after provenance.
         files = _discover(folder)

@@ -20,6 +20,8 @@ from xml.parsers import expat
 import zipfile
 
 from PIL import Image, UnidentifiedImageError
+from suite_windows_paths import is_link_or_reparse as _linked
+from suite_windows_paths import is_reserved_windows_component
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / "work"
@@ -48,7 +50,7 @@ def _inside_work(folder: Path | str, *, existing: bool) -> Path:
     raw = Path(folder)
     if not raw.is_absolute():
         raw = ROOT / raw
-    if raw.is_symlink():
+    if _linked(raw):
         raise AssetModError("Verknüpfte Quell- oder Zielordner nicht zulässig")
     resolved = raw.resolve(strict=existing)
     if resolved == base or not resolved.is_relative_to(base):
@@ -56,7 +58,7 @@ def _inside_work(folder: Path | str, *, existing: bool) -> Path:
     for candidate in (raw, *raw.parents):
         if candidate == base:
             break
-        if candidate.is_symlink():
+        if _linked(candidate):
             raise AssetModError("Symbolische Ordnerverknüpfung im Pfad")
     return resolved
 
@@ -67,7 +69,7 @@ def _relative_key(path: Path) -> str:
         raise AssetModError("Dateien müssen unter Override/ oder Patches/ liegen")
     if any(
         not part or part in (".", "..") or part.endswith((" ", "."))
-        or ":" in part or "\\" in part or os.path.isreserved(part)
+        or ":" in part or "\\" in part or is_reserved_windows_component(part)
         for part in parts
     ):
         raise AssetModError("Unsicherer Asset-Pfad")
@@ -179,7 +181,7 @@ def _discover(source: Path) -> list[tuple[str, Path, int, str]]:
     folded = set()
     total = 0
     for file in sorted(source.rglob("*")):
-        if file.is_symlink():
+        if _linked(file):
             raise AssetModError(f"Symbolische Asset-Datei: {file.name}")
         if file.is_dir():
             continue
@@ -213,7 +215,7 @@ def _discover(source: Path) -> list[tuple[str, Path, int, str]]:
 
 def build(source: Path | str, guid: str, *, name: str, author: str,
           target: Path | str | None = None, version: str = "1.0.0") -> dict:
-    if not _GUID.fullmatch(guid) or os.path.isreserved(guid):
+    if not _GUID.fullmatch(guid) or is_reserved_windows_component(guid):
         raise AssetModError("Ungültige Mod-GUID")
     if not _VERSION.fullmatch(version):
         raise AssetModError("Ungültige Mod-Version")

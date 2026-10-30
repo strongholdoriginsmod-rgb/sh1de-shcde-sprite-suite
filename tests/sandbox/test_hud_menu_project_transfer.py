@@ -290,3 +290,107 @@ def test_corrupt_zip_member_crc_cleans_temporary_restore(sample,tmp_path):
     assert not list((suite/"work").glob(".restore-project-*"))
     assert not list((suite/"work"/workspace.BASELINES).glob(".restore-metadata-*"))
     assert source.read_bytes()==original
+
+
+def test_archive_metadata_only_allows_editor_generated_names(sample, tmp_path):
+    good = (
+        "metadata/layouts/MyMenu.scene.json",
+        "metadata/layouts/revisions/MyMenu-" + "a" * 20 + ".scene.json",
+        "metadata/import-baselines/" + "b" * 64 + ".png",
+        "metadata/import-baselines/" + "b" * 64 + ".json",
+        "metadata/revisions/" + "c" * 64 + "-" + "d" * 16 + ".png",
+        "metadata/exports/Mein Menü.png.json",
+    )
+    for name in good:
+        assert transfer._safe_member(name) == name
+    unsafe = (
+        "metadata/layouts/installer.exe",
+        "metadata/layouts/MyMenu.scene.json.exe",
+        "metadata/layouts/revisions/anything.cmd",
+        "metadata/import-baselines/script.ps1",
+        "metadata/revisions/arbitrary.png",
+        "metadata/exports/autorun.bat",
+        "metadata/exports/CON.png.json",
+        "metadata/layouts/subdir/extra.scene.json",
+    )
+    for name in unsafe:
+        with pytest.raises(workspace.WorkshopError):
+            transfer._safe_member(name)
+    # Verify ZIP indexing uses the same allowlist before extraction.
+    attack = tmp_path / "unknown-metadata.zip"
+    filename = "metadata/layouts/installer.exe"
+    content = b"not an editor scene"
+    with ZipFile(attack, "w") as writer:
+        writer.writestr(filename, content)
+        writer.writestr(transfer.MANIFEST, json.dumps({
+            "schema": transfer.SCHEMA, "project_name": "bad-project",
+            "files": [{"path": filename, "bytes": len(content),
+                       "sha256": sha256(content).hexdigest()}],
+        }))
+    with pytest.raises(workspace.WorkshopError, match="Metadatendatei"):
+        transfer.archive_info(attack)
+
+
+def test_backup_rejects_unknown_metadata_without_creating_zip(sample, tmp_path):
+    _suite, project, source, original, *_rest = sample
+    metadata = workspace._metadata_dir(project)
+    (metadata / "exports" / "unexpected.exe").write_bytes(b"unexpected")
+    output = tmp_path / "should-not-exist.zip"
+    with pytest.raises(workspace.WorkshopError, match="Metadatendatei"):
+        transfer.create_archive(project, output)
+    assert not output.exists()
+    assert source.read_bytes() == original
+
+
+def test_windows_path_checks_still_work_without_new_python_apis(monkeypatch, tmp_path):
+    import os
+    monkeypatch.delattr(os.path, "isreserved", raising=False)
+    monkeypatch.delattr(Path, "is_junction", raising=False)
+    for reserved in ("CON", "LPT1", "COM¹", "NUL.png", "trailing."):
+        assert workspace._windows_reserved_name(reserved)
+    for path in ("Override/Sprites/CON.png", "Override/Sprites/COM1.png"):
+        with pytest.raises(workspace.WorkshopError):
+            workspace._relative(path)
+    with pytest.raises(workspace.WorkshopError):
+        transfer._name("CON")
+    with pytest.raises(workspace.WorkshopError):
+        transfer._safe_member("metadata/layouts/COM1.scene.json")
+    import se_asset_package as pack
+    import origins_grafikdaten as graphics
+    with pytest.raises(pack.AssetModError):
+        pack._relative_key(Path("Override") / "COM1.png")
+    with pytest.raises(graphics.GraphicsDataError):
+        graphics.secure_relative("Assets/LPT1.png")
+    simple_file = tmp_path / "regular-file"
+    simple_file.write_text("safe", encoding="utf8")
+    assert not transfer._is_link(simple_file)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows NTFS junction test")
+def test_windows_junction_is_rejected_without_new_pathlib_api(monkeypatch, tmp_path):
+    import subprocess
+    import se_asset_package as pack
+
+    work = tmp_path / "work"
+    work.mkdir()
+    real = work / "real"
+    real.mkdir()
+    junction = work / "linked-project"
+    created = subprocess.run(
+        ["cmd", "/c", "mklink", "/J", str(junction), str(real)],
+        capture_output=True, check=False,
+    )
+    if created.returncode != 0:
+        pytest.skip("Junction creation unavailable on this Windows runner")
+    try:
+        monkeypatch.delattr(Path, "is_junction", raising=False)
+        assert workspace._linked(junction)
+        assert transfer._is_link(junction)
+        monkeypatch.setattr(pack, "ROOT", tmp_path)
+        monkeypatch.setattr(pack, "WORK", work)
+        with pytest.raises(pack.AssetModError, match="Verknüpfte"):
+            pack._inside_work(junction, existing=True)
+    finally:
+        # rmdir removes only the junction itself, never its target.
+        junction.rmdir()
+    assert real.is_dir()

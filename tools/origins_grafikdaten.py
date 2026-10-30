@@ -20,6 +20,9 @@ import subprocess
 import sys
 import tempfile
 
+from suite_windows_paths import is_link_or_reparse as _linked
+from suite_windows_paths import is_reserved_windows_component
+
 ROOT = Path(__file__).resolve().parents[1]
 OFFICIAL_URL = "https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten.git"
 PRIVATE_GITHUB_URL = "https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite.git"
@@ -50,7 +53,7 @@ def secure_relative(value: object) -> str:
     path = PurePosixPath(value)
     win = PureWindowsPath(value)
     if (path.is_absolute() or win.is_absolute() or win.drive or
-            any(os.path.isreserved(part) for part in value.split("/")) or
+            any(is_reserved_windows_component(part) for part in value.split("/")) or
             any(part in {"", ".", ".."} or part.endswith((" ", "."))
                 or any(ch in part for ch in ':<>"|?*')
                 for part in value.split("/"))):
@@ -182,7 +185,7 @@ def inventory_from_tree(repo: Path | str) -> dict:
 
 def load_inventory(path: Path | str = INVENTORY) -> dict:
     file = Path(path)
-    if file.is_symlink() or not file.is_file() or file.stat().st_size > 5_000_000:
+    if _linked(file) or not file.is_file() or file.stat().st_size > 5_000_000:
         raise GraphicsDataError("Grafikdaten-Inventar fehlt, ist verknüpft oder zu groß")
     try:
         value = json.loads(file.read_text(encoding="utf8"))
@@ -220,7 +223,7 @@ def checked_source_file(repo: Path | str, item: dict) -> Path:
     if classification(relative) != item["kind"] or not item.get("is_regular"):
         raise GraphicsDataError("Der Grafikeintrag ist nicht zur Bearbeitung freigegeben")
     file = root.joinpath(*PurePosixPath(relative).parts)
-    if not file.is_file() or file.is_symlink() or not file.resolve().is_relative_to(root):
+    if not file.is_file() or _linked(file) or not file.resolve().is_relative_to(root):
         raise GraphicsDataError("Grafik noch nicht ausgecheckt: " + relative)
     # Inventory data never authorizes an untracked Git object. Verify the
     # selected file's blob directly against the immutable source Git tree.
@@ -265,10 +268,10 @@ def safe_edit_folder(folder: Path) -> Path:
     work = (ROOT / "work").resolve()
     raw = Path(folder)
     dest = raw.resolve()
-    if dest == work or not dest.is_relative_to(work) or raw.is_symlink():
+    if dest == work or not dest.is_relative_to(work) or _linked(raw):
         raise GraphicsDataError("Bearbeitung nur in einem Unterordner von work/")
     for candidate in (raw, *raw.parents):
-        if candidate.exists() and candidate.is_symlink():
+        if candidate.exists() and _linked(candidate):
             raise GraphicsDataError("Symbolische Ordnerverknüpfung abgewiesen")
     return dest
 
@@ -292,7 +295,7 @@ def copy_for_editing(repo: Path, inventory: dict, relative: str,
     for parent in (filename.parent, *filename.parent.parents):
         if parent == root:
             break
-        if parent.is_symlink():
+        if _linked(parent):
             raise GraphicsDataError("Verknüpfter Unterordner im Arbeitsverzeichnis")
     filename.parent.mkdir(parents=True, exist_ok=True)
     if not filename.parent.resolve().is_relative_to(root):

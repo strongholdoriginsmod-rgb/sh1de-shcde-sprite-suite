@@ -59,6 +59,11 @@ nicht automatisch eine funktionierende Spiel-Modinstallation.
   anhand ihres SHA-256-Hashes geprüft.
 - Absolute Pfade, Verzeichniswechsel per `..`, doppelte Dateinamen,
   ZIP-Symlinks und unbekannte Archivbereiche werden zurückgewiesen.
+- Innerhalb der Metadatenbereiche sind nur die Dateinamen und Endungen
+  zulässig, die SpriteSuite für Layouts, Revisionen, Importbasen und
+  Exportnachweise selbst verwendet. Fremde oder ausführbare Dateien führen
+  zum sicheren Abbruch der Sicherung oder Wiederherstellung; sie werden
+  weder unbemerkt ausgelassen noch aus fremden ZIPs übernommen.
 - Es werden **nur neue Ordner unter `SpriteSuite/work/`** erstellt.
   Vorhandene Projekte werden weder ersetzt noch zusammengeführt.
 - QA-Spielinstallationsbelege werden aus Sicherheitsgründen nicht auf
@@ -70,6 +75,25 @@ nicht automatisch eine funktionierende Spiel-Modinstallation.
   es fehl, wird kein scheinbar vollständiges ZIP erzeugt.
 - Beim Wechsel des Arbeitsprojekts verwendet der Layout-Designer nie
   das noch offene Fenster des vorherigen Projekts als neue Szene.
+
+## Hilfe bei unterbrochener Sicherung oder fehlgeschlagenem Export
+
+- **„Unbekannte oder unzulässige Projekt-Metadatendatei“:** Eine Datei
+  entspricht nicht dem erwarteten SpriteSuite-Format. Das Backup wird
+  abgebrochen, statt diese Datei unbemerkt mitzuübertragen. Bestehende
+  Projektdateien bleiben erhalten. Vor manuellen Änderungen an Metadaten
+  zunächst den vollständigen `work/`-Ordner separat sichern.
+- **ZIP beschädigt / Prüfsumme falsch:** Das Archiv nicht erneut unter
+  demselben Namen einspielen. Eine neue Sicherung vom ursprünglichen
+  Projekt erstellen. Ein abgebrochener Import überschreibt kein Projekt.
+- **PNG-Export schlägt beim Schreiben fehl:** Bei gewöhnlichen Dateifehlern
+  versucht die Suite, die vorherige PNG und den dazugehörigen Exportnachweis
+  unverändert zurückzusetzen. Ist eine sichere Rücknahme nicht möglich,
+  meldet sie das ausdrücklich; dann vor einem erneuten Export beide Dateien
+  kontrollieren und eine Kopie des Projekts aufbewahren.
+- **Stromausfall oder harter Programmabbruch:** Zwei getrennte Dateien können
+  nicht vollständig gemeinsam atomar geschrieben werden. Nach einem solchen
+  Ereignis das Layout und den exportierten PNG-Nachweis erneut prüfen.
 
 ## Vorherige SpriteSuite-Versionen
 

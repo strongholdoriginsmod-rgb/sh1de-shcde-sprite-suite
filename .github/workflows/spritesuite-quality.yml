@@ -5,16 +5,26 @@ on:
     branches: [main]
     paths:
       - 'tools/hud_menu_*.py'
+      - 'tools/suite_windows_paths.py'
+      - 'tools/se_asset_package.py'
+      - 'tools/origins_grafikdaten.py'
       - 'tools/suite_hud_menu_*.py'
       - 'tests/sandbox/test_hud_menu_*.py'
+      - 'tests/sandbox/test_se_asset_package.py'
+      - 'tests/sandbox/test_origins_grafikdaten.py'
       - 'tests/sandbox/test_suite_layout_guidance.py'
       - 'tests/sandbox/test_windows_portable_release.py'
       - '.github/workflows/spritesuite-quality.yml'
   pull_request:
     paths:
       - 'tools/hud_menu_*.py'
+      - 'tools/suite_windows_paths.py'
+      - 'tools/se_asset_package.py'
+      - 'tools/origins_grafikdaten.py'
       - 'tools/suite_hud_menu_*.py'
       - 'tests/sandbox/test_hud_menu_*.py'
+      - 'tests/sandbox/test_se_asset_package.py'
+      - 'tests/sandbox/test_origins_grafikdaten.py'
       - 'tests/sandbox/test_suite_layout_guidance.py'
       - 'tests/sandbox/test_windows_portable_release.py'
       - '.github/workflows/spritesuite-quality.yml'
@@ -29,8 +39,12 @@ concurrency:
 
 jobs:
   metadata-and-export:
-    name: Windows x64 / Python 3.13 / metadata and export
+    name: Windows x64 / Python ${{ matrix.python-version }} / metadata and export
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
     timeout-minutes: 30
     defaults:
       run:
@@ -38,10 +52,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Python 3.13
+      - name: Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: ${{ matrix.python-version }}
           architecture: x64
           cache: pip
           cache-dependency-path: requirements-py313-win_amd64.lock
@@ -63,6 +77,8 @@ jobs:
           python -m pytest -q -p no:cacheprovider --maxfail=1
           tests/sandbox/test_hud_menu_metadata_paths.py
           tests/sandbox/test_hud_menu_project_transfer.py
+          tests/sandbox/test_se_asset_package.py
+          tests/sandbox/test_origins_grafikdaten.py
           tests/sandbox/test_hud_menu_workshop.py
           tests/sandbox/test_hud_menu_workshop_gui.py
           tests/sandbox/test_suite_layout_guidance.py

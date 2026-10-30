@@ -17,6 +17,10 @@ import tempfile
 from typing import Literal
 
 from PIL import Image, ImageOps, UnidentifiedImageError
+from suite_windows_paths import (
+    is_link_or_reparse as _linked,
+    is_reserved_windows_component as _windows_reserved_name,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / "work"
@@ -60,7 +64,7 @@ def workspace(path: Path | str = DEFAULT, *, create: bool = False) -> Path:
     raw = Path(path)
     if not raw.is_absolute():
         raw = ROOT / raw
-    if raw.is_symlink():
+    if _linked(raw):
         raise WorkshopError("Symbolic workspaces are not allowed")
     target = raw.resolve(strict=False)
     if target == work or not target.is_relative_to(work):
@@ -71,7 +75,7 @@ def workspace(path: Path | str = DEFAULT, *, create: bool = False) -> Path:
     # final target would still resolve inside work/.
     node = raw
     while node != work and node != node.parent:
-        if node.is_symlink():
+        if _linked(node):
             raise WorkshopError("Workspace path contains a symlink")
         node = node.parent
     if create:
@@ -85,7 +89,7 @@ def _relative(relative: str, *, patch: bool = False) -> PurePosixPath:
     name = PurePosixPath(relative)
     if name.is_absolute() or any(
         part in ("", ".", "..") or part.endswith((" ", "."))
-        or os.path.isreserved(part) or ":" in part
+        or _windows_reserved_name(part) or ":" in part
         for part in relative.split("/")
     ):
         raise WorkshopError("Unsafe resource-key path")
@@ -103,7 +107,7 @@ def _relative(relative: str, *, patch: bool = False) -> PurePosixPath:
 def _existing(root: Path, relative: str, *, patch: bool = False) -> Path:
     rel = _relative(relative, patch=patch)
     path = root.joinpath(*rel.parts)
-    if not path.is_file() or path.is_symlink() or path.resolve() != path:
+    if not path.is_file() or _linked(path) or path.resolve() != path:
         raise WorkshopError("Asset missing or symlinked")
     return path
 
@@ -119,7 +123,7 @@ def filename(value: str) -> str:
     candidate = candidate.strip(" .")
     if (not candidate or len(candidate) > 85 or
             candidate.casefold() in {"con", "nul", "prn", "aux"} or
-            candidate.startswith(".") or os.path.isreserved(candidate)):
+            candidate.startswith(".") or _windows_reserved_name(candidate)):
         raise WorkshopError("Unsafe PNG image name")
     if candidate.lower().endswith(".png"):
         candidate = candidate[:-4]
@@ -129,7 +133,7 @@ def filename(value: str) -> str:
 
 
 def _image_png(source: Path) -> bytes:
-    if source.is_symlink() or not source.is_file():
+    if _linked(source) or not source.is_file():
         raise WorkshopError("Image source missing or symlinked")
     if source.suffix.casefold() not in _ALLOWED_SOURCE:
         raise WorkshopError("Only PNG, JPEG and WebP images can be imported")
@@ -161,11 +165,11 @@ def _write_new(path: Path, data: bytes) -> None:
     if not path.resolve(strict=False).is_relative_to(work):
         raise WorkshopError("Output escapes the work directory")
     while node != work and node != node.parent:
-        if node.is_symlink():
+        if _linked(node):
             raise WorkshopError("Linked parent directory is unsafe")
         node = node.parent
     path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists() or path.is_symlink():
+    if path.exists() or _linked(path):
         raise WorkshopError(f"Existing files are never replaced: {path.name}")
     fd, temp_name = tempfile.mkstemp(dir=path.parent, prefix=".sprite-suite-", suffix=".tmp")
     try:
@@ -277,7 +281,7 @@ def import_patch(
 ) -> Path:
     root = workspace(project, create=True)
     src = Path(source)
-    if not src.is_file() or src.is_symlink() or src.suffix.lower() != ".xaml":
+    if not src.is_file() or _linked(src) or src.suffix.lower() != ".xaml":
         raise WorkshopError("Please choose a regular XAML patch")
     if src.stat().st_size > 2 * 1024 * 1024:
         raise WorkshopError("XAML patch exceeds 2 MiB")
@@ -300,10 +304,10 @@ def list_assets(project: Path | str = DEFAULT) -> list[WorkshopAsset]:
         parent = root / base
         if not parent.exists():
             continue
-        if parent.is_symlink():
+        if _linked(parent):
             raise WorkshopError(f"Asset directory is symlinked: {base}")
         for entry in sorted(parent.rglob("*")):
-            if entry.is_symlink():
+            if _linked(entry):
                 raise WorkshopError(f"Linked asset not allowed: {entry}")
             if not entry.is_file():
                 continue
@@ -373,7 +377,7 @@ def write_png(
             dst.write(png)
             dst.flush()
             os.fsync(dst.fileno())
-        if path.is_symlink() or _sha(path.read_bytes()) != expected_sha256:
+        if _linked(path) or _sha(path.read_bytes()) != expected_sha256:
             raise WorkshopError("Image changed while saving")
         os.replace(temp_name, path)
     finally:
