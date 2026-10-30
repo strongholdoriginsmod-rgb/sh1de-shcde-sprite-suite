@@ -12,12 +12,14 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from PIL import Image
+from suite_windows_paths import is_link_or_reparse, is_reserved_windows_component
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -98,16 +100,17 @@ def _read_json(path: Path, label: str) -> dict[str, Any]:
 
 def _flat_name(value: Any, label: str) -> str:
     text = str(value)
-    if not text or Path(text).name != text or text in {".", ".."}:
+    if (not isinstance(value, str) or not text or len(text) > 180
+            or text in {".", ".."} or Path(text).name != text
+            or is_reserved_windows_component(text)):
         raise LayoutPortError(f"Unsicherer {label}: {text!r}")
     return text
 
 
 def _positive_int(value: Any, label: str, *, allow_zero: bool = False) -> int:
-    try:
-        number = int(value)
-    except (TypeError, ValueError) as exc:
-        raise LayoutPortError(f"{label} ist nicht ganzzahlig") from exc
+    if type(value) is not int:
+        raise LayoutPortError(f"{label} muss eine echte Ganzzahl sein")
+    number = value
     minimum = 0 if allow_zero else 1
     if number < minimum:
         raise LayoutPortError(f"{label} ist kleiner als {minimum}")
@@ -122,18 +125,25 @@ def _digest(value: Any, label: str) -> str:
 
 
 def _load_index(root: Path, label: str) -> tuple[dict[str, Any], dict[str, Atlas]]:
+    if (not root.is_dir() or is_link_or_reparse(root)
+            or is_link_or_reparse(root / "index.json")):
+        raise LayoutPortError(f"{label} ist kein regulärer Exportordner")
     raw = _read_json(root / "index.json", f"{label}-Index")
     if raw.get("schema_version") != 1 or not isinstance(raw.get("atlases"), list):
         raise LayoutPortError(f"{label}-Index hat einen unbekannten Vertrag")
     atlases: dict[str, Atlas] = {}
     global_keys: set[str] = set()
+    directories: set[str] = set()
     for atlas_raw in raw["atlases"]:
         if not isinstance(atlas_raw, dict) or not isinstance(atlas_raw.get("crops"), list):
             raise LayoutPortError(f"{label}-Atlas ist unvollstaendig")
         sheet = _flat_name(atlas_raw.get("sheet"), f"{label}-Blatt")
         directory = _flat_name(atlas_raw.get("directory"), f"{label}-Atlasordner")
-        if sheet in atlases:
+        if sheet.casefold() in (name.casefold() for name in atlases):
             raise LayoutPortError(f"{label}-Blatt ist doppelt: {sheet}")
+        if directory.casefold() in directories:
+            raise LayoutPortError(f"{label}-Atlasordner ist doppelt: {directory}")
+        directories.add(directory.casefold())
         width = _positive_int(atlas_raw.get("sheet_width"), f"{label}/{sheet}/Breite")
         height = _positive_int(atlas_raw.get("sheet_height"), f"{label}/{sheet}/Hoehe")
         crops: dict[str, Crop] = {}
@@ -143,7 +153,9 @@ def _load_index(root: Path, label: str) -> tuple[dict[str, Any], dict[str, Atlas
                 raise LayoutPortError(f"{label}/{sheet}: Ausschnitt ist kein Objekt")
             key = str(crop_raw.get("key", ""))
             filename = _flat_name(crop_raw.get("file"), f"{label}/{sheet}/Datei")
-            if not key or key in crops or key in global_keys or filename in filenames:
+            if (not key or key in crops or key in global_keys
+                    or filename.casefold() in filenames
+                    or Path(filename).suffix.lower() != ".png"):
                 raise LayoutPortError(f"{label}/{sheet}: doppelter Key/Dateiname {key!r}")
             x = _positive_int(crop_raw.get("x"), f"{label}/{key}/x", allow_zero=True)
             y = _positive_int(crop_raw.get("y"), f"{label}/{key}/y", allow_zero=True)
@@ -167,9 +179,9 @@ def _load_index(root: Path, label: str) -> tuple[dict[str, Any], dict[str, Atlas
             )
             crops[key] = crop
             global_keys.add(key)
-            filenames.add(filename)
+            filenames.add(filename.casefold())
         atlas_dir = root / directory
-        if not atlas_dir.is_dir() or atlas_dir.is_symlink():
+        if not atlas_dir.is_dir() or is_link_or_reparse(atlas_dir):
             raise LayoutPortError(f"{label}-Atlasordner fehlt: {atlas_dir}")
         atlases[sheet] = Atlas(sheet, width, height, directory, crops)
     return raw, atlases
@@ -181,6 +193,9 @@ def _load_store(
     source_index_path: Path,
     source_atlases: dict[str, Atlas],
 ) -> dict[str, Path]:
+    if (not root.is_dir() or is_link_or_reparse(root)
+            or is_link_or_reparse(root / "store-manifest.json")):
+        raise LayoutPortError("Quellablage ist kein regulärer Ordner")
     raw = _read_json(root / "store-manifest.json", "Quellablagenmanifest")
     if raw.get("schema_version") != 1 or raw.get("origin") != "derived":
         raise LayoutPortError("Quellablage ist keine abgeleitete UI-Ablage")
@@ -204,7 +219,7 @@ def _load_store(
             raise LayoutPortError(f"Quellblattgroesse weicht vom Export ab: {sheet}")
         path = root / sheet
         expected_hash = _digest(entry.get("sha256"), f"{sheet}/SHA-256")
-        if not path.is_file() or path.is_symlink() or _sha256_file(path) != expected_hash:
+        if not path.is_file() or is_link_or_reparse(path) or _sha256_file(path) != expected_hash:
             raise LayoutPortError(f"Quellblatt fehlt oder weicht vom Pin ab: {sheet}")
         paths[sheet] = path
     if set(paths) != set(source_atlases):
@@ -217,7 +232,7 @@ def _load_store(
 
 
 def _read_crop(path: Path, crop: Crop, label: str) -> Image.Image:
-    if not path.is_file() or path.is_symlink():
+    if not path.is_file() or is_link_or_reparse(path):
         raise LayoutPortError(f"{label} fehlt: {path}")
     try:
         with Image.open(path) as opened:
@@ -250,7 +265,124 @@ def _write_png_atomic(image: Image.Image, destination: Path) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def _file_state(path: Path) -> str | None:
+    """Return a regular file's bytes digest, never following a reparse point."""
+    if is_link_or_reparse(path):
+        raise LayoutPortError(f"Verknüpfte Ausgabedatei ist nicht zulässig: {path}")
+    if not path.exists():
+        return None
+    if not path.is_file():
+        raise LayoutPortError(f"Ausgabepfad ist keine normale Datei: {path}")
+    return _sha256_file(path)
+
+
+def _commit_ported_crops(
+    target_export: Path,
+    prepared: list[tuple[Path, Image.Image, str]],
+    report: dict[str, Any],
+) -> None:
+    """Stage all PNGs and the report before replacing a single existing file.
+
+    Previously committed files are rolled back if publication fails. This is a
+    recoverable *multi-file* operation, not a claim of power-loss atomicity.
+    Externally modified destinations are not silently overwritten on rollback.
+    """
+    if not target_export.is_dir() or is_link_or_reparse(target_export):
+        raise LayoutPortError("Zielexport ist kein regulärer Ordner")
+    report_path = target_export / "layout-port-report.json"
+    seen: set[str] = set()
+    for dest, _image, _key in prepared:
+        if dest.parent.parent != target_export or is_link_or_reparse(dest.parent):
+            raise LayoutPortError(f"Unzulässiger Zielpfad: {dest}")
+        relative = dest.relative_to(target_export).as_posix().casefold()
+        if relative in seen:
+            raise LayoutPortError(f"Zielbild doppelt: {relative}")
+        seen.add(relative)
+        if _file_state(dest) is None:
+            raise LayoutPortError(f"Zielbild wurde entfernt: {dest}")
+    if _file_state(report_path) is not None and report_path in (
+        dest for dest, _image, _key in prepared
+    ):
+        raise LayoutPortError("Berichtspfad kollidiert mit einem Atlasbild")
+
+    # Keep every new image and every original as a private staging file until
+    # all preparation, checksum checks and JSON serialization have succeeded.
+    with tempfile.TemporaryDirectory(prefix=".ui-atlas-port-", dir=target_export) as folder:
+        stage = Path(folder)
+        updates: list[tuple[Path, Path | None, Path, str | None, str]] = []
+        for number, (destination, image, _key) in enumerate(prepared):
+            original_digest = _file_state(destination)
+            if original_digest is None:
+                raise LayoutPortError(f"Zielbild fehlt: {destination}")
+            before = stage / f"before-{number:05d}.png"
+            shutil.copyfile(destination, before)
+            if (_file_state(before) != original_digest
+                    or _file_state(destination) != original_digest):
+                raise LayoutPortError(f"Zielbild änderte sich beim Sichern: {destination}")
+            proposed = stage / f"new-{number:05d}.png"
+            _write_png_atomic(image, proposed)
+            updates.append((destination, before, proposed,
+                            original_digest, _sha256_file(proposed)))
+
+        report_original = _file_state(report_path)
+        report_before: Path | None = None
+        if report_original is not None:
+            report_before = stage / "before-layout-port-report.json"
+            shutil.copyfile(report_path, report_before)
+            if (_file_state(report_before) != report_original
+                    or _file_state(report_path) != report_original):
+                raise LayoutPortError("Bisheriger Layout-Bericht änderte sich")
+        report_new = stage / "layout-port-report.json"
+        report_new.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        updates.append((report_path, report_before, report_new,
+                        report_original, _sha256_file(report_new)))
+
+        # Preflight again after staging: a user's external edit must not be
+        # overwritten by our commit. Per-file checks are repeated during commit.
+        for dest, _old, _new, expected, _published in updates:
+            if _file_state(dest) != expected:
+                raise LayoutPortError(f"Zieldatei änderte sich vor dem Export: {dest}")
+
+        attempted: list[tuple[Path, Path | None, Path, str | None, str]] = []
+        try:
+            for item in updates:
+                dest, _old, new, expected, _after = item
+                if _file_state(dest) != expected:
+                    raise LayoutPortError(f"Zieldatei änderte sich während des Exports: {dest}")
+                # Track *before* os.replace: a storage layer can write then
+                # report an error, so that path needs rollback inspection too.
+                attempted.append(item)
+                os.replace(new, dest)
+        except Exception:
+            unrecovered: list[str] = []
+            for dest, old, _new, expected, written in reversed(attempted):
+                try:
+                    current = _file_state(dest)
+                    if current == expected:
+                        continue  # Our replacement did not occur.
+                    if current != written:
+                        unrecovered.append(str(dest))  # External change: don't erase.
+                        continue
+                    if old is None:
+                        dest.unlink()  # The report did not exist before.
+                    else:
+                        os.replace(old, dest)
+                except (OSError, LayoutPortError):
+                    unrecovered.append(str(dest))
+            if unrecovered:
+                raise LayoutPortError(
+                    "Layout-Port abgebrochen; diese Dateien konnten nicht ohne "
+                    "Überschreiben fremder Änderungen zurückgesetzt werden: "
+                    + ", ".join(unrecovered)
+                )
+            raise
+
+
 def port_layout(source_export: Path, source_store: Path, target_export: Path) -> dict[str, Any]:
+    if source_export.resolve() == target_export.resolve():
+        raise LayoutPortError("Quell- und Zielexport müssen verschiedene Ordner sein")
+    if source_store.resolve() == target_export.resolve():
+        raise LayoutPortError("Quellablage und Zielexport müssen getrennt sein")
     source_index, source_atlases = _load_index(source_export, "Quelle")
     target_index, target_atlases = _load_index(target_export, "Ziel")
     store_paths = _load_store(
@@ -308,9 +440,6 @@ def port_layout(source_export: Path, source_store: Path, target_export: Path) ->
             changed += 1
         counts[sheet_name] = changed
 
-    for destination, image, _key in prepared:
-        _write_png_atomic(image, destination)
-
     report = {
         "schema": "stronghold-europe-ui-layout-port-v1",
         "source_target_build_id": source_index.get("target_build_id"),
@@ -325,8 +454,7 @@ def port_layout(source_export: Path, source_store: Path, target_export: Path) ->
         "target_only_crops": target_only,
         "ported_keys": [key for _path, _image, key in prepared],
     }
-    report_path = target_export / "layout-port-report.json"
-    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    _commit_ported_crops(target_export, prepared, report)
     return report
 
 

@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from scipy import ndimage as ndi
+from suite_windows_paths import is_link_or_reparse
 
 
 LANCZOS = Image.Resampling.LANCZOS
@@ -17,6 +18,33 @@ SKIRMISH_NAMES = (
     + [f"SkirmishSands{number}Map.png" for number in range(1, 8)]
     + ["SkirmishTrailMap.png", "SkirmishTrailMap2.png", "SkirmishTrailMap3.png"]
 )
+
+
+def _preflight_images(source: Path, filenames: list[str], *, missions: bool) -> None:
+    """Check every original before generating any persistent outputs.
+
+    A missing or corrupted late source must not leave a seemingly complete
+    route/mission report containing only the first processed images.
+    """
+    if not source.is_dir() or is_link_or_reparse(source):
+        raise ValueError(f"Originalbildordner fehlt oder ist verknüpft: {source}")
+    family_sizes: dict[int, tuple[int, int]] = {}
+    for index, filename in enumerate(filenames):
+        path = source / filename
+        if is_link_or_reparse(path) or not path.is_file():
+            raise FileNotFoundError(f"Originalgrafik fehlt oder ist verknüpft: {path}")
+        with Image.open(path) as image:
+            if image.format != "PNG":
+                raise ValueError(f"Keine PNG-Originalgrafik: {path}")
+            size = image.size
+            image.verify()  # Validates PNG structure without retaining large pixels.
+        if missions:
+            family = index // 7
+            if family in family_sizes and family_sizes[family] != size:
+                raise RuntimeError(
+                    f"Mission family dimensions differ: {filename}"
+                )
+            family_sizes[family] = size
 
 
 def _rgba(path: Path) -> Image.Image:
@@ -133,6 +161,7 @@ def _overlay_preview(
 
 
 def audit_skirmish(source: Path, output: Path) -> list[dict[str, object]]:
+    _preflight_images(source, list(SKIRMISH_NAMES), missions=False)
     records: list[dict[str, object]] = []
     for filename in SKIRMISH_NAMES:
         original = _rgba(source / filename)
@@ -182,6 +211,8 @@ def mission_overlay_mask(base: Image.Image, current: Image.Image, first: bool) -
 
 
 def audit_missions(source: Path, output: Path) -> list[dict[str, object]]:
+    names = [f"HistoricalCampaign-Map-{number:02d}.png" for number in range(1, 50)]
+    _preflight_images(source, names, missions=True)
     records: list[dict[str, object]] = []
     output.mkdir(parents=True, exist_ok=True)
     for family in range(1, 8):
