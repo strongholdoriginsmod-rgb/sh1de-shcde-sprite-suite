@@ -4,8 +4,9 @@
 # This lock is intentionally platform-specific. Hash checking must stay enabled:
 #   py -3.14 -m pip install --require-hashes -r requirements-py314-win_amd64.lock
 #
-# Direct requirements: UnityPy 1.25.3, Pillow 12.3.0, pytest 8.4.2,
-# pytest-cov 6.3.0. All other entries are their resolved runtime dependencies.
+# Direct requirements: UnityPy 1.25.3, Pillow 12.3.0, PySide6 6.10.2,
+# NumPy 2.5.2, SciPy 1.18.0, pytest 8.4.2 and pytest-cov 6.3.0.
+# Includes native GUI and specialist-tool dependencies missing from the old 3.14 lock.
 
 archspec==0.2.6 \
     --hash=sha256:22463371fe8e9fa92fa144bf320cb445373a99f2ca6a5914c890e0c0b7816f8f
@@ -29,12 +30,20 @@ iniconfig==2.3.0 \
     --hash=sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12
 lz4==4.4.5 \
     --hash=sha256:92159782a4502858a21e0079d77cdcaade23e8a5d252ddf46b0652604300d7be
+numpy==2.5.2 \
+    --hash=sha256:7587f53dfbd5edc0f7b87c6217b4c6d2d1f2ef9c3da70bc1315e7db5f8d7ec9d
 packaging==26.3 \
     --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
 pillow==12.3.0 \
     --hash=sha256:fdafc9cce40277e0f7a0feabce0ee50dd2fa1800f3b38015e51296b5e814048d
 pluggy==1.6.0 \
     --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
+pyside6==6.10.2 \
+    --hash=sha256:032bad6b18a17fcbf4dddd0397f49b07f8aae7f1a45b7e4de7037bf7fd6e0edf
+pyside6-addons==6.10.2 \
+    --hash=sha256:c20150068525a17494f3b6576c5d61c417cf9a5870659e29f5ebd83cd20a78ea
+pyside6-essentials==6.10.2 \
+    --hash=sha256:0741018c2b6395038cad4c41775cfae3f13a409e87995ac9f7d89e5b1fb6b22a
 pyfmodex==0.7.2 \
     --hash=sha256:1c42112b788e80ee7b4b57ae25bbbc0a98eb1e32a8e7c9e1246698cdf72efa9d
 pygments==2.20.0 \
@@ -43,6 +52,10 @@ pytest==8.4.2 \
     --hash=sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79
 pytest-cov==6.3.0 \
     --hash=sha256:440db28156d2468cafc0415b4f8e50856a0d11faefa38f30906048fe490f1749
+scipy==1.18.0 \
+    --hash=sha256:2d8bbdc6c817f5b4006a54d799d4f5bab6f910193cbb9a1ff310833d4d270f61
+shiboken6==6.10.2 \
+    --hash=sha256:10f3c8c5e1b8bee779346f21c10dbc14cff068f0b0b4e62420c82a6bf36ac2e7
 texture2ddecoder==1.0.6 \
     --hash=sha256:1bad8209d9dfbfc7daf13ea2e545236ea2bbc1e423b2992b6e7563909975a47b
 tpk-ar==0.2.4 \

@@ -65,7 +65,7 @@ class Center(workshop.Suite):
         self.build_setup()
         self.build_bc7()
         self.build_catalog()
-        self.advanced = tk.BooleanVar(value=False)
+        self.advanced = tk.BooleanVar(master=self, value=False)
         self.basic_tabs = (self.setup_page, self.tab_art, self.bc7_page)
         self.extra_tabs = tuple(tab for tab in self.notebook.tabs() if tab not in {str(t) for t in self.basic_tabs})
         switch = ttk.Checkbutton(self.command_bar, text='Erweiterte Werkzeuge', variable=self.advanced, command=self.show_advanced)

@@ -41,12 +41,13 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import sys
 
 from PIL import Image
+from suite_windows_paths import is_link_or_reparse, is_reserved_windows_component
 
-Image.MAX_IMAGE_PIXELS = None
+# Keep Pillow's decompression-bomb limits enabled for untrusted artwork.
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -78,14 +79,17 @@ def motivrahmen(bild: Image.Image, schwelle: int = 8) -> tuple[int, int, int, in
 def einpassen(
     bild: Image.Image, ziel: tuple[int, int], anker: str, schwelle: int
 ) -> tuple[Image.Image, dict]:
-    """Ein erzeugtes Bild auf die Slotgroesse bringen."""
+    """Motiv proportional verkleinern, niemals unbemerkt hochskalieren."""
 
+    if (len(ziel) != 2 or any(type(v) is not int or v <= 0 for v in ziel)
+            or anker not in ANKER):
+        raise EinpflegeError("Ungültige Slotgröße oder Ankerposition")
     rahmen = motivrahmen(bild, schwelle)
     if rahmen is None:
         raise EinpflegeError("Das Bild ist vollstaendig durchsichtig")
     motiv = bild.crop(rahmen)
     breite, hoehe = ziel
-    faktor = min(breite / motiv.width, hoehe / motiv.height)
+    faktor = min(1.0, breite / motiv.width, hoehe / motiv.height)
     neu = (
         max(1, min(breite, round(motiv.width * faktor))),
         max(1, min(hoehe, round(motiv.height * faktor))),
@@ -108,6 +112,29 @@ def einpassen(
         "ablage": [x, y],
         "faktor": round(faktor, 4),
     }
+
+
+def _safe_slot(baum: Path, value: str) -> Path:
+    """Reject escaping or linked slot paths supplied by an external assignment."""
+    if not isinstance(value, str) or not value or len(value) > 240:
+        raise EinpflegeError("Ungültiger Zielslot im Auftrag")
+    normalized = value.replace("\\", "/")
+    relative = PurePosixPath(normalized)
+    if (relative.is_absolute() or not relative.parts or
+            any(part in {"", ".", ".."} or is_reserved_windows_component(part)
+                for part in normalized.split("/")) or
+            relative.suffix.lower() != ".png"):
+        raise EinpflegeError("Unsicherer Zielslot im Auftrag: " + value[:120])
+    base = baum.resolve(strict=False)
+    target = baum.joinpath(*relative.parts)
+    node = target
+    while node != baum and node != node.parent:
+        if is_link_or_reparse(node):
+            raise EinpflegeError("Verknüpfter Zielslot im Auftrag: " + value[:120])
+        node = node.parent
+    if is_link_or_reparse(baum) or not target.resolve(strict=False).is_relative_to(base):
+        raise EinpflegeError("Zielslot liegt außerhalb des Exportbaums")
+    return target
 
 
 def einpflegen(
@@ -135,7 +162,7 @@ def einpflegen(
             zaehler["Schluessel nicht im Auftrag"] += 1
             abgelehnt.append({"schluessel": schluessel, "grund": "nicht im Auftrag"})
             continue
-        slot = baum / posten["slot"]
+        slot = _safe_slot(baum, posten["slot"])
         if not slot.is_file():
             zaehler["Slot fehlt im Baum"] += 1
             abgelehnt.append({"schluessel": schluessel, "grund": "Slot fehlt im Baum"})

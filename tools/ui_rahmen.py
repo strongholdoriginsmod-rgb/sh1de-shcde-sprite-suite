@@ -42,7 +42,7 @@ import sys
 import numpy as np
 from PIL import Image, ImageDraw
 
-Image.MAX_IMAGE_PIXELS = None
+# Keep Pillow's decompression-bomb limits enabled for untrusted artwork.
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 

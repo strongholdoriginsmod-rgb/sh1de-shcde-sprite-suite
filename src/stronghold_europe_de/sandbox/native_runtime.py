@@ -164,7 +164,13 @@ def capture_snapshot(map_path: str | Path, cache_dir: str | Path | None = None):
     cache_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="capture-", dir=cache_root) as temp:
         work = Path(temp)
-        env = dict(os.environ, PYTHONPATH=str(ROOT / "src"), PYTHONIOENCODING="utf-8")
+        # A worker needs both our source package and the packages supplied
+        # by the parent runtime (for example isolated NumPy/UnityPy installs).
+        # Replacing PYTHONPATH breaks otherwise valid development installs.
+        module_paths = os.pathsep.join(filter(None, (
+            str(ROOT / "src"), os.environ.get("PYTHONPATH", ""),
+        )))
+        env = dict(os.environ, PYTHONPATH=module_paths, PYTHONIOENCODING="utf-8")
         command = [sys.executable, "-m", __name__, "--worker", str(source), str(game_data), str(work)]
         try:
             result = subprocess.run(command, env=env, cwd=work, capture_output=True,

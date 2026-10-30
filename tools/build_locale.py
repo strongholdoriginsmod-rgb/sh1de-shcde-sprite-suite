@@ -260,7 +260,9 @@ def cross_check(roster: dict) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    # The full technical module docstring contains Unicode typography.
+    # Passing it to argparse crashes --help on Windows cp1252 consoles.
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
         "--check",
         action="store_true",

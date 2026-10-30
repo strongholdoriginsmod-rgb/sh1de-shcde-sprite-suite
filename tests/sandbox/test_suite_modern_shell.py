@@ -89,8 +89,11 @@ def test_sidebar_language_and_advanced_controls_track_suite_state(ui):
     app.update()
     assert shell.buttons["menus"].cget("text")=="HUD & Menüs"
     assert app.hud_menu_tab.project_summary.get().startswith("Aktives Projekt:")
+    # Other GUI tests may have enabled advanced mode in this process.
+    # Verify the control toggles the current state, not a global default.
+    before = app.advanced.get()
     shell.advanced.invoke()
-    assert app.advanced.get() is True
+    assert app.advanced.get() is (not before)
 
 
 def test_workshop_hides_technical_controls_and_toggles_them(ui):
@@ -191,3 +194,43 @@ def test_project_archive_actions_translate_to_english(ui):
             labels.append(widget.cget("text"))
     assert "Projekt sichern …" in labels
     assert "Projekt aus ZIP öffnen …" in labels
+
+
+def test_advanced_sidebar_checkbox_uses_correct_tk_interpreter_with_old_root(
+    tmp_path, monkeypatch,
+):
+    """A previously created Tk root must not steal this window's variables."""
+    import stronghold_europe_de.workspace_lock as lock_module
+    monkeypatch.setattr(
+        lock_module, "lock_path",
+        lambda _root, _name: tmp_path / "second-root-instance.lock",
+    )
+    older = tk.Tk()
+    older.withdraw()
+    app = None
+    try:
+        loader = importlib.machinery.SourceFileLoader(
+            "suite_second_root_integration_test",
+            str(ROOT / "tools" / "suite_universal.pyw"),
+        )
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        mod = importlib.util.module_from_spec(spec)
+        loader.exec_module(mod)
+        monkeypatch.setattr(mod, "SETTINGS", tmp_path / "second-root-settings.json")
+        previous_language = mod.LANG.code
+        mod.LANG.code = "de"
+        try:
+            app = mod.Universal()
+            app.update()
+            assert app.advanced._root is app
+            assert app.language._root is app
+            assert app.strict._root is app
+            before = app.advanced.get()
+            app.modern_shell.advanced.invoke()
+            assert app.advanced.get() is not before
+        finally:
+            mod.LANG.code = previous_language
+    finally:
+        if app is not None:
+            app.destroy()
+        older.destroy()

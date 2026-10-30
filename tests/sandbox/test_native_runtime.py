@@ -148,3 +148,37 @@ def test_abi_contract_rejects_path_and_array_tampering(tmp_path):
     bad=copy.deepcopy(baseline);bad['dll_sha256']='not a known digest'
     path.write_text(json.dumps(bad))
     with pytest.raises(NativeRuntimeError):load_contract(path)
+
+
+def test_engine_worker_inherits_optional_package_paths(monkeypatch, tmp_path):
+    """A native capture worker must import NumPy from the parent environment."""
+    if os.name != "nt":
+        pytest.skip("The original engine worker requires Windows")
+    from types import SimpleNamespace
+    import stronghold_europe_de.sandbox.native_runtime as native
+
+    game = tmp_path / "OriginalGame_Data"
+    map_path = game / "StreamingAssets" / "Maps" / "example.map"
+    library = game / "Plugins" / "x86_64" / "CrusaderDE.dll"
+    managed = game / "Managed" / "Assembly-CSharp.dll"
+    for path, content in ((map_path,b"map"),(library,b"safe-mock-dll"),
+                          (managed,b"safe-mock-managed")):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    contract = {"dll_sha256":native.sha256(library),
+                "managed_sha256":native.sha256(managed)}
+    monkeypatch.setattr(native, "load_contract", lambda:contract)
+    monkeypatch.setattr(native, "ROOT", tmp_path / "SeparateSourceTree")
+    optional = str(tmp_path / "isolated-optional-dependencies")
+    monkeypatch.setenv("PYTHONPATH", optional)
+    captured = {}
+    def checked_spawn(command, **kw):
+        captured.update(kw)
+        return SimpleNamespace(returncode=1,stderr="synthetic worker blocked",stdout="")
+    monkeypatch.setattr(native.subprocess,"run",checked_spawn)
+    with pytest.raises(NativeRuntimeError,match="synthetic worker blocked"):
+        native.capture_snapshot(map_path,cache_dir=tmp_path / "new-cache")
+    search_path = captured["env"]["PYTHONPATH"].split(os.pathsep)
+    assert search_path == [str(native.ROOT / "src"),optional]
+    assert captured["env"]["PYTHONIOENCODING"] == "utf-8"
+    assert map_path.read_bytes() == b"map"

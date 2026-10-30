@@ -28,7 +28,6 @@ def old_and_new(name:str):
 @pytest.mark.parametrize("name",[
     "sandkasten.py","sprites.py","tile_objects.py","ui_atlas.py",
     "asset_katalog.py","editor_bruecke.py","groups.py","pin_digests.py",
-    "se_atlas.py",
 ])
 def test_original_tool_is_byte_preserved(name):
     a=OLD/"tools"/name
@@ -122,3 +121,20 @@ def test_current_build_mapping_does_not_claim_historical_27_target():
     assert "local-shcde-2.80-unity-2021.3.45f2" in ids
     # Exact per-game file SHA checking is a distinct, read-only IO QA.
     # Do not reuse a historic 2.7 mapping identity as a 2.80 proof.
+
+
+def test_atlas_wrapper_keeps_original_behavior_with_updated_user_instructions():
+    """The prior byte-equality check was stale after two intentional UI edits."""
+    old = OLD / "tools" / "se_atlas.py"
+    if not old.is_file():
+        pytest.skip("Historical original unavailable")
+    expected = old.read_text("utf8")
+    replacements = {
+        "Script Extender 2.11 laedt": "Der vorhandene Script Extender laedt",
+        "Installieren: Reiter 'Ziel & SE 2.11' -> Mod installieren (mit Sicherung).":
+            "Modinstallation: Reiter 'Ziele & Mods' -> Mod installieren (mit Sicherung).",
+    }
+    for source, updated in replacements.items():
+        assert expected.count(source) == 1
+        expected = expected.replace(source, updated)
+    assert (NEW / "tools" / "se_atlas.py").read_text("utf8") == expected

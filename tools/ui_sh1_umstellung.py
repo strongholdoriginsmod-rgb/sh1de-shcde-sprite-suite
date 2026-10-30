@@ -87,7 +87,7 @@ except ImportError:  # pragma: no cover - das venv hat es immer
     print("Pillow fehlt. Bitte im Projekt-venv arbeiten.", file=sys.stderr)
     raise
 
-Image.MAX_IMAGE_PIXELS = None
+# Keep Pillow's decompression-bomb limits enabled for untrusted artwork.
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
