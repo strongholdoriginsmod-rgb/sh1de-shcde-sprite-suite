@@ -135,6 +135,21 @@ def _write_reproducible_zip(package: Path, archive: Path) -> int:
     return count
 
 
+def _is_protected_windows_temp(path: Path) -> bool:
+    """Avoid staging Tcl scripts beneath Windows' protected system Temp.
+
+    CPython can read init.tcl there with pathlib, while Tcl's native 'source'
+    may still fail with ENOENT. A relocated runtime on a regular user-writable
+    drive has been independently tested with real Tk initialization.
+    """
+    system_root = os.environ.get("SystemRoot") or os.environ.get("WINDIR")
+    if not system_root:
+        return False
+    protected = str((Path(system_root) / "Temp").resolve()).casefold()
+    actual = str(path.resolve()).casefold()
+    return actual == protected or actual.startswith(protected + os.sep)
+
+
 def build(python: Path, venv: Path, out: Path) -> dict:
     python = python.resolve(strict=True)
     venv = venv.resolve(strict=True)
@@ -142,6 +157,11 @@ def build(python: Path, venv: Path, out: Path) -> dict:
     _check_binary_sources(python, venv)
     if out.exists():
         raise RuntimeError("Output directory already exists; refusing overwrite: " + str(out))
+    if _is_protected_windows_temp(out):
+        raise RuntimeError(
+            "Windows system Temp cannot be used for portable Tcl/Tk staging; "
+            "choose a new output directory on a normal user-writable drive."
+        )
     out.parent.mkdir(parents=True, exist_ok=True)
     # Build in a new *sibling* folder. A failure never creates a misleading
     # half-built public release directory; the final rename happens last.
@@ -220,9 +240,14 @@ def build(python: Path, venv: Path, out: Path) -> dict:
             encoding="utf8", errors="replace", timeout=60,
         )
         if smoke.returncode != 0 or "GUI_BACKENDS_READY=1" not in smoke.stdout:
+            # Include the *start* of a Python traceback. A SyntaxError prints
+            # the entire -c source after the actual exception; the old [-1200:]
+            # often contained only that source and hid the useful error.
             raise RuntimeError(
-                "Bundled Python/Tk/Qt startup failed: "
-                + (smoke.stdout + smoke.stderr)[-1200:]
+                f"Bundled Python/Tk/Qt startup failed (exit {smoke.returncode})"
+                + "\nSTDOUT:\n" + smoke.stdout[:4000]
+                + "\nSTDERR BEGIN:\n" + smoke.stderr[:5000]
+                + "\nSTDERR END:\n" + smoke.stderr[-1600:]
             )
         # Do not embed a developer-specific build path in the ZIP.
         (package / ".venv" / "pyvenv.cfg").write_text(

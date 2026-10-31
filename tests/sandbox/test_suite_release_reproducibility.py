@@ -52,6 +52,9 @@ def test_failed_git_source_step_cleans_entire_staging_and_published_dir(
     fake.mkdir()
     output=tmp_path/"proposed-release"
     monkeypatch.setattr(builder,"_check_binary_sources",lambda *_:None)
+    # This synthetic test targets the later git-archive rollback, not the
+    # protected-system-TEMP preflight tested separately below.
+    monkeypatch.setattr(builder,"_is_protected_windows_temp",lambda _:False)
 
     def abort(*args,**kwargs):
         raise RuntimeError("synthetic git failure")
@@ -126,3 +129,22 @@ def test_portable_venv_excludes_developer_specific_launchers(tmp_path):
         "python.exe", "pythonw.exe"
     ]
     assert not (output / "Scripts" / "pip.exe").exists()
+
+
+def test_portable_rejects_protected_windows_temp_before_creating_release(
+    tmp_path, monkeypatch,
+):
+    system_root = tmp_path / "FakeWindows"
+    protected_temp = system_root / "Temp"
+    protected_temp.mkdir(parents=True)
+    monkeypatch.setenv("SystemRoot", str(system_root))
+    restricted_output = protected_temp / "new-qa-release"
+    assert builder._is_protected_windows_temp(restricted_output)
+    assert builder._is_protected_windows_temp(restricted_output / "nested")
+    assert not builder._is_protected_windows_temp(tmp_path / "normal" / "release")
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    monkeypatch.setattr(builder, "_check_binary_sources", lambda *_args: None)
+    with pytest.raises(RuntimeError, match="Windows system Temp"):
+        builder.build(runtime, runtime, restricted_output)
+    assert not restricted_output.exists()
