@@ -104,3 +104,25 @@ def test_private_venv_site_packages_are_kept_for_hash_checked_dependencies(tmp_p
     assert (dst / "Lib" / "site-packages" / "PIL" / "__init__.py").read_bytes() == (
         b"version = 'synthetic'"
     )
+
+
+def test_portable_venv_excludes_developer_specific_launchers(tmp_path):
+    venv = tmp_path / "builder-venv"
+    scripts = venv / "Scripts"
+    scripts.mkdir(parents=True)
+    for filename in ("python.exe", "pythonw.exe"):
+        (scripts / filename).write_bytes(b"the synthetic interpreter")
+    (scripts / "pip.exe").write_bytes(b"C:/Users/Builder/venv/python.exe")
+    (scripts / "activate.bat").write_text(
+        "set VIRTUAL_ENV=C:/Users/Builder/venv\n", encoding="utf8"
+    )
+    (scripts / "some-other.exe").write_bytes(b"not a shipped runtime executable")
+
+    output = tmp_path / "portable-venv"
+    builder._copy_whitelist(
+        venv, output, ("Scripts",), venv_python_executables_only=True
+    )
+    assert sorted(x.name for x in (output / "Scripts").iterdir()) == [
+        "python.exe", "pythonw.exe"
+    ]
+    assert not (output / "Scripts" / "pip.exe").exists()

@@ -77,6 +77,7 @@ def _check_binary_sources(python: Path, venv: Path) -> None:
 def _copy_whitelist(
     src: Path, dst: Path, names: tuple[str, ...], *,
     exclude_base_site_packages: bool = False,
+    venv_python_executables_only: bool = False,
 ) -> None:
     """Copy only the runtime whitelist; exclude unrelated base installations.
 
@@ -90,6 +91,14 @@ def _copy_whitelist(
             skipped.extend(
                 entry for entry in entries
                 if entry.casefold() in {"site-packages", "dist-packages"}
+            )
+        if venv_python_executables_only and Path(directory) == src / "Scripts":
+            # pip launchers, activation scripts and other console .exe files
+            # embed the *builder's* private venv location in their shebang.
+            # The Suite starts only through its own python/pythonw command.
+            skipped.extend(
+                entry for entry in entries
+                if entry.casefold() not in {"python.exe", "pythonw.exe"}
             )
         return skipped
 
@@ -163,7 +172,14 @@ def build(python: Path, venv: Path, out: Path) -> dict:
         if (package / "python" / "Lib" / "site-packages").exists():
             raise RuntimeError("Private base Python packages leaked into runtime")
         print("COPY: CPython 3.13 runtime", flush=True)
-        _copy_whitelist(venv, package / ".venv", VENV_DIRS)
+        _copy_whitelist(
+            venv, package / ".venv", VENV_DIRS,
+            venv_python_executables_only=True,
+        )
+        private_scripts = {entry.name.casefold() for entry in
+                           (package / ".venv" / "Scripts").iterdir()}
+        if private_scripts != {"python.exe", "pythonw.exe"}:
+            raise RuntimeError("Portable venv contains unexpected or missing executables")
         print("COPY: application dependencies", flush=True)
         # Only the first-run launcher will make .venv relocatable.
         (package / ".venv" / "pyvenv.cfg").write_text(
