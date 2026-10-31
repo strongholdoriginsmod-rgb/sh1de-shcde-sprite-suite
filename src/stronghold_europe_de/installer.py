@@ -33,9 +33,10 @@ _WINDOWS_RESERVED_COMPONENTS = {
     "CON",
     "PRN",
     "AUX",
-    "NUL",
+    "NUL", "CONIN$", "CONOUT$",
     *(f"COM{index}" for index in range(1, 10)),
     *(f"LPT{index}" for index in range(1, 10)),
+    *(f"{prefix}{number}" for prefix in ("COM", "LPT") for number in "¹²³"),
 }
 _SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 _TARGET_GAME_EXECUTABLE = "Stronghold Crusader Definitive Edition.exe"

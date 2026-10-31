@@ -16,6 +16,9 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
+from datetime import datetime, timezone
+from uuid import uuid4
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
@@ -157,9 +160,34 @@ def main() -> int:
     args = [str(interpreter), str(PROJECT / "tools" / "suite_universal.pyw")]
     if console:
         return subprocess.call(args, cwd=PROJECT, env=env)
-    subprocess.Popen(args, cwd=PROJECT, env=env,
-                     creationflags=getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    return 0
+    # The old launcher reported success immediately after spawning pythonw,
+    # even if Tk failed while creating the main window. Require an explicit
+    # event-loop handshake, keeping the diagnostic only on the local machine.
+    from suite_launch_status import await_ready
+    with tempfile.TemporaryDirectory(prefix="spritesuite-startup-") as folder:
+        marker = Path(folder) / "ready.json"
+        child = subprocess.Popen(
+            [*args, "--startup-ready-file", str(marker)],
+            cwd=PROJECT, env=env,
+            creationflags=(getattr(subprocess, "DETACHED_PROCESS", 0)
+                           | getattr(subprocess, "CREATE_NO_WINDOW", 0)),
+        )
+        ready, detail = await_ready(child, marker)
+        if ready:
+            return 0
+        error_file = marker.with_suffix(".error.txt")
+        if error_file.is_file():
+            try:
+                folder = PROJECT / "work" / "logs" / "startup-errors"
+                folder.mkdir(parents=True, exist_ok=True)
+                named = folder / (datetime.now(timezone.utc).strftime("%Y%m%d-")
+                                  + uuid4().hex[:10] + ".log")
+                named.write_bytes(error_file.read_bytes())
+                detail += f" | Fehlerprotokoll: {named}"
+            except OSError:
+                detail += " | Fehlerprotokoll konnte nicht gesichert werden"
+        print("SPRITESUITE_GUI_START_FAILED: " + detail, file=sys.stderr)
+        return 5
 
 
 if __name__ == "__main__":

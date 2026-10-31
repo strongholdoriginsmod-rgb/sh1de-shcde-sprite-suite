@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw
+from suite_output_transaction import OutputBatch
 
 ROOT = Path(__file__).resolve().parents[1]
 ATLAS = ROOT / "work" / "ui" / "UI-MasterAtlas"
@@ -96,7 +97,7 @@ def main() -> int:
             cur = [rec]
     families.append(cur)
 
-    OUT.mkdir(parents=True, exist_ok=True)
+    # Assemble both outputs before replacing any existing catalogue data.
     katalog = []
     for i, fam in enumerate(families, 1):
         katalog.append({
@@ -107,10 +108,10 @@ def main() -> int:
             "groesse": fam[0]["groesse"],
             "dateien": [r["datei"] for r in fam],
         })
-    (OUT / "katalog.json").write_text(
-        json.dumps({"quelle": str(ATLAS), "familien": katalog}, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
+    catalogue_bytes = (json.dumps(
+        {"quelle": str(ATLAS), "familien": katalog},
+        indent=2, ensure_ascii=False
+    ) + "\n").encode("utf-8")
 
     cols, cell = 10, 132
     rows = (len(families) + cols - 1) // cols
@@ -127,7 +128,10 @@ def main() -> int:
         sheet.paste(im, (bx + (cell - im.width) // 2, by + (cell - im.height) // 2), im)
         dr.text((bx + 4, by + cell + 2), f"F{i+1:02d}  {fam[0]['key']}", fill=(245, 245, 245))
         dr.text((bx + 4, by + cell + 14), f"{len(fam)}x  {fam[0]['groesse'][0]}x{fam[0]['groesse'][1]}", fill=(190, 190, 200))
-    sheet.save(OUT / "kontaktbogen_familien.png")
+    with OutputBatch(OUT) as batch:
+        batch.stage("katalog.json").write_bytes(catalogue_bytes)
+        sheet.save(batch.stage("kontaktbogen_familien.png"))
+        batch.publish()
 
     print(f"Ausschnitte {len(recs)}  Familien {len(families)}")
     for f in katalog:

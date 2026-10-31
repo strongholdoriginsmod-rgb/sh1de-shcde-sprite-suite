@@ -16,7 +16,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile, ZIP_DEFLATED, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON_FILES = (
@@ -25,7 +25,10 @@ PYTHON_FILES = (
 )
 PYTHON_DIRS = ("DLLs", "Lib", "tcl")
 VENV_DIRS = ("Scripts", "Lib")
-OUT_NAME = "SpriteSuite-Windows-Portable-Sichere-Projektsicherung-2026-10-30.zip"
+VERSION = (ROOT / "VERSION").read_text("utf8").strip()
+if not VERSION or not all(part.isdigit() for part in VERSION.split(".")):
+    raise RuntimeError("VERSION must be a numeric dotted application version")
+OUT_NAME = f"SpriteSuite-Windows-Portable-v{VERSION}-py313-x64.zip"
 
 
 def _ignore(directory: str, names: list[str]) -> list[str]:
@@ -88,6 +91,23 @@ def _copy_whitelist(src: Path, dst: Path, names: tuple[str, ...]) -> None:
             raise RuntimeError("Unexpected filesystem entry " + str(source))
 
 
+def _write_reproducible_zip(package: Path, archive: Path) -> int:
+    """Zip stable file bytes without developer timestamps or paths in headers."""
+    count = 0
+    with ZipFile(archive, "w", ZIP_DEFLATED, compresslevel=6, allowZip64=True) as z:
+        for file in sorted(package.rglob("*")):
+            if not file.is_file():
+                continue
+            relative = file.relative_to(package.parent).as_posix()
+            info = ZipInfo(relative, date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            with file.open("rb") as source, z.open(info, "w", force_zip64=True) as target:
+                shutil.copyfileobj(source, target, length=1024 * 1024)
+            count += 1
+    return count
+
+
 def build(python: Path, venv: Path, out: Path) -> dict:
     python = python.resolve(strict=True)
     venv = venv.resolve(strict=True)
@@ -96,7 +116,10 @@ def build(python: Path, venv: Path, out: Path) -> dict:
     if out.exists():
         raise RuntimeError("Output directory already exists; refusing overwrite: " + str(out))
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.mkdir()
+    # Build in a new *sibling* folder. A failure never creates a misleading
+    # half-built public release directory; the final rename happens last.
+    final_out = out
+    out = Path(tempfile.mkdtemp(prefix=".spritesuite-portable-stage-", dir=out.parent))
     package = out / "SpriteSuite"
     package.mkdir()
     archive = out / OUT_NAME
@@ -173,6 +196,7 @@ def build(python: Path, venv: Path, out: Path) -> dict:
         provenance = {
             "schema": "sprite-suite.windows-portable.v1",
             "source_commit": commit,
+            "application_version": VERSION,
             "python": "CPython 3.13, redistributed locally",
             "python_requires_installation": False,
             "separate_python_required": False,
@@ -185,13 +209,7 @@ def build(python: Path, venv: Path, out: Path) -> dict:
             encoding="utf8",
         )
         print("ZIP: compressing self-contained Windows distribution", flush=True)
-        count = 0
-        with ZipFile(archive, "w", ZIP_DEFLATED, compresslevel=6, allowZip64=True) as z:
-            for file in sorted(package.rglob("*")):
-                if not file.is_file():
-                    continue
-                z.write(file, file.relative_to(out).as_posix())
-                count += 1
+        count = _write_reproducible_zip(package, archive)
         hasher = sha256()
         with archive.open("rb") as stream:
             for chunk in iter(lambda: stream.read(8 * 1024 * 1024), b""):
@@ -200,15 +218,19 @@ def build(python: Path, venv: Path, out: Path) -> dict:
         (out / (OUT_NAME + ".sha256")).write_text(
             digest + "  " + OUT_NAME + "\n", encoding="ascii"
         )
-        report = {"archive": str(archive), "sha256": digest,
-                  "source_commit": commit, "files": count,
+        report = {"archive": str(final_out / OUT_NAME), "sha256": digest,
+                  "source_commit": commit, "version": VERSION, "files": count,
                   "bytes": archive.stat().st_size,
-                  "unpacked": str(package)}
+                  "unpacked": str(final_out / "SpriteSuite")}
+        if final_out.exists():
+            raise RuntimeError("Release destination appeared during the build")
+        os.rename(out, final_out)
         print(json.dumps(report, indent=2), flush=True)
         return report
     except Exception:
-        if source.exists():
-            source.unlink()
+        # The unique staging folder is ours. Refuse to clean a swapped link.
+        if out.is_dir() and not out.is_symlink():
+            shutil.rmtree(out)
         raise
 
 

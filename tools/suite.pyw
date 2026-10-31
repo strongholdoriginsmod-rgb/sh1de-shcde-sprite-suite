@@ -25,6 +25,8 @@ import re
 import subprocess
 import sys
 import threading
+from datetime import datetime, timezone
+from uuid import uuid4
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -62,8 +64,13 @@ class Runner:
     a crash.
     """
 
-    def __init__(self, sink: queue.Queue):
+    MAX_CAPTURE_CHARS = 8 * 1024 * 1024
+    MAX_DISPLAY_LINE_CHARS = 4000
+
+    def __init__(self, sink: queue.Queue, *, log_directory: Path | None = None):
         self.sink = sink
+        self.log_directory = log_directory
+        self.last_log_path: Path | None = None
         self.process: subprocess.Popen | None = None
         self.thread: threading.Thread | None = None
         # Thread completion and GUI acknowledgement are separate events.
@@ -99,6 +106,11 @@ class Runner:
 
         def work() -> None:
             collected: list[str] | None = [] if capture else None
+            collected_chars = 0
+            capture_too_large = False
+            display_dropped = 0
+            log_stream = None
+            log_path = None
             try:
                 self.process = subprocess.Popen(
                     runner_command(args),
@@ -114,15 +126,61 @@ class Runner:
                         | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
                     ),
                 )
+                if self.log_directory is not None:
+                    try:
+                        self.log_directory.mkdir(parents=True, exist_ok=True)
+                        log_path = self.log_directory / (
+                            datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-")
+                            + uuid4().hex[:12] + ".log"
+                        )
+                        log_stream = log_path.open("x", encoding="utf-8")
+                        self.last_log_path = log_path
+                    except OSError:
+                        # An unwritable log directory must not block a build;
+                        # fall back to backpressure instead of losing lines.
+                        log_stream = None
+                        log_path = None
                 assert self.process.stdout is not None
                 for line in self.process.stdout:
+                    if log_stream is not None:
+                        try:
+                            log_stream.write(line)
+                        except OSError:
+                            log_stream.close()
+                            log_stream = None
                     if collected is not None:
-                        collected.append(line)
+                        collected_chars += len(line)
+                        if collected_chars > self.MAX_CAPTURE_CHARS:
+                            capture_too_large = True
+                        elif not capture_too_large:
+                            collected.append(line)
                     else:
-                        self.sink.put(("line", line.rstrip("\n")))
+                        display_line = line.rstrip("\n")[:self.MAX_DISPLAY_LINE_CHARS]
+                        try:
+                            self.sink.put_nowait(("line", display_line))
+                        except queue.Full:
+                            if log_stream is None:
+                                self.sink.put(("line", display_line))
+                            else:
+                                display_dropped += 1
                 code = self.process.wait()
+                if capture_too_large:
+                    self.sink.put((
+                        "line", "Werkzeugantwort überschreitet 8 MiB; "
+                        "Datenerwerb sicher verweigert."
+                    ))
+                    code = 1 if code == 0 else code
+                if display_dropped:
+                    self.sink.put((
+                        "line", f"{display_dropped} Protokollzeilen aus "
+                        "der GUI-Anzeige ausgelassen (vollständig im Dateilog)."
+                    ))
+                if log_path is not None:
+                    self.sink.put(("line", f"Lokales Werkzeugprotokoll: {log_path}"))
                 if collected is not None:
-                    self.sink.put(("captured", (code, "".join(collected))))
+                    self.sink.put((
+                        "captured", (code, "" if capture_too_large else "".join(collected))
+                    ))
                 self.sink.put(("done", code))
             except Exception as exc:  # pragma: no cover - surfaced in the UI
                 self.sink.put(("line", f"Fehler beim Start: {exc}"))
@@ -130,6 +188,8 @@ class Runner:
                     self.sink.put(("captured", (-1, "")))
                 self.sink.put(("done", -1))
             finally:
+                if log_stream is not None:
+                    log_stream.close()
                 self.process = None
 
         self.thread = threading.Thread(target=work, daemon=True)
@@ -179,6 +239,8 @@ class ImagePreview(ttk.Frame):
         self.path: Path | None = None
         self._photo = None
         self._render_key = None
+        self._source_meta = None
+        self._detail_text = ""
         self._job = None
         self._empty_text = empty_text
 
@@ -222,6 +284,7 @@ class ImagePreview(ttk.Frame):
         self.path = None
         self._photo = None
         self._render_key = None
+        self._source_meta = None
         self.title.configure(text=message or self._empty_text)
         self.detail.configure(text="")
         self.canvas.delete("all")
@@ -241,6 +304,8 @@ class ImagePreview(ttk.Frame):
         self.path = path
         self.title.configure(text=title or path.name)
         self.detail.configure(text=detail)
+        self._detail_text = detail
+        self._source_meta = None
         self._render_key = None
         self.redraw(force=True)
 
@@ -264,52 +329,57 @@ class ImagePreview(ttk.Frame):
         return max(0.02, min(4.0, available_w / width, available_h / height))
 
     def redraw(self, force: bool = False) -> None:
+        """Repaint one bounded bitmap only when the source or view changed."""
         self._job = None
         path = self.path
         if path is None:
             return
         try:
             from PIL import Image, ImageTk
+            from suite_preview_render import checkerboard, preview_dimensions
 
-            with Image.open(path) as opened:
-                picture = opened.convert("RGBA")
-            # Tk reports 1x1 while a notebook page is not currently selected.
-            # Still decode and retain the preview so the image appears on the
-            # first visit instead of requiring a resize event to wake it up.
+            stat = path.stat()
+            stamp = (path, stat.st_mtime_ns, stat.st_ctime_ns, stat.st_size)
+            # Read PNG dimensions once per source modification; unchanged
+            # resize events do not decode or even reopen the original image.
+            if self._source_meta is None or self._source_meta[0] != stamp:
+                with Image.open(path) as opened:
+                    source_size = opened.size
+                self._source_meta = (stamp, source_size)
+            else:
+                source_size = self._source_meta[1]
             viewport = (
                 max(320, self.canvas.winfo_width()),
                 max(240, self.canvas.winfo_height()),
             )
-            scale = self._scale(picture.size, viewport)
-            rendered_size = (
-                max(1, round(picture.width * scale)),
-                max(1, round(picture.height * scale)),
-            )
-            key = (path, path.stat().st_mtime_ns, rendered_size, viewport, self.zoom.get())
+            zoom = self.zoom.get()
+            requested_scale = self._scale(source_size, viewport)
+            rendered_size, capped = preview_dimensions(source_size, requested_scale)
+            key = (stamp, rendered_size, viewport, zoom)
             if not force and key == self._render_key and self._photo is not None:
                 return
-            if rendered_size != picture.size:
-                picture = picture.resize(rendered_size, Image.Resampling.NEAREST)
-            self._photo = ImageTk.PhotoImage(picture)
+            with Image.open(path) as opened:
+                picture = opened.convert("RGBA")
+            # One bounded RGB bitmap renders both transparency and artwork.
+            preview = checkerboard(picture, rendered_size)
+            self._photo = ImageTk.PhotoImage(preview, master=self.canvas)
+            message = self._detail_text
+            if capped:
+                message += (
+                    (" — " if message else "") +
+                    "Vorschaubild aus Speichergründen begrenzt; "
+                    "Originaldatei unverändert."
+                )
+            self.detail.configure(text=message)
         except Exception as exc:
             self.clear(f"Bild nicht lesbar: {path.name}")
             self.detail.configure(text=str(exc))
             return
 
-        fit = self.zoom.get() == "Einpassen"
+        fit = zoom == "Einpassen"
         x = max(12, (viewport[0] - rendered_size[0]) // 2) if fit else 12
         y = max(12, (viewport[1] - rendered_size[1]) // 2) if fit else 12
         self.canvas.delete("all")
-        square = 16
-        for top in range(y, y + rendered_size[1], square):
-            for left in range(x, x + rendered_size[0], square):
-                colour = "#d2d2d2" if ((left - x) // square + (top - y) // square) % 2 == 0 else "#a9a9a9"
-                self.canvas.create_rectangle(
-                    left, top,
-                    min(left + square, x + rendered_size[0]),
-                    min(top + square, y + rendered_size[1]),
-                    fill=colour, outline=colour,
-                )
         self.canvas.create_image(x, y, anchor="nw", image=self._photo)
         extent_w = max(viewport[0], x + rendered_size[0] + 12)
         extent_h = max(viewport[1], y + rendered_size[1] + 12)
@@ -349,8 +419,11 @@ class Suite(tk.Tk):
         self.configure(bg=BG)
         self.protocol("WM_DELETE_WINDOW", self._close)
 
-        self.events: queue.Queue = queue.Queue()
-        self.runner = Runner(self.events)
+        self.events: queue.Queue = queue.Queue(maxsize=1024)
+        self.runner = Runner(
+            self.events, log_directory=PROJECT_ROOT / "work" / "logs" / "tool-runs"
+        )
+        self._display_line_count = 0
         # Empfänger einer gesammelten Ausgabe (run_captured) und die Reiter,
         # die nach jedem beendeten Vorgang nachladen wollen (die Werkstatt
         # liest den Export-Ordner erst, wenn das Werkzeug fertig ist).
@@ -532,12 +605,20 @@ class Suite(tk.Tk):
         return True
 
     def log(self, text: str, tag: str = "") -> None:
+        # The complete worker output is saved to a local per-job log; the Tk
+        # console must not grow without bound over a multi-hour session.
         self.console.insert("end", text + "\n", tag)
+        self._display_line_count += text.count("\n") + 1
+        if self._display_line_count > 3000:
+            self.console.delete("1.0", "1001.0")
+            self._display_line_count -= 1000
         self.console.see("end")
 
     def _drain(self) -> None:
         try:
-            while True:
+            # A fast CLI may produce more output than Tk can paint. Budget the
+            # event handling so the GUI can still process user interaction.
+            for _event_number in range(180):
                 kind, payload = self.events.get_nowait()
                 if kind == "start":
                     self.log(f"$ {payload}", "head")
@@ -738,6 +819,8 @@ class HomeTab(ttk.Frame):
         quick.pack(fill="x", pady=(9, 4))
         ttk.Button(quick, text="Umgebung vollständig prüfen", command=self.doctor).pack(side="left", padx=(0, 6))
         ttk.Button(quick, text="Anleitung öffnen", command=self.open_manual).pack(side="left", padx=6)
+        ttk.Button(quick, text="Diagnose exportieren",
+                   command=self.export_diagnostics).pack(side="left", padx=6)
 
         ttk.Label(readiness, text="Projektbereitschaft", style="Head.TLabel").pack(anchor="w")
         self.readiness = ttk.Treeview(
@@ -756,6 +839,13 @@ class HomeTab(ttk.Frame):
             wraplength=440, justify="left",
         )
         self.profile_summary.pack(anchor="w", pady=(0, 12))
+        ttk.Label(readiness, text="Projekt → Mod → Ingame",
+                  style="Head.TLabel").pack(anchor="w")
+        self.workflow_summary = ttk.Label(
+            readiness, text="Status wird gelesen …", style="Muted.TLabel",
+            wraplength=820, justify="left",
+        )
+        self.workflow_summary.pack(anchor="w", pady=(4, 12))
 
         ttk.Label(readiness, text="Sicherheitsmodell", style="Head.TLabel").pack(anchor="w")
         ttk.Label(
@@ -800,6 +890,27 @@ class HomeTab(ttk.Frame):
             target = fallback
         self.app.open_tab(target)
 
+    def export_diagnostics(self) -> None:
+        """Offer a private opt-in report; never transfer private game files."""
+        from suite_diagnostics import save_diagnostic
+        filename = filedialog.asksaveasfilename(
+            parent=self, title="Lokales Diagnosepaket speichern",
+            defaultextension=".json", filetypes=[("JSON", "*.json")],
+            initialfile="SpriteSuite-Diagnose.json",
+        )
+        if not filename:
+            return
+        try:
+            save_diagnostic(PROJECT_ROOT, Path(filename))
+        except (OSError, ValueError) as exc:
+            messagebox.showerror("Diagnose nicht gespeichert", str(exc), parent=self)
+            return
+        messagebox.showinfo(
+            "Diagnose gespeichert",
+            "Bericht lokal erstellt. Er enthält keine Originalgrafiken, "
+            "Benutzernamen oder privaten Dateipfade.", parent=self,
+        )
+
     def doctor(self) -> None:
         self.app.run(
             ["-m", "stronghold_europe_de", "doctor", "--config", "config/installations.local.toml"],
@@ -822,8 +933,14 @@ class HomeTab(ttk.Frame):
             ((PROJECT_ROOT / "config" / "installations.local.toml").is_file(), "Installationen", "lokale Konfiguration"),
             ((PROJECT_ROOT / "work" / "mapping" / "proposals.json.gz").is_file(), "Mapping", "Sprite-Zuordnung vorhanden"),
             ((PROJECT_ROOT / "profiles" / "europe-production.json").is_file(), "Profil", "europe-production"),
-            ((PROJECT_ROOT / "dist" / "europe-production").is_dir(), "Build", "Ausgabe vorhanden"),
-            ((PROJECT_ROOT / "state" / "install-manifest.json").is_file(), "Installation", "Manifest vorhanden"),
+            (False, "Build",
+             "Ausgabe vorhanden, aber hier nicht unabhängig validiert"
+             if (PROJECT_ROOT / "dist" / "europe-production").is_dir()
+             else "noch keine Ausgabe"),
+            (False, "Installation",
+             "Manifest vorhanden; Spiel-/Besitznachweise hier nicht validiert"
+             if (PROJECT_ROOT / "state" / "install-manifest.json").is_file()
+             else "kein geprüfter Installationsnachweis"),
             (
                 not interrupted,
                 "Transaktionen",
@@ -840,6 +957,8 @@ class HomeTab(ttk.Frame):
             )
         authored = profile.get("authored_sprites", [])
         authored_ui = profile.get("authored_ui_atlases", [])
+        from suite_workflow_status import milestone_text
+        self.workflow_summary.configure(text=milestone_text(PROJECT_ROOT))
         self.profile_summary.configure(
             text=(
                 f"Aktives Produktionsprofil: {atlas_count} GM-Atlanten mit "

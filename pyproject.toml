@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stronghold-europe-de"
-version = "0.1.0"
+version = "2.0.0"
 description = "Private local builder for a Stronghold Europe-style SHCDE mod"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13,<3.15"
 license = { text = "Private local project; no game assets are licensed or distributed" }
 dependencies = []
 
@@ -21,6 +21,8 @@ dev = [
 assets = [
   "UnityPy==1.25.3",
   "Pillow==12.3.0",
+  "numpy==2.5.2",
+  "scipy==1.18.0",
 ]
 
 [project.scripts]

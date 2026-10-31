@@ -3029,4 +3029,26 @@ class Universal(center.Center):
 
 
 if __name__ == "__main__":
-    Universal().mainloop()
+    # Only an initialized Tk window that has entered its event loop may signal
+    # success to the detached launcher. Importing this module has no effects.
+    ready = None
+    if "--startup-ready-file" in sys.argv:
+        index = sys.argv.index("--startup-ready-file")
+        if index + 1 < len(sys.argv):
+            ready = Path(sys.argv[index + 1])
+    try:
+        gui = Universal()
+        if ready is not None:
+            from suite_launch_status import announce_ready
+            gui.after(150, lambda: announce_ready(ready, os.getpid()))
+        gui.mainloop()
+    except Exception:
+        if ready is not None:
+            import traceback
+            try:
+                ready.with_suffix(".error.txt").write_text(
+                    traceback.format_exc(), encoding="utf8"
+                )
+            except OSError:
+                pass
+        raise

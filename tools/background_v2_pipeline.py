@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from scipy import ndimage as ndi
 from suite_windows_paths import is_link_or_reparse
+from suite_output_transaction import OutputBatch
 
 
 LANCZOS = Image.Resampling.LANCZOS
@@ -163,22 +164,25 @@ def _overlay_preview(
 def audit_skirmish(source: Path, output: Path) -> list[dict[str, object]]:
     _preflight_images(source, list(SKIRMISH_NAMES), missions=False)
     records: list[dict[str, object]] = []
-    for filename in SKIRMISH_NAMES:
-        original = _rgba(source / filename)
-        seed, exact = skirmish_route_mask(original)
-        stem = Path(filename).stem
-        output.mkdir(parents=True, exist_ok=True)
-        Image.fromarray((exact.astype(np.uint8) * 255), mode="L").save(
-            output / f"{stem}-route-lock.png"
-        )
-        _overlay_preview(original, exact, output / f"{stem}-route-overlay.jpg")
-        records.append(
-            {
-                "file": filename,
-                "seed_pixels": int(seed.sum()),
+    with OutputBatch(output) as batch:
+        for filename in SKIRMISH_NAMES:
+            original = _rgba(source / filename)
+            seed, exact = skirmish_route_mask(original)
+            stem = Path(filename).stem
+            Image.fromarray((exact.astype(np.uint8) * 255), mode="L").save(
+                batch.stage(f"{stem}-route-lock.png")
+            )
+            _overlay_preview(
+                original, exact, batch.stage(f"{stem}-route-overlay.jpg")
+            )
+            records.append({
+                "file": filename, "seed_pixels": int(seed.sum()),
                 "locked_pixels": int(exact.sum()),
-            }
-        )
+            })
+        batch.stage("report.json").write_text(json.dumps({
+            "command": "audit-skirmish", "count": len(records), "files": records
+        }, indent=2) + "\n", encoding="utf8")
+        batch.publish()
     return records
 
 
@@ -214,34 +218,32 @@ def audit_missions(source: Path, output: Path) -> list[dict[str, object]]:
     names = [f"HistoricalCampaign-Map-{number:02d}.png" for number in range(1, 50)]
     _preflight_images(source, names, missions=True)
     records: list[dict[str, object]] = []
-    output.mkdir(parents=True, exist_ok=True)
-    for family in range(1, 8):
-        first_number = (family - 1) * 7 + 1
-        base_name = f"HistoricalCampaign-Map-{first_number:02d}.png"
-        base = _rgba(source / base_name)
-        for offset in range(7):
-            number = first_number + offset
-            filename = f"HistoricalCampaign-Map-{number:02d}.png"
-            current = _rgba(source / filename)
-            mask = mission_overlay_mask(base, current, first=offset == 0)
-            stem = Path(filename).stem
-            Image.fromarray((mask.astype(np.uint8) * 255), mode="L").save(
-                output / f"{stem}-overlay-lock.png"
-            )
-            _overlay_preview(
-                current,
-                mask,
-                output / f"{stem}-overlay-preview.jpg",
-                color=(0, 220, 255),
-            )
-            records.append(
-                {
-                    "file": filename,
-                    "family": family,
-                    "family_base": base_name,
-                    "locked_pixels": int(mask.sum()),
-                }
-            )
+    with OutputBatch(output) as batch:
+        for family in range(1, 8):
+            first_number = (family - 1) * 7 + 1
+            base_name = f"HistoricalCampaign-Map-{first_number:02d}.png"
+            base = _rgba(source / base_name)
+            for offset in range(7):
+                number = first_number + offset
+                filename = f"HistoricalCampaign-Map-{number:02d}.png"
+                current = _rgba(source / filename)
+                mask = mission_overlay_mask(base, current, first=offset == 0)
+                stem = Path(filename).stem
+                Image.fromarray((mask.astype(np.uint8) * 255), mode="L").save(
+                    batch.stage(f"{stem}-overlay-lock.png")
+                )
+                _overlay_preview(
+                    current, mask, batch.stage(f"{stem}-overlay-preview.jpg"),
+                    color=(0, 220, 255),
+                )
+                records.append({
+                    "file": filename, "family": family,
+                    "family_base": base_name, "locked_pixels": int(mask.sum()),
+                })
+        batch.stage("report.json").write_text(json.dumps({
+            "command": "audit-missions", "count": len(records), "files": records
+        }, indent=2) + "\n", encoding="utf8")
+        batch.publish()
     return records
 
 
@@ -261,10 +263,7 @@ def main() -> int:
         records = audit_skirmish(args.source, args.output)
     else:
         records = audit_missions(args.source, args.output)
-    report = {"command": args.command, "count": len(records), "files": records}
-    (args.output / "report.json").write_text(
-        json.dumps(report, indent=2) + "\n", encoding="utf-8"
-    )
+    # The report and all images have already been published as one guarded batch.
     print(json.dumps({"command": args.command, "count": len(records)}, indent=2))
     return 0
 
