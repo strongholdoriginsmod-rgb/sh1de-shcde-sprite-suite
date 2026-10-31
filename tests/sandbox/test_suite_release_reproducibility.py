@@ -73,3 +73,34 @@ def test_never_replace_existing_release_directory(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError,match="already exists"):
         builder.build(fake,fake,output)
     assert (output/"user-file.txt").read_bytes()==b"must remain"
+
+
+def test_base_python_site_packages_are_not_bundled(tmp_path):
+    """The source Python may contain private packages absent from the lock."""
+    base = tmp_path / "python-base"
+    (base / "Lib" / "site-packages" / "private-package").mkdir(parents=True)
+    (base / "Lib" / "site-packages" / "private-package" / "secret.txt").write_bytes(
+        b"must-not-be-packaged"
+    )
+    (base / "Lib" / "hello_stdlib.py").write_text("VALUE = 42\n", encoding="utf8")
+    (base / "DLLs").mkdir()
+    (base / "tcl").mkdir()
+    runtime = tmp_path / "runtime"
+    builder._copy_whitelist(
+        base, runtime, ("Lib", "DLLs", "tcl"), exclude_base_site_packages=True
+    )
+    assert (runtime / "Lib" / "hello_stdlib.py").is_file()
+    assert not (runtime / "Lib" / "site-packages").exists()
+
+
+def test_private_venv_site_packages_are_kept_for_hash_checked_dependencies(tmp_path):
+    src = tmp_path / "verified-venv"
+    (src / "Lib" / "site-packages" / "PIL").mkdir(parents=True)
+    (src / "Lib" / "site-packages" / "PIL" / "__init__.py").write_bytes(
+        b"version = 'synthetic'"
+    )
+    dst = tmp_path / "private-package"
+    builder._copy_whitelist(src, dst, ("Lib",))
+    assert (dst / "Lib" / "site-packages" / "PIL" / "__init__.py").read_bytes() == (
+        b"version = 'synthetic'"
+    )

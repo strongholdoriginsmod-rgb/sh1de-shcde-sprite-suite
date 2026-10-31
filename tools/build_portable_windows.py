@@ -74,7 +74,25 @@ def _check_binary_sources(python: Path, venv: Path) -> None:
         raise RuntimeError("Matching CPython 3.13 runtime and venv required")
 
 
-def _copy_whitelist(src: Path, dst: Path, names: tuple[str, ...]) -> None:
+def _copy_whitelist(
+    src: Path, dst: Path, names: tuple[str, ...], *,
+    exclude_base_site_packages: bool = False,
+) -> None:
+    """Copy only the runtime whitelist; exclude unrelated base installations.
+
+    Python's base Lib/site-packages can contain years of user-owned or
+    unpublished packages. The portable distribution must carry only the
+    independently hash-locked dependencies from the dedicated venv.
+    """
+    def ignore(directory: str, entries: list[str]) -> list[str]:
+        skipped = _ignore(directory, entries)
+        if exclude_base_site_packages and Path(directory) == src / "Lib":
+            skipped.extend(
+                entry for entry in entries
+                if entry.casefold() in {"site-packages", "dist-packages"}
+            )
+        return skipped
+
     for name in names:
         source = src / name
         if not source.exists():
@@ -83,7 +101,7 @@ def _copy_whitelist(src: Path, dst: Path, names: tuple[str, ...]) -> None:
             raise RuntimeError("Missing whitelisted path " + str(source))
         target = dst / name
         if source.is_dir():
-            shutil.copytree(source, target, ignore=_ignore)
+            shutil.copytree(source, target, ignore=ignore)
         elif source.is_file():
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
@@ -138,8 +156,12 @@ def build(python: Path, venv: Path, out: Path) -> dict:
             files.extractall(package)
         source.unlink()
         print("COPY: committed source", flush=True)
-        _copy_whitelist(python, package / "python",
-                        PYTHON_FILES + PYTHON_DIRS)
+        _copy_whitelist(
+            python, package / "python", PYTHON_FILES + PYTHON_DIRS,
+            exclude_base_site_packages=True,
+        )
+        if (package / "python" / "Lib" / "site-packages").exists():
+            raise RuntimeError("Private base Python packages leaked into runtime")
         print("COPY: CPython 3.13 runtime", flush=True)
         _copy_whitelist(venv, package / ".venv", VENV_DIRS)
         print("COPY: application dependencies", flush=True)
