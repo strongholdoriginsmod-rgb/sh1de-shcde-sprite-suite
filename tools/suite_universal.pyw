@@ -3036,11 +3036,16 @@ if __name__ == "__main__":
         index = sys.argv.index("--startup-ready-file")
         if index + 1 < len(sys.argv):
             ready = Path(sys.argv[index + 1])
+    nonce = None
+    if "--startup-ready-token" in sys.argv:
+        index = sys.argv.index("--startup-ready-token")
+        if index + 1 < len(sys.argv):
+            nonce = sys.argv[index + 1]
     try:
         gui = Universal()
         if ready is not None:
             from suite_launch_status import announce_ready
-            gui.after(150, lambda: announce_ready(ready, os.getpid()))
+            gui.after(150, lambda: announce_ready(ready, os.getpid(), nonce=nonce))
         gui.mainloop()
     except Exception:
         if ready is not None:

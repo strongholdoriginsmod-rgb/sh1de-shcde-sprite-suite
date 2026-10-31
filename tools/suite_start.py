@@ -17,6 +17,7 @@ import os
 import subprocess
 import sys
 import tempfile
+from secrets import token_hex
 from datetime import datetime, timezone
 from uuid import uuid4
 from pathlib import Path
@@ -166,13 +167,15 @@ def main() -> int:
     from suite_launch_status import await_ready
     with tempfile.TemporaryDirectory(prefix="spritesuite-startup-") as folder:
         marker = Path(folder) / "ready.json"
+        nonce = token_hex(16)
         child = subprocess.Popen(
-            [*args, "--startup-ready-file", str(marker)],
+            [*args, "--startup-ready-file", str(marker),
+             "--startup-ready-token", nonce],
             cwd=PROJECT, env=env,
             creationflags=(getattr(subprocess, "DETACHED_PROCESS", 0)
                            | getattr(subprocess, "CREATE_NO_WINDOW", 0)),
         )
-        ready, detail = await_ready(child, marker)
+        ready, detail = await_ready(child, marker, nonce=nonce, timeout=30.0)
         if ready:
             return 0
         error_file = marker.with_suffix(".error.txt")

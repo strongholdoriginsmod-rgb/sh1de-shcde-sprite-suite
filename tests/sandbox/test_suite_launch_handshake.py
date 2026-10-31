@@ -54,10 +54,14 @@ def test_launcher_requires_real_child_readiness(tmp_path,monkeypatch):
     monkeypatch.setattr(starter,"find_dotnet_sdk",lambda _:None)
     monkeypatch.setattr(starter.sys,"argv",["suite_start.py"])
     class FakeProcess:
-        pid=4321
+        pid=4321  # Windows venv redirector process, not the Tk interpreter.
         def __init__(self,args,**kwargs):
-            assert args[-2]=="--startup-ready-file"
-            announce_ready(Path(args[-1]),self.pid)
+            assert "--startup-ready-file" in args
+            assert "--startup-ready-token" in args
+            marker=Path(args[args.index("--startup-ready-file")+1])
+            token=args[args.index("--startup-ready-token")+1]
+            assert len(token)==32
+            announce_ready(marker,9876,nonce=token)  # Actual GUI child differs.
         def poll(self):
             return None
     monkeypatch.setattr(starter.subprocess,"Popen",FakeProcess)
@@ -76,7 +80,7 @@ def test_launcher_returns_failure_when_child_crashes(tmp_path,monkeypatch):
     class FakeProcess:
         pid=789
         def __init__(self,args,**kwargs):
-            marker=Path(args[-1])
+            marker=Path(args[args.index("--startup-ready-file")+1])
             marker.with_suffix(".error.txt").write_text(
                 "synthetic safe trace",encoding="utf8")
         def poll(self):
@@ -86,3 +90,69 @@ def test_launcher_returns_failure_when_child_crashes(tmp_path,monkeypatch):
     logs=list((tmp_path/"work"/"logs"/"startup-errors").glob("*.log"))
     assert len(logs)==1
     assert logs[0].read_text("utf8")=="synthetic safe trace"
+
+
+def test_nonce_handshake_accepts_redirected_gui_pid_without_weakening_identity(tmp_path):
+    marker=tmp_path/"nonce-ready.json"
+    nonce="9"*32
+    announce_ready(marker,8088,nonce=nonce)
+    parent=SimpleNamespace(pid=1007,poll=lambda:None)
+    assert await_ready(parent,marker,nonce=nonce,timeout=.2)==(True,"GUI_READY=1")
+    # A stale marker, wrong nonce or absent nonce cannot claim this launch.
+    crashed=SimpleNamespace(pid=1007,poll=lambda:4)
+    assert await_ready(crashed,marker,nonce="8"*32,timeout=.2)[0] is False
+    assert await_ready(crashed,marker,timeout=.2)[0] is False
+
+
+def test_invalid_or_malformed_startup_tokens_are_rejected(tmp_path):
+    marker=tmp_path/"invalid.json"
+    for nonce in ("", "not-a-nonce", "q"*32, "1"*31):
+        try:
+            announce_ready(marker,100,nonce=nonce)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Invalid nonce was accepted: "+repr(nonce))
+    assert not marker.exists()
+
+
+def test_tampered_marker_nonce_cannot_authorize_gui(tmp_path):
+    marker=tmp_path/"ready.json"
+    announce_ready(marker,2468,nonce="1"*32)
+    result=json.loads(marker.read_text("utf8"))
+    result["nonce"]="2"*32
+    marker.write_text(json.dumps(result),encoding="utf8")
+    child=SimpleNamespace(pid=2468,poll=lambda:22)
+    ok,detail=await_ready(child,marker,nonce="1"*32,timeout=.2)
+    assert not ok and "exit=22" in detail
+
+
+def test_real_python_subprocess_nonce_handshake(tmp_path):
+    """Proof travels from a real child interpreter, not a mocked function."""
+    import os
+    import subprocess
+    marker=tmp_path/"subprocess-ready.json"
+    script=tmp_path/"announce.py"
+    script.write_text(
+        "from pathlib import Path\n"
+        "import os,sys,time\n"
+        "from suite_launch_status import announce_ready\n"
+        "announce_ready(Path(sys.argv[1]),os.getpid(),nonce=sys.argv[2])\n"
+        "time.sleep(1.0)\n",
+        encoding="utf8",
+    )
+    nonce="a"*32
+    env=os.environ.copy()
+    tools=Path(__file__).resolve().parents[2]/"tools"
+    env["PYTHONPATH"]=str(tools)+os.pathsep+env.get("PYTHONPATH","")
+    env["PYTHONDONTWRITEBYTECODE"]="1"
+    child=subprocess.Popen(
+        [sys.executable,str(script),str(marker),nonce],env=env,
+        stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,
+        creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0),
+    )
+    try:
+        assert await_ready(child,marker,nonce=nonce,timeout=5)==(True,"GUI_READY=1")
+        assert json.loads(marker.read_text("utf8"))["nonce"]==nonce
+    finally:
+        child.wait(timeout=5)
