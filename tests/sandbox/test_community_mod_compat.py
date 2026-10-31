@@ -150,7 +150,16 @@ def test_real_qa_game_reports_abi_mismatch_without_writes():
     result=compat.check(game,candidate)
     assert result["installed_script_extender_version"]=="1.44.0"
     assert "RUNTIME_ABI_PIN_MISMATCH" in codes(result)
-    assert "PACKAGE_SE_ATTESTATION_MISMATCH" in codes(result)
+    assert result["status"]=="BLOCKED"
+    # A different *declared* SE version needs explicit review, not a second
+    # fabricated native-binary failure. The verified DLL mismatch above is
+    # the independent hard stop. Keep parity with the synthetic contract.
+    review={row["code"] for row in result["issues"]
+            if row["severity"]=="REVIEW"}
+    assert "PACKAGE_SE_ATTESTATION_MISMATCH" in review
+    assert "PACKAGE_SE_ATTESTATION_MISMATCH" not in codes(result)
+    with pytest.raises(compat.CompatibilityError,match="RUNTIME_ABI_PIN_MISMATCH"):
+        compat.require_safe_to_install(game,candidate)
     assert result["candidate"]["runtime_guid"]=="strongholdeuropede.runtime.private"
     assert result["candidate"]["runtime_se_version"]=="1.44.0.0"
     assert sha256((game/compat.SE_DLL).read_bytes()).hexdigest()==old
