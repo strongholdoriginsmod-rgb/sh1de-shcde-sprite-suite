@@ -2135,7 +2135,7 @@ class ArtTab(ttk.Frame):
                 with Image.open(path) as picture:
                     picture = picture.convert("RGBA")
                     picture.thumbnail((cell - 4, cell - 4), Image.LANCZOS)
-                    photo = ImageTk.PhotoImage(picture)
+                    photo = ImageTk.PhotoImage(picture, master=holder)
             except Exception:
                 photo = None
         else:
@@ -2237,7 +2237,7 @@ class ArtTab(ttk.Frame):
                 picture = picture.convert("RGB")
                 if not full:
                     picture.thumbnail((width - 4, height - 4), Image.LANCZOS)
-                self._sheet_photo = ImageTk.PhotoImage(picture)
+                self._sheet_photo = ImageTk.PhotoImage(picture, master=self.sheet_canvas)
                 size = picture.size
         except Exception as exc:
             self.sheet_label.configure(text=f"{path.name}: nicht lesbar ({exc})")

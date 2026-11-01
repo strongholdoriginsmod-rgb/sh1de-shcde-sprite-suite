@@ -724,7 +724,7 @@ class SandboxWindow:
             state["image"] = compose_hud(image) if hud.get() else image
             factor = zoom.get()
             shown = image if factor == 1 else image.resize((image.width * factor, image.height * factor), 0)
-            state["photo"] = ImageTk.PhotoImage(shown)
+            state["photo"] = ImageTk.PhotoImage(shown, master=canvas)
             canvas.delete("welt")
             canvas.create_image(0, 0, image=state["photo"], anchor="nw", tags=("welt",))
             canvas.tag_lower("welt")
@@ -751,7 +751,7 @@ class SandboxWindow:
                     image = apply_ui_changes(image, log=lambda t: status.set(t))
                 except Exception as exc:
                     status.set(f"UI-Ersetzung uebersprungen: {exc}")
-                state["hud_photo"] = ImageTk.PhotoImage(image)
+                state["hud_photo"] = ImageTk.PhotoImage(image, master=canvas)
                 state["hud_size"] = image.size
 
         def place_hud(*_args):

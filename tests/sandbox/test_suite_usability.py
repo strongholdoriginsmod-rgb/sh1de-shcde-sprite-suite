@@ -905,3 +905,48 @@ def test_guided_home_all_seven_routes_are_safe_navigation_only(app_fixture,monke
     assert app.notebook.select()==str(home)
     assert app.advanced.get() is False or app.advanced.get() is True
     # Navigation doesn't change the current active build profile or source.
+
+
+def test_catalogue_images_own_the_live_tk_interpreter_even_if_default_is_stale(
+    app_fixture, tmp_path, monkeypatch,
+):
+    """Regression: actual private-art QA after many GUI roots destroyed raised
+    TclError: can't invoke image command: application has been destroyed.
+    Explicit master=self.grid/self.detail must bypass a stale global Tk root.
+    """
+    from PIL import Image
+
+    suite, app, _settings = app_fixture
+    stale = object()
+    # No additional Tcl interpreter is created for this regression.
+    # No additional Tcl interpreter is created for this regression.
+    # A stale default-root sentinel catches implicit PhotoImage ownership.
+    monkeypatch.setattr(tk, "_default_root", stale)
+    catalog = app.catalog_tab
+
+    # This test never opens a private image: force two synthetic 24px sprites.
+    monkeypatch.setattr(
+        suite.katalog, "group_rows", lambda _group: [
+            {"name": "anim_castle 002", "action": "KEEP_CRUSADER",
+             "target": {"width": 24, "height": 24, "pivot_x": 0.5,
+                        "pivot_y": 0.5}},
+            {"name": "anim_castle 003", "action": "KEEP_CRUSADER",
+             "target": {"width": 24, "height": 24, "pivot_x": 0.5,
+                        "pivot_y": 0.5}},
+        ],
+    )
+    monkeypatch.setattr(catalog, "side_directory", lambda _side: tmp_path)
+    monkeypatch.setattr(
+        catalog, "image_for",
+        lambda _side, _name: Image.new("RGBA", (24, 24), (120, 80, 220, 180)),
+    )
+    app.open_tab(catalog)
+    app.update_idletasks()
+    catalog.open_group("anim_castle", "anim_castle 002")
+    app.update_idletasks()
+    assert catalog.photos
+    assert catalog.detail_photos
+    assert all(item.width() > 0 for item in catalog.photos)
+    assert all(item.width() > 0 for item in catalog.detail_photos)
+    assert catalog.grid.tk is app.tk
+    assert catalog.detail.tk is app.tk

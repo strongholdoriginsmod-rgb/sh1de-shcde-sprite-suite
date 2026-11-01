@@ -242,7 +242,7 @@ class HudMenuPixelEditor(tk.Toplevel):
                 draw.line((x,0,x,size[1]),fill=(88,92,98,160))
             for y in range(0,size[1],zoom):
                 draw.line((0,y,size[0],y),fill=(88,92,98,160))
-        self._picture=ImageTk.PhotoImage(scaled)
+        self._picture=ImageTk.PhotoImage(scaled, master=self.canvas)
         self.canvas.delete("all")
         self.canvas.create_image(0,0,image=self._picture,anchor="nw")
         self.canvas.configure(scrollregion=(0,0,*size))

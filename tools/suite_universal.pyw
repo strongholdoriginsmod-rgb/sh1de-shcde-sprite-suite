@@ -628,7 +628,7 @@ class CatalogTab(ttk.Frame):
             if image is not None:
                 image.thumbnail((self.THUMB - 6, self.THUMB - 6), Image.Resampling.NEAREST
                                 if max(image.size) < self.THUMB else Image.Resampling.LANCZOS)
-                photo = ImageTk.PhotoImage(image)
+                photo = ImageTk.PhotoImage(image, master=self.grid)
                 self.photos.append(photo)
                 self.grid.create_image(x + self.THUMB // 2, y + self.THUMB // 2, image=photo,
                                        tags=("f:" + frame["name"],))
@@ -717,7 +717,7 @@ class CatalogTab(ttk.Frame):
             shown = image.resize((image.width * scale, image.height * scale), Image.Resampling.NEAREST)
             checker = Image.new("RGBA", shown.size, (60, 62, 66, 255))
             checker.alpha_composite(shown)
-            photo = ImageTk.PhotoImage(checker)
+            photo = ImageTk.PhotoImage(checker, master=self.detail)
             self.detail_photos.append(photo)
             self.detail.create_image(x, 26, anchor="nw", image=photo)
             self.detail.create_text(x, 30 + shown.height, anchor="nw", text=f"{image.width}x{image.height}",
@@ -1823,7 +1823,7 @@ class DiagnoseTab(ttk.Frame):
         if picture and Path(picture).is_file():
             image = Image.open(picture).convert("RGBA")
             image.thumbnail((max(self.canvas.winfo_width(), 400), max(self.canvas.winfo_height(), 300)))
-            self.photo = ImageTk.PhotoImage(image)
+            self.photo = ImageTk.PhotoImage(image, master=self.canvas)
             self.canvas.create_image(0, 0, anchor="nw", image=self.photo)
 
     def open_in_catalog(self, _event=None):

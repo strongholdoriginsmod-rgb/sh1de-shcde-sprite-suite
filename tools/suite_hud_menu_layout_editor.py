@@ -688,7 +688,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
                     (width,height),Image.Resampling.NEAREST)
                 draw_ratio=ratio
             self._scale=draw_ratio
-            self._image_tk=ImageTk.PhotoImage(picture)
+            self._image_tk=ImageTk.PhotoImage(picture, master=self.canvas)
             self.canvas.delete("all")
             margin=_CANVAS_MARGIN
             self.canvas.create_rectangle(
