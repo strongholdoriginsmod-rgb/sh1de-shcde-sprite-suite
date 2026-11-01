@@ -118,6 +118,7 @@ class HudMenuWorkshop(ttk.Frame):
             ("Origins-Mod als bearbeitbare Kopie importieren …",
              self.import_origins_package),
             ("Noesis-Originalseiten frei gestalten · Ebenen & Patches …",self.open_origins_visual),
+            ("Interaktiver Modul-Demo-Modus (echte Bearbeitung) …",self.open_demo_mode),
             ("Noesis-Einzelpatch-Editor öffnen …",self.open_origins_xaml),
             ("Origins-Farbthema visuell bearbeiten …",self.open_origins_theme),
             ("Menüvideo (WebM) importieren …",self.import_origins_video),
@@ -754,6 +755,10 @@ class HudMenuWorkshop(ttk.Frame):
         except (ValueError,OSError) as exc:
             messagebox.showerror("Origins-Mod konnte nicht übernommen werden",
                                  str(exc),parent=self)
+
+    def open_demo_mode(self):
+        from suite_demo_mode import open_demo_mode
+        return open_demo_mode(self)
 
     def open_origins_visual(self):
         """Open the complete original Noesis page editor, not the overlay tool."""

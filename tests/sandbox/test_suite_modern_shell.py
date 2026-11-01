@@ -234,3 +234,36 @@ def test_advanced_sidebar_checkbox_uses_correct_tk_interpreter_with_old_root(
         if app is not None:
             app.destroy()
         older.destroy()
+
+
+
+def test_main_sidebar_launches_actual_module_demo_and_executes_files(ui,tmp_path,monkeypatch):
+    import hud_menu_workspace as demo_work
+    import hud_menu_layout as demo_layout
+    import se_asset_package as demo_package
+    mod,app=ui
+    suite=tmp_path/"demo-suite"
+    (suite/"work").mkdir(parents=True)
+    monkeypatch.setattr(demo_work,"ROOT",suite)
+    monkeypatch.setattr(demo_work,"WORK",suite/"work")
+    monkeypatch.setattr(demo_layout,"WORK",suite/"work")
+    monkeypatch.setattr(demo_package,"ROOT",suite)
+    monkeypatch.setattr(demo_package,"WORK",suite/"work")
+    monkeypatch.setattr(demo_package,"OUT",suite/"work"/"se-asset-mods")
+    shell=app.modern_shell
+    assert shell.demo_button.winfo_exists()
+    window=shell.open_demo()
+    try:
+        app.update()
+        assert window.module_list.size()==10
+        idx=next(i for i,m in enumerate(__import__("suite_demo_engine").MODULES)
+                 if m.key=="pixels")
+        window.module_list.selection_clear(0,"end")
+        window.module_list.selection_set(idx)
+        window._select_module()
+        window.run_all()
+        assert window._run().complete
+        assert window.verify_outputs()
+        assert (window._run().root/"demo-protokoll.json").is_file()
+    finally:
+        window.destroy()

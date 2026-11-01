@@ -174,6 +174,9 @@ class ModernShell:
         self.manual_button = ttk.Button(body, text="Anleitung öffnen",
                         style="Rail.TButton", command=app.open_guide)
         self.manual_button.pack(fill="x", padx=5, pady=2)
+        self.demo_button=ttk.Button(body,text="Interaktiver Demo-Modus",
+              style="Rail.TButton",command=self.open_demo)
+        self.demo_button.pack(fill="x",padx=5,pady=2)
         self.log_button=ttk.Button(body,text="Protokoll anzeigen",
               style="Rail.TButton",command=self.toggle_log)
         self.log_button.pack(fill="x",padx=5,pady=2)
@@ -207,6 +210,10 @@ class ModernShell:
     def _separator(self, parent):
         ttk.Separator(parent, orient="horizontal").pack(
             fill="x", padx=10, pady=(10, 5))
+
+    def open_demo(self):
+        from suite_demo_mode import open_demo_mode
+        return open_demo_mode(self.app)
 
     def toggle_log(self):
         self.app.toggle_console()
@@ -268,6 +275,8 @@ class ModernShell:
                                      else "Suche (Strg+K)")
         self.manual_button.configure(text="Open guide" if english
                                      else "Anleitung öffnen")
+        self.demo_button.configure(text="Interactive demos" if english
+                                   else "Interaktiver Demo-Modus")
         self.log_button.configure(text=(
             ("Hide log" if english else "Protokoll ausblenden")
             if self.app._console_wanted else
