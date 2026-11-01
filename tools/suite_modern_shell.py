@@ -177,6 +177,10 @@ class ModernShell:
         self.demo_button=ttk.Button(body,text="Interaktiver Demo-Modus",
               style="Rail.TButton",command=self.open_demo)
         self.demo_button.pack(fill="x",padx=5,pady=2)
+        self.native_preview_button=ttk.Button(
+              body,text="Noesis-Live-Pixel (Spiel)",
+              style="Rail.TButton",command=self.open_native_preview)
+        self.native_preview_button.pack(fill="x",padx=5,pady=2)
         self.log_button=ttk.Button(body,text="Protokoll anzeigen",
               style="Rail.TButton",command=self.toggle_log)
         self.log_button.pack(fill="x",padx=5,pady=2)
@@ -214,6 +218,10 @@ class ModernShell:
     def open_demo(self):
         from suite_demo_mode import open_demo_mode
         return open_demo_mode(self.app)
+
+    def open_native_preview(self):
+        from suite_noesis_native_live_preview import open_native_noesis_live
+        return open_native_noesis_live(self.app)
 
     def toggle_log(self):
         self.app.toggle_console()

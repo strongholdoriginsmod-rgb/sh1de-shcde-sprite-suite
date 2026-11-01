@@ -114,6 +114,8 @@ class OriginsVisualEditor(tk.Toplevel):
                    ).pack(side="left",padx=5)
         ttk.Button(toolbar,text="Originalbilder für Vorschau …",
                    command=self.choose_preview_images).pack(side="left",padx=5)
+        ttk.Button(toolbar,text="Native Noesis-Live-Pixel (Spiel) …",
+                   command=self.open_native_live_preview).pack(side="left",padx=5)
         ttk.Button(toolbar,text="Rückgängig",command=self.undo).pack(side="left",padx=3)
         ttk.Button(toolbar,text="Wiederholen",command=self.redo).pack(side="left",padx=3)
         ttk.Button(toolbar,text="Patch + Revision speichern",command=self.save
@@ -235,6 +237,18 @@ class OriginsVisualEditor(tk.Toplevel):
         ttk.Button(rotation,text="Drehen",command=self.rotate).pack(side="left")
         ttk.Button(rotation,text="Eigenes Bild einsetzen",command=self.import_selected_image
                    ).pack(side="right")
+
+    def open_native_live_preview(self):
+        """Show genuine game/Noesis pixels, never the Python geometry proxy."""
+        from suite_noesis_native_live_preview import open_native_noesis_live
+        def use_capture(reference:Path):
+            self.reference_image_path=reference
+            if self.doc is not None:self.redraw()
+            self.status.set("Echte native Aufnahme als Layoutreferenz übernommen: "+
+                            str(reference)+" · Original-XAML unverändert")
+        viewer=open_native_noesis_live(self,on_reference=use_capture)
+        viewer.focus_set()
+        return viewer
 
     def compare_game_frames(self):
         """Compare two actual user-supplied game/Noesis PNG captures exactly."""
