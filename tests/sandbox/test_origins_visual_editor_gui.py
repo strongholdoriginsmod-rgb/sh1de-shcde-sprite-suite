@@ -18,7 +18,8 @@ from suite_origins_visual_editor import OriginsVisualEditor
 @pytest.fixture(scope="module")
 def ui_root():
     try:
-        root=tk.Tk()
+        from suite_tcl_runtime import create_tk_root
+        root=create_tk_root()
         root.withdraw()
     except tk.TclError as err:
         pytest.skip("Native Tk unavailable: "+str(err))

@@ -205,7 +205,8 @@ def test_advanced_sidebar_checkbox_uses_correct_tk_interpreter_with_old_root(
         lock_module, "lock_path",
         lambda _root, _name: tmp_path / "second-root-instance.lock",
     )
-    older = tk.Tk()
+    from suite_tcl_runtime import create_tk_root
+    older = create_tk_root()
     older.withdraw()
     app = None
     try:

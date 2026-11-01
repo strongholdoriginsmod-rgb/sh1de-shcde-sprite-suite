@@ -106,7 +106,8 @@ def portable_self_test() -> int:
         "from stronghold_europe_de.sdk_toolchain import find_dotnet_sdk; "
         "from PySide6.QtWidgets import QApplication; "
         "assert sys.version_info[:2] == (3, 13); "
-        "tk=tkinter.Tk(); tk.withdraw(); tk.destroy(); "
+        "from suite_tcl_runtime import create_tk_root; "
+        "tk=create_tk_root(); tk.withdraw(); tk.destroy(); "
         "os.environ['QT_QPA_PLATFORM']='offscreen'; "
         "qt=QApplication([]); assert qt.platformName()=='offscreen'; "
         "qt.quit(); "
@@ -121,7 +122,8 @@ def portable_self_test() -> int:
     except (OSError,TclRuntimeError) as exc:
         print("PORTABLE_TCL_ERROR:", exc, file=sys.stderr)
         return 4
-    env = dict(os.environ, PYTHONPATH=str(PROJECT / "src"),
+    env = dict(os.environ,
+               PYTHONPATH=str(PROJECT / "tools")+os.pathsep+str(PROJECT / "src"),
                PYTHONDONTWRITEBYTECODE="1", **prepared)
     try:
         return subprocess.run(

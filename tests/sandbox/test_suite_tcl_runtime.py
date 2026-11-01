@@ -66,8 +66,8 @@ def test_native_tk_stress_with_untrusted_environment_and_verified_cache(tmp_path
         pytest.skip("No real local Tk runtime available: "+str(exc))
     env=prepare_tcl_env(ROOT,source=base,cache_root=tmp_path/"private")
     program=(
-        "import tkinter as tk;"
-        "[(lambda r:(r.withdraw(),r.update_idletasks(),r.destroy()))(tk.Tk()) "
+        "from suite_tcl_runtime import create_tk_root;"
+        "[(lambda r:(r.withdraw(),r.update_idletasks(),r.destroy()))(create_tk_root()) "
         "for _ in range(16)];"
         "print('VERIFIED_TCL_TK_RECREATIONS=16')"
     )
@@ -75,6 +75,7 @@ def test_native_tk_stress_with_untrusted_environment_and_verified_cache(tmp_path
         capture_output=True,text=True,
         timeout=35,env={**os.environ,
                 "TCL_LIBRARY":"C:/invalid/nonexistent/tcl8.6",
-                "TK_LIBRARY":"C:/invalid/nonexistent/tk8.6",**env})
+                "TK_LIBRARY":"C:/invalid/nonexistent/tk8.6",
+                "PYTHONPATH":str(ROOT/"tools")+os.pathsep+str(ROOT/"src"),**env})
     assert run.returncode==0,run.stderr
     assert "VERIFIED_TCL_TK_RECREATIONS=16" in run.stdout

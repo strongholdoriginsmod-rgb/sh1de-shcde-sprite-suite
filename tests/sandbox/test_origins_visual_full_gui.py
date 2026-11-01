@@ -21,7 +21,8 @@ from suite_origins_visual_editor import OriginsVisualEditor
 @pytest.fixture(scope="module")
 def tk_root():
     try:
-        app=tk.Tk()
+        from suite_tcl_runtime import create_tk_root
+        app=create_tk_root()
         app.withdraw()
     except tk.TclError as error:
         pytest.skip("Windows Tk unavailable: "+str(error))

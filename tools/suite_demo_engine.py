@@ -702,4 +702,6 @@ class DemoSession:
 # Register after DemoSession is defined to avoid dependency cycles.
 from suite_demo_extra import register as _register_specialty_demos
 MODULES=_register_specialty_demos(DemoSession,MODULES)
+from suite_demo_more import register as _register_more_demos
+MODULES=_register_more_demos(DemoSession,MODULES)
 MODULE_BY_KEY={item.key:item for item in MODULES}

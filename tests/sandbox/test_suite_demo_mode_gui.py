@@ -19,7 +19,8 @@ from suite_demo_engine import MODULES
 @pytest.fixture(scope="module")
 def tk_root():
     try:
-        root=tk.Tk()
+        from suite_tcl_runtime import create_tk_root
+        root=create_tk_root()
         root.withdraw()
     except tk.TclError as error:
         pytest.skip("Windows Tcl/Tk could not start: "+str(error))
@@ -257,7 +258,7 @@ def test_native_menu_demo_requires_game_and_opens_real_campaign_workshop(gui,mon
     editor.choose_original()
     assert editor.source_paths["native_menu"]==game
     editor.run_all()
-    assert editor._run().complete
+    assert editor._run().complete, errors
     assert editor.verify_outputs()
     special=editor.open_editor()
     from suite_origins_runtime_workshop import OriginsRuntimeWorkshop
@@ -266,3 +267,30 @@ def test_native_menu_demo_requires_game_and_opens_real_campaign_workshop(gui,mon
     assert len(special.missions)==1
     assert special.saved_campaign_slug=="demo-native-menu"
     special.destroy()
+
+
+
+def test_five_new_specialist_modules_open_the_real_editors(gui):
+    editor,wd,_=gui
+    from suite_hud_menu_editor import HudMenuPixelEditor
+    from suite_origins_runtime_workshop import OriginsRuntimeWorkshop
+    for key in ("background_masked","button_states","vegetation","gold_relief"):
+        choose(editor,key)
+        editor.run_all()
+        assert editor._run().complete
+        assert editor.verify_outputs()
+        assert not editor.practice_button.instate(("disabled",))
+        tool=editor.open_editor()
+        assert isinstance(tool,HudMenuPixelEditor),key
+        assert tool.winfo_exists()
+        tool.destroy()
+    choose(editor,"menu_behavior")
+    editor.run_all()
+    assert editor._run().complete
+    assert editor.verify_outputs()
+    tool=editor.open_editor()
+    assert isinstance(tool,OriginsRuntimeWorkshop)
+    assert tool.name.get()=="demo-menu-mock"
+    assert len(tool.missions)==2
+    assert tool.saved_campaign_slug=="demo-menu-mock"
+    tool.destroy()

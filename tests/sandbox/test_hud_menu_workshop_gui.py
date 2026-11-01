@@ -41,7 +41,8 @@ def workshop(tmp_path,monkeypatch):
     monkeypatch.setattr(layout,"WORK",suite/"work")
     monkeypatch.setattr(gui,"ROOT",suite)
     try:
-        root=tk.Tk()
+        from suite_tcl_runtime import create_tk_root
+        root=create_tk_root()
         root.geometry("1200x760+30+30")
     except tk.TclError as exc:
         pytest.skip("Native Tk is unavailable: "+str(exc))

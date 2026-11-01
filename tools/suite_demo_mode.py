@@ -418,10 +418,11 @@ class DemoMode(tk.Toplevel):
     def _can_open_editor(run):
         if not run or not run.receipts:return False
         if run.module.key in {"noesis","patch","pixels","package","layout","theme",
-                              "campaign","season","native_menu"}:
+                              "campaign","season","native_menu","menu_behavior"}:
             return True
         specialty={"stone","boar","historic_palette","team_mask","sandbox_scene",
-                   "button_motif","native_tiles","bc7","extra_atlas"}
+                   "button_motif","native_tiles","bc7","extra_atlas",
+                   "background_masked","button_states","vegetation","gold_relief"}
         if run.module.key not in specialty:return False
         relative=run.data.get("extra_asset")
         if relative and (run.project/relative).is_file():return True
@@ -448,7 +449,8 @@ class DemoMode(tk.Toplevel):
                     editor.refresh_tree()
             elif key in {"pixels","package","stone","boar","historic_palette",
                           "team_mask","sandbox_scene","button_motif","native_tiles",
-                          "bc7","extra_atlas"}:
+                          "bc7","extra_atlas","background_masked","button_states",
+                          "vegetation","gold_relief"}:
                 from suite_hud_menu_editor import HudMenuPixelEditor
                 if key=="pixels":
                     source=run.project/run.data["relative"]
@@ -480,10 +482,10 @@ class DemoMode(tk.Toplevel):
                 from suite_origins_theme_editor import OriginsThemeEditor
                 editor=OriginsThemeEditor(self,project=run.project,
                      source=Path(run.data["theme_source"]))
-            elif key in {"campaign","season","native_menu"}:
+            elif key in {"campaign","season","native_menu","menu_behavior"}:
                 from suite_origins_runtime_workshop import OriginsRuntimeWorkshop
                 editor=OriginsRuntimeWorkshop(self,project=run.project)
-                if key in {"campaign","native_menu"} and "campaign" in run.data:
+                if key in {"campaign","native_menu","menu_behavior"} and "campaign" in run.data:
                     plan=run.data["campaign"]
                     editor.name.set(plan["name"])
                     editor.title_var.set(plan["title"])

@@ -67,44 +67,61 @@ def compile_menu_candidate(project:Path, slug:str, game_root:Path)->dict:
         authored=stage/"OriginsCampaignData.g.cs"
         authored.write_bytes(generated)
         output=stage/"OriginsMenuCandidate.dll"
-        sources=[CORE,BRIDGE,authored]
-        args=[str(CSC),"/nologo","/target:library","/optimize+",
-              "/out:"+str(output)]
-        args += ["/reference:"+str(refs[k]) for k in
-                 ("bep","harmony","noesis","unity","unity_core")]
-        args += [str(source) for source in sources]
-        try:
-            process=subprocess.run(args,cwd=stage,capture_output=True,text=True,
-                      encoding="utf8",errors="replace",timeout=50,
-                      creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
-        except (OSError,subprocess.TimeoutExpired) as err:
-            raise WorkshopError("Native menu candidate compiler did not finish") from err
-        (stage/"compile.log").write_text(
-            (process.stdout+process.stderr)[:32000],encoding="utf8")
-        if process.returncode or not output.is_file():
-            raise WorkshopError(
-                "Native menu candidate failed compilation: "+
-                (process.stdout+process.stderr)[-1800:])
+        from suite_windows_csharp_scratch import short_csharp_scratch
+        with short_csharp_scratch() as compiler_dir:
+            # csc.exe from .NET Framework 4 may fail on deeply nested work/
+            # paths. It receives only short user-local source/output paths.
+            temp_source=compiler_dir/"OriginsCampaignData.g.cs"
+            temp_source.write_bytes(generated)
+            temp_output=compiler_dir/"OriginsMenuCandidate.dll"
+            args=[str(CSC),"/nologo","/target:library","/optimize+",
+                  "/out:"+str(temp_output)]
+            args += ["/reference:"+str(refs[k]) for k in
+                     ("bep","harmony","noesis","unity","unity_core")]
+            args += [str(CORE),str(BRIDGE),str(temp_source)]
+            try:
+                process=subprocess.run(args,cwd=compiler_dir,capture_output=True,
+                            text=True,encoding="utf8",errors="replace",timeout=50,
+                            creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+            except (OSError,subprocess.TimeoutExpired) as err:
+                raise WorkshopError("Native menu candidate compiler did not finish") from err
+            (stage/"compile.log").write_text(
+                (process.stdout+process.stderr)[:32000],encoding="utf8")
+            if process.returncode or not temp_output.is_file():
+                raise WorkshopError(
+                    "Native menu candidate failed compilation: "+
+                    (process.stdout+process.stderr)[-1800:])
+            shutil.copyfile(temp_output,output)
+            if _digest(output)!=_digest(temp_output):
+                raise WorkshopError("Compiled candidate changed while copying")
         # Verify compiled plugin metadata through Mono.Cecil without ever
         # loading/executing the DLL, Harmony or Unity game code.
         if not PROBE.is_file() or linked(PROBE):
             raise WorkshopError("Audited candidate metadata verifier missing")
-        cecil=stage/refs["cecil"].name
-        shutil.copyfile(refs["cecil"],cecil)
-        reader=stage/"OriginsNativeMetadataReader.exe"
-        check=subprocess.run([str(CSC),"/nologo","/target:exe",
-                    "/out:"+str(reader),"/reference:"+str(cecil),str(PROBE)],
-                    cwd=stage,capture_output=True,text=True,errors="replace",timeout=40,
-                    creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
-        if check.returncode or not reader.is_file():
-            raise WorkshopError("Candidate metadata reader compilation failed: "+
-                                (check.stdout+check.stderr)[-1000:])
-        checked=subprocess.run([str(reader),*[str(refs[k]) for k in
-                       ("game","noesis","bep","harmony","cecil")],str(output)],
-                    cwd=stage,capture_output=True,text=True,errors="replace",timeout=35,
-                    creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
-        (stage/"candidate-metadata.log").write_text(checked.stdout+checked.stderr,
-                                                     encoding="utf8")
+        with short_csharp_scratch() as compiler_dir:
+            cecil=compiler_dir/refs["cecil"].name
+            shutil.copyfile(refs["cecil"],cecil)
+            reader=compiler_dir/"OriginsNativeMetadataReader.exe"
+            short_candidate=compiler_dir/"OriginsMenuCandidate.dll"
+            shutil.copyfile(output,short_candidate)
+            check=subprocess.run([str(CSC),"/nologo","/target:exe",
+                        "/out:"+str(reader),"/reference:"+str(cecil),str(PROBE)],
+                        cwd=compiler_dir,capture_output=True,text=True,
+                        errors="replace",timeout=40,
+                        creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+            if check.returncode or not reader.is_file():
+                raise WorkshopError("Candidate metadata reader compilation failed: "+
+                                    (check.stdout+check.stderr)[-1000:])
+            checked=subprocess.run([str(reader),*[str(refs[k]) for k in
+                           ("game","noesis","bep","harmony","cecil")],
+                           str(short_candidate)],
+                        cwd=compiler_dir,capture_output=True,text=True,
+                        errors="replace",timeout=35,
+                        creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+            (stage/"candidate-metadata.log").write_text(
+                checked.stdout+checked.stderr,encoding="utf8")
+            if _digest(output)!=_digest(short_candidate):
+                raise WorkshopError("Candidate changed while checking its metadata")
         signs=dict(line.split("=",1) for line in checked.stdout.splitlines()
                    if "=" in line)
         required=("CANDIDATE_HAS_PLUGIN_HOST","CANDIDATE_HAS_PLUGIN_ATTRIBUTE",
@@ -113,9 +130,16 @@ def compile_menu_candidate(project:Path, slug:str, game_root:Path)->dict:
         if checked.returncode or any(signs.get(k)!="1" for k in required):
             raise WorkshopError("Native menu candidate metadata check failed: "+
                                 (checked.stdout+checked.stderr)[-1000:])
-        # Cecil belongs to the installed game. Do not bundle its DLL into
-        # the user-facing offline candidate folder.
-        reader.unlink();cecil.unlink()
+        # Execute the SAME bridge C# against a fake Noesis/Harmony/BepInEx
+        # host. This validates command routing and unpatch lifetime without
+        # loading the actual game or adding test binaries to the candidate.
+        from origins_menu_mock_qa import run_menu_mock_qa
+        mock=run_menu_mock_qa(root,slug,destination=stage/"menu-mock-run")
+        shutil.copyfile(mock["log"],stage/"menu-mock-behavior.log")
+        shutil.copyfile(mock["report"],stage/"menu-mock-report.json")
+        shutil.rmtree(stage/"menu-mock-run")
+        # The Cecil copy and metadata reader were destroyed with the short
+        # compiler scratch folder; never ship game/test binaries.
         if (_digest(CORE)!=core_before or _digest(BRIDGE)!=bridge_before or
               any(_digest(p)!=original_hashes[k] for k,p in refs.items())):
             raise WorkshopError("Game libraries or bridge source changed during compilation")
@@ -136,6 +160,10 @@ def compile_menu_candidate(project:Path, slug:str, game_root:Path)->dict:
           "authored_campaign_source_sha256":sha256(generated).hexdigest(),
           "compiled_candidate_metadata_attested":True,
           "compiled_candidate_metadata_signatures":{k:True for k in required},
+          "offline_fake_game_host_executed":True,
+          "offline_fake_host_assertions":mock["behavior_assertions_executed"],
+          "offline_fake_host_log":"menu-mock-behavior.log",
+          "mock_game_commands_preserved":True,
           "source_installation":str(installed),
           "referenced_game_assembly_hashes":original_hashes,
           "compiled_without_game_running":True,
@@ -149,7 +177,7 @@ def compile_menu_candidate(project:Path, slug:str, game_root:Path)->dict:
           "automatic_install_performed":False,
           "installable_mod_produced":False,
           "warnings":[
-            "A compilable BepInEx DLL is NOT proof that the adapter is safe in the game.",
+            "A compilable BepInEx DLL and fake-host tests are NOT proof of in-game functionality.",
             "The menu bridge only displays/hides authored Noesis controls, "
             "allows selection and LOGS launch requests without launching a map.",
             "Check exact running game build, game UI controls, command bindings, "

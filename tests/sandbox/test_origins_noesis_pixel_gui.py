@@ -23,7 +23,8 @@ def app(tmp_path,monkeypatch):
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
       <Grid Name="Main"><Button Name="RunButton" Content="Play"/></Grid>
       </UserControl>''',encoding="utf8")
-    root=tk.Tk()
+    from suite_tcl_runtime import create_tk_root
+    root=create_tk_root()
     root.withdraw()
     window=OriginsVisualEditor(root,project=suite/"work"/"visual",source=original)
     root.update_idletasks()

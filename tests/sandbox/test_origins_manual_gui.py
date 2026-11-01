@@ -22,7 +22,8 @@ def tkinter_root():
     # One live interpreter per module: Tcl/Tk resource resolution on this
     # portable Windows Python may be inconsistent after repeated Tk teardown.
     try:
-        root=tk.Tk()
+        from suite_tcl_runtime import create_tk_root
+        root=create_tk_root()
         root.withdraw()
     except tk.TclError as exc:
         pytest.skip("Tk cannot open windows: "+str(exc))

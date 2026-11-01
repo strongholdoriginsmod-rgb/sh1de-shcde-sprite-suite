@@ -620,9 +620,9 @@ def cmd_hud(args) -> int:
 
 
 def cmd_fenster(args) -> int:
-    import tkinter as tk
+    from suite_tcl_runtime import create_tk_root
 
-    root = tk.Tk()
+    root = create_tk_root(project=PROJECT_ROOT)
     root.withdraw()
     window = SandboxWindow(root, Path(args.szene) if args.szene else None)
     window.protocol("WM_DELETE_WINDOW", root.destroy)

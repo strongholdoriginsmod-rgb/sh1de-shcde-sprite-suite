@@ -114,7 +114,8 @@ def test_real_game_metadata_probe_reports_structure_but_not_gameplay_attestation
 def test_runtime_workshop_compiles_selected_native_candidate_in_private_folder(project,monkeypatch):
     _available()
     _campaign(project)
-    root=tk.Tk();root.withdraw()
+    from suite_tcl_runtime import create_tk_root
+    root=create_tk_root();root.withdraw()
     view=None
     try:
         view=workshop.OriginsRuntimeWorkshop(root,project=project)

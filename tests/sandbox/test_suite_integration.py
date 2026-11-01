@@ -73,7 +73,8 @@ def test_open_sandbox_studio_switches_to_embedded_tab(monkeypatch):
 def test_tk_notebook_embeds_once_and_catalog_navigation_remains_bidirectional(monkeypatch):
     suite=load_suite()
     try:
-        root=tk.Tk()
+        from suite_tcl_runtime import create_tk_root
+        root=create_tk_root()
     except tk.TclError as exc:
         pytest.skip(f"No Tk desktop: {exc}")
     root.geometry("1100x780")
@@ -340,7 +341,8 @@ def test_first_studio_open_maps_tk_tab_before_initializing_native_child():
     """Real Notebook.select() is asynchronous until Tk's idle geometry pass."""
     suite=load_suite()
     try:
-        root=tk.Tk()
+        from suite_tcl_runtime import create_tk_root
+        root=create_tk_root()
     except tk.TclError as exc:
         pytest.skip(f"No Tk desktop: {exc}")
     root.geometry("900x650+95+95")

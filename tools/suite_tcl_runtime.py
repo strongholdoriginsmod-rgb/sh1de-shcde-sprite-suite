@@ -146,3 +146,44 @@ def install_tcl_env(project:Path,*,source:Path|None=None,
     values=prepare_tcl_env(project,source=source,cache_root=cache_root)
     os.environ.update(values)
     return values
+
+
+def call_with_tcl_bootstrap_retries(operation, *, attempts:int=5):
+    """Retry only native Tcl library bootstrap reads, not ordinary GUI errors.
+
+    Windows/Tcl can sporadically report native I/O failures while sourcing
+    intact init.tcl/tk.tcl. No widgets or application state are published
+    before this constructor returns successfully. The upper bound prevents
+    concealing a permanently broken runtime installation.
+    """
+    import gc
+    import time
+    import tkinter as tk
+    if type(attempts) is not int or attempts<1 or attempts>5:
+        raise ValueError("Tk bootstrap attempts must be 1..5")
+    for trial in range(attempts):
+        try:
+            return operation()
+        except tk.TclError as exc:
+            detail=str(exc).casefold()
+            missing_tcl=("usable init.tcl" in detail or
+                         "usable tk.tcl" in detail or
+                         ("init.tcl" in detail and "couldn't read" in detail) or
+                         ("invalid command name" in detail and
+                          "tcl_findlibrary" in detail))
+            if not missing_tcl or trial+1==attempts:
+                raise
+            gc.collect()
+            time.sleep(0.10*(trial+1))
+
+
+def create_tk_root(*, project:Path|None=None):
+    """The same guarded native Tk root factory used by the suite launcher.
+
+    Specialists and GUI smoke tests can use this rather than creating an
+    unprotected standalone tkinter.Tk interpreter. No global Tk monkeypatch.
+    """
+    if project is not None:
+        install_tcl_env(project)
+    import tkinter as tk
+    return call_with_tcl_bootstrap_retries(tk.Tk)

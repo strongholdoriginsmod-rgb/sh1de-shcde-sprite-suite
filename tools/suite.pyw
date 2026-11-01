@@ -400,26 +400,13 @@ class Suite(tk.Tk):
         # A verified user-local copy avoids intermittent native Tcl source
         # failures seen with the portable/developer Python library paths.
         # The process environment is altered, never the system installation.
-        from suite_tcl_runtime import install_tcl_env
+        from suite_tcl_runtime import (
+            install_tcl_env, call_with_tcl_bootstrap_retries
+        )
         install_tcl_env(PROJECT_ROOT)
-        # Native Tcl on Windows can sporadically fail to source init.tcl even
-        # though the verified script exists. A failed interpreter creation
-        # has not displayed a GUI or acquired a suite lock; retry this ONE
-        # initialization, never a later game/build operation.
-        import gc
-        import time
-        for attempt in range(3):
-            try:
-                super().__init__()
-                break
-            except tk.TclError as exc:
-                text=str(exc)
-                missing_runtime=("usable init.tcl" in text or
-                                 "usable tk.tcl" in text)
-                if not missing_runtime or attempt==2:
-                    raise
-                gc.collect()
-                time.sleep(0.1*(attempt+1))
+        # Do not bypass the normal constructor or suppress unrelated Tk
+        # failures; retry only the native Tcl script source bootstrap.
+        call_with_tcl_bootstrap_retries(lambda: super(Suite,self).__init__())
         from stronghold_europe_de.workspace_lock import WorkspaceLock, WorkspaceLockError, lock_path
 
         self._instance_lock = WorkspaceLock(
