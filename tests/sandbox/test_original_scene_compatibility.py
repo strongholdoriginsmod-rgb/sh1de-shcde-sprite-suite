@@ -58,11 +58,21 @@ def test_original_sandbox_scene_is_not_silently_flattened(name,tmp_path):
     assert sha256(source.read_bytes()).hexdigest()==original_hash
 
 
-def test_original_sandbox_source_file_is_exactly_preserved(old_and_current):
+def test_original_sandbox_source_file_is_preserved_except_live_canvas_ownership(
+    old_and_current,
+):
+    """Original renderer pixels stay unchanged; only Tk image-owner fixes differ."""
     source=ORIGINAL/"tools/sandkasten.py"
-    assert sha256(source.read_bytes()).hexdigest()==sha256(
-        (ROOT/"tools/sandkasten.py").read_bytes()
-    ).hexdigest()
+    expected=source.read_text("utf8")
+    for before, after in (
+        ("ImageTk.PhotoImage(shown)",
+         "ImageTk.PhotoImage(shown, master=canvas)"),
+        ("ImageTk.PhotoImage(image)",
+         "ImageTk.PhotoImage(image, master=canvas)"),
+    ):
+        assert expected.count(before)==1
+        expected=expected.replace(before,after)
+    assert (ROOT/"tools/sandkasten.py").read_text("utf8")==expected
 
 
 @pytest.mark.parametrize("name",["beispieldorf.json","katalog-vorschau.json"])

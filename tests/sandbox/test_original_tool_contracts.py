@@ -34,6 +34,20 @@ def test_original_tool_is_byte_preserved(name):
     if not a.is_file():
         pytest.skip("Historical original not available")
     b=NEW/"tools"/name
+    if name == "sandkasten.py":
+        # Historical Sandbox pixel math stays byte-identical. The only
+        # intentional changes bind two Tk PhotoImages to their live Canvas,
+        # avoiding destroyed process-global roots in multi-window sessions.
+        original = a.read_text("utf8")
+        replacements = {
+            "ImageTk.PhotoImage(shown)": "ImageTk.PhotoImage(shown, master=canvas)",
+            "ImageTk.PhotoImage(image)": "ImageTk.PhotoImage(image, master=canvas)",
+        }
+        for before, after in replacements.items():
+            assert original.count(before) == 1
+            original = original.replace(before, after)
+        assert b.read_text("utf8") == original
+        return
     assert hashlib.sha256(a.read_bytes()).digest()==hashlib.sha256(
         b.read_bytes()
     ).digest()
