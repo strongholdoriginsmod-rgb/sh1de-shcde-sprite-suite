@@ -513,3 +513,43 @@ def test_folder_picker_refuses_switch_with_unsaved_editor(workshop,monkeypatch):
     assert view._project()==previous
     assert editor.is_dirty()
     editor.destroy()
+
+
+def test_origins_historic_plugin_can_be_imported_as_new_editable_ui_project(
+    workshop,monkeypatch,
+):
+    """The integrated workshop menu performs the actual safe one-click import."""
+    import json
+    import origins_package_import as plugin_importer
+
+    suite,root,view,links,commands=workshop
+    monkeypatch.setattr(plugin_importer,"ROOT",suite)
+    monkeypatch.setattr(plugin_importer,"WORK",suite/"work")
+    monkeypatch.setattr(gui,"save_session",lambda *_a,**_kw:None)
+
+    original=suite/"OriginalOriginsPlugin"
+    original.mkdir()
+    (original/"info.json").write_text(json.dumps({
+        "GUID":"com.strongholdorigins.core",
+        "Name":"Stronghold Origins",
+        "Version":"0.1.0",
+        "SupportedGameVersions":["2.7.0"],
+    }),encoding="utf8")
+    images=original/"Override"/"Assets"/"GUI"/"Images"
+    images.mkdir(parents=True)
+    image=images/"menu.png"
+    Image.new("RGBA",(16,12),(42,74,122,255)).save(image)
+    before=image.read_bytes()
+    (original/"StrongholdOrigins.Core.dll").write_bytes(b"original binary not copied")
+    monkeypatch.setattr(gui.filedialog,"askdirectory",lambda **kw:str(original))
+    monkeypatch.setattr(gui.simpledialog,"askstring",lambda *_a,**_kw:"origins-manual-copy")
+    monkeypatch.setattr(gui.messagebox,"askyesno",lambda *_a,**_kw:True)
+    view.import_origins_package()
+    result=suite/"work"/"origins-manual-copy"
+    assert result.is_dir()
+    assert view.project_var.get()==str(result)
+    assert len(view._assets)==1
+    assert (result/"Override/Assets/GUI/Images/menu.png").read_bytes()==before
+    assert not (result/"StrongholdOrigins.Core.dll").exists()
+    assert image.read_bytes()==before
+    assert "1 Origins-Ressourcen" in view.message.get()

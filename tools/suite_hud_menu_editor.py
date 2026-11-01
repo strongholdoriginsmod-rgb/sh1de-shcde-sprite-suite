@@ -338,7 +338,7 @@ class HudMenuPixelEditor(tk.Toplevel):
 
 
 class HudMenuTextEditor(tk.Toplevel):
-    """Safe work-only XAML/JSON editor with syntax checks and atomic save."""
+    """Safe work-only XAML/JSON/locale editor with guarded atomic save."""
 
     def __init__(self,parent,file:Path,*,project:Path,after_save=None):
         self.project=workspace(project)
@@ -347,14 +347,14 @@ class HudMenuTextEditor(tk.Toplevel):
         self.path=path.resolve(strict=True)
         self.relative=self.path.relative_to(self.project).as_posix()
         _existing(self.project,self.relative,patch=self.relative.startswith("Patches/"))
-        if self.path.suffix.lower() not in (".xaml",".json"):
-            raise WorkshopError("Only XAML or JSON can be edited as text")
+        if self.path.suffix.lower() not in (".xaml",".json",".txt"):
+            raise WorkshopError("Only XAML, JSON or verified locale text can be edited")
         if self.path.stat().st_size>2_000_000:raise WorkshopError("Text file too large")
         initial=self.path.read_text("utf8-sig")
         self.expected=sha256(self.path.read_bytes()).hexdigest()
         self.after_save=after_save
         super().__init__(parent)
-        self.title("HUD- & Menü-XAML/JSON · "+self.path.name)
+        self.title("HUD- & Menü-XAML/JSON/Sprache · "+self.path.name)
         self.geometry("1000x760")
         self.minsize(600,430)
         label=ttk.Label(self,text="Arbeitskopie: "+self.relative)
@@ -376,6 +376,13 @@ class HudMenuTextEditor(tk.Toplevel):
         if self.path.suffix.lower()==".json":
             if not isinstance(json.loads(data.decode("utf8")),dict):
                 raise WorkshopError("JSON resource must be an object")
+        elif self.path.suffix.lower()==".txt":
+            from se_asset_package import _validate_locale
+            fd,name=tempfile.mkstemp(suffix=".txt",dir=self.path.parent)
+            try:
+                with os.fdopen(fd,"wb") as stream:stream.write(data)
+                _validate_locale(Path(name),self.relative)
+            finally:Path(name).unlink(missing_ok=True)
         else:
             from se_asset_package import _check_xml
             fd,name=tempfile.mkstemp(suffix=".xaml",dir=self.path.parent)

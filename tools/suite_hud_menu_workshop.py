@@ -14,7 +14,8 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from hud_menu_workspace import (
     CATEGORIES, DEFAULT, WorkshopError, audit_assets, create_image,
-    duplicate_image, import_image, import_patch, list_assets, restore_image, workspace,
+    duplicate_image, import_image, import_patch, import_media,
+    list_assets, restore_image, workspace,
 )
 from suite_usability import CompactActionBar
 from suite_hud_menu_session import read_session, save_session
@@ -71,7 +72,8 @@ class HudMenuWorkshop(ttk.Frame):
             ("1  Bild öffnen",self.import_images),
             ("2  Pixel bearbeiten",self.edit_selected),
             ("3  Layout gestalten",self.open_layout),
-            ("4  Export vorbereiten",self.export_help),
+            ("4  Original-Menüseiten gestalten",self.open_origins_visual),
+            ("5  Export vorbereiten",self.export_help),
         ):
             ttk.Button(journey,text=label,style="GuideStep.TButton",
                        command=callback).pack(side="left",padx=(0,5))
@@ -113,6 +115,14 @@ class HudMenuWorkshop(ttk.Frame):
             ("Ausgewählte Grafik bearbeiten",self.edit_selected),
         ],more=[
             ("XAML-Menüpatch importieren …",self.import_xaml),
+            ("Origins-Mod als bearbeitbare Kopie importieren …",
+             self.import_origins_package),
+            ("Noesis-Originalseiten frei gestalten · Ebenen & Patches …",self.open_origins_visual),
+            ("Noesis-Einzelpatch-Editor öffnen …",self.open_origins_xaml),
+            ("Origins-Farbthema visuell bearbeiten …",self.open_origins_theme),
+            ("Menüvideo (WebM) importieren …",self.import_origins_video),
+            ("Sprachdatei (crusader.txt) importieren …",self.import_origins_locale),
+            ("Kampagnen-/Saisonvorlagen öffnen …",self.open_origins_runtime_workshop),
             ("Bild mit neuem Resource-Key duplizieren …",self.duplicate),
             ("Aus Origins-Grafikkatalog übernehmen …",self.import_origins),
             ("Original / Bearbeitung vergleichen",self.compare),
@@ -358,7 +368,7 @@ class HudMenuWorkshop(ttk.Frame):
             else:
                 self.original.clear("Kein baselined Original (fremd hinzugefügt).")
         else:
-            self.preview.clear("XAML/JSON/DDS: Mit Texteditor oder externem Grafikprogramm bearbeiten.")
+            self.preview.clear("XAML/JSON/Locale/Video/DDS: Passenden Editor wählen.")
             self.original.clear("Kein automatisch geladener Pixelvergleich.")
 
     def _pending_project_edits(self, project):
@@ -693,15 +703,143 @@ class HudMenuWorkshop(ttk.Frame):
 
     def import_xaml(self):
         file=filedialog.askopenfilename(
-            parent=self,title="Eigenen statischen Noesis-XAML-Patch auswählen",
+            parent=self,title="Eigenen Noesis-XAML-Patch auswählen",
             filetypes=[("Noesis XAML","*.xaml")])
         if not file:return
+        # Historic Origins requires Patches/Assets/GUI/XAML/FrontendMenus.xaml,
+        # NOT a flat patch under Patches/Assets/GUI/FrontendMenus.xaml.
+        document=simpledialog.askstring(
+            "XAML-Zielpfad", "Relativer Spiel-XAML-Pfad (Unterordner erhalten):",
+            initialvalue="XAML/"+Path(file).name,parent=self)
+        if document is None:return
         try:
-            result=import_patch(file,project=self._project(create=True))
+            result=import_patch(file,project=self._project(create=True),
+                                target_document=document)
             self.refresh()
             self._select_path(result)
         except (ValueError,OSError) as exc:
             messagebox.showerror("XAML-Patch",str(exc),parent=self)
+
+    def import_origins_package(self):
+        """Copy supported static assets from a plugin; never install a DLL."""
+        source=filedialog.askdirectory(
+            parent=self,title="Origins-Mod-Pluginverzeichnis auswählen (nur lesen)")
+        if not source:return
+        slug=simpledialog.askstring(
+            "Neues SpriteSuite-Projekt",
+            "Neue, noch nicht verwendete Projekt-ID (a-z, 0-9, Bindestrich):",
+            initialvalue="origins-ui-kopie",parent=self)
+        if not slug:return
+        if not self._save_pending_before_backup(
+            self._project(create=True),action="ein Originals-Modpaket importieren"):
+            return
+        if not messagebox.askyesno(
+            "Origins-Paket importieren",
+            "Nur XAML, Grafiken, WebM-Menüvideos, Themes und geprüfte Sprachdateien "
+            "werden in ein NEUES SpriteSuite-Projekt kopiert.\n"
+            "DLLs, native Hooks und Saison-Laufzeitdateien bleiben ausgeschlossen.\n"
+            "Die originale Modinstallation wird niemals verändert. Fortfahren?",
+            parent=self,default="no"):
+            return
+        try:
+            from origins_package_import import import_static_origins
+            report=import_static_origins(plugin=Path(source),project_slug=slug)
+            selected=workspace(report["project"])
+            self.project_var.set(str(selected))
+            self.refresh()
+            save_session(selected)
+            self.message.set(
+                f"{report['file_count']} Origins-Ressourcen importiert. "
+                "Originale unberührt; ausführbare Spielhandlers NICHT importiert.")
+        except (ValueError,OSError) as exc:
+            messagebox.showerror("Origins-Mod konnte nicht übernommen werden",
+                                 str(exc),parent=self)
+
+    def open_origins_visual(self):
+        """Open the complete original Noesis page editor, not the overlay tool."""
+        source=filedialog.askopenfilename(
+            parent=self,title="Original-Noesis-XAML-Menüseite öffnen",
+            filetypes=[("Noesis/XAML","*.xaml")])
+        if not source:return
+        try:
+            from suite_origins_visual_editor import OriginsVisualEditor
+            editor=OriginsVisualEditor(self,project=self._project(create=True),
+                                       source=Path(source),after_export=self.refresh)
+            editor.focus_set()
+        except (OSError,ValueError) as exc:
+            messagebox.showerror("Original-Noesis-Fenster",str(exc),parent=self)
+
+    def open_origins_xaml(self):
+        source=filedialog.askopenfilename(
+            parent=self,title="Original-Spiel-XAML zum manuellen Bearbeiten auswählen",
+            filetypes=[("Noesis Original-XAML","*.xaml")])
+        if not source:return
+        try:
+            from suite_origins_xaml_editor import OriginsXamlEditor
+            editor=OriginsXamlEditor(
+                self,project=self._project(create=True),source=Path(source),
+                after_export=self.refresh)
+            editor.focus_set()
+        except (ValueError,OSError) as exc:
+            messagebox.showerror("Noesis-Menüeditor",str(exc),parent=self)
+
+    def open_origins_theme(self):
+        source=filedialog.askopenfilename(
+            parent=self,title="Originales Noesis-Theme auswählen",
+            filetypes=[("Noesis Theme-XAML","*.xaml")])
+        if not source:return
+        try:
+            from suite_origins_theme_editor import OriginsThemeEditor
+            editor=OriginsThemeEditor(
+                self,project=self._project(create=True),source=Path(source),
+                after_save=self.refresh)
+            editor.focus_set()
+        except (ValueError,OSError) as exc:
+            messagebox.showerror("Origins-Farbthema",str(exc),parent=self)
+
+    def import_origins_video(self):
+        selected=filedialog.askopenfilename(
+            parent=self,title="Eigenes WebM-Menüvideo wählen",
+            filetypes=[("WebM-Video","*.webm")])
+        if not selected:return
+        try:
+            resource="Override/Assets/GUI/Video/"+Path(selected).name
+            file=import_media(selected,resource=resource,
+                              project=self._project(create=True))
+            self.refresh()
+            self._select_path(file)
+            self.message.set("WebM geprüft und als eigene Arbeitskopie importiert. "
+                             "Die Spiel-XAML muss ausdrücklich darauf verweisen.")
+        except (ValueError,OSError) as exc:
+            messagebox.showerror("Menüvideo",str(exc),parent=self)
+
+    def import_origins_locale(self):
+        selected=filedialog.askopenfilename(
+            parent=self,title="Eigene Script-Extender-Sprachdatei wählen",
+            filetypes=[("crusader.txt","crusader.txt"),("Textdateien","*.txt")])
+        if not selected:return
+        lang=simpledialog.askstring(
+            "Sprache wählen", "Sprachcode (z. B. de-DE oder en-US):",
+            initialvalue="de-DE",parent=self)
+        if not lang:return
+        try:
+            resource="Locales/"+lang+"/crusader.txt"
+            file=import_media(selected,resource=resource,
+                              project=self._project(create=True))
+            self.refresh()
+            self._select_path(file)
+            self.message.set("Sprachdatei unter Locales/ geprüft und importiert.")
+        except (ValueError,OSError) as exc:
+            messagebox.showerror("Sprachdatei",str(exc),parent=self)
+
+    def open_origins_runtime_workshop(self):
+        try:
+            from suite_origins_runtime_workshop import OriginsRuntimeWorkshop
+            editor=OriginsRuntimeWorkshop(
+                self,project=self._project(create=True))
+            editor.focus_set()
+        except (ValueError,OSError) as exc:
+            messagebox.showerror("Origins-Runtime-Entwürfe",str(exc),parent=self)
 
     def edit_selected(self):
         asset=self.selected_asset()
@@ -713,7 +851,7 @@ class HudMenuWorkshop(ttk.Frame):
                 from suite_hud_menu_editor import HudMenuPixelEditor
                 window=HudMenuPixelEditor(self,asset.path,
                                          project=self._project(),after_save=self.refresh)
-            elif asset.path.suffix.lower() in {".xaml",".json"}:
+            elif asset.path.suffix.lower() in {".xaml",".json",".txt"}:
                 from suite_hud_menu_editor import HudMenuTextEditor
                 window=HudMenuTextEditor(self,asset.path,
                                         project=self._project(),after_save=self.refresh)

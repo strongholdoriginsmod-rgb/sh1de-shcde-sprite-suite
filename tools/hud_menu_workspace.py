@@ -33,6 +33,7 @@ CATEGORIES = {
     "Zusätzliche Atlanten": "Override/Atlas",
 }
 PATCH_FOLDER = "Patches/Assets/GUI"
+MEDIA_FOLDERS = ("Override/Assets/GUI/Video", "Locales")
 _MAX_SOURCE = 128 * 1024 * 1024
 _MAX_PIXELS = 30_000_000
 _ALLOWED_SOURCE = {".png", ".jpg", ".jpeg", ".webp"}
@@ -98,6 +99,13 @@ def _relative(relative: str, *, patch: bool = False) -> PurePosixPath:
     if patch:
         if not relative.startswith(PATCH_FOLDER + "/") or name.suffix.lower() != ".xaml":
             raise WorkshopError("Only GUI XAML patches can use Patches/")
+    elif name.parts[0] == "Locales":
+        if (len(name.parts) != 3 or name.parts[2] != "crusader.txt" or
+                not re.fullmatch(r"[a-z]{2}-[A-Z]{2}", name.parts[1])):
+            raise WorkshopError("Only Locales/xx-XX/crusader.txt is supported")
+    elif relative.startswith("Override/Assets/GUI/Video/"):
+        if name.suffix.lower() != ".webm":
+            raise WorkshopError("Only WebM video is supported in the menu video directory")
     elif (name.suffix.lower() not in {".png", ".jpg", ".jpeg", ".dds", ".xaml", ".json"}
           or not any(relative.startswith(prefix + "/") for prefix in CATEGORIES.values())):
         raise WorkshopError("Unsupported HUD/menu resource path")
@@ -277,6 +285,7 @@ def create_image(
 
 def import_patch(
     source: Path | str, *, name: str | None = None,
+    target_document: str | None = None,
     project: Path | str = DEFAULT,
 ) -> Path:
     root = workspace(project, create=True)
@@ -287,7 +296,7 @@ def import_patch(
         raise WorkshopError("XAML patch exceeds 2 MiB")
     from se_asset_package import _check_xml
     _check_xml(src, patch=True)
-    candidate = name or src.name
+    candidate = target_document if target_document is not None else (name or src.name)
     if not candidate.endswith(".xaml") or candidate.startswith("."):
         raise WorkshopError("XAML patch name must end with .xaml")
     rel = PATCH_FOLDER + "/" + candidate
@@ -297,10 +306,35 @@ def import_patch(
     return dest
 
 
+def import_media(
+    source: Path | str, *, resource: str, project: Path | str = DEFAULT,
+) -> Path:
+    """Import Origins media/localization with original resource hierarchy.
+
+    Accept only Script Extender menu WebM and locale files. No transparent
+    LFS pointers, symlinks, or shared-game modifications are allowed.
+    """
+    root = workspace(project, create=True)
+    src = Path(source)
+    if not src.is_file() or _linked(src) or src.stat().st_size > 256 * 1024**2:
+        raise WorkshopError("Invalid or oversized media source")
+    relative = _relative(resource).as_posix()
+    from se_asset_package import _validate_asset
+    _validate_asset(src, relative)
+    before = src.stat()
+    blob = src.read_bytes()
+    after = src.stat()
+    if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+        raise WorkshopError("Media changed during import")
+    dest = root / relative
+    _write_new(dest, blob)
+    return dest
+
+
 def list_assets(project: Path | str = DEFAULT) -> list[WorkshopAsset]:
     root = workspace(project, create=True)
     results = []
-    for base in [*CATEGORIES.values(), PATCH_FOLDER]:
+    for base in [*CATEGORIES.values(), PATCH_FOLDER, *MEDIA_FOLDERS]:
         parent = root / base
         if not parent.exists():
             continue
@@ -323,9 +357,11 @@ def list_assets(project: Path | str = DEFAULT) -> list[WorkshopAsset]:
                 baseline = original
             else:
                 status, baseline = "Ohne Importbasis", None
-            kind = "XAML-Patch" if rel.startswith("Patches/") else next(
+            kind = "XAML-Patch" if rel.startswith("Patches/") else (
+                "Menüvideo" if rel.startswith("Override/Assets/GUI/Video/") else
+                "Sprache" if rel.startswith("Locales/") else next(
                 (label for label,prefix in CATEGORIES.items() if rel.startswith(prefix+"/")),
-                "Sonstiges")
+                "Sonstiges"))
             results.append(WorkshopAsset(
                 relative_path=rel,name=entry.name,kind=kind,status=status,
                 size=entry.stat().st_size,baseline_path=baseline,path=entry))

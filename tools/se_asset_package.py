@@ -28,7 +28,7 @@ WORK = ROOT / "work"
 OUT = WORK / "se-asset-mods"
 _GUID = re.compile(r"[a-zA-Z][a-zA-Z0-9._-]{2,63}\Z")
 _VERSION = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
-_VALID_START = frozenset({"Override", "Patches"})
+_VALID_START = frozenset({"Override", "Patches", "Locales"})
 _MAX_FILES = 10000
 _MAX_BYTES = 2 * 1024**3
 _MAX_FILE = 512 * 1024**2
@@ -132,8 +132,57 @@ def _check_xml(file: Path, *, patch: bool) -> None:
         raise AssetModError("Leere XAML-Patchdatei")
 
 
+def _validate_locale(path: Path, relative: str) -> None:
+    """Only Script Extender positional crusader.txt files, never arbitrary text."""
+    parts = PurePosixPath(relative).parts
+    if (len(parts) != 3 or parts[0] != "Locales" or
+            not re.fullmatch(r"[a-z]{2}-[A-Z]{2}", parts[1]) or
+            parts[2] != "crusader.txt" or path.stat().st_size > 2 * 1024**2):
+        raise AssetModError("Only Locales/xx-XX/crusader.txt is allowed")
+    raw = path.read_bytes()
+    if b"\x00" in raw or b"\r" in raw or raw.startswith(b"version https://git-lfs"):
+        raise AssetModError("Invalid locale file or unresolved LFS pointer")
+    try:
+        lines = raw.decode("utf-8-sig").splitlines()
+    except UnicodeError as exc:
+        raise AssetModError("Locale must be UTF-8") from exc
+    if not (3 <= len(lines) <= 50000 and
+            re.fullmatch(r"[A-Za-z]{2,12}", lines[0]) and
+            lines[1] == ">>TEXTSTART"):
+        raise AssetModError("Missing localization header")
+    sections = 0
+    for line in lines[2:]:
+        if line.startswith(">>"):
+            if not re.fullmatch(r">>[1-9][0-9]{0,2}-----", line):
+                raise AssetModError("Malformed locale section")
+            sections += 1
+        elif not sections or len(line) > 20000:
+            raise AssetModError("Malformed locale entry")
+    if not sections:
+        raise AssetModError("Locale contains no numbered section")
+
+
+def _validate_webm(path: Path, relative: str) -> None:
+    if (not relative.startswith("Override/Assets/GUI/Video/") or
+            path.suffix.lower() != ".webm" or path.stat().st_size < 32 or
+            path.stat().st_size > 256 * 1024**2):
+        raise AssetModError("Only bounded menu WebM videos are allowed")
+    with path.open("rb") as stream:
+        head = stream.read(4096)
+    if (not head.startswith(b"\x1a\x45\xdf\xa3") or
+            b"\x42\x82\x84webm" not in head[:1024] or
+            b"version https://git-lfs" in head):
+        raise AssetModError("Invalid WebM header or unresolved LFS pointer")
+
+
 def _validate_asset(path: Path, relative: str) -> None:
     suffix = path.suffix.casefold()
+    if relative.startswith("Locales/"):
+        _validate_locale(path, relative)
+        return
+    if suffix == ".webm":
+        _validate_webm(path, relative)
+        return
     if relative.startswith("Patches/"):
         if suffix != ".xaml" or "/Assets/GUI/" not in f"/{relative}":
             raise AssetModError("Nur statische Noesis-XAML-Patches unter Patches/Assets/GUI/")
