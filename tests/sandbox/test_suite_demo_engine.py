@@ -19,7 +19,7 @@ import se_asset_package as asset_mod
 from suite_demo_engine import DemoSession,MODULES
 from origins_visual_document import VisualXamlDocument
 
-ALL_OFFLINE=[x.key for x in MODULES if x.key!="video"]
+ALL_OFFLINE=[x.key for x in MODULES if x.key not in {"video","native_menu"}]
 
 
 @pytest.fixture

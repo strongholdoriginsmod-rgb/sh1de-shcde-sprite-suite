@@ -29,6 +29,8 @@ class DemoMode(tk.Toplevel):
         self.runs:dict[str,DemoSession]={}
         self.source_paths:dict[str,Path]={}
         self.active_key=MODULES[0].key
+        self._visible_modules=list(MODULES)
+        self.module_search=tk.StringVar(self)
         self._photos=[]
         self._busy=False
         self.progress=tk.StringVar(self,value="Modul wählen und starten.")
@@ -59,9 +61,18 @@ class DemoMode(tk.Toplevel):
         panes.add(left,weight=2);panes.add(main,weight=7)
         ttk.Label(left,text="Module einzeln wählen",
                   font=("Segoe UI",11,"bold")).pack(anchor="w",pady=(0,7))
-        self.module_list=tk.Listbox(left,exportselection=False,height=16,
+        ttk.Label(left,text="Spezialwerkzeug suchen:").pack(anchor="w")
+        search=ttk.Entry(left,textvariable=self.module_search)
+        search.pack(fill="x",pady=(2,6))
+        search.bind("<KeyRelease>",self._filter_modules)
+        listing=ttk.Frame(left)
+        listing.pack(fill="both",expand=True)
+        self.module_list=tk.Listbox(listing,exportselection=False,height=16,
                           activestyle="dotbox",font=("Segoe UI",10))
-        self.module_list.pack(fill="both",expand=True)
+        scroll=ttk.Scrollbar(listing,orient="vertical",command=self.module_list.yview)
+        self.module_list.configure(yscrollcommand=scroll.set)
+        self.module_list.pack(side="left",fill="both",expand=True)
+        scroll.pack(side="right",fill="y")
         for item in MODULES:self.module_list.insert("end",item.title)
         self.module_list.bind("<<ListboxSelect>>",self._select_module)
         ttk.Separator(left).pack(fill="x",pady=8)
@@ -73,8 +84,8 @@ class DemoMode(tk.Toplevel):
                                     command=self.choose_original)
         self.pick_button.pack(fill="x",pady=3)
         ttk.Label(left,text="Ohne Auswahl nutzen Noesis-Module eine eigene "
-                  "mitgelieferte Beispiel-XAML. Die Video-Demo benötigt "
-                  "ausdrücklich ein echtes WebM.",
+                  "mitgelieferte Beispiel-XAML. Der Pixelvergleich kann ein "
+                  "eigenes PNG verwenden. Die Video-Demo benötigt ein echtes WebM.",
                   wraplength=265).pack(fill="x",pady=9)
         self.begin=ttk.Button(left,text="Neuen Demolauf starten",command=self.start)
         self.begin.pack(fill="x",pady=(11,4))
@@ -172,15 +183,34 @@ class DemoMode(tk.Toplevel):
     def _run(self):
         return self.runs.get(self.active_key)
 
+    def _filter_modules(self,_event=None):
+        term=self.module_search.get().strip().casefold()
+        previous=self.active_key
+        self._visible_modules=[m for m in MODULES if term in
+            (m.title+" "+m.summary+" "+m.key).casefold()]
+        self.module_list.delete(0,"end")
+        for module in self._visible_modules:
+            self.module_list.insert("end",module.title)
+        if self._visible_modules:
+            index=next((i for i,m in enumerate(self._visible_modules)
+                        if m.key==previous),0)
+            self.module_list.selection_set(index)
+            self.module_list.see(index)
+            self._select_module()
+        else:
+            self.progress.set("Keine passende Demo. Suchbegriff ändern.")
+
     def _select_module(self,_event=None):
         choice=self.module_list.curselection()
         if not choice:return
-        module=MODULES[choice[0]]
+        module=self._visible_modules[choice[0]]
         self.active_key=module.key
         self.module_details.set(module.title+" — "+module.summary)
         original=self.source_paths.get(module.key)
         self.source_display.set(str(original) if original else (
             "Für Video benötigt" if module.input_type=="video"
+            else "Installiertes SHCDE-Spielverzeichnis nur lesend wählen" if module.input_type=="game_dir"
+            else "Eigenes PNG oder eingebaute Beispielaufnahme" if module.input_type=="png"
             else "Integrierte Originalcode-/XAML-Beispielquelle"))
         self.pick_button.configure(state=("normal" if module.input_type else "disabled"))
         self._refresh_steps()
@@ -194,7 +224,7 @@ class DemoMode(tk.Toplevel):
         self.begin.configure(state="normal" if enabled else "disabled")
         self.all_button.configure(state="normal" if enabled else "disabled")
         self.folder_button.configure(state="normal" if enabled and run else "disabled")
-        can_edit=bool(run and run.receipts and self.active_key not in {"video","locale"})
+        can_edit=self._can_open_editor(run)
         self.practice_button.configure(state="normal" if enabled and can_edit else "disabled")
         self.verify_button.configure(state="normal" if enabled and run and run.receipts else "disabled")
 
@@ -237,10 +267,16 @@ class DemoMode(tk.Toplevel):
     def choose_original(self):
         module=self._module()
         if not module.input_type:return
-        file=filedialog.askopenfilename(
-            parent=self,title="Originaldatei ausschließlich lesend wählen",
-            filetypes=[("Noesis/XAML","*.xaml")] if module.input_type=="xaml"
-                        else [("WebM Video","*.webm")])
+        if module.input_type=="game_dir":
+            file=filedialog.askdirectory(parent=self,
+                title="SHCDE-Spielordner (BepInEx / Daten) nur lesend wählen")
+        else:
+            file=filedialog.askopenfilename(
+                parent=self,title="Originaldatei ausschließlich lesend wählen",
+                filetypes=([("Noesis/XAML","*.xaml")] if module.input_type=="xaml"
+                            else [("Spiel-Screenshot (PNG)","*.png")]
+                            if module.input_type=="png" else
+                            [("WebM Video","*.webm")]))
         if not file:return
         path=Path(file)
         self.source_paths[module.key]=path
@@ -378,6 +414,21 @@ class DemoMode(tk.Toplevel):
             content=content[:80000]+"\n[Ansicht gekürzt; vollständige Datei liegt auf Datenträger.]"
         self._put_text(f"Datei: {path}\n\n"+content)
 
+    @staticmethod
+    def _can_open_editor(run):
+        if not run or not run.receipts:return False
+        if run.module.key in {"noesis","patch","pixels","package","layout","theme",
+                              "campaign","season","native_menu"}:
+            return True
+        specialty={"stone","boar","historic_palette","team_mask","sandbox_scene",
+                   "button_motif","native_tiles","bc7","extra_atlas"}
+        if run.module.key not in specialty:return False
+        relative=run.data.get("extra_asset")
+        if relative and (run.project/relative).is_file():return True
+        # The additional Noesis atlas becomes editable only after its real
+        # PNG pages have been generated and copied to the mod project.
+        return bool(list((run.project/"Override/Assets/GUI/Sprites").glob("*.png")))
+
     def open_editor(self):
         """Move from the verified exercise into the actual specialist editor."""
         run=self._run()
@@ -395,10 +446,21 @@ class DemoMode(tk.Toplevel):
                     editor.doc=VisualXamlDocument.reopen(Path(revision))
                     editor.title_var.set("Weiterbearbeitete Original-Revision: "+str(revision))
                     editor.refresh_tree()
-            elif key in {"pixels","package"}:
+            elif key in {"pixels","package","stone","boar","historic_palette",
+                          "team_mask","sandbox_scene","button_motif","native_tiles",
+                          "bc7","extra_atlas"}:
                 from suite_hud_menu_editor import HudMenuPixelEditor
-                source=(run.project/run.data["relative"] if key=="pixels"
-                        else Path(run.data["plugin_image"]))
+                if key=="pixels":
+                    source=run.project/run.data["relative"]
+                elif key=="package":
+                    source=Path(run.data["plugin_image"])
+                elif run.data.get("extra_asset"):
+                    source=run.project/run.data["extra_asset"]
+                else:
+                    matching=sorted((run.project/"Override/Assets/GUI/Sprites").glob("*.png"))
+                    if not matching:
+                        raise ValueError("Mod-Atlas noch nicht vorbereitet; erst bis Schritt 3 ausführen")
+                    source=matching[0]
                 editor=HudMenuPixelEditor(self,source,project=run.project)
             elif key=="layout":
                 from suite_hud_menu_layout_editor import HudMenuLayoutEditor
@@ -418,9 +480,26 @@ class DemoMode(tk.Toplevel):
                 from suite_origins_theme_editor import OriginsThemeEditor
                 editor=OriginsThemeEditor(self,project=run.project,
                      source=Path(run.data["theme_source"]))
-            elif key in {"campaign","season"}:
+            elif key in {"campaign","season","native_menu"}:
                 from suite_origins_runtime_workshop import OriginsRuntimeWorkshop
                 editor=OriginsRuntimeWorkshop(self,project=run.project)
+                if key in {"campaign","native_menu"} and "campaign" in run.data:
+                    plan=run.data["campaign"]
+                    editor.name.set(plan["name"])
+                    editor.title_var.set(plan["title"])
+                    editor.missions={row["number"]:row for row in plan["missions"]}
+                    editor._render_missions()
+                    if "campaign_dir" in run.data:
+                        editor.saved_campaign_slug=plan["name"]
+                if key=="season" and run.data.get("season_folder"):
+                    editor.pack_id.set("demo-winter")
+                    editor.season_maps.set("Demo 1.map")
+                    editor.group.set("tree_pine")
+                    editor.atlas_path.set(run.data["season_folder"])
+                    editor.season_groups={"tree_pine":Path(run.data["season_folder"])}
+                    editor.groups.insert("","end",values=("tree_pine",run.data["season_folder"]))
+                    if "season_dir" in run.data:
+                        editor.saved_season_pack="demo-winter"
             else:
                 self.progress.set("Dieses Modul nutzt den Dateiexport statt eines eigenen GUI-Editors.")
                 return None

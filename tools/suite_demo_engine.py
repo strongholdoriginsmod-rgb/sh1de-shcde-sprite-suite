@@ -190,15 +190,22 @@ class DemoSession:
         if module is None:raise ValueError("Unbekanntes Demo-Modul")
         if module.input_type=="video" and source is None:
             raise ValueError("Diese Demo benötigt ein echtes eigenes .webm-Video")
+        if module.input_type=="game_dir" and source is None:
+            raise ValueError("Für Native-ABI-Demo echtes Spielverzeichnis nur lesend wählen")
         external=Path(source) if source is not None else None
         if external is not None:
-            if (not external.is_file() or is_link_or_reparse(external) or
+            if module.input_type=="game_dir":
+                if not external.is_dir() or is_link_or_reparse(external):
+                    raise ValueError("Installiertes Spielverzeichnis nicht verfügbar")
+            elif (not external.is_file() or is_link_or_reparse(external) or
                     external.stat().st_size>256*1024**2):
                 raise ValueError("Die ausgewählte Originaldatei ist nicht lesbar oder zu groß")
             if module.input_type=="xaml" and external.suffix.lower()!=".xaml":
                 raise ValueError("Bitte eine originale Noesis-XAML auswählen")
             if module.input_type=="video" and external.suffix.lower()!=".webm":
                 raise ValueError("Bitte eine echte WebM-Datei auswählen")
+            if module.input_type=="png" and external.suffix.lower()!=".png":
+                raise ValueError("Bitte ein echtes PNG-Spielbild auswählen")
             if not module.input_type:
                 raise ValueError("Dieses Modul benötigt keine externe Quelldatei")
         base=work.WORK.resolve()
@@ -212,7 +219,7 @@ class DemoSession:
         project=root/"mod-projekt";project.mkdir()
         return cls(module=module,root=root,project=project,samples=samples,
                    source=external,
-                   initial_source_hash=_sha(external) if external else None)
+                   initial_source_hash=_sha(external) if external and external.is_file() else None)
 
     @property
     def complete(self):
@@ -238,8 +245,12 @@ class DemoSession:
 
     def _unchanged_external_source(self):
         if self.source is not None:
-            _require(self.source.is_file() and _sha(self.source)==self.initial_source_hash,
-                     "Die externe Originaldatei wurde unerwartet verändert")
+            if self.module.input_type=="game_dir":
+                _require(self.source.is_dir() and not is_link_or_reparse(self.source),
+                         "Das ausgewählte Spielverzeichnis ist nicht mehr gültig")
+            else:
+                _require(self.source.is_file() and _sha(self.source)==self.initial_source_hash,
+                         "Die externe Originaldatei wurde unerwartet verändert")
 
     def execute_next(self)->dict:
         if self.complete:raise ValueError("Alle Schritte dieses Moduls sind abgeschlossen")
@@ -287,7 +298,7 @@ class DemoSession:
             "module":self.module.key,"module_title":self.module.title,
             "completed":self.complete,"next_step":self.next_step,
             "steps":self.receipts,"project":str(self.project),
-            "requires_in_game_validation":self.module.key in {"noesis","patch","campaign","season","video"},
+            "requires_in_game_validation":self.module.key in {"noesis","patch","campaign","season","video","native_menu"},
             "installation_modified":False,
         }
         proof=self.root/"demo-protokoll.json"
@@ -685,3 +696,10 @@ class DemoSession:
                  "Video im ZIP ist nicht mit der echten Vorlage identisch")
         return {"outputs":[result["zip"]],"source":str(self.source),
                 "message":"Echtes WebM als Mod-Replacement paketiert (kein Video-Neuencoding)"}
+
+
+# Specialty modules use the same observed-file execution and receipt contract.
+# Register after DemoSession is defined to avoid dependency cycles.
+from suite_demo_extra import register as _register_specialty_demos
+MODULES=_register_specialty_demos(DemoSession,MODULES)
+MODULE_BY_KEY={item.key:item for item in MODULES}

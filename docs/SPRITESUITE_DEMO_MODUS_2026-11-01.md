@@ -13,7 +13,7 @@ BepInEx-/Script-Extender-Asset-Mod-ZIP. Er dokumentiert tatsächliche
 Dateigrößen und SHA-256-Werte. Bei einem fehlgeschlagenen Schritt bleibt die
 Anzeige offen und springt nicht automatisch weiter.
 
-Die Demo bietet zehn einzeln auswählbare Arbeitsmodule. Die
+Die Demo bietet 21 einzeln auswählbare Arbeitsmodule. Die
 Schrittbeschreibungen nennen die tatsächlich genutzte Funktion.
 Die Code- und Dateiansicht liest erzeugte XAML-, C#-, JSON-,
 Text- und PNG-Dateien direkt von Datenträger.
@@ -32,6 +32,14 @@ Text- und PNG-Dateien direkt von Datenträger.
 | Atlas-/Saisonwerkstatt | PNG-Atlas/Frames rendern, GM-ID prüfen, C#-Routen erzeugen, MapLoad/MapUnload testen | Atlas, Saisonpaket und C#-Testbericht |
 | Mod-Paketbuilder | PNG+XAML importieren, Grafik bearbeiten, Assets prüfen, ZIP CRC lesen | Script-Extender-Mod-ZIP |
 | Menüvideo / WebM-Override | Echte Benutzer-WebM prüfen, Bytes übernehmen und im ZIP bestätigen | Echte WebM-Override-Ressource |
+
+Die elf ergänzten Spezialmodule (Steinfarben, Tier-Sprites, historische
+Origins-Palette, Teamfarben, Sandkasten, Motive, native Kacheltypen,
+BC7-Texturen, Noesis-Screenshotvergleich, Noesis-Zusatzatlanten und die
+nur offline kompilierbare Spiel-Menübridge) sind im zusätzlichen
+Abnahmebericht `SPRITESUITE_ORIGINS_TCL_NATIVE_MENU_ABNAHME_2026-11-01.md`
+dokumentiert. Ihre Algorithmen werden mit echten Daten ausgeführt;
+Spiel-Hooks und Originalrenderer werden dadurch nicht vorgetäuscht.
 
 ### Original-Codebestandteile und Beispielquellen
 
@@ -86,11 +94,12 @@ Der gleiche Backend-Demolauf ist auch ohne GUI ausführbar:
     python tools/suite_demo_cli.py --lis
     python tools/suite_demo_cli.py --module pixels
     python tools/suite_demo_cli.py --module noesis --source C:\\Pfad\\FrontendMenus.xaml
-    python tools/suite_demo_cli.py --all
+    python tools/suite_demo_cli.py --all --game "D:\\Games\\Stronghold Crusader Definitive Edition" --video "D:\\MeineVideos\\menu.webm"
 
-Bei --all wird das Video-Modul ohne ausgewählte echte WebM offen
-als übersprungen gemeldet. Alle übrigen Module werden tatsächlich
-nacheinander ausgeführt und geprüft.
+Bei --all werden Video und native Spiel-ABI ohne ausgewählte echte
+Originalquellen ausdrücklich als übersprungen gemeldet. Mit
+--video und --game werden auch diese Module wirklich ausgeführt.
+Jeder Abschluss besitzt tatsächlich erzeugte Dateibelege.
 
 Paket-ZIPs liegen im normalen Suite-Arbeitsordner work/se-asset-mods/.
 Die vollständigen Pfade werden im Demo-Protokoll aufgezeichnet.
@@ -110,7 +119,7 @@ nativen Spielaktionen. Origins 2.7.0 ist dadurch nicht automatisch für
 Steam-Build 24816905 ABI-freigegeben. Die Video-Demo zeigt echtes
 Asset-Replacement und keine Videobearbeitung oder Wiedergabe.
 
-Andere Engine- und Spezialwerkzeuge außerhalb dieser zehn Kategorien
+Andere Engine- und Spezialwerkzeuge außerhalb dieser 21 Kategorien
 haben noch keine pauschale Demo-Abnahme. Ihre Funktionen werden nich
 als fertig geprüft ausgegeben. Der Demo-Modulbaukasten ist erweiterbar.
 
@@ -127,7 +136,7 @@ aus der gebündelten Portable-Laufzeit unter Windows öffnen.
 
 ### Nachprüfbarer QA-Stand am 1. November 2026
 
-- Alle zehn Modul-Abläufe nacheinander über die echte Kommandozeile
+- Alle ursprünglich zehn Modul-Abläufe sowie elf weitere produktive Module über die echte Kommandozeile
   ausgeführt, einschließlich einer lokalen 3,8-MB-WebM-Datei:
   null fehlgeschlagen, null übersprungen; alle Mod-/ZIP-Belege geprüft.
 - Echte installierte FrontendMenus.xaml separat als Noesis-Demo geladen,

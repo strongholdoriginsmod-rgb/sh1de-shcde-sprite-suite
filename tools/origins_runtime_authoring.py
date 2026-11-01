@@ -141,7 +141,8 @@ def campaign_draft_xaml(plan:dict)->bytes:
             '    <StackPanel HorizontalAlignment="Center" '
             'VerticalAlignment="Center">\n'
             '     <TextBlock FontSize="34" Text="'+escape(validated["title"],{'\"':'&quot;'})+'" />\n')
-    body=[]
+    body=['     <TextBlock Name="SpriteSuiteSelectedMission" '
+          'Text="Mission 1" FontSize="22" />\n']
     for mission in validated["missions"]:
         number=mission["number"]
         title=escape(mission["title"],{'"':'&quot;'})

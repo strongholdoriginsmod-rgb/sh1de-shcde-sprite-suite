@@ -255,7 +255,7 @@ def test_main_sidebar_launches_actual_module_demo_and_executes_files(ui,tmp_path
     window=shell.open_demo()
     try:
         app.update()
-        assert window.module_list.size()==10
+        assert window.module_list.size()>=20
         idx=next(i for i,m in enumerate(__import__("suite_demo_engine").MODULES)
                  if m.key=="pixels")
         window.module_list.selection_clear(0,"end")

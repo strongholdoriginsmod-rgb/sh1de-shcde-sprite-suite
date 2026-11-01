@@ -196,6 +196,8 @@ class OriginsVisualEditor(tk.Toplevel):
         ttk.Label(footer,text="×").pack(side="left")
         ttk.Entry(footer,textvariable=self.preview_height,width=6).pack(side="left",padx=2)
         ttk.Button(footer,text="Ansicht aktualisieren",command=self.redraw).pack(side="left",padx=5)
+        ttk.Button(footer,text="Pixelvergleich echter Noesis-Aufnahmen …",
+                   command=self.compare_game_frames).pack(side="right",padx=6)
         ttk.Label(footer,text="Ziehen = Position · Eckpunkt = Größe").pack(side="right")
 
     def _make_inspector(self,parent):
@@ -233,6 +235,48 @@ class OriginsVisualEditor(tk.Toplevel):
         ttk.Button(rotation,text="Drehen",command=self.rotate).pack(side="left")
         ttk.Button(rotation,text="Eigenes Bild einsetzen",command=self.import_selected_image
                    ).pack(side="right")
+
+    def compare_game_frames(self):
+        """Compare two actual user-supplied game/Noesis PNG captures exactly."""
+        if self.doc is None:return
+        original=filedialog.askopenfilename(parent=self,
+            title="Originaler Spiel-/Noesis-Screenshot (PNG) für Vergleich",
+            filetypes=[("PNG-Bild","*.png")])
+        if not original:return
+        changed=filedialog.askopenfilename(parent=self,
+            title="Neu aufgenommener Spiel-/Noesis-Screenshot (PNG)",
+            filetypes=[("PNG-Bild","*.png")])
+        if not changed:return
+        try:
+            from origins_noesis_pixel_compare import compare_captured_frames
+            from secrets import token_hex
+            folder=self.project.parent/".origins-render-comparisons"/(
+                "screen-"+token_hex(7))
+            evidence=compare_captured_frames(Path(original),Path(changed),folder)
+            popup=tk.Toplevel(self)
+            popup.title("Noesis-Spielaufnahmen · tatsächliche Pixeldifferenz")
+            popup.geometry("950x690")
+            ttk.Label(popup,text=(
+                str(evidence["changed_pixels"])+" von "+str(evidence["total_pixels"])+
+                " Pixeln verschieden (Abweichung "+str(evidence["changed_fraction"])+")"),
+                font=("Segoe UI",11,"bold")).pack(pady=8)
+            ttk.Label(popup,text="Diese zwei Aufnahmen wurden pixelgenau verglichen. "
+                      "Ein nativer Renderer wurde NICHT im Editor aufgerufen.",
+                      wraplength=900).pack(pady=5)
+            with Image.open(evidence["heatmap"]) as file:
+                bitmap=file.convert("RGBA")
+            bitmap.thumbnail((910,540),Image.Resampling.LANCZOS)
+            photo=ImageTk.PhotoImage(bitmap,master=popup)
+            popup._photo=photo
+            ttk.Label(popup,image=photo).pack(fill="both",expand=True,pady=6)
+            ttk.Label(popup,text="Belege: "+evidence["output"],wraplength=920
+                      ).pack(fill="x",padx=12,pady=10)
+            self.status.set("Echter Screenshot-Pixelvergleich gespeichert: "+
+                            evidence["output"])
+            return evidence
+        except (OSError,ValueError,RuntimeError) as exc:
+            self._message("Noesis-Pixelvergleich",exc)
+            return None
 
     def _message(self,title,exc):
         messagebox.showerror(title,str(exc),parent=self)

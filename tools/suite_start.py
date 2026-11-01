@@ -115,8 +115,14 @@ def portable_self_test() -> int:
         "print('PYTHON='+sys.version.split()[0]); "
         "print('PIL='+PIL.__version__)"
     )
+    from suite_tcl_runtime import prepare_tcl_env, TclRuntimeError
+    try:
+        prepared=prepare_tcl_env(PROJECT,source=PYTHON_HOME/"tcl")
+    except (OSError,TclRuntimeError) as exc:
+        print("PORTABLE_TCL_ERROR:", exc, file=sys.stderr)
+        return 4
     env = dict(os.environ, PYTHONPATH=str(PROJECT / "src"),
-               PYTHONDONTWRITEBYTECODE="1")
+               PYTHONDONTWRITEBYTECODE="1", **prepared)
     try:
         return subprocess.run(
             [str(executable), "-c", code], cwd=PROJECT, env=env,
@@ -144,7 +150,14 @@ def main() -> int:
         return 0
     fix_venv()
     fix_toolchains()
+    from suite_tcl_runtime import prepare_tcl_env, TclRuntimeError
+    try:
+        prepared=prepare_tcl_env(PROJECT)
+    except (OSError,TclRuntimeError) as exc:
+        print("SPRITESUITE_TCL_ERROR:", exc, file=sys.stderr)
+        return 4
     env = dict(os.environ)
+    env.update(prepared)
     env["PYTHONPATH"] = str(PROJECT / "src")
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     dotnet = find_dotnet_sdk(PROJECT)

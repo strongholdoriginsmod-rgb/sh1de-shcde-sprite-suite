@@ -128,7 +128,10 @@ def faerbe_bild(pfad_ein: Path):
         geoeffnet.load()
         bild = geoeffnet.convert("RGBA")
 
-    pixel = list(bild.getdata())
+    # Pillow 12 deprecated getdata(); preserve compatibility with older
+    # installations while using the supported flattened-pixel API.
+    pixel = list(bild.get_flattened_data() if hasattr(
+        bild, "get_flattened_data") else bild.getdata())
     neu = []
     gefaerbt = 0
     for r, g, b, a in pixel:

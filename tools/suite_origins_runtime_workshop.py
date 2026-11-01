@@ -96,6 +96,12 @@ class OriginsRuntimeWorkshop(tk.Toplevel):
                    command=self.compile_campaign).pack(side="right",padx=7)
         ttk.Button(row,text="Geprüften QA-Kampagnenentwurf speichern",
                    command=self.save_campaign).pack(side="right")
+        native=ttk.Frame(parent)
+        native.pack(fill="x",pady=(2,5))
+        ttk.Button(native,text="BepInEx-Menübridge nur OFFLINE kompilieren (keine Installation) …",
+                   command=self.compile_native_menu).pack(side="left")
+        ttk.Label(native,text="Kein geprüfter Kartenstart / Saisonwechsel",
+                  foreground="#968c7a").pack(side="left",padx=11)
 
     def _select_mission(self,event=None):
         selection=self.mission_list.selection()
@@ -205,6 +211,22 @@ class OriginsRuntimeWorkshop(tk.Toplevel):
                             " · noch keine native Ingame-Anbindung.")
         except (OSError,ValueError) as exc:
             messagebox.showerror("C#-Kompilierung",str(exc),parent=self)
+
+    def compile_native_menu(self):
+        """Compile against selected real game DLLs, never install the result."""
+        slug=self.saved_campaign_slug or self.name.get()
+        game=filedialog.askdirectory(parent=self,
+            title="Installiertes SHCDE-Verzeichnis als LESENDE C#-Referenz wählen")
+        if not game:return None
+        try:
+            from origins_native_menu_compiler import compile_menu_candidate
+            result=compile_menu_candidate(self.project,slug,Path(game))
+            self.status.set("C#-Menükandidat offline kompiliert: "+result["dll"]+
+                            " · KEINE Ingame-Freigabe, KEINE Installation")
+            return result
+        except (OSError,ValueError,RuntimeError) as exc:
+            messagebox.showerror("Native Menübridge nur offline",str(exc),parent=self)
+            return None
 
     def _season_ui(self,parent):
         ttk.Label(parent,text="Kartenabhängige Origins-Saisonpakete",

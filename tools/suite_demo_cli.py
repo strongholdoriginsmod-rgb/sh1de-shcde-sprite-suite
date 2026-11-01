@@ -27,6 +27,8 @@ def main(argv=None)->int:
     choice.add_argument("--all",action="store_true",help="All modules with supplied inputs")
     parser.add_argument("--source",type=Path,help="Read-only user-owned original Noesis XAML")
     parser.add_argument("--video",type=Path,help="Read-only, genuine WebM source")
+    parser.add_argument("--capture",type=Path,help="Read-only actual PNG screen capture for capture_diff")
+    parser.add_argument("--game",type=Path,help="Read-only SHCDE installation root for native_menu")
     args=parser.parse_args(argv)
     if args.list:
         for item in MODULES:
@@ -40,7 +42,12 @@ def main(argv=None)->int:
         if key=="video" and args.video is None:
             skipped.append({"module":key,"reason":"Echtes WebM benötigt"})
             continue
+        if key=="native_menu" and args.game is None:
+            skipped.append({"module":key,"reason":"Installiertes SHCDE-Verzeichnis benötigt"})
+            continue
         source=(args.video if key=="video" else
+                args.game if key=="native_menu" else
+                args.capture if key=="capture_diff" else
                 args.source if key in {"noesis","patch"} else None)
         try:
             session=DemoSession.start(key,source=source)
