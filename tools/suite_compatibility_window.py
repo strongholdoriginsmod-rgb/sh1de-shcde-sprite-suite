@@ -10,6 +10,52 @@ from tkinter import filedialog,ttk,messagebox
 from suite_compatibility_preflight import collect
 
 
+# Localized presentation only: machine-readable report keys remain stable.
+COMPONENT_DE={
+    "Windows x64 host":"Windows-x64-System",
+    "Python runtime":"Python-Laufzeit",
+    "Tcl/Tk":"Tcl/Tk",
+    "Python dependencies":"Python-Abhängigkeiten",
+    "Qt Sandbox":"Qt-Spielvorschau",
+    "Illustrated PDF manual":"Bebildertes PDF-Handbuch",
+    "Launcher / project files":"Programmstart und Dateien",
+    ".NET SDK (optional)":".NET-SDK (optional)",
+    "Native game ABI":"Native Spiel-ABI",
+    "Local Steam discovery":"Lokale Steam-Erkennung",
+}
+
+
+def german_detail(message:str)->str:
+    exact={
+        "Bundled Tcl/Tk 8.6 scripts present":
+           "Die mitgelieferten Tcl/Tk-8.6-Dateien sind vorhanden.",
+        "System Tcl/Tk 8.6 scripts present":
+           "Die Tcl/Tk-8.6-Dateien des Python-Systems sind vorhanden.",
+        "Bundled Tcl/Tk 8.6 scripts missing or invalid":
+           "Mitgelieferte Tcl/Tk-8.6-Dateien fehlen oder sind ungültig.",
+        "QtWidgets and offscreen platform plugin launched successfully":
+           "QtWidgets und das Offscreen-Plugin wurden erfolgreich gestartet.",
+        "PySide6 not installed":"PySide6 ist nicht installiert.",
+        "Expected application entry points and version file":
+           "Startmodule und Versionsdatei sind im Paket enthalten.",
+        "No SDK listed":"Kein .NET-SDK registriert.",
+        "Not found on PATH":"Nicht im Systempfad gefunden.",
+        "Steam BuildID does not attest Unity/Noesis/Script Extender ABI":
+           "Steam-Build-ID beweist keine Unity-/Noesis-/Script-Extender-ABI.",
+        "14-page illustrated PDF manual found (header/trailer valid)":
+           "14-seitiges PDF-Handbuch vorhanden; Dateikopf und Dateiende geprüft.",
+    }
+    if message in exact:return exact[message]
+    if message.endswith(" versions match requirements-py313-win_amd64.lock"):
+        return message.replace(" versions match "," Paketversionen stimmen mit ")
+    if message.endswith(" versions match requirements-py314-win_amd64.lock"):
+        return message.replace(" versions match "," Paketversionen stimmen mit ")
+    if message.endswith(" matching game installations (read-only)"):
+        return message.replace(" matching game installations (read-only)",
+                               " passende Spielinstallation(en) lesend erkannt")
+    return message
+
+
 class CompatibilityWindow(tk.Toplevel):
     def __init__(self,app):
         super().__init__(app)
@@ -129,10 +175,13 @@ class CompatibilityWindow(tk.Toplevel):
            "blocked":self._label("Blockiert","Blocked"),
            "unverified":self._label("Nicht bestätigt","Unverified"),
         }
+        english=self._en()
         for i,row in enumerate(entries):
-            self.table.insert("","end",iid=str(i),text=row["name"],
+            name=row["name"] if english else COMPONENT_DE.get(row["name"],row["name"])
+            detail=row["detail"] if english else german_detail(row["detail"])
+            self.table.insert("","end",iid=str(i),text=name,
                     values=(status_names.get(row["status"],row["status"]),
-                            row["detail"]))
+                            detail))
         if keep and self.table.exists(keep):
             self.table.selection_set(keep)
             self._selected()
@@ -151,7 +200,8 @@ class CompatibilityWindow(tk.Toplevel):
         try:row=self.report["checks"][int(chosen[0])]
         except (IndexError,KeyError,ValueError):return
         suffix=row.get("recommendation_en" if self._en() else "recommendation_de","")
-        self.details.set(row["detail"]+(("\n"+suffix) if suffix else ""))
+        detail=row["detail"] if self._en() else german_detail(row["detail"])
+        self.details.set(detail+(("\n"+suffix) if suffix else ""))
 
     def save_report(self):
         if not self.report:

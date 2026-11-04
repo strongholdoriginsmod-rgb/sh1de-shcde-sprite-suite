@@ -62,11 +62,21 @@ def _tcl(root:Path):
             return _result("Tcl/Tk","limited",
                     f"Tcl {major} and Tk {version} are not a supported pair")
         if major==8.6:
-            script=root/"python"/"tcl"/"tcl8.6"/"init.tcl"
-            tk_script=root/"python"/"tcl"/"tk8.6"/"tk.tcl"
-            if script.is_file() and tk_script.is_file():
+            bundled_home=root/"python"
+            script=bundled_home/"tcl"/"tcl8.6"/"init.tcl"
+            tk_script=bundled_home/"tcl"/"tk8.6"/"tk.tcl"
+            if (script.is_file() and tk_script.is_file()
+                    and not script.is_symlink() and not tk_script.is_symlink()):
                 return _result("Tcl/Tk","ready","Bundled Tcl/Tk 8.6 scripts present")
-            # System Python can still run source without bundled scripts.
+            # When a bundled Python directory exists, falling back to the
+            # inspecting PC's global Tcl/Tk would falsely approve a broken
+            # portable extraction that will fail on a different Windows PC.
+            if bundled_home.exists() or bundled_home.is_symlink():
+                return _result("Tcl/Tk","limited",
+                    "Bundled Tcl/Tk 8.6 scripts missing or invalid",
+                    "Portable-Archiv vollständig neu entpacken.",
+                    "Re-extract the complete portable archive.")
+            # Source-only Python can legitimately use its own Tcl scripts.
             if (Path(sys.base_prefix)/"tcl"/"tcl8.6"/"init.tcl").is_file():
                 return _result("Tcl/Tk","ready","System Tcl/Tk 8.6 scripts present")
             return _result("Tcl/Tk","limited","Tcl/Tk scripts not found",
@@ -109,6 +119,26 @@ def _qt():
         "Use the verified portable Qt and VC runtime files.")
 
 
+def _manual_pdf(root:Path):
+    path=root/"docs"/"SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf"
+    try:
+        if (path.is_symlink() or not path.is_file()
+                or not 10000 <= path.stat().st_size <= 30*1024*1024):
+            raise ValueError("missing, linked, or implausible PDF")
+        with path.open("rb") as stream:
+            header=stream.read(8)
+            stream.seek(-1024,os.SEEK_END)
+            end=stream.read()
+        if not header.startswith(b"%PDF-") or b"%%EOF" not in end:
+            raise ValueError("PDF header or trailer is invalid")
+        return _result("Illustrated PDF manual","ready",
+            "14-page illustrated PDF manual found (header/trailer valid)")
+    except (OSError,ValueError) as exc:
+        return _result("Illustrated PDF manual","limited",str(exc),
+            "Das vollständige Portable-Paket einschließlich PDF neu entpacken.",
+            "Re-extract the complete portable package, including the PDF.")
+
+
 def _dotnet():
     executable=shutil.which("dotnet")
     if not executable:
@@ -132,9 +162,11 @@ def collect(root:Path=ROOT,*,check_steam:bool=False) -> dict:
     windows=sys.platform=="win32"
     cpython=platform.python_implementation()=="CPython"
     minor=sys.version_info.minor
+    machine=platform.machine().lower()
+    host_x64=windows and bits==64 and machine in ("amd64","x86_64")
     pyok=cpython and sys.version_info.major==3 and minor in (13,14) and bits==64
     entries=[
-       _result("Windows x64 host","ready" if windows and bits==64 else "blocked",
+       _result("Windows x64 host","ready" if host_x64 else "blocked",
                platform.system()+" / "+platform.machine()+f" / {bits}-bit",
                "SpriteSuite Portable ist für Windows x64 gebaut.",
                "SpriteSuite Portable targets Windows x64."),
@@ -145,12 +177,7 @@ def collect(root:Path=ROOT,*,check_steam:bool=False) -> dict:
        _tcl(root),
        _dependencies(root,minor),
        _qt(),
-       _result("Illustrated PDF manual",
-               "ready" if (root/"docs"/"SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf").is_file()
-               else "limited",
-               "14-page illustrated PDF manual in docs/ (when bundled)",
-               "Die PDF-Datei mit der vollständigen Portable-Version beziehen.",
-               "Use the PDF from the complete portable distribution."),
+       _manual_pdf(root),
        _result("Launcher / project files","ready" if all(
               (root/name).is_file() for name in
               ("tools/suite_universal.pyw","tools/suite_tcl_runtime.py",

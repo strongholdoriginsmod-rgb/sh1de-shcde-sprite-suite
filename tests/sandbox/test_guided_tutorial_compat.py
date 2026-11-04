@@ -206,3 +206,113 @@ def test_manual_embedded_and_safely_labeled(tmp_path):
     assert len(doc)==14
     assert "Geführter Anleitungsmodus" in doc[2].get_text()
     assert sum(len(page.get_images(full=True)) for page in doc)>=9
+
+
+
+def test_readonly_compatibility_rejects_incomplete_bundled_tcl(tmp_path):
+    """A developer PC's Tcl must never green-light a broken copied bundle."""
+    from suite_compatibility_preflight import _tcl
+    (tmp_path/"python").mkdir()
+    row=_tcl(tmp_path)
+    assert row["status"]=="limited"
+    assert "Bundled" in row["detail"]
+
+
+def test_readonly_compatibility_checks_manual_integrity(tmp_path):
+    from suite_compatibility_preflight import _manual_pdf
+    folder=tmp_path/"docs"
+    folder.mkdir()
+    manual=folder/"SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf"
+    manual.write_bytes(b"%PDF-1.7"+(b"A"*15000))
+    assert _manual_pdf(tmp_path)["status"]=="limited"
+    manual.write_bytes((b"%PDF-1.7"+b"A"*15000)+b"%%EOF")
+    assert _manual_pdf(tmp_path)["status"]=="ready"
+
+
+def test_arm64_cannot_be_marked_as_native_windows_x64(monkeypatch):
+    import suite_compatibility_preflight as preflight
+    monkeypatch.setattr(preflight.platform,"machine",lambda:"ARM64")
+    report=preflight.collect(ROOT)
+    host=next(x for x in report["checks"] if x["name"]=="Windows x64 host")
+    assert host["status"]=="blocked"
+    assert report["host_ready"] is False
+    assert report["native_game_approved"] is False
+
+
+def test_german_compatibility_table_and_diagnostics_translate_without_changes(app):
+    gui,_=app
+    window=gui.run_compatibility_report()
+    gui.update()
+    for _ in range(250):
+        gui.update_idletasks()
+        gui.update()
+        if window.report is not None:break
+        import time
+        time.sleep(.02)
+    assert window.report is not None
+    assert window.table.item("0","text")=="Windows-x64-System"
+    names=[window.table.item(k,"text") for k in window.table.get_children()]
+    assert "Qt-Spielvorschau" in names
+    idx=next(k for k in window.table.get_children()
+             if window.report["checks"][int(k)]["name"]=="Qt Sandbox")
+    assert "erfolgreich" in window.table.set(idx,"detail")
+    before=window.report["checks"][int(idx)].copy()
+    gui.set_language("en")
+    gui.update()
+    assert window.table.item(idx,"text")=="Qt Sandbox"
+    assert window.table.set(idx,"detail")==before["detail"]
+    assert window.report["checks"][int(idx)]==before
+    gui.set_language("de")
+    window.close()
+
+
+def test_highlighting_export_never_takes_keyboard_focus_to_command(app,monkeypatch):
+    gui,dir=app
+    widget=gui.workflow_tab.export_button
+    monkeypatch.setattr(widget,"focus_set",
+                        lambda:pytest.fail("Guide stole focus to export"))
+    tutorial=open_guided_tutorial(gui,track="quickstart",
+                                  store=ProgressStore(dir/"focus-progression.json"))
+    tutorial.index=6
+    tutorial._update_labels_and_step()
+    gui.update()
+    assert tutorial._focus_widget is widget
+    assert widget.cget("style")=="Tutorial.Focus.TButton"
+    before=tutorial.index
+    tutorial.focus_force()
+    gui.update()
+    tutorial.event_generate("<Alt-Right>",when="tail")
+    gui.update()
+    assert tutorial.index==before+1
+    tutorial.close()
+    assert widget.cget("style")!="Tutorial.Focus.TButton"
+
+
+
+def test_completed_tutorial_remembers_finish_and_restarts_at_first_step(app,tmp_path):
+    gui,_=app
+    store=ProgressStore(tmp_path/"finished-track.json")
+    tutorial=open_guided_tutorial(gui,track="quickstart",store=store)
+    tutorial.index=len(BY_KEY["quickstart"].steps)-1
+    tutorial._update_labels_and_step()
+    tutorial.next()
+    assert store.load_completed()=={"quickstart"}
+    assert store.load()["quickstart"]==len(BY_KEY["quickstart"].steps)-1
+    again=open_guided_tutorial(gui,track="quickstart",store=store)
+    assert again.index==0
+    assert "abgeschlossen" in again.note_var.get()
+    gui.set_language("en")
+    assert "completed" in again.note_var.get()
+    again.close()
+
+
+def test_old_progress_format_remains_compatible(tmp_path):
+    p=tmp_path/"old-guide.json"
+    p.write_text(json.dumps({
+        "schema":"sprite-suite.guide-progress.v1",
+        "steps":{"layout":2}},ensure_ascii=False),encoding="utf-8")
+    store=ProgressStore(p)
+    assert store.load()=={"layout":2}
+    assert store.load_completed()==set()
+    assert store.save({"layout":3},completed={"layout"})
+    assert store.load_completed()=={"layout"}

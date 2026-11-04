@@ -126,27 +126,45 @@ class ProgressStore:
     def __init__(self,path:Path|None=None):
         self.path=Path(path) if path else progress_path()
 
-    def load(self) -> dict[str,int]:
+    def _read_data(self):
         try:
-            if self.path.is_symlink() or not self.path.is_file() or self.path.stat().st_size>16384:
+            if (self.path.is_symlink() or not self.path.is_file()
+                    or self.path.stat().st_size>16384):
                 return {}
             data=json.loads(self.path.read_text(encoding="utf-8"))
-            if data.get("schema")!="sprite-suite.guide-progress.v1":return {}
-            saved=data.get("steps",{})
-            return {key:min(max(0,int(saved[key])),len(track.steps)-1)
-                    for key,track in BY_KEY.items()
-                    if key in saved and type(saved[key]) is int}
-        except (OSError,ValueError,TypeError,KeyError):
-            return {}
+            if isinstance(data,dict) and data.get("schema")=="sprite-suite.guide-progress.v1":
+                return data
+        except (OSError,ValueError,TypeError):
+            pass
+        return {}
 
-    def save(self,progress:dict[str,int]) -> bool:
+    def load(self) -> dict[str,int]:
+        saved=self._read_data().get("steps",{})
+        if not isinstance(saved,dict):
+            return {}
+        return {key:min(max(0,int(saved[key])),len(track.steps)-1)
+                for key,track in BY_KEY.items()
+                if key in saved and type(saved[key]) is int}
+
+    def load_completed(self) -> set[str]:
+        """Old v1 files without 'completed' remain perfectly readable."""
+        values=self._read_data().get("completed",[])
+        if not isinstance(values,list):
+            return set()
+        return {value for value in values
+                if isinstance(value,str) and value in BY_KEY}
+
+    def save(self,progress:dict[str,int],
+             *,completed:set[str]|None=None) -> bool:
         temp=None
         try:
             if self.path.is_symlink() or self.path.parent.is_symlink():return False
             self.path.parent.mkdir(parents=True,exist_ok=True)
+            done=self.load_completed() if completed is None else completed
             data={"schema":"sprite-suite.guide-progress.v1",
                   "steps":{k:min(max(0,int(v)),len(BY_KEY[k].steps)-1)
-                           for k,v in progress.items() if k in BY_KEY}}
+                           for k,v in progress.items() if k in BY_KEY},
+                  "completed":sorted(k for k in done if k in BY_KEY)}
             # Atomic write prevents corrupted progress on power loss.
             import tempfile
             with tempfile.NamedTemporaryFile(mode="w",encoding="utf-8",
@@ -174,8 +192,11 @@ class GuidedTutorial(tk.Toplevel):
         self.app=app
         self.store=store or ProgressStore()
         self.progress=self.store.load()
+        self.completed=self.store.load_completed()
         self.track_key=track if track in BY_KEY else "quickstart"
-        self.index=min(self.progress.get(self.track_key,0),len(BY_KEY[self.track_key].steps)-1)
+        self.index=(0 if self.track_key in self.completed else
+                    min(self.progress.get(self.track_key,0),
+                        len(BY_KEY[self.track_key].steps)-1))
         self._focus_widget=None
         self._focus_style=None
         self._expanded_by_guide=False
@@ -308,11 +329,16 @@ class GuidedTutorial(tk.Toplevel):
                                "SpriteSuite - Guided tutorial"))
         self.title_var.set(self._label("Geführte Anleitung","Guided tutorial"))
         self.track_label.set(self._label("Lernpfad:","Learning path:"))
-        self.note_var.set(self._label(
-            "Du navigierst durch die echte Oberfläche. Die Anleitung führt keine "
-            "Dateiänderungen, Spielinstallationen oder Exporte selbst aus.",
-            "You navigate the real application. The tutorial never runs file "
-            "changes, installs, or exports on your behalf."))
+        if self.track_key in self.completed:
+            self.note_var.set(self._label(
+                "Diesen Lernpfad hast du abgeschlossen. Du kannst ihn erneut durchgehen.",
+                "This learning path is completed. You can repeat it at any time."))
+        else:
+            self.note_var.set(self._label(
+                "Du navigierst durch die echte Oberfläche. Die Anleitung führt keine "
+                "Dateiänderungen, Spielinstallationen oder Exporte selbst aus.",
+                "You navigate the real application. The tutorial never runs file "
+                "changes, installs, or exports on your behalf."))
         self._choices={self._label(x.title_de,x.title_en):x.key for x in TRACKS}
         self.track_picker.configure(values=tuple(self._choices))
         self.track_choice.set(self._label(self._track().title_de,self._track().title_en))
@@ -347,13 +373,13 @@ class GuidedTutorial(tk.Toplevel):
         key=self._choices.get(self.track_choice.get())
         if key in BY_KEY:
             self.track_key=key
-            self.index=self.progress.get(key,0)
+            self.index=0 if key in self.completed else self.progress.get(key,0)
             self._update_labels_and_step()
 
     def select_track(self,key):
         if key in BY_KEY:
             self.track_key=key
-            self.index=self.progress.get(key,0)
+            self.index=0 if key in self.completed else self.progress.get(key,0)
             self._update_labels_and_step()
 
     def focus_target(self):
@@ -386,9 +412,11 @@ class GuidedTutorial(tk.Toplevel):
             else:
                 self._focus_style=None
             self._focus_widget=widget
-            # Focus is visual/keyboard only. Do NOT call invoke().
-            if widget is not self.focus_button:
-                widget.focus_set()
+            # Highlight WITHOUT transferring keyboard focus to the target:
+            # focusing a build/export button made Alt+Left/Alt+Right unusable
+            # and could activate a real command on the next Space/Return.
+            # Keep keyboard navigation in the tutorial's own controls.
+            self.focus_button.focus_set()
         except (tk.TclError,AttributeError):
             self._focus_widget=None
         return widget
@@ -397,13 +425,14 @@ class GuidedTutorial(tk.Toplevel):
         new=self.index+direction
         if new<0:return
         if new>=len(self._track().steps):
+            self.completed.add(self.track_key)
             self.progress[self.track_key]=self.index
-            self.store.save(self.progress)
+            self.store.save(self.progress,completed=self.completed)
             self.close()
             return
         self.index=new
         self.progress[self.track_key]=new
-        self.store.save(self.progress)
+        self.store.save(self.progress,completed=self.completed)
         self._update_labels_and_step()
 
     def previous(self):self._move(-1)
@@ -414,7 +443,7 @@ class GuidedTutorial(tk.Toplevel):
         self._closed=True
         self._clear_focus()
         self.progress[self.track_key]=self.index
-        self.store.save(self.progress)
+        self.store.save(self.progress,completed=self.completed)
         if self._expanded_by_guide and self.app.modern_shell.more_expanded:
             self.app.modern_shell._toggle_extra()
         if getattr(self.app,"_guided_tutorial",None) is self:

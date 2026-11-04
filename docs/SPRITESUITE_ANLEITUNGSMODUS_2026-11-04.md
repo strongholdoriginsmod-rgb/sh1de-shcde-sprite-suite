@@ -4,7 +4,7 @@ Stand: 04.11.2026. Gilt für SpriteSuite 2.0.0 (lokaler Windows-x64-Release-Kand
 
 ## Direkt in der Oberfläche
 
-Die linke Navigation enthält jetzt immer **Anleitung (Strg+F1)**. Dadurch öffnet sich ein **nicht modaler** Lernassistent. Er zeigt real existierende Bedienfelder an und markiert sie vorübergehend. **Zurück**, **Weiter** und **Bedienelement zeigen** ändern weder Projektbilder noch installierte Spiele. Der Lernfortschritt wird nutzerlokal gespeichert, soweit die Windows-Profilordner beschreibbar sind.
+Die linke Navigation enthält jetzt immer **Anleitung (Strg+F1)**. Dadurch öffnet sich ein **nicht modaler** Lernassistent. Er zeigt real existierende Bedienfelder an und markiert sie vorübergehend. **Zurück**, **Weiter** und **Bedienelement zeigen** ändern weder Projektbilder noch installierte Spiele. Der Lernfortschritt und der abgeschlossene Lernpfad werden nutzerlokal gespeichert, soweit die Windows-Profilordner beschreibbar sind. Ein abgeschlossener Lernpfad kann erneut ab Schritt 1 durchgegangen werden. Die Hervorhebung lässt den Tastaturfokus beim Lernassistenten und aktiviert keine echten Datei- oder Exportbefehle.
 
 Fünf Lernpfade sind verfügbar:
 
@@ -24,7 +24,7 @@ In SpriteSuite unter **Werkzeuge > PDF-Handbuch** oder über die Schaltfläche i
 
 ## Kompatibilität maximal sinnvoll absichern
 
-**Werkzeuge > Kompatibilität prüfen** öffnet eine nicht blockierende, **nur lesende** Diagnose. Sie prüft die lokale Umgebung und unterscheidet streng zwischen:
+**Werkzeuge > Kompatibilität prüfen** öffnet eine nicht blockierende, **nur lesende** Diagnose mit deutsch-/englischsprachigen Befunden. Sie erkennt unvollständig entpackte Tcl/Tk-Portable-Pakete auch dann als eingeschränkt, wenn auf dem Prüf-PC ein vollständiges System-Python vorhanden ist. ARM64-Systeme werden nicht fälschlich als natives Windows x64 eingeordnet; das PDF wird auf einen plausiblen Dateikopf und ein gültiges Dateiende geprüft. Sie unterscheidet streng zwischen:
 
 - **Windows x64 und CPython 3.13/3.14:** unterstützte Host-/Quelllaufzeiten. Das veröffentlichbare lokale Portable-Paket bündelt CPython 3.13; die Quellvariante besitzt zusätzliche versionierte Python-3.14-Lockdateien.
 - **Tcl/Tk:** vorhandene Scriptdateien der Version 8.6 oder die native Tcl/Tk-9-ZIPFS-Laufzeit; keine globalen Änderungen.
