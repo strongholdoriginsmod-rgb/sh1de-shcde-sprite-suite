@@ -75,8 +75,12 @@ def test_ctrl_k_dialog_en_de_navigation_and_reuse(suite_gui,monkeypatch):
         assert required in [x.key for x in find_targets(targets,search)]
     assert not invoked
     assert app.bind_all("<Control-k>")
-    assert app.command_search_button.winfo_ismapped()
-    app.command_search_button.invoke()
+    # The modern unified shell hides the duplicated top toolbar. Search
+    # remains visibly available in the sidebar and through Ctrl+K.
+    search_button=app.modern_shell.search_button
+    assert search_button.winfo_ismapped()
+    assert not app.command_search_button.winfo_ismapped()
+    search_button.invoke()
     app.update()
     dlg=app._command_search
     assert dlg.winfo_exists()
@@ -93,7 +97,7 @@ def test_ctrl_k_dialog_en_de_navigation_and_reuse(suite_gui,monkeypatch):
 
     app.set_language("en")
     app.update()
-    assert "Search" in app.command_search_button.cget("text")
+    assert "Search" in search_button.cget("text")
     other=app.show_command_search()
     other.query.set("build")
     app.update()

@@ -88,3 +88,33 @@ aktuelle, inzwischen anders organisierte Oberfläche kopiert.
 
 **Keine öffentliche Freigabe** ohne dokumentierte unabhängige
 Windows-CI- und manuelle Ingame-/Hardwareabnahme.
+
+## Integrationsprüfung nach erstem Portable-Build
+
+**Erster instrumentierter Windows/Python-3.13-Gesamtlauf (Junit und
+Coverage-JSON in separater lokaler QA-Ablage):** 1.720 Tests bestanden,
+36 übersprungen, 3 fehlgeschlagen (1.759 gesammelt, 1330,91 Sekunden,
+gemessene aggregierte Quellzeilenabdeckung rund 51 %).
+Die drei Fehler betrafen zwei historische Quellcode-Bytegleichheitstests,
+die den absichtlich abgesicherten Tcl-Start nicht berücksichtigt hatten,
+sowie einen Suchdialog-Test, der den inzwischen ausgeblendeten alten
+Top-Bar-Knopf statt der sichtbaren linken Suche erwartete.
+Diese Testverträge wurden auf die tatsächlich unverändert verfügbaren
+Funktionen beziehungsweise genau die zulässigen Tk-Änderungen aktualisiert
+und separat nachgetestet. **Der erste Gesamtlauf ist damit nicht
+rückwirkend grün.** Eine unabhängige erneute vollständige CI-Prüfung
+bleibt Voraussetzung für die spätere Release-Freigabe.
+
+**Erster Paketbau:** vollständiges Windows-x64-Paket mit CPython 3.13.15,
+12.525 Dateien, 333.490.565 ZIP-Bytes. Hashprüfung der ZIP-Datei,
+ZIP-CRC, Git-Quellcommit-Metadaten, Ausschluss privater Spiel-/Arbeitsordner,
+Portable-Selftest und realer Tk-Hauptfensterstart bestanden.
+Ein synthetisches Projekt konnte mit dieser tatsächlichen gebündelten
+Laufzeit ein geprüftes Mod-ZIP sowie ein übertragbares Projekt-ZIP
+erstellen und wiederherstellen; Originalquellen wurden dabei nicht
+geändert. Keine Ingame- oder Cross-PC-Zulassung ist damit verbunden.
+
+Die letzte Quellstand-/Testkorrektur wird als nachfolgender lokaler Commit
+in den finalen Integrationskandidaten übernommen. Alle ZIPs haben
+versionierte Commit-Metadaten, keine automatische Aktualisierung oder
+Veränderung alter Portable-Ausgaben.
