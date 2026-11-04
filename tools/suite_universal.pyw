@@ -2748,6 +2748,10 @@ class Universal(center.Center):
         self.modern_shell = ModernShell(self)
         self.open_tab(self.workflow_tab)
         self._command_search = None
+        self._guided_tutorial=None
+        self._compat_window=None
+        self.bind_all("<Control-F1>",
+                      lambda _e:self.open_guide(),add="+")
         self.bind_all("<Control-k>", self._command_search_shortcut, add="+")
         self.bind_all("<Control-K>", self._command_search_shortcut, add="+")
         self.log("Nachsicht ist Standard: Abweichungen werden gemeldet, nicht blockiert. "
@@ -2993,6 +2997,12 @@ class Universal(center.Center):
         if shell is not None:
             shell.refresh_language()
         self.tab_home.refresh_quick_language(LANG.code == "en")
+        tutorial=getattr(self,"_guided_tutorial",None)
+        if tutorial is not None and tutorial.winfo_exists():
+            tutorial.refresh_language()
+        compat=getattr(self,"_compat_window",None)
+        if compat is not None and compat.winfo_exists():
+            compat.refresh_language()
         self.hud_menu_tab.update_project_caption()
         layout=getattr(self.hud_menu_tab,"_layout_window",None)
         if layout is not None and layout.winfo_exists():
@@ -3036,16 +3046,42 @@ class Universal(center.Center):
             os.environ.pop("SEDE_STRENG", None)
 
     def open_guide(self):
-        name = ("SPRITESUITE_UI_QUICKSTART_EN_2026-10-28.md"
-                if LANG.code == "en" else
-                "SPRITESUITE_NEUE_OBERFLAECHE_2026-10-28.md")
-        path = ROOT / "docs" / name
+        """Open the non-modal tutorial; never execute an editor action."""
+        from suite_guided_tutorial import open_guided_tutorial
+        return open_guided_tutorial(self)
+
+    def open_pdf_manual(self):
+        """Open the illustrated, versioned handbook with system PDF handler."""
+        from tkinter import messagebox
+        path=ROOT/"docs"/"SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf"
         if not path.is_file():
-            path = ROOT / "docs" / (
-                "UNIVERSAL_SUITE_EN.md" if LANG.code == "en"
-                else "UNIVERSAL_SUITE_DE.md")
-        if path.is_file():
+            messagebox.showwarning(
+                "PDF-Handbuch fehlt" if LANG.code=="de" else "PDF manual missing",
+                str(path),parent=self)
+            return None
+        try:
             os.startfile(path)
+        except (OSError,AttributeError) as exc:
+            messagebox.showerror(
+                "PDF konnte nicht geöffnet werden" if LANG.code=="de"
+                else "Unable to open PDF",str(exc),parent=self)
+            return None
+        return path
+
+    def open_legacy_text_manual(self):
+        """Keep the previous Markdown guide available as a fallback."""
+        name=("SPRITESUITE_UI_QUICKSTART_EN_2026-10-28.md"
+              if LANG.code=="en" else
+              "SPRITESUITE_NEUE_OBERFLAECHE_2026-10-28.md")
+        path=ROOT/"docs"/name
+        if path.is_file() and hasattr(os,"startfile"):
+            os.startfile(path)
+        return path if path.is_file() else None
+
+    def run_compatibility_report(self):
+        """Read-only inspection; NEVER install SDKs or game mods."""
+        from suite_compatibility_window import open_compatibility_window
+        return open_compatibility_window(self)
 
     def show_in_catalog(self, group: str, frame: str | None = None):
         self.notebook.select(self.catalog_tab)

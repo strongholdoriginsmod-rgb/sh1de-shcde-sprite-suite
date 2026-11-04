@@ -245,9 +245,25 @@ def call_with_tcl_bootstrap_retries(operation, *, attempts:int=5):
             return operation()
         except tk.TclError as exc:
             detail=str(exc).casefold()
+            # Native Windows Tcl can sporadically fail while reading a
+            # present auto.tcl or ttk/panedwindow.tcl, not only init.tcl.
+            # Match known interpreter library paths, never arbitrary
+            # user/application files. A real missing file still fails
+            # after the bounded retry count.
+            native_read_error=(
+                ("couldn't read file" in detail or "could not read file" in detail)
+                and any(name in detail for name in (
+                    "/tcl8.6/auto.tcl", "\\tcl8.6\\auto.tcl",
+                    "/tk8.6/ttk/panedwindow.tcl",
+                    "\\tk8.6\\ttk\\panedwindow.tcl",
+                    "/tk8.6/tk.tcl", "\\tk8.6\\tk.tcl",
+                    "/tcl8.6/clock.tcl", "\\tcl8.6\\clock.tcl",
+                ))
+            )
             missing_tcl=("usable init.tcl" in detail or
                          "usable tk.tcl" in detail or
                          ("init.tcl" in detail and "couldn't read" in detail) or
+                         native_read_error or
                          ("invalid command name" in detail and
                           "tcl_findlibrary" in detail))
             if not missing_tcl or trial+1==attempts:

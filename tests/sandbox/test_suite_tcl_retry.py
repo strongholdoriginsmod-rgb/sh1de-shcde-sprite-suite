@@ -141,3 +141,33 @@ def test_unrelated_tcl_invalid_command_still_not_retried(monkeypatch):
     with pytest.raises(tk.TclError,match="user_modified_widget"):
         create_tk_root()
     assert tries["count"]==1
+
+
+@pytest.mark.parametrize("script_name",(
+    "tcl8.6/auto.tcl",
+    "tk8.6/ttk/panedwindow.tcl",
+))
+def test_retry_handles_transient_verified_library_script_reads(script_name):
+    """These actual Windows cache errors must be retried, but at most 5x."""
+    from suite_tcl_runtime import call_with_tcl_bootstrap_retries
+    counts={"n":0}
+    def transient():
+        counts["n"]+=1
+        if counts["n"]==1:
+            raise tk.TclError(
+                'couldn\'t read file "C:/Private/TclCache/'+script_name+
+                '": no such file or directory')
+        return "GUI_STARTED"
+    assert call_with_tcl_bootstrap_retries(transient,attempts=3)=="GUI_STARTED"
+    assert counts["n"]==2
+
+
+def test_retry_refuses_unrelated_user_tcl_script_io_failure():
+    from suite_tcl_runtime import call_with_tcl_bootstrap_retries
+    count={"n":0}
+    def unrelated():
+        count["n"]+=1
+        raise tk.TclError("couldn't read file C:/Project/user-script.tcl")
+    with pytest.raises(tk.TclError,match="user-script"):
+        call_with_tcl_bootstrap_retries(unrelated,attempts=3)
+    assert count["n"]==1

@@ -67,8 +67,13 @@ def build_workflow(view):
         ("Projekt wechseln", view.choose_project),
         ("Neues Projekt", view.create_project),
     ):
-        ttk.Button(project, text=title, command=action,
-                   style="WorkspaceSmall.TButton").pack(side="left", padx=(3, 0))
+        button=ttk.Button(project, text=title, command=action,
+                          style="WorkspaceSmall.TButton")
+        button.pack(side="left",padx=(3,0))
+        if title=="Projekt sichern (ZIP)":
+            view.project_backup_button=button
+        elif title=="Projekt-ZIP öffnen":
+            view.project_restore_button=button
 
     status = ttk.Frame(root, style="Workspace.TFrame", padding=(14, 0, 14, 5))
     status.pack(fill="x")
