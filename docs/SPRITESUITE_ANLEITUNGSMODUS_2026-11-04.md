@@ -45,7 +45,7 @@ Die Qt-Prüfung startet einen Offscreen-Unterprozess und die Steam-Prüfung lies
 
 ## Bei Problemen
 
-- Die Windows-Portable-ZIP **vollständig** in einen eigenen Ordner entpacken. Danach `SpriteSuite\Suite starten.cmd` starten.
+- Die Windows-Portable-ZIP **vollständig in einen kurzen Ordner** wie `C:/SpriteSuite` oder `E:/SS` entpacken. Eine gezielte Belastungsprobe schlug bei einem vollständigen Qt-Dateipfad von 260 Zeichen fehl, während die Entpackung in `E:/SS QA äöü 20261104` erfolgreich war. Tief verschachtelte Downloads- oder Archivordner vermeiden. Danach `SpriteSuite\Suite starten.cmd` starten.
 - Bei fehlendem Qt oder Tcl/Tk die eingebettete Python-Laufzeit prüfen. **Keine** ungeprüften DLLs oder Script-Extender-Dateien aus anderen Spielen einfügen.
 - Bei fehlendem Spielstand/Mapping nur lesende Inventur ausführen. Native Prüfungen und Atlas-Rollback gehören in eine autorisierte QA-Spielkopie.
 - Demodaten liegen getrennt unter dem jeweiligen `work/demo-sessions`-Bereich; sie sind keine Originalspielgrafiken.

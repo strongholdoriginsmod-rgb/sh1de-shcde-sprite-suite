@@ -304,7 +304,7 @@ def make():
     header(c,13,"FAQ","Häufige Fragen und typische Probleme",
            "Fehlermeldungen ernst nehmen: kein grünes Erfolgssignal ohne Beleg.")
     faq=[
-      ("Kein Python installiert?", "Die Windows-x64-Portable-Ausgabe enthält Python 3.13 und die benötigten Bibliotheken. ZIP vollständig entpacken; dann »Suite starten.cmd« öffnen."),
+      ("Kein Python installiert?", "Die Portable-Ausgabe enthält Python 3.13. Das ZIP vollständig in einen kurzen Ordner wie C:/SpriteSuite oder E:/SS entpacken: Sehr tiefe Pfade können die Windows-260-Zeichen-Grenze überschreiten. Dann »Suite starten.cmd« öffnen."),
       ("Fenster bleibt leer?", "Prüfe im Kompatibilitätsfenster Tcl/Tk und Qt. Eine fehlende Spielkarte ist zunächst ein Einrichtungsproblem, nicht automatisch ein Absturz."),
       ("Warum fehlt .NET?", "Das SDK wird nur für bestimmte native C#-Entwicklungsschritte benötigt. Der normale Grafik- und Projektworkflow bleibt verfügbar."),
       ("Warum ist mein neuer Steam-Build nicht freigegeben?", "Versionserkennung ist nur lesend. Unity-/Noesis-ABI und private Sprite-Mappings benötigen reale Ingame- und Rückbautests."),

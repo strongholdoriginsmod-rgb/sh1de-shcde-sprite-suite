@@ -45,6 +45,9 @@ first use, leaving the original untouched.
 
 ## Download
 
+**Windows portability notice:** Fully extract the ZIP to a **short destination** such as `C:/SpriteSuite` or `E:/SS`; avoid deeply nested Downloads/archive paths. Bundled Qt assets include long relative paths, and some Windows extractors fail around 260 characters even when the ZIP is valid. Short paths containing spaces and accented characters have been tested. Never mix the bundled Python files with another installation.
+
+
 | Variant | Contents | How |
 |---|---|---|
 | **Windows Portable 2.0.0 (local release candidate)** | Suite and bundled Python runtime; **no separate Python installation** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – not yet approved as a public stable release; [release review (German)](docs/RELEASE_CANDIDATE_2026-11-04.md) |

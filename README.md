@@ -31,6 +31,9 @@ zuletzt gespeicherte Layout erneut. Der Zustandsvermerk bleibt unter
 
 ## Herunterladen
 
+**Wichtig für Windows-Kompatibilität:** Das Portable-ZIP in einen **kurzen Zielpfad** entpacken, zum Beispiel `C:/SpriteSuite` oder `E:/SS`, statt in einen mehrfach verschachtelten Downloads-/Archivordner. Die mitgelieferten Qt-Dateien besitzen lange relative Namen. Bei ungefähr 260 Zeichen im vollständigen Pfad kann die Windows-Entpackung fehlschlagen, auch wenn die ZIP-Prüfsumme korrekt ist. Leere kurze Ordner mit Umlauten und Leerzeichen wurden erfolgreich getestet. Bitte vor dem Start **vollständig** entpacken; keine Einzeldateien in fremde Python-Installationen mischen.
+
+
 | Variante | Inhalt | Wie |
 |---|---|---|
 | **Windows Portable 2.0.0 (lokaler Release-Kandidat)** | Suite mit Python-Laufzeit im ZIP; **keine Python-Installation nötig** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – noch keine öffentliche Stable-Freigabe; [Release- und Abnahmestand](docs/RELEASE_CANDIDATE_2026-11-04.md) |

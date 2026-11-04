@@ -2,7 +2,7 @@
 
 **Lokal geprüfter Release-Kandidat, keine öffentliche Stable- oder native Spiel-Freigabe.** Die früheren Installer- und Spielordnerkopier-Anweisungen aus 1.1.3 gelten für diese Fassung nicht.
 
-1. Das komplette Windows-Portable-ZIP in einen **eigenen** Ordner entpacken und innerhalb des entpackten Verzeichnisses `SpriteSuite\Suite starten.cmd` starten. Python 3.13, Tcl/Tk und Qt sind enthalten.
+1. Das komplette Windows-Portable-ZIP in einen **eigenen, kurzen** Ordner (z. B. `C:/SpriteSuite` oder `E:/SS`) entpacken; sehr tiefe Ordnerpfade können bei Qt-Dateinamen die Windows-260-Zeichen-Grenze überschreiten und innerhalb des entpackten Verzeichnisses `SpriteSuite\Suite starten.cmd` starten. Python 3.13, Tcl/Tk und Qt sind enthalten.
 2. Links **Anleitung (Strg+F1)** anklicken, **Projekt bis Mod-ZIP** wählen und den echten Schritten folgen. Die Anleitung ändert keine Originaldateien.
 3. Im Bereich **Projekt & Dateien** die eigenen Bilder/XAML-Dateien importieren und eine bearbeitbare Projektsicherung erstellen. Bilder bearbeiten oder den Layout-Designer nutzen.
 4. **Änderungen prüfen**, Warnungen bewerten und erst anschließend **Geprüftes Mod-ZIP bauen**. Der Export kopiert **keine** Dateien automatisch in installierte Spiele.
