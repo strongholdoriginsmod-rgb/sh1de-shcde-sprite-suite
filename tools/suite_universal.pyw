@@ -1937,6 +1937,16 @@ class SandboxTab(ttk.Frame):
         self.label = ttk.Label(self, textvariable=self.message,
                                style="Muted.TLabel")
         self.label.pack(anchor="w", padx=7, pady=(0, 3))
+        # An empty Qt canvas used to offer no explanation or next step.
+        # Keep the hint OUTSIDE Qt and never claim an unverified native map.
+        self.map_hint_text=tk.StringVar(master=self, value="")
+        self.empty_map_banner=ttk.Frame(self,style="Panel.TFrame")
+        ttk.Label(self.empty_map_banner,textvariable=self.map_hint_text,
+                  style="Muted.TLabel").pack(side="left",padx=(8,6))
+        self.setup_map_button=ttk.Button(
+            self.empty_map_banner,text="Spielordner einrichten",
+            command=lambda:self.app.open_tab(self.app.setup_page))
+        self.setup_map_button.pack(side="right",padx=7)
         self.host = tk.Frame(self, bg="#151c1b", bd=0, highlightthickness=0)
         self.host.pack(fill="both", expand=True, padx=4, pady=(0, 4))
         app.notebook.bind("<<NotebookTabChanged>>", self._tab_changed, add="+")
@@ -1977,8 +1987,29 @@ class SandboxTab(ttk.Frame):
         from stronghold_europe_de.sandbox.maps_configuration import configured_map_root
         return configured_map_root(ROOT)
 
+    def _refresh_map_hint(self):
+        bridge=getattr(self,"bridge",None)
+        canvas=getattr(getattr(bridge,"window",None),"native_canvas",None)
+        checker=getattr(canvas,"has_map",None)
+        if not callable(checker):
+            return
+        if checker():
+            self.empty_map_banner.pack_forget()
+            return
+        english=self.app.language.get().upper()=="EN"
+        self.map_hint_text.set(
+            ("No map loaded. Open a map or configure the game folder."
+             if english else
+             "Keine Karte geladen. Karte öffnen oder Spielordner einrichten."))
+        self.setup_map_button.configure(text=(
+            "Set up game folder" if english else "Spielordner einrichten"))
+        if self.empty_map_banner.winfo_manager()!="pack":
+            self.empty_map_banner.pack(before=self.host,fill="x",
+                                       padx=6,pady=(0,3))
+
     def ensure_studio(self):
         if self.bridge is not None:
+            self._refresh_map_hint()
             return self.bridge
         if self._starting:
             return None
@@ -2012,6 +2043,7 @@ class SandboxTab(ttk.Frame):
         # The embedded Qt toolbar provides instructions; do not reserve
         # a second full-width line once loading has succeeded.
         self.label.pack_forget()
+        self._refresh_map_hint()
         if self._pending_sprite is not None:
             group, frame = self._pending_sprite
             self._pending_sprite = None
@@ -2031,12 +2063,14 @@ class SandboxTab(ttk.Frame):
         bridge = self.ensure_studio()
         if bridge is not None:
             bridge.window.choose_map()
+            self.after(100,self._refresh_map_hint)
 
     def choose_folder(self):
         self.app.notebook.select(self)
         bridge = self.ensure_studio()
         if bridge is not None:
             bridge.window.choose_folder()
+            self.after(100,self._refresh_map_hint)
 
     def save_scene(self):
         bridge = self.ensure_studio()
@@ -2615,6 +2649,27 @@ class TargetTab(ttk.Frame):
 # ====================================================================== Hauptfenster
 
 class Universal(center.Center):
+    def run(self, args, label):
+        accepted=super().run(args,label)
+        if accepted:
+            self.stop_button.pack(side="right")
+        return accepted
+
+    def run_captured(self,args,label,on_output):
+        accepted=super().run_captured(args,label,on_output)
+        if accepted:
+            self.stop_button.pack(side="right")
+        return accepted
+
+    def _drain(self):
+        super()._drain()
+        # The persistent disabled Cancel button looked like a task was running.
+        # Keep it visible only when a genuine background CLI job is active.
+        button=getattr(self,"stop_button",None)
+        if (button is not None and not self.runner.busy
+                and button.winfo_manager()=="pack"):
+            button.pack_forget()
+
     def show_advanced(self):
         super().show_advanced()
         # The original Suite Center resets this useful mode on every launch.
@@ -2630,6 +2685,7 @@ class Universal(center.Center):
 
     def __init__(self):
         super().__init__()
+        self.stop_button.pack_forget()
         # Preserve the user's explicit choice without changing first-run defaults.
         self.advanced.set(
             katalog.load_json(SETTINGS, {}).get("erweiterte_werkzeuge", False)
@@ -2906,7 +2962,14 @@ class Universal(center.Center):
         if not hasattr(self, "_navigation_entries"):
             return
         selected = self.notebook.select()
-        if hasattr(self,"workflow_tab") and selected == str(self.workflow_tab):
+        previous = getattr(self, "_last_quick_tab", None)
+        # A language refresh is NOT a workspace transition. Re-entering the
+        # project here replaced its just-created export status with a fresh
+        # disk summary, even though no page was changed by the user.
+        self._last_quick_tab = selected
+        if (hasattr(self, "workflow_tab")
+                and selected == str(self.workflow_tab)
+                and previous != selected):
             self.workflow_tab.on_activate()
         position = 1 if LANG.code == "en" else 0
         for row in self._navigation_entries:
@@ -2921,6 +2984,10 @@ class Universal(center.Center):
         LANG.save()
         os.environ["SEDE_SPRACHE"] = LANG.code
         LANG.apply(self)
+        if hasattr(self,"workflow_tab"):
+            self.workflow_tab.refresh_language()
+        if hasattr(self,"sandbox_tab"):
+            self.sandbox_tab._refresh_map_hint()
         self._refresh_quick_navigation()
         shell = getattr(self, "modern_shell", None)
         if shell is not None:

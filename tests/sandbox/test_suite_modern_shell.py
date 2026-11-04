@@ -278,3 +278,68 @@ def test_main_sidebar_launches_actual_module_demo_and_executes_files(ui,tmp_path
         assert (window._run().root/"demo-protokoll.json").is_file()
     finally:
         window.destroy()
+
+
+
+def test_idle_cancel_is_hidden_and_only_exposed_for_accepted_jobs(ui,monkeypatch):
+    mod,app=ui
+    assert app.stop_button.winfo_manager()==""
+    monkeypatch.setattr(mod.center.Center,"run",lambda *_args,**_kw:False)
+    assert app.run(["unused"],"fake") is False
+    assert app.stop_button.winfo_manager()==""
+    monkeypatch.setattr(mod.center.Center,"run",lambda *_args,**_kw:True)
+    assert app.run(["unused"],"fake") is True
+    assert app.stop_button.winfo_manager()=="pack"
+    assert "disabled" not in app.stop_button.state() or not app.runner.busy
+    app._drain()
+    assert app.stop_button.winfo_manager()==""
+
+
+def test_sandbox_empty_map_hint_points_to_setup_and_disappears_for_real_map(
+    ui,monkeypatch,
+):
+    from types import SimpleNamespace
+    _mod,app=ui
+    view=app.sandbox_tab
+    assert view.empty_map_banner.winfo_manager()==""
+    fake_canvas=SimpleNamespace(has_map=lambda:False)
+    view.bridge=SimpleNamespace(window=SimpleNamespace(native_canvas=fake_canvas))
+    try:
+        view._refresh_map_hint()
+        assert view.empty_map_banner.winfo_manager()=="pack"
+        assert "Keine Karte geladen" in view.map_hint_text.get()
+        app.set_language("en")
+        assert "No map loaded" in view.map_hint_text.get()
+        assert view.setup_map_button.cget("text")=="Set up game folder"
+        monkeypatch.setattr(fake_canvas,"has_map",lambda:True)
+        view._refresh_map_hint()
+        assert view.empty_map_banner.winfo_manager()==""
+    finally:
+        view.bridge=None
+
+
+def test_legacy_exchange_bottom_tools_can_be_reached_by_section_picker(ui):
+    from tkinter import ttk
+    _mod,app=ui
+    app.geometry("1020x680+20+20")
+    view=app.exchange_tab
+    app.open_tab(view)
+    app.update()
+    section=next(k for k in view.section_targets if "Mehrteilige" in k)
+    view.section_choice.set(section)
+    view.jump_to_section()
+    app.update()
+    bottom=app.winfo_rooty()+app.winfo_height()
+    actions=[]
+    pending=[view.form_scroll.body]
+    while pending:
+        node=pending.pop()
+        pending.extend(node.winfo_children())
+        if isinstance(node,ttk.Button) and node.cget("text") in (
+            "Als ORA zusammensetzen","ORA zuruecknehmen ..."):
+            actions.append(node)
+    assert len(actions)==2
+    for widget in actions:
+        assert widget.winfo_ismapped()
+        assert widget.winfo_rooty()>=app.winfo_rooty()
+        assert widget.winfo_rooty()+widget.winfo_height()<=bottom

@@ -72,7 +72,7 @@ def build_workflow(view):
 
     status = ttk.Frame(root, style="Workspace.TFrame", padding=(14, 0, 14, 5))
     status.pack(fill="x")
-    view.stage_text = tk.StringVar(master=view, value="QUELLE  →  BEARBEITEN  →  PRÜFEN  →  EXPORT")
+    view.stage_text = view._display_var("QUELLE  →  BEARBEITEN  →  PRÜFEN  →  EXPORT")
     ttk.Label(status, textvariable=view.stage_text,
               style="WorkspaceCaption.TLabel").pack(side="left")
 
@@ -97,9 +97,10 @@ def build_workflow(view):
     ttk.Label(options, text="Typ:", style="WorkspaceMuted.TLabel").pack(
         side="left", padx=(9, 4))
     view.category_box = ttk.Combobox(
-        options, textvariable=view.category, state="readonly",
+        options, textvariable=view.category_choice, state="readonly",
         values=tuple(__import__("hud_menu_workspace").CATEGORIES), width=14)
     view.category_box.pack(side="left", fill="x", expand=True)
+    view.category_box.bind("<<ComboboxSelected>>",view._category_changed)
     tree_frame = ttk.Frame(files, style="WorkspacePanel.TFrame")
     tree_frame.pack(fill="both", expand=True, pady=(4, 4))
     view.tree = ttk.Treeview(tree_frame, columns=("typ", "state"),
@@ -107,9 +108,9 @@ def build_workflow(view):
     view.tree.heading("#0", text="Datei")
     view.tree.heading("typ", text="Typ")
     view.tree.heading("state", text="Stand")
-    view.tree.column("#0", width=165, minwidth=100, stretch=True)
-    view.tree.column("typ", width=66, minwidth=45, stretch=False)
-    view.tree.column("state", width=65, minwidth=45, stretch=False)
+    view.tree.column("#0", width=121, minwidth=75, stretch=True)
+    view.tree.column("typ", width=59, minwidth=45, stretch=False)
+    view.tree.column("state", width=62, minwidth=50, stretch=False)
     tree_scroll = ttk.Scrollbar(tree_frame, orient="vertical", command=view.tree.yview)
     view.tree.configure(yscrollcommand=tree_scroll.set)
     view.tree.pack(side="left", fill="both", expand=True)
@@ -153,7 +154,8 @@ def build_workflow(view):
     view.noesis_button = ttk.Button(
         actions, text="Noesis-XAML bearbeiten", command=view.open_noesis)
     view.noesis_button.pack(side="left", padx=(0, 6))
-    more = ttk.Menubutton(actions, text="Weitere Aktionen ▾")
+    more = ttk.Menubutton(actions, text="Mehr ▾")
+    view.more_actions_button=more
     more.pack(side="right")
     view.actions_menu = tk.Menu(more, tearoff=False)
     view.actions_menu.add_command(label="Bild mit Noesis verknüpfen",

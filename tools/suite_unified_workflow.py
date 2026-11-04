@@ -16,6 +16,7 @@ from xml.etree import ElementTree
 from PIL import Image,ImageTk
 
 import hud_menu_workspace as hud
+from suite_workflow_i18n import WorkflowDisplayVar, CATEGORY_EN, display_text
 from suite_hud_menu_session import read_session,save_session
 from suite_unified_project import (
     ProjectPipeline,UnifiedFlowError,project_from_recent,new_project,
@@ -38,18 +39,50 @@ class UnifiedWorkflowTab(ttk.Frame):
         self._photo=None
         self._selected=None
         self._last_export=None
-        self.project_text=tk.StringVar(self,value="")
-        self.source_text=tk.StringVar(self,value="")
-        self.selection_text=tk.StringVar(self,value="Noch keine Datei ausgewählt.")
-        self.check_text=tk.StringVar(self,value="Noch nicht geprüft.")
-        self.result_text=tk.StringVar(self,value="Noch kein Mod-ZIP für dieses Projekt erstellt.")
-        self.message=tk.StringVar(self,value="Wähle eine Originalgrafik oder eine Noesis-XAML-Seite.")
+        self._localized_vars=[]
+        self.project_text=self._display_var("")
+        self.source_text=self._display_var("")
+        self.selection_text=self._display_var("Noch keine Datei ausgewählt.")
+        self.check_text=self._display_var("Noch nicht geprüft.")
+        self.result_text=self._display_var("Noch kein Mod-ZIP für dieses Projekt erstellt.")
+        self.message=self._display_var("Wähle eine Originalgrafik oder eine Noesis-XAML-Seite.")
         self.category=tk.StringVar(self,value="Menüs / UI-Bilder")
+        self.category_choice=tk.StringVar(self,value=self.category.get())
+        self._category_choice_to_key=dict((name,name) for name in hud.CATEGORIES)
         slug=re.sub(r"[^a-z0-9-]","-",self.pipeline.project.name.lower()).strip("-")
         self.guid=tk.StringVar(self,value="spritesuite-"+(slug or "projekt"))
         self.mod_name=tk.StringVar(self,value="SpriteSuite "+self.pipeline.project.name)
         self._build()
         self.refresh()
+        self.refresh_language()
+
+    def _display_var(self, value):
+        v=WorkflowDisplayVar(
+            self,lambda:self.app.language.get().upper()=="EN",value)
+        self._localized_vars.append(v)
+        return v
+
+    def _localize(self, message):
+        return display_text(message,self.app.language.get().upper()=="EN")
+
+    def _category_changed(self,_event=None):
+        canonical=self._category_choice_to_key.get(self.category_choice.get())
+        if canonical in hud.CATEGORIES:
+            self.category.set(canonical)
+
+    def refresh_language(self):
+        """Translate UI statuses without changing project data or a saved receipt."""
+        for variable in self._localized_vars:
+            variable.refresh_language()
+        english=self.app.language.get().upper()=="EN"
+        translated={key:(CATEGORY_EN.get(key,key) if english else key)
+                    for key in hud.CATEGORIES}
+        self._category_choice_to_key={value:key for key,value in translated.items()}
+        self.category_box.configure(values=tuple(translated.values()))
+        current=self.category.get()
+        self.category_choice.set(translated.get(current,current))
+        if self.selected_asset() is None:
+            self.preview.configure(text=self._localize("Bild wählen oder hinzufügen"))
 
     def _build(self):
         from suite_workflow_layout import build_workflow
@@ -336,7 +369,7 @@ class UnifiedWorkflowTab(ttk.Frame):
                 self._select()
             else:
                 self._selected=None;self._photo=None
-                self.preview.configure(text="Bild wählen oder hinzufügen",image="")
+                self.preview.configure(text=self._localize("Bild wählen oder hinzufügen"),image="")
                 self.empty_import_button.place(relx=.5,rely=.62,anchor="center")
                 self.selection_text.set("Noch keine Datei. Links Bild oder XAML hinzufügen.")
                 self.edit_button.configure(state="disabled")
@@ -398,7 +431,7 @@ class UnifiedWorkflowTab(ttk.Frame):
             self._selected=None
             self.selection_text.set("Keine Datei ausgewählt.")
             self._photo=None
-            self.preview.configure(image="",text="Bild wählen oder hinzufügen")
+            self.preview.configure(image="",text=self._localize("Bild wählen oder hinzufügen"))
             self.empty_import_button.place(relx=.5,rely=.62,anchor="center")
             self.edit_button.configure(state="disabled")
             return
@@ -430,11 +463,11 @@ class UnifiedWorkflowTab(ttk.Frame):
         item=self.selected_asset()
         if item is None:
             self._photo=None
-            self.preview.configure(image="",text="Bild wählen oder hinzufügen")
+            self.preview.configure(image="",text=self._localize("Bild wählen oder hinzufügen"))
             return
         if item.path.suffix.lower() not in (".png",".jpeg",".jpg",".webp"):
             self._photo=None
-            self.preview.configure(image="",text="Text-/XAML-Datei – Bearbeiten öffnen")
+            self.preview.configure(image="",text=self._localize("Text-/XAML-Datei – Bearbeiten öffnen"))
             return
         try:
             with Image.open(item.path) as image:
@@ -448,7 +481,7 @@ class UnifiedWorkflowTab(ttk.Frame):
             self.preview.configure(image=self._photo,text="")
         except (OSError,ValueError) as exc:
             self._photo=None
-            self.preview.configure(image="",text="Vorschau ungültig: "+str(exc))
+            self.preview.configure(image="",text=self._localize("Vorschau ungültig: "+str(exc)))
 
     def edit_selected(self):
         item=self.selected_asset()

@@ -268,6 +268,9 @@ class ModernShell:
         width = 166 if event.width < 1200 else 194
         if int(self.rail.cget("width")) != width:
             self.rail.configure(width=width)
+        # Side text must wrap inside the scrollable rail, not be clipped at
+        # the right edge when the main window shrinks below 1200 px.
+        self.rail_hint.configure(wraplength=max(100,width-42))
         # Der alte, sehr lange Zusatztext darf die Knöpfe rechts oben nicht
         # aus dem Fenster drücken. In schmalen Ansichten erklärt die
         # Werkstatt selbst die nächsten Schritte.

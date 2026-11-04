@@ -272,9 +272,11 @@ class HudMenuLayoutEditor(tk.Toplevel):
             layers_frame,columns=("visible","locked","source"),
             show="tree headings",selectmode="extended",height=7)
         self.layers.heading("#0",text="Ebene")
-        self.layers.column("#0",width=135,minwidth=75,stretch=True)
-        for col,label,width in (("visible","Aug",35),("locked","Schl",35),
-                                ("source","PNG",155)):
+        # Short column widths leave usable canvas space at 880px; the PNG
+        # path remains available in the layer details / asset chooser.
+        self.layers.column("#0",width=110,minwidth=65,stretch=True)
+        for col,label,width in (("visible","Aug",30),("locked","Schl",30),
+                                ("source","PNG",95)):
             self.layers.heading(col,text=label)
             self.layers.column(col,width=width,minwidth=28,stretch=(col=="source"))
         sb=ttk.Scrollbar(layers_frame,orient="vertical",command=self.layers.yview)
@@ -340,12 +342,23 @@ class HudMenuLayoutEditor(tk.Toplevel):
                   "Pfeile=1 px (Shift=10 px) · Strg+C/V/Z/Y/S",
                   wraplength=320,justify="left").pack(
             fill="x",padx=6,pady=5)
-        ttk.Label(self,textvariable=self.status,wraplength=1100,
-                  justify="left").pack(side="bottom",fill="x",padx=12,pady=3)
+        self.status_label=ttk.Label(self,textvariable=self.status,
+                                    wraplength=1100,justify="left")
+        self.status_label.pack(side="bottom",fill="x",padx=12,pady=3)
+        self.bind("<Configure>",self._resize_editor,add="+")
         self._sync_properties()
         # On smaller displays the full layer/transform inspector stays
         # scrollable instead of clipping lower controls out of the window.
         self.inspector_scroll.bind_mousewheel()
+
+    def _resize_editor(self,event):
+        if event.widget is not self:
+            return
+        count=4 if event.height<700 else 7
+        if int(self.layers.cget("height"))!=count:
+            self.layers.configure(height=count)
+        # Do not silently crop the last controls hint at 880x570.
+        self.status_label.configure(wraplength=max(450,event.width-40))
 
     def show_layout_help(self):
         messagebox.showinfo(

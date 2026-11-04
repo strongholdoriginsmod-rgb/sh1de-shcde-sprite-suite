@@ -587,3 +587,118 @@ def test_layout_designer_uses_real_canvas_fit_and_visible_property_inspector(
         assert "Asset-Mod-Paket bauen" in action_labels
     finally:
         editor.close_editor()
+
+
+
+def test_workbench_language_switch_translates_live_status_without_changing_project(
+    app_and_tree, tmp_path,
+):
+    app, _work, _ = app_and_tree
+    tab=app.workflow_tab
+    original_project=tab.pipeline.project
+    original_guid=tab.guid.get()
+    app.set_language("en")
+    app.update()
+    assert tab.project_text.get().startswith("Active project: ")
+    assert tab.source_text.get().startswith("No original Noesis")
+    assert tab.selection_text.get().startswith("No file yet.")
+    assert "Validation required before export" in tab.check_text.get()
+    assert "No verified export" in tab.result_text.get()
+    assert tab.stage_text.get().startswith("ADD SOURCES")
+    assert tab.source_button.cget("text")=="+  Add files"
+    assert tab.export_button.cget("text")=="Build verified mod ZIP"
+    assert tab.category_choice.get()=="Menu images"
+    assert tab.category.get()=="Menüs / UI-Bilder"
+    assert tab.pipeline.project==original_project
+    assert tab.guid.get()==original_guid
+
+    # Changing a translated display label must still select the canonical
+    # on-disk category, never save an English path or new identifier.
+    tab.category_choice.set("Game sprites")
+    tab._category_changed()
+    assert tab.category.get()=="Spiel-Sprites"
+    img=tmp_path/"EnglishBadge.png"
+    _image(img)
+    stored=tab.pipeline.import_image(img,category=tab.category.get())
+    assert stored.relative_to(tab.pipeline.project).as_posix().startswith(
+        "Override/Sprites/")
+    tab.refresh()
+    assert tab.category_choice.get()=="Game sprites"
+    assert "1 workspace file(s)" in tab.check_text.get()
+    assert tab.check_project() is not None
+    assert "files checked" in tab.check_text.get()
+    result=tab.build_package()
+    assert result and result["zip_verified_against_project"] is True
+    assert tab.result_text.get().startswith("DONE:")
+    export_receipt=result["zip_sha256"]
+    assert tab.pipeline.latest_export()["zip_sha256"]==export_receipt
+
+    app.set_language("de")
+    app.update()
+    assert tab.project_text.get().startswith("Aktives Projekt: ")
+    assert tab.result_text.get().startswith("FERTIG:")
+    assert tab.category_choice.get()=="Spiel-Sprites"
+    assert tab.category.get()=="Spiel-Sprites"
+    assert tab.pipeline.project==original_project
+    assert tab.pipeline.latest_export()["zip_sha256"]==export_receipt
+    assert tab.guid.get()==original_guid
+
+
+def test_workflow_status_translation_is_reversible_without_revalidating(
+    app_and_tree,
+):
+    app,_work,_=app_and_tree
+    tab=app.workflow_tab
+    raw_message="Prüfe das Projekt und erstelle das Paket …"
+    tab.message.set(raw_message)
+    app.set_language("en")
+    assert tab.message.get()=="Checking project and building package…"
+    app.set_language("de")
+    assert tab.message.get()==raw_message
+    tab.check_text.set("Prüfung fehlgeschlagen: synthetic missing image")
+    app.set_language("en")
+    assert tab.check_text.get()=="Validation failed: synthetic missing image"
+    app.set_language("de")
+    assert tab.check_text.get()=="Prüfung fehlgeschlagen: synthetic missing image"
+
+
+
+def test_english_compact_workspace_keeps_menu_and_file_status_visible(app_and_tree):
+    app, _work, _ = app_and_tree
+    app.geometry("1020x680+20+20")
+    app.set_language("en")
+    app.open_tab(app.workflow_tab)
+    app.update()
+    tab=app.workflow_tab
+    more=tab.more_actions_button
+    assert more.cget("text")=="More ▾"
+    assert more.winfo_ismapped()
+    right=app.winfo_rootx()+app.winfo_width()
+    for widget in (more,tab.noesis_button,tab.layout_button,tab.edit_button):
+        assert widget.winfo_rootx()+widget.winfo_width()<=right+3
+        assert widget.winfo_ismapped()
+    assert tab.tree.heading("state","text")=="Status"
+    columns=sum(tab.tree.column(column,"width") for column in ("#0","typ","state"))
+    assert columns<=tab.tree.winfo_width()+2
+    hint=app.modern_shell.rail_hint
+    assert int(hint.cget("wraplength"))<=hint.winfo_width()
+
+
+
+def test_minimum_layout_editor_reduces_layer_panel_and_wraps_status(app_and_tree):
+    app,_work,_=app_and_tree
+    editor=app.workflow_tab.open_layout()
+    assert editor is not None
+    try:
+        editor.geometry("880x570+20+20")
+        editor.update()
+        app.update()
+        assert int(editor.layers.cget("height"))==4
+        assert editor.canvas.winfo_width()>=390
+        assert editor.canvas.winfo_height()>=275
+        assert editor._zoom_value()>0.20
+        assert int(editor.status_label.cget("wraplength"))<=editor.winfo_width()
+        bottom=editor.winfo_rooty()+editor.winfo_height()
+        assert editor.status_label.winfo_rooty()+editor.status_label.winfo_height()<=bottom
+    finally:
+        editor.close_editor()
