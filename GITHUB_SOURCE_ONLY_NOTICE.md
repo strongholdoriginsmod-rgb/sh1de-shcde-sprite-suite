@@ -21,9 +21,11 @@ bleiben dagegen im Repository erhalten.
 Die Datei ist **kein eigenständig spielbares Spiel**. Auch die
 Stronghold-Europe-/Origins-Runtime auf Basis von SE 2.11.0 ist mit einer
 bloßen Formatprüfung gegen SE 2.14.3 **noch nicht Ingame-/ABI-freigegeben**.
-Für neue Script-Extender-Releases ist die Prüfung in
-`tools/shcdese_compat_check.py` nur lesend. Der alte 2.11-Installer darf
-kein neueres Script Extender automatisch zurückstufen.
+Die Steam-Build-Diagnose in `tools/suite_steam_compatibility.py` ist nur
+lesend; der frühere `tools/shcdese_compat_check.py` wurde bewusst entfernt.
+Eine reine Build-Erkennung ersetzt keinen nativen C#-ABI- oder Ingame-Test.
+Der historische SE-2.11-Installer darf einen neueren Script Extender nicht
+automatisch zurückstufen.
 
 Die README- und Kompatibilitätsdokumente erklären die Funktionen,
 Sicherheitsgrenzen und offenen Runtime-Tests.
