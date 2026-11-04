@@ -148,6 +148,12 @@ class ModernShell:
             body, text="Suche (Strg+K)", style="Rail.TButton",
             command=app.show_command_search)
         self.search_button.pack(fill="x", padx=5, pady=(1, 3))
+        # A first-time user should not need to discover an advanced menu
+        # before reaching the illustrated, contextual tutorial.
+        self.tutorial_button=ttk.Button(
+            body,text="Anleitung (Strg+F1)",style="Rail.TButton",
+            command=app.open_guide)
+        self.tutorial_button.pack(fill="x",padx=5,pady=(1,3))
 
         self.more_toggle = ttk.Button(body,
             text="Werkzeuge ▸", style="Rail.TButton",
@@ -165,12 +171,17 @@ class ModernShell:
         self.extra.pack(fill="x", padx=9, pady=(0, 6))
         self.extra.bind("<<ComboboxSelected>>", self._open_more)
         self.manual_button = ttk.Button(
-            self.more_panel, text="Anleitung öffnen",
-            style="Rail.TButton", command=app.open_guide)
+            self.more_panel, text="PDF-Handbuch",
+            style="Rail.TButton", command=app.open_pdf_manual)
         self.manual_button.pack(fill="x", padx=5, pady=2)
         self.demo_button = ttk.Button(
             self.more_panel, text="Interaktiver Demo-Modus",
             style="Rail.TButton", command=self.open_demo)
+        self.demo_button.pack(fill="x",padx=5,pady=2)
+        self.compat_button=ttk.Button(
+            self.more_panel,text="Kompatibilität prüfen",
+            style="Rail.TButton",command=app.run_compatibility_report)
+        self.compat_button.pack(fill="x",padx=5,pady=2)
         self.native_preview_button = ttk.Button(
             self.more_panel, text="Noesis-Live-Pixel (Spiel)",
             style="Rail.TButton", command=self.open_native_preview)
@@ -319,8 +330,12 @@ class ModernShell:
             if self.more_expanded else
             ("Tools ▸" if english else "Werkzeuge ▸")
         ))
-        self.manual_button.configure(text="Open guide" if english
-                                     else "Anleitung öffnen")
+        self.tutorial_button.configure(
+            text="Tutorial (Ctrl+F1)" if english else "Anleitung (Strg+F1)")
+        self.manual_button.configure(text="PDF manual" if english
+                                     else "PDF-Handbuch")
+        self.compat_button.configure(text="Compatibility check" if english
+                                     else "Kompatibilität prüfen")
         self.demo_button.configure(text="Interactive demos" if english
                                    else "Interaktiver Demo-Modus")
         self.log_button.configure(text=(

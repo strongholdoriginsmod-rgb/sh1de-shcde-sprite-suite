@@ -2,6 +2,12 @@
 
 Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Static GUI/sprite packages use **no fixed SE version and no C# DLL**; optional C# runtimes retain separate ABI safety checks. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
 
+## Guided tutorial, illustrated manual and compatibility (Nov 4, 2026)
+
+Open **Tutorial (Ctrl+F1)** from the left sidebar, select a learning path and navigate with **Back / Next**. Highlighted real controls are never invoked automatically. Progress stays in per-user local settings.
+
+The **[14-page illustrated PDF manual](docs/SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf)** includes genuine Windows screenshots (German text); open it via **Tools > PDF manual**. **Tools > Compatibility check** performs a read-only Windows, Python, Tcl/Tk, Qt and optional Steam diagnostic. Unknown native Unity/Noesis/Script Extender builds are never auto-approved. [Details and safety boundaries](docs/SPRITESUITE_ANLEITUNGSMODUS_2026-11-04.md).
+
 ## Redesigned interface
 
 **Workflow-first revision, November 4, 2026:** Project files, a responsive preview and editing actions now share one workbench; validation and static mod-ZIP export stay visible at 1020 × 680. The layout editor has a larger canvas, more accessible layer properties and a reliable first-time fit. [Workflow and release limitations (German)](docs/SPRITESUITE_WORKFLOW_FIRST_UI_2026-11-04.md).

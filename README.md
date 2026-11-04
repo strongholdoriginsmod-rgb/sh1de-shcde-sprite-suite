@@ -2,6 +2,12 @@
 
 Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Statische HUD-/Sprite-Pakete entstehen **ohne feste SE-Version und ohne eigene C#-DLL**; für optionale C#-Plugins gelten getrennte ABI-Schutzprüfungen. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
+## Interaktive Anleitung und bebildertes Handbuch (04.11.2026)
+
+**Sofort erreichbar:** Links **Anleitung (Strg+F1)** anklicken, Lernpfad auswählen, mit **Zurück / Weiter** durch echte Bedienelemente gehen. Ein markierter Befehl wird dadurch **nicht automatisch ausgeführt**. Der Lernfortschritt bleibt nutzerlokal; alle Projektdateien und Spielinstallationen bleiben unverändert.
+
+Das neue **[14-seitige PDF-Handbuch mit Original-Screenshots](docs/SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf)** kann auch direkt unter **Werkzeuge > PDF-Handbuch** geöffnet werden. **Werkzeuge > Kompatibilität prüfen** bietet eine nur lesende Windows-/Python-/Tcl-/Qt-/Steam-Diagnose; die Freigabe unbekannter Spiel-/Noesis-/ABI-Versionen bleibt gesperrt. [Bedienung, Demo, Grenzen und Kompatibilitätsmatrix](docs/SPRITESUITE_ANLEITUNGSMODUS_2026-11-04.md).
+
 ## Neue Oberfläche
 
 **Workflow-Überarbeitung vom 4. November 2026:** Statt übereinander gestapelter Schrittkarten stehen jetzt Projektdateien, skalierende Vorschau und Bearbeiten nebeneinander. Prüfung und statischer Mod-ZIP-Export bleiben bei 1020 × 680 sichtbar. Der Layout-Designer nutzt die vergrößerte Zeichenfläche, zeigt Ebeneneigenschaften früher und passt den anfänglichen Zoom korrekt ein. [Bedienung und Grenzen](docs/SPRITESUITE_WORKFLOW_FIRST_UI_2026-11-04.md).
