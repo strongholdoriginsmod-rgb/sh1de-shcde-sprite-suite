@@ -25,15 +25,15 @@ class ModernShell:
 
     # Ein Eintrag bezeichnet einen bestehenden, wirklichen Reiter.
     PRIMARY = (
-        ("start", "Mein Mod-Projekt", "My mod project", "workflow_tab"),
+        ("start", "Projekt & Dateien", "Project & files", "workflow_tab"),
         ("menus", "Pixel & Layout", "Pixels & layout", "hud_menu_tab"),
         ("sandbox", "Spielvorschau", "Game preview", "sandbox_tab"),
-        ("diagnose", "Pr?fen & Fehler", "Checks & errors", "diagnose_tab"),
+        ("diagnose", "Prüfung & Fehler", "Checks & errors", "diagnose_tab"),
         ("targets", "Zielspiel & Mods", "Game target & mods", "target_tab"),
     )
     HINTS = {
-        "start": ("1 Quelle ? 2 Bearbeiten ? 3 Pr?fen ? 4 fertiges Mod-ZIP",
-                  "1 Source ? 2 Edit ? 3 Check ? 4 verified mod ZIP"),
+        "start": ("Dateien auswählen, bearbeiten und als geprüftes Mod-ZIP ausgeben.",
+                  "Choose files, edit and export a verified mod ZIP."),
         "menus": ("Das Bild-/Layoutwerkzeug nutzt dasselbe Mod-Projekt.",
                   "The image/layout editor uses the same mod project."),
         "sandbox": ("Spielvorschau separat pr?fen; keine native Abnahme simulieren.",
@@ -127,75 +127,101 @@ class ModernShell:
                                  style="Muted.TLabel")
 
     def _make_sidebar(self):
+        """Five clear destinations; tools and settings only when requested."""
         app = self.app
-        self.rail = ttk.Frame(app, style="Rail.TFrame", width=204)
+        self.rail = ttk.Frame(app, style="Rail.TFrame", width=194)
         self.rail.pack(before=app.notebook, side="left", fill="y",
-                       padx=(14, 7), pady=(0, 6))
+                       padx=(12, 6), pady=(0, 6))
         self.rail.pack_propagate(False)
         self.scroll = ScrollableColumn(self.rail, background=RAIL)
         self.scroll.pack(fill="both", expand=True)
         body = self.scroll.body
         body.configure(style="Rail.TFrame")
 
-        ttk.Label(body, text="BEREICHE", style="RailGroup.TLabel").pack(
-            anchor="w", padx=11, pady=(14, 8))
-        for key in ("start", "menus"):
-            self._button(body, key)
-
-        self._separator(body)
-        ttk.Label(body, text="PRÜFEN & AUSGEBEN",
+        ttk.Label(body, text="ARBEITSBEREICHE",
                   style="RailGroup.TLabel").pack(
-                      anchor="w", padx=11, pady=(7, 8))
-        for key in ("sandbox", "diagnose", "targets"):
+                  anchor="w", padx=11, pady=(12, 7))
+        for key in ("start", "menus", "sandbox", "diagnose", "targets"):
             self._button(body, key)
+        self._separator(body)
+        self.search_button = ttk.Button(
+            body, text="Suche (Strg+K)", style="Rail.TButton",
+            command=app.show_command_search)
+        self.search_button.pack(fill="x", padx=5, pady=(1, 3))
 
-        self._separator(body)
-        self.more_title = ttk.Label(body, text="WEITERE BEREICHE",
-                                    style="RailGroup.TLabel")
-        self.more_title.pack(anchor="w", padx=11, pady=(7, 6))
+        self.more_toggle = ttk.Button(body,
+            text="Weitere Werkzeuge ▸", style="Rail.TButton",
+            command=self._toggle_extra)
+        self.more_toggle.pack(fill="x", padx=5, pady=(2, 5))
+        self.more_panel = ttk.Frame(body, style="Rail.TFrame")
+        self.more_expanded = False
+        self.more_title = ttk.Label(
+            self.more_panel, text="WEITERE BEREICHE",
+            style="RailGroup.TLabel")
+        self.more_title.pack(anchor="w", padx=11, pady=(4, 5))
         self.extra_choice = tk.StringVar(master=body)
-        self.extra = ttk.Combobox(body, textvariable=self.extra_choice,
-                                  state="readonly")
-        self.extra.pack(fill="x", padx=9, pady=(0, 7))
+        self.extra = ttk.Combobox(
+            self.more_panel, textvariable=self.extra_choice, state="readonly")
+        self.extra.pack(fill="x", padx=9, pady=(0, 6))
         self.extra.bind("<<ComboboxSelected>>", self._open_more)
-        self.search_button = ttk.Button(body, text="Suche (Strg+K)",
-                        style="Rail.TButton", command=app.show_command_search)
-        self.search_button.pack(fill="x", padx=5, pady=2)
-        self.manual_button = ttk.Button(body, text="Anleitung öffnen",
-                        style="Rail.TButton", command=app.open_guide)
+        self.manual_button = ttk.Button(
+            self.more_panel, text="Anleitung öffnen",
+            style="Rail.TButton", command=app.open_guide)
         self.manual_button.pack(fill="x", padx=5, pady=2)
-        self.demo_button=ttk.Button(body,text="Interaktiver Demo-Modus",
-              style="Rail.TButton",command=self.open_demo)
-        self.demo_button.pack_forget()
-        self.native_preview_button=ttk.Button(
-              body,text="Noesis-Live-Pixel (Spiel)",
-              style="Rail.TButton",command=self.open_native_preview)
-        self.native_preview_button.pack_forget()
-        self.log_button=ttk.Button(body,text="Protokoll anzeigen",
-              style="Rail.TButton",command=self.toggle_log)
-        self.log_button.pack(fill="x",padx=5,pady=2)
-        self.tabs_button=ttk.Button(body,text="Alle Reiter",
-              style="Rail.TButton",command=app.toggle_tab_strip)
-        self.tabs_button.pack(fill="x",padx=5,pady=2)
-        self._separator(body)
-        self.language_label = ttk.Label(body, text="Sprache",
-                                        style="RailMuted.TLabel")
-        self.language_label.pack(anchor="w", padx=11, pady=(5, 1))
-        self.lang = ttk.Combobox(body, textvariable=app.language,
-                                  values=("DE", "EN"), state="readonly", width=7)
-        self.lang.pack(anchor="w", padx=11, pady=(0, 7))
+        self.demo_button = ttk.Button(
+            self.more_panel, text="Interaktiver Demo-Modus",
+            style="Rail.TButton", command=self.open_demo)
+        self.native_preview_button = ttk.Button(
+            self.more_panel, text="Noesis-Live-Pixel (Spiel)",
+            style="Rail.TButton", command=self.open_native_preview)
+        self.log_button = ttk.Button(
+            self.more_panel, text="Protokoll anzeigen",
+            style="Rail.TButton", command=self.toggle_log)
+        self.log_button.pack(fill="x", padx=5, pady=2)
+        self.tabs_button = ttk.Button(
+            self.more_panel, text="Alle Reiter",
+            style="Rail.TButton", command=app.toggle_tab_strip)
+        self.tabs_button.pack(fill="x", padx=5, pady=2)
+        self.advanced = ttk.Checkbutton(
+            self.more_panel, text="Erweiterte Werkzeuge",
+            variable=app.advanced, command=app.show_advanced)
+        self.advanced.pack(anchor="w", padx=9, pady=(8, 3))
+        self.strict = ttk.Checkbutton(
+            self.more_panel, text="Strenge Prüfung",
+            variable=app.strict, command=app._strict_changed)
+        self.strict.pack(anchor="w", padx=9, pady=(0, 8))
+
+        self.language_row = ttk.Frame(body, style="Rail.TFrame")
+        self.language_row.pack(fill="x", padx=10, pady=(3, 3))
+        self.language_label = ttk.Label(
+            self.language_row, text="Sprache", style="RailMuted.TLabel")
+        self.language_label.pack(side="left", padx=(0, 8))
+        self.lang = ttk.Combobox(
+            self.language_row, textvariable=app.language,
+            values=("DE", "EN"), state="readonly", width=5)
+        self.lang.pack(side="left")
         self.lang.bind("<<ComboboxSelected>>",
                        lambda _e: app.set_language(app.language.get().lower()))
-        self.advanced = ttk.Checkbutton(body, text="Erweiterte Werkzeuge",
-                   variable=app.advanced, command=app.show_advanced)
-        self.advanced.pack(anchor="w", padx=9, pady=(2, 4))
-        self.strict = ttk.Checkbutton(body, text="Strenge Prüfung",
-                    variable=app.strict, command=app._strict_changed)
-        self.strict.pack(anchor="w", padx=9, pady=(0, 9))
-        self.rail_hint=ttk.Label(body,text="",style="RailMuted.TLabel",
-                                 wraplength=174,justify="left")
-        self.rail_hint.pack(fill="x",padx=11,pady=(3,10))
+        self._separator(body)
+        self.rail_hint = ttk.Label(
+            body, text="", style="RailMuted.TLabel",
+            wraplength=165, justify="left")
+        self.rail_hint.pack(fill="x", padx=11, pady=(2, 8))
         self.scroll.bind_mousewheel()
+
+    def _toggle_extra(self):
+        self.more_expanded = not self.more_expanded
+        if self.more_expanded:
+            self.more_panel.pack(before=self.language_row, fill="x",
+                                 padx=0, pady=(0, 4))
+        else:
+            self.more_panel.pack_forget()
+        english = self.app.language.get().upper() == "EN"
+        self.more_toggle.configure(text=(
+            ("Tools & settings ▾" if english else "Werkzeuge & Einstellungen ▾")
+            if self.more_expanded else
+            ("Tools & settings ▸" if english else "Werkzeuge & Einstellungen ▸")
+        ))
 
     def _button(self, parent, key):
         entry = next(row for row in self.PRIMARY if row[0] == key)
@@ -239,7 +265,7 @@ class ModernShell:
     def _resize(self, event):
         if event.widget is not self.app:
             return
-        width = 174 if event.width < 1200 else 204
+        width = 166 if event.width < 1200 else 194
         if int(self.rail.cget("width")) != width:
             self.rail.configure(width=width)
         # Der alte, sehr lange Zusatztext darf die Knöpfe rechts oben nicht
@@ -283,6 +309,11 @@ class ModernShell:
                                         else "WEITERE BEREICHE"))
         self.search_button.configure(text="Search (Ctrl+K)" if english
                                      else "Suche (Strg+K)")
+        self.more_toggle.configure(text=(
+            ("Tools & settings ▾" if english else "Werkzeuge & Einstellungen ▾")
+            if self.more_expanded else
+            ("Tools & settings ▸" if english else "Werkzeuge & Einstellungen ▸")
+        ))
         self.manual_button.configure(text="Open guide" if english
                                      else "Anleitung öffnen")
         self.demo_button.configure(text="Interactive demos" if english

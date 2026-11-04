@@ -52,116 +52,8 @@ class UnifiedWorkflowTab(ttk.Frame):
         self.refresh()
 
     def _build(self):
-        head=ttk.Frame(self,padding=(15,12,15,5))
-        head.pack(fill="x")
-        ttk.Label(head,text="Mein Mod-Projekt",
-                  style="SectionTitle.TLabel").pack(anchor="w")
-        ttk.Label(head,text=TITLE,style="Description.TLabel").pack(anchor="w",pady=(3,5))
-        top=ttk.Frame(self,padding=(15,0,15,8));top.pack(fill="x")
-        ttk.Label(top,textvariable=self.project_text,
-                  font=("Segoe UI",10,"bold")).pack(side="left")
-        ttk.Button(top,text="Neues Projekt",command=self.create_project
-                   ).pack(side="right",padx=3)
-        ttk.Button(top,text="Projekt wechseln",command=self.choose_project
-                   ).pack(side="right",padx=3)
-        ttk.Button(top,text="Projekt sichern (ZIP)",command=self.backup_project
-                   ).pack(side="right",padx=3)
-        ttk.Button(top,text="Projekt-ZIP öffnen",command=self.restore_project
-                   ).pack(side="right",padx=3)
-        steps=ttk.Frame(self,padding=(15,0,15,9));steps.pack(fill="x")
-        for number,title in (
-            ("1","QUELLE WÄHLEN"),("2","BEARBEITEN"),
-            ("3","PRÜFEN"),("4","MOD-ZIP BAUEN")
-        ):
-            card=ttk.Frame(steps,borderwidth=1,relief="ridge",padding=7)
-            card.pack(side="left",fill="x",expand=True,padx=(0,4))
-            ttk.Label(card,text=number+"   "+title,
-                      font=("Segoe UI",9,"bold")).pack(anchor="center")
-
-        first=ttk.LabelFrame(self,text="1  Original oder eigene Grafik übernehmen",padding=9)
-        first.pack(fill="x",padx=15,pady=(0,8))
-        row=ttk.Frame(first);row.pack(fill="x")
-        self.source_button=ttk.Button(
-            row,text="Dateien hinzufügen …",command=self.add_sources)
-        self.source_button.pack(side="left",padx=(0,8))
-        ttk.Label(row,text="Ziel für PNG-Bilder:").pack(side="left")
-        self.category_box=ttk.Combobox(row,textvariable=self.category,
-                    values=tuple(hud.CATEGORIES),state="readonly",width=23)
-        self.category_box.pack(side="left",padx=5)
-        ttk.Button(row,text="Leeres Bild erstellen …",command=self.make_blank
-                   ).pack(side="left",padx=8)
-        self.source_label=ttk.Label(first,textvariable=self.source_text,
-                                  wraplength=1040)
-        self.source_label.pack(fill="x",pady=(7,0))
-
-        second=ttk.LabelFrame(self,text="2  Bearbeiten – alle Änderungen bleiben im selben Projekt",padding=9)
-        second.pack(fill="both",expand=True,padx=15,pady=(0,8))
-        main=ttk.Panedwindow(second,orient="horizontal")
-        main.pack(fill="both",expand=True)
-        left=ttk.Frame(main);right=ttk.Frame(main)
-        main.add(left,weight=5);main.add(right,weight=3)
-        self.tree=ttk.Treeview(left,columns=("typ","state"),show="tree headings",
-                               selectmode="browse",height=7)
-        self.tree.heading("#0",text="Arbeitsdatei")
-        self.tree.heading("typ",text="Art")
-        self.tree.heading("state",text="Stand")
-        self.tree.column("#0",width=250,minwidth=130)
-        self.tree.column("typ",width=136,minwidth=85)
-        self.tree.column("state",width=95,minwidth=70)
-        scrollbar=ttk.Scrollbar(left,orient="vertical",command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        self.tree.pack(side="left",fill="both",expand=True)
-        scrollbar.pack(side="right",fill="y")
-        self.tree.bind("<<TreeviewSelect>>",self._select)
-        self.tree.bind("<Double-1>",lambda _e:self.edit_selected())
-        self.preview=ttk.Label(right,text="Bildvorschau nach Auswahl",
-                               anchor="center",justify="center")
-        self.preview.pack(fill="both",expand=True,padx=8)
-        ttk.Button(right,text="Bild in Noesis-Menü einbinden",
-                   command=self.bind_selected_image).pack(fill="x",padx=8,pady=4)
-        ttk.Label(right,textvariable=self.selection_text,justify="left",
-                  wraplength=330).pack(fill="x",padx=8,pady=5)
-        actions=ttk.Frame(second);actions.pack(fill="x",pady=(8,0))
-        ttk.Button(actions,text="Ausgewählte Datei bearbeiten",
-                   command=self.edit_selected).pack(side="left",padx=(0,6))
-        ttk.Button(actions,text="HUD-Layout gestalten",
-                   command=self.open_layout).pack(side="left",padx=5)
-        ttk.Button(actions,text="Noesis-Menüseite gestalten",
-                   command=self.open_noesis).pack(side="left",padx=5)
-        ttk.Button(actions,text="Liste aktualisieren",
-                   command=self.refresh).pack(side="right")
-
-        third=ttk.LabelFrame(self,text="3  Geprüfte Arbeitsdateien",padding=8)
-        third.pack(fill="x",padx=15,pady=(0,8))
-        auditbar=ttk.Frame(third);auditbar.pack(fill="x")
-        ttk.Button(auditbar,text="Änderungen & XAML prüfen",
-                   command=self.check_project).pack(side="left",padx=(0,8))
-        ttk.Button(auditbar,text="Echte Noesis-Spielpixel anzeigen",
-                   command=self.open_native_preview).pack(side="left",padx=6)
-        ttk.Button(auditbar,text="Steam-Version prüfen",
-                   command=self.check_steam_compatibility).pack(side="left",padx=6)
-        ttk.Label(auditbar,textvariable=self.check_text,
-                  wraplength=650).pack(side="left",padx=9,fill="x",expand=True)
-
-        fourth=ttk.LabelFrame(self,text="4  Reproduzierbares Mod-Paket aus genau diesem Projekt",padding=8)
-        fourth.pack(fill="x",padx=15,pady=(0,8))
-        line=ttk.Frame(fourth);line.pack(fill="x")
-        ttk.Label(line,text="Mod-ID:").pack(side="left")
-        ttk.Entry(line,textvariable=self.guid,width=27).pack(side="left",padx=5)
-        ttk.Label(line,text="Paketname:").pack(side="left",padx=(10,0))
-        ttk.Entry(line,textvariable=self.mod_name,width=33).pack(
-            side="left",padx=5,fill="x",expand=True)
-        ttk.Button(line,text="Geprüftes Mod-ZIP bauen",
-                   command=self.build_package).pack(side="right",padx=(9,0))
-        result=ttk.Frame(fourth);result.pack(fill="x",pady=(6,0))
-        ttk.Label(result,textvariable=self.result_text,
-                  wraplength=950).pack(side="left",fill="x",expand=True)
-        ttk.Button(result,text="Ergebnisordner öffnen",
-                   command=self.open_result).pack(side="right",padx=5)
-        footer=ttk.Frame(self,padding=(15,1,15,7))
-        footer.pack(fill="x")
-        ttk.Label(footer,textvariable=self.message,wraplength=1090,
-                  style="Muted.TLabel").pack(side="left",fill="x",expand=True)
+        from suite_workflow_layout import build_workflow
+        build_workflow(self)
 
     def _set_message(self,text):
         self.message.set(text)
@@ -444,8 +336,10 @@ class UnifiedWorkflowTab(ttk.Frame):
                 self._select()
             else:
                 self._selected=None;self._photo=None
-                self.preview.configure(text="Noch kein Bild im Projekt",image="")
-                self.selection_text.set("Originale hinzufügen oder ein transparentes PNG erstellen.")
+                self.preview.configure(text="Bild wählen oder hinzufügen",image="")
+                self.empty_import_button.place(relx=.5,rely=.62,anchor="center")
+                self.selection_text.set("Noch keine Datei. Links Bild oder XAML hinzufügen.")
+                self.edit_button.configure(state="disabled")
             self.check_text.set(
                 str(len(self._assets))+" Arbeitsdatei(en) · "+
                 "Paketprüfung vor dem Export erforderlich")
@@ -462,6 +356,14 @@ class UnifiedWorkflowTab(ttk.Frame):
                         "Bitte erneut prüfen und exportieren.")
             else:
                 self.result_text.set("Noch kein geprüfter Export für dieses Projekt.")
+            if self._last_export is not None and self._last_export["project_current"]:
+                self.stage_text.set("✓ QUELLEN  →  ✓ BEARBEITEN  →  ✓ PRÜFEN  →  ✓ MOD-ZIP")
+            elif self._assets:
+                self.stage_text.set(
+                    str(len(self._assets))+" DATEI(EN)  →  BEARBEITEN  →  PRÜFEN  →  MOD-ZIP")
+            else:
+                self.stage_text.set(
+                    "QUELLEN HINZUFÜGEN  →  BEARBEITEN  →  PRÜFEN  →  MOD-ZIP")
         except (ValueError,OSError) as exc:
             self.check_text.set("Projekt kann nicht gelesen werden: "+str(exc))
             self._set_message("Prüfung der Arbeitsdateien fehlgeschlagen.")
@@ -492,21 +394,56 @@ class UnifiedWorkflowTab(ttk.Frame):
 
     def _select(self,_event=None):
         item=self.selected_asset()
-        if item is None:return
+        if item is None:
+            self._selected=None
+            self.selection_text.set("Keine Datei ausgewählt.")
+            self._photo=None
+            self.preview.configure(image="",text="Bild wählen oder hinzufügen")
+            self.empty_import_button.place(relx=.5,rely=.62,anchor="center")
+            self.edit_button.configure(state="disabled")
+            return
         self._selected=item.relative_path
+        self.empty_import_button.place_forget()
         self.selection_text.set(
-            item.relative_path+"\n"+item.status+"\n"+str(item.size)+" Bytes")
-        try:save_session(self.pipeline.project,asset=item.relative_path)
-        except (OSError,ValueError):pass
+            item.relative_path+"\n"+item.status+" · "+str(item.size)+" Bytes")
+        self.edit_button.configure(
+            state="normal" if item.path.suffix.lower() in
+            (".png",".xaml",".json",".txt") else "disabled")
+        try:
+            save_session(self.pipeline.project,asset=item.relative_path)
+        except (OSError,ValueError):
+            pass
+        self._render_selected_preview()
+
+    def _preview_resized(self,_event=None):
+        """Update zoom-to-fit without reopening the image at every pixel resize."""
+        if self._photo is None and self.selected_asset() is None:
+            return
+        previous=getattr(self,"_preview_job",None)
+        if previous is not None:
+            try:self.after_cancel(previous)
+            except tk.TclError:pass
+        self._preview_job=self.after(120,self._render_selected_preview)
+
+    def _render_selected_preview(self):
+        self._preview_job=None
+        item=self.selected_asset()
+        if item is None:
+            self._photo=None
+            self.preview.configure(image="",text="Bild wählen oder hinzufügen")
+            return
         if item.path.suffix.lower() not in (".png",".jpeg",".jpg",".webp"):
             self._photo=None
-            self.preview.configure(image="",text="Kein Pixelbild – passenden Editor öffnen")
+            self.preview.configure(image="",text="Text-/XAML-Datei – Bearbeiten öffnen")
             return
         try:
-            with Image.open(item.path) as img:
-                if img.width*img.height>30_000_000:raise ValueError("Bild zu groß")
-                bitmap=img.convert("RGBA")
-                bitmap.thumbnail((345,215),Image.Resampling.LANCZOS)
+            with Image.open(item.path) as image:
+                if image.width*image.height>30_000_000:
+                    raise ValueError("Bild zu groß")
+                bitmap=image.convert("RGBA")
+                width=max(160,self.preview.winfo_width()-30)
+                height=max(110,self.preview.winfo_height()-30)
+                bitmap.thumbnail((width,height),Image.Resampling.LANCZOS)
             self._photo=ImageTk.PhotoImage(bitmap,master=self.preview)
             self.preview.configure(image=self._photo,text="")
         except (OSError,ValueError) as exc:

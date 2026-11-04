@@ -500,3 +500,90 @@ def test_steam_version_check_is_read_only_and_uses_background_runner(
     monkeypatch.setattr(app, "run", lambda *_args: False)
     assert tab.check_steam_compatibility() is False
     assert tab.pipeline.project == previous
+
+
+
+
+def test_workbench_keeps_checks_export_and_project_actions_visible_on_small_screen(
+    app_and_tree,
+):
+    app, _, _ = app_and_tree
+    app.geometry("1020x680+30+30")
+    app.open_tab(app.workflow_tab)
+    app.update()
+    view = app.workflow_tab
+    right = app.winfo_rootx() + app.winfo_width()
+    bottom = app.winfo_rooty() + app.winfo_height()
+    for widget in (view.source_button, view.tree, view.preview,
+                   view.check_button, view.export_button, view.details_toggle):
+        assert widget.winfo_ismapped(), str(widget)
+        assert widget.winfo_rootx() + widget.winfo_width() <= right + 3
+        assert widget.winfo_rooty() + widget.winfo_height() <= bottom + 3
+    assert view.preview.winfo_height() >= 170
+    assert view.export_details.winfo_manager() == ""
+    view.details_toggle.invoke()
+    app.update()
+    assert view.export_details.winfo_manager() == "pack"
+    assert view.export_button.winfo_ismapped()
+    view.details_toggle.invoke()
+    assert view.export_details.winfo_manager() == ""
+    shell = app.modern_shell
+    assert shell.more_panel.winfo_manager() == ""
+    shell.more_toggle.invoke()
+    app.update()
+    assert shell.more_panel.winfo_manager() == "pack"
+    shell.more_toggle.invoke()
+    assert shell.more_panel.winfo_manager() == ""
+
+
+def test_workbench_preview_fits_available_space_without_resampling_to_tiny_card(
+    app_and_tree, tmp_path,
+):
+    from PIL import Image
+    app, _, _ = app_and_tree
+    app.geometry("1150x760+30+30")
+    image = tmp_path / "wide_preview.png"
+    Image.new("RGBA", (1200, 620), (60, 110, 164, 255)).save(image)
+    view = app.workflow_tab
+    stored = view.pipeline.import_image(image)
+    view.refresh()
+    view.select_asset(stored)
+    app.open_tab(view)
+    app.update()
+    view._render_selected_preview()
+    assert view._photo is not None
+    assert view._photo.width() >= 280
+    assert view._photo.height() >= 120
+    assert view._photo.width() <= view.preview.winfo_width()
+    assert view._photo.height() <= view.preview.winfo_height()
+
+
+def test_layout_designer_uses_real_canvas_fit_and_visible_property_inspector(
+    app_and_tree,
+):
+    from tkinter import ttk
+    app, _, _ = app_and_tree
+    editor = app.workflow_tab.open_layout()
+    assert editor is not None
+    try:
+        editor.geometry("1280x800+30+30")
+        app.update()
+        editor.update()
+        assert editor.canvas.winfo_width() >= 470
+        assert editor.canvas.winfo_height() >= 340
+        # Initial fit must use the mapped canvas, not the 150-px fallback
+        assert editor._first_fit_pending is False
+        assert editor._zoom_value() > 0.30
+        assert editor.layers.winfo_height() < 300
+        assert editor.more_button.winfo_ismapped()
+        action_labels=[]
+        remaining=[editor]
+        while remaining:
+            node=remaining.pop()
+            remaining.extend(node.winfo_children())
+            if isinstance(node,ttk.Button) and node.winfo_ismapped():
+                action_labels.append(node.cget("text"))
+        assert "Layout → PNG + Positionsdaten" in action_labels
+        assert "Asset-Mod-Paket bauen" in action_labels
+    finally:
+        editor.close_editor()

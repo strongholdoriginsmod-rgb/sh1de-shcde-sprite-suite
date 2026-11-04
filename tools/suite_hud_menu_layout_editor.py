@@ -79,6 +79,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self._image_tk = None
         self._render_pending = False
         self._render_job = None
+        self._first_fit_pending = True
         self._syncing_tree = False
         self._busy = False
         self._export_verified = False
@@ -112,7 +113,9 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self._refresh_layers()
         self._check_export_status()
         self._schedule_draw()
-        self._after_fit=self.after(120,self.fit)
+        # Initial zoom is chosen only after the real canvas receives geometry;
+        # a delayed fallback is safe when the editor was opened offscreen.
+        self._after_fit=self.after(450,self._initial_fit_fallback)
         self._after_lang=self.after(140,self._apply_initial_language)
         self._after_guidance=self.after(160,self._update_guidance)
         self.protocol("WM_DELETE_WINDOW",self.close_editor)
@@ -142,9 +145,11 @@ class HudMenuLayoutEditor(tk.Toplevel):
                   font=("Segoe UI",16,"bold")).pack(side="left")
         ttk.Button(intro,text="Hilfe",command=self.show_layout_help
                    ).pack(side="right",padx=3)
+        ttk.Button(intro,text="Spieloberfläche anbinden (Noesis)",
+                   command=self.bind_noesis).pack(side="right",padx=(0,5))
         ttk.Label(intro,text="Bilder platzieren · Ebenen bearbeiten",
                   ).pack(side="left",padx=14)
-        guide=ttk.Frame(self,padding=(10,7,10,7))
+        guide=ttk.Frame(self,padding=(10,2,10,3))
         guide.pack(fill="x")
         guide_copy=ttk.Frame(guide)
         self.next_button=ttk.Button(guide,text="PNG importieren",
@@ -153,9 +158,10 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.next_button.pack(side="right",padx=(10,0))
         guide_copy.pack(side="left",fill="x",expand=True)
         ttk.Label(guide_copy,textvariable=self.guide_heading,
-                  font=("Segoe UI",11,"bold")).pack(anchor="w")
+                  font=("Segoe UI",10,"bold")).pack(side="left")
         ttk.Label(guide_copy,textvariable=self.guide_detail,
-                  wraplength=460,justify="left").pack(anchor="w",pady=(1,0))
+                  wraplength=520,justify="left").pack(
+                      side="left",padx=(12,0),fill="x",expand=True)
         top=ttk.Frame(self,padding=(7,4,7,1))
         top.pack(fill="x")
         ttk.Label(top,text="Projekt:",font=("Segoe UI",10,"bold")).pack(side="left")
@@ -185,28 +191,25 @@ class HudMenuLayoutEditor(tk.Toplevel):
         ttk.Checkbutton(viewbar,text="Proportionen",
                         variable=self.proportional).pack(side="left",padx=5)
 
-        actions=ttk.Frame(self,padding=(7,1,7,4))
-        actions.pack(fill="x")
+        # Export commands stay in a single fixed bottom row. The canvas owns
+        # all remaining vertical space, including on 880x570 windows.
+        actions=ttk.Frame(self,padding=(8,5,8,5))
+        actions.pack(side="bottom",fill="x")
         first_row=ttk.Frame(actions)
         first_row.pack(fill="x")
-        second_row=ttk.Frame(actions)
-        second_row.pack(fill="x",pady=(3,0))
-        for parent,entries in (
-            (first_row,(
-                ("PNG importieren",self.import_external),
-                ("Bild einfügen",self.add_asset),
-                ("Original-Pixeleditor",self.open_pixel_editor),
-            )),
-            (second_row,(
-                ("Layout → PNG + Positionsdaten",self.export),
-                ("Spieloberfläche anbinden (Noesis)",self.bind_noesis),
-            )),
+        for label,callback in (
+            ("PNG importieren",self.import_external),
+            ("Bild einfügen",self.add_asset),
+            ("Layout → PNG + Positionsdaten",self.export),
+            ("Asset-Mod-Paket bauen",self.build_mod),
         ):
-            for label,callback in entries:
-                ttk.Button(parent,text=label,command=callback).pack(
-                    side="left",padx=2)
+            ttk.Button(first_row,text=label,command=callback).pack(
+                side="left",padx=(0,5))
+
         self.more_menu=tk.Menu(self,tearoff=False)
         for label,callback in (
+            ("Original-Pixeleditor",self.open_pixel_editor),
+            ("Spieloberfläche anbinden (Noesis)",self.bind_noesis),
             ("Kopieren",self.copy),
             ("Einfügen",self.paste),
             ("Duplizieren",self.duplicate),
@@ -220,16 +223,14 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.more_button=ttk.Menubutton(first_row,text="Weitere Aktionen ▾",
                                        direction="below",menu=self.more_menu)
         self.more_button.pack(side="left",padx=(8,0))
-        ttk.Label(second_row,
-                  text="Hinweis: Spielknöpfe bleiben separat.",
-                  ).pack(side="left",padx=(8,0))
 
         host=ttk.PanedWindow(self,orient="horizontal")
         host.pack(fill="both",expand=True,padx=8,pady=2)
         preview=ttk.Frame(host)
         self.inspector_scroll=ScrollableColumn(host,background="#1b222c")
-        host.add(preview,weight=5)
-        host.add(self.inspector_scroll,weight=2)
+        host.add(preview,weight=7)
+        host.add(self.inspector_scroll,weight=3)
+        self.editor_panes = host
         inspector=self.inspector_scroll.body
         preview.rowconfigure(0,weight=1);preview.columnconfigure(0,weight=1)
         self.canvas=tk.Canvas(
@@ -245,7 +246,7 @@ class HudMenuLayoutEditor(tk.Toplevel):
         self.canvas.bind("<B1-Motion>",self._move)
         self.canvas.bind("<ButtonRelease-1>",self._up)
         self.canvas.bind("<Double-1>",lambda _:self.open_pixel_editor())
-        self.canvas.bind("<Configure>",lambda _:self._schedule_draw())
+        self.canvas.bind("<Configure>",self._canvas_resized)
         self.canvas.bind("<Control-MouseWheel>",self._mouse_zoom)
         self.canvas.bind("<MouseWheel>",self._mouse_scroll)
         self.canvas.bind("<Button-3>",self._show_canvas_menu)
@@ -265,10 +266,11 @@ class HudMenuLayoutEditor(tk.Toplevel):
         ttk.Label(inspector,text="Ebenen (oben = vorne)",
                   font=("Segoe UI",10,"bold")).pack(anchor="w",padx=7,pady=(5,2))
         layers_frame=ttk.Frame(inspector)
-        layers_frame.pack(fill="both",expand=True,padx=4,pady=(0,6))
+        # A layer table must not swallow the entire properties inspector.
+        layers_frame.pack(fill="x",padx=4,pady=(0,6))
         self.layers=ttk.Treeview(
             layers_frame,columns=("visible","locked","source"),
-            show="tree headings",selectmode="extended",height=12)
+            show="tree headings",selectmode="extended",height=7)
         self.layers.heading("#0",text="Ebene")
         self.layers.column("#0",width=135,minwidth=75,stretch=True)
         for col,label,width in (("visible","Aug",35),("locked","Schl",35),
@@ -338,8 +340,8 @@ class HudMenuLayoutEditor(tk.Toplevel):
                   "Pfeile=1 px (Shift=10 px) · Strg+C/V/Z/Y/S",
                   wraplength=320,justify="left").pack(
             fill="x",padx=6,pady=5)
-        ttk.Label(self,textvariable=self.status,wraplength=1400,
-                  justify="left").pack(fill="x",padx=12,pady=7)
+        ttk.Label(self,textvariable=self.status,wraplength=1100,
+                  justify="left").pack(side="bottom",fill="x",padx=12,pady=3)
         self._sync_properties()
         # On smaller displays the full layer/transform inspector stays
         # scrollable instead of clipping lower controls out of the window.
@@ -630,6 +632,22 @@ class HudMenuLayoutEditor(tk.Toplevel):
     def zoom_step(self,delta):
         self.zoom.set(round(max(.05,min(3.,self._zoom_value()*(1.2 if delta>0 else 1/1.2))),3))
         self._schedule_draw()
+
+    def _initial_fit_fallback(self):
+        if self._first_fit_pending and self.canvas.winfo_width()>=300:
+            self._first_fit_pending=False
+            self.fit()
+
+    def _canvas_resized(self,_event=None):
+        # The old 120 ms startup timer sometimes ran before Tk geometry,
+        # fixing zoom at 150 px / 1280 px regardless of available space.
+        if (self._first_fit_pending and
+                self.canvas.winfo_width()>=300 and
+                self.canvas.winfo_height()>=200):
+            self._first_fit_pending=False
+            self.after_idle(self.fit)
+        else:
+            self._schedule_draw()
 
     def fit(self):
         width=max(150,self.canvas.winfo_width()-2*_CANVAS_MARGIN-10)

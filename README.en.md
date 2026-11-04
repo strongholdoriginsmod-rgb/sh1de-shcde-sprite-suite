@@ -4,6 +4,9 @@ Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusad
 
 ## Redesigned interface
 
+**Workflow-first revision, November 4, 2026:** Project files, a responsive preview and editing actions now share one workbench; validation and static mod-ZIP export stay visible at 1020 × 680. The layout editor has a larger canvas, more accessible layer properties and a reliable first-time fit. [Workflow and release limitations (German)](docs/SPRITESUITE_WORKFLOW_FIRST_UI_2026-11-04.md).
+
+
 SpriteSuite now opens with a persistent sidebar, direct task shortcuts
 and a simpler **HUD & menus** workflow: open an image, edit pixels,
 arrange the layout and prepare the export. Specialist tools, technical

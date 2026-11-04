@@ -1891,22 +1891,18 @@ class SandboxTab(ttk.Frame):
         self._starting = False
         self._pending_sprite = None
         self._console_hidden = False
+        # The embedded Qt editor already has its own palette/inspector bars.
+        # Avoid five duplicate Tk actions and another row of captions.
         header = ttk.Frame(self)
-        header.pack(fill="x", padx=6, pady=(3, 0))
-        ttk.Label(
-            header, text="Sandbox Studio",
-            style="Head.TLabel"
-        ).pack(side="left")
+        header.pack(fill="x", padx=7, pady=(3, 3))
+        ttk.Label(header, text="SPIELVORSCHAU",
+                  style="Head.TLabel").pack(side="left")
         self.caption = ttk.Label(
-            header, text="F4 Spielkarte · F2 Testfeld · F6 Palette · F9 Fokus",
-            style="Muted.TLabel"
-        )
-        self.caption.pack(side="left", padx=12)
-        # Five short, dependable actions fit a narrow notebook. Longer and
-        # less common workflows remain discoverable via the labelled menu,
-        # rather than silently falling off the right edge of a button strip.
-        bar = ttk.Frame(self)
-        bar.pack(fill="x", padx=6, pady=(0, 2))
+            header, text="Karte öffnen → bearbeiten  ·  F4 Spielkarte  ·  F9 Fokus",
+            style="Muted.TLabel")
+        self.caption.pack(side="left", padx=(12, 4))
+        bar = ttk.Frame(header)
+        bar.pack(side="right")
         self.quick_buttons = {}
         for title, callback in (
             ("Karte öffnen", self.choose_map),
@@ -1916,11 +1912,15 @@ class SandboxTab(ttk.Frame):
             ("Layout zurück", self.restore_layout),
         ):
             button = ttk.Button(bar, text=title, command=callback)
-            button.pack(side="left", padx=(0, 5))
             self.quick_buttons[title] = button
-        self.more_button = ttk.Menubutton(bar, text="Weitere Werkzeuge ▾")
+            if title in ("Karte öffnen", "Fokus"):
+                button.pack(side="left", padx=(0, 5))
+        self.more_button = ttk.Menubutton(bar, text="Werkzeuge ▾")
         actions = tk.Menu(self.more_button, tearoff=False)
         for title, callback in (
+            ("Palette anzeigen / ausblenden", self.toggle_palette),
+            ("Inspector anzeigen / ausblenden", self.toggle_inspector),
+            ("Layout zurücksetzen", self.restore_layout),
             ("Kartenordner wählen", self.choose_folder),
             ("Szene speichern", self.save_scene),
             ("Originalgrafik im Katalog", self.show_in_catalog),
@@ -1934,9 +1934,8 @@ class SandboxTab(ttk.Frame):
         self.message = tk.StringVar(
             value=LANG.tr("Beim ersten Öffnen wird der Karteneditor direkt in diesen Reiter geladen.")
         )
-        self.label = ttk.Label(
-            self, textvariable=self.message, style="Muted.TLabel"
-        )
+        self.label = ttk.Label(self, textvariable=self.message,
+                               style="Muted.TLabel")
         self.label.pack(anchor="w", padx=7, pady=(0, 3))
         self.host = tk.Frame(self, bg="#151c1b", bd=0, highlightthickness=0)
         self.host.pack(fill="both", expand=True, padx=4, pady=(0, 4))
@@ -2010,6 +2009,9 @@ class SandboxTab(ttk.Frame):
             "Integriert · F4 Spielkarte · Strg+E Sprite bearbeiten · "
             "Mausrad Zoom · mittlere Taste verschieben"
         ))
+        # The embedded Qt toolbar provides instructions; do not reserve
+        # a second full-width line once loading has succeeded.
+        self.label.pack_forget()
         if self._pending_sprite is not None:
             group, frame = self._pending_sprite
             self._pending_sprite = None

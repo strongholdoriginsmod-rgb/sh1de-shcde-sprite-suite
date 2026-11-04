@@ -4,6 +4,9 @@ Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Defini
 
 ## Neue Oberfläche
 
+**Workflow-Überarbeitung vom 4. November 2026:** Statt übereinander gestapelter Schrittkarten stehen jetzt Projektdateien, skalierende Vorschau und Bearbeiten nebeneinander. Prüfung und statischer Mod-ZIP-Export bleiben bei 1020 × 680 sichtbar. Der Layout-Designer nutzt die vergrößerte Zeichenfläche, zeigt Ebeneneigenschaften früher und passt den anfänglichen Zoom korrekt ein. [Bedienung und Grenzen](docs/SPRITESUITE_WORKFLOW_FIRST_UI_2026-11-04.md).
+
+
 Die SpriteSuite besitzt eine feste Seitennavigation, eine kürzere
 Startseite mit Direkteinstiegen und einen vereinfachten Bereich
 **HUD & Menüs**: Bild öffnen → Pixel bearbeiten → Layout gestalten →
