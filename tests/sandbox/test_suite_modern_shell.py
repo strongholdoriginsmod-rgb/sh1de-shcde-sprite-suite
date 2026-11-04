@@ -158,9 +158,9 @@ def test_project_archive_actions_are_visible_at_minimum_suite_width(ui):
         queue.extend(widget.winfo_children())
         if isinstance(widget,ttk.Button):
             label=widget.cget("text")
-            if label in ("Projekt sichern (ZIP)","Projekt-ZIP ?ffnen"):
+            if label in ("Projekt sichern (ZIP)","Projekt-ZIP öffnen"):
                 found[label]=widget
-    assert set(found)=={"Projekt sichern (ZIP)","Projekt-ZIP ?ffnen"}
+    assert set(found)=={"Projekt sichern (ZIP)","Projekt-ZIP öffnen"}
     right=app.winfo_rootx()+app.winfo_width()
     for button in found.values():
         assert button.winfo_ismapped()
