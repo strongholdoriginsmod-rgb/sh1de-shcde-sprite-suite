@@ -24,7 +24,8 @@ zuletzt gespeicherte Layout erneut. Der Zustandsvermerk bleibt unter
 
 | Variante | Inhalt | Wie |
 |---|---|---|
-| **Windows Portable (empfohlen)** | Suite und sämtliche Python-Laufzeitpakete direkt im ZIP; **keine Python-Installation nötig** | [Windows-Download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) → `SpriteSuite-Windows-Portable-Sichere-Projektsicherung-2026-10-30.zip` |
+| **Windows Portable 2.0.0 (lokaler Release-Kandidat)** | Suite mit Python-Laufzeit im ZIP; **keine Python-Installation nötig** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – noch keine öffentliche Stable-Freigabe; [Release- und Abnahmestand](docs/RELEASE_CANDIDATE_2026-11-04.md) |
+| **Frühere öffentlich angebotene Portable-Ausgabe** | Historischer Stand mit sicherer Projektsicherung | [Windows-Release vom 30. Oktober 2026](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) |
 | **Quellcode** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | `main` → *Code* → *Download ZIP* |
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 

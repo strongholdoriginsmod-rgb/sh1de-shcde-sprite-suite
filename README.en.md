@@ -38,7 +38,8 @@ first use, leaving the original untouched.
 
 | Variant | Contents | How |
 |---|---|---|
-| **Windows Portable (recommended)** | Suite with bundled Python runtime and required packages; **no Python installation needed** | [Windows download](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) → `SpriteSuite-Windows-Portable-Sichere-Projektsicherung-2026-10-30.zip` |
+| **Windows Portable 2.0.0 (local release candidate)** | Suite and bundled Python runtime; **no separate Python installation** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – not yet approved as a public stable release; [release review (German)](docs/RELEASE_CANDIDATE_2026-11-04.md) |
+| **Previously published portable release** | Historical safe-project-backup build | [Windows release from October 30, 2026](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) |
 | **Source ZIP** | full application code and tools, but **without** the Python runtime | branch `main` → *Code* → *Download ZIP* |
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 

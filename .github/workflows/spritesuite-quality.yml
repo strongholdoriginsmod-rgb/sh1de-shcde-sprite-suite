@@ -44,7 +44,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.13']
+        include:
+          - python-version: '3.13'
+            lock: requirements-py313-win_amd64.lock
+          - python-version: '3.14'
+            lock: requirements-py314-win_amd64.lock
     timeout-minutes: 30
     defaults:
       run:
@@ -58,11 +62,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
           cache: pip
-          cache-dependency-path: requirements-py313-win_amd64.lock
+          cache-dependency-path: ${{ matrix.lock }}
       - name: Install testing dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install "Pillow==12.3.0" "UnityPy==1.25.3" "pytest==8.4.2"
+          python -m pip install --require-hashes -r "${{ matrix.lock }}"
           python -m pip check
       - name: Compile source
         run: python -m compileall -q tools src
