@@ -35,13 +35,18 @@ def test_original_tool_is_byte_preserved(name):
         pytest.skip("Historical original not available")
     b=NEW/"tools"/name
     if name == "sandkasten.py":
-        # Historical Sandbox pixel math stays byte-identical. The only
-        # intentional changes bind two Tk PhotoImages to their live Canvas,
-        # avoiding destroyed process-global roots in multi-window sessions.
+        # Historical Sandbox pixel math stays byte-identical. Explicit
+        # GUI-only changes bind images to their Canvas and bootstrap the
+        # verified Tcl/Tk runtime before constructing a new Tk root.
         original = a.read_text("utf8")
         replacements = {
             "ImageTk.PhotoImage(shown)": "ImageTk.PhotoImage(shown, master=canvas)",
             "ImageTk.PhotoImage(image)": "ImageTk.PhotoImage(image, master=canvas)",
+            # This source-compatible wrapper selects the verified Tcl/Tk
+            # runtime before opening the legacy sandbox window.
+            "    import tkinter as tk\n\n    root = tk.Tk()":
+                "    from suite_tcl_runtime import create_tk_root\n\n"
+                "    root = create_tk_root(project=PROJECT_ROOT)",
         }
         for before, after in replacements.items():
             assert original.count(before) == 1

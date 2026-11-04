@@ -2,11 +2,12 @@
 
 Some portable Python installations intermittently fail to source init.tcl /
 tk.tcl directly from developer toolchain paths despite files being present.
-Load the shipped Tcl scripts from a verified, short, user-local cache instead
-of relying on cwd, PATH, registry lookups or system-wide installations.
+For Tcl/Tk 8.6, load the shipped scripts from a verified user-local cache.
+For Python 3.14 with native Tcl/Tk 9 zipfs, validate the official library
+archives and preserve the interpreter's native zipfs mounting.
 
 No game directories, system Python directories or global environment are
-modified. The cache is fully derived from the bundled Python's own tcl/.
+modified. The Tcl 8.6 cache is derived from bundled Python's own tcl/.
 """
 from __future__ import annotations
 
@@ -17,17 +18,66 @@ import os
 import shutil
 import sys
 import tempfile
+import re
+from zipfile import ZipFile, BadZipFile
 
 SENTINELS=("tcl8.6/init.tcl","tk8.6/tk.tcl",
            "tk8.6/ttk/ttk.tcl","tk8.6/ttk/panedwindow.tcl")
 CACHE_SCHEMA="sprite-suite.private-tcl-cache.v1"
+ZIPFS9_REQUIRED = {
+    "libtcl": ("tcl_library/init.tcl",),
+    "libtk": ("tk_library/tk.tcl", "tk_library/ttk/ttk.tcl",
+              "tk_library/ttk/panedwindow.tcl"),
+}
 
 
 class TclRuntimeError(RuntimeError):
     """The Tcl/Tk installation could not be prepared safely."""
 
 
+def _zipfs9_fingerprint(folder:Path)->dict[str,str]:
+    """Verify the real Python 3.14 Tcl/Tk 9 zipfs libraries, without unpacking.
+
+    Tcl 9 mounts its library ZIPs natively at //zipfs:/lib/... rather than
+    exposing an on-disk tcl9.0/init.tcl or tk9.0/tk.tcl tree.
+    """
+    if folder.is_symlink():
+        raise TclRuntimeError("Verknüpfte Tcl-9-Laufzeit ist nicht zugelassen")
+    result={}
+    for prefix,required in ZIPFS9_REQUIRED.items():
+        candidates=list(folder.glob(prefix+"9.0.*.zip"))
+        if len(candidates)!=1:
+            raise TclRuntimeError("Tcl-9-ZIP fehlt oder ist nicht eindeutig: "+prefix)
+        archive=candidates[0]
+        if (not re.fullmatch(prefix+r"9\.0\.[0-9]+\.zip",archive.name) or
+                archive.is_symlink() or not archive.is_file() or
+                not 1024<=archive.stat().st_size<=32*1024*1024):
+            raise TclRuntimeError("Tcl-9-ZIP ist ungültig: "+archive.name)
+        try:
+            with ZipFile(archive) as zipped:
+                infos=zipped.infolist()
+                if len(infos)>10000 or sum(x.file_size for x in infos)>128*1024*1024:
+                    raise TclRuntimeError("Tcl-9-ZIP überschreitet die Größenbegrenzung")
+                for info in infos:
+                    name=info.filename
+                    if (name.startswith("/") or "\\" in name or
+                            ".." in name.split("/") or info.file_size>4*1024*1024):
+                        raise TclRuntimeError("Unsicherer Tcl-9-ZIP-Eintrag")
+                for member in required:
+                    info=zipped.getinfo(member)
+                    if not 0<info.file_size<=1024*1024:
+                        raise TclRuntimeError("Tcl-9-Startdatei ungültig: "+member)
+                if zipped.testzip() is not None:
+                    raise TclRuntimeError("Tcl-9-ZIP-Prüfsumme ist ungültig")
+        except (BadZipFile,KeyError,OSError,ValueError) as exc:
+            raise TclRuntimeError("Tcl-9-ZIP fehlerhaft: "+archive.name) from exc
+        result[archive.name]=sha256(archive.read_bytes()).hexdigest()
+    return result
+
+
 def _fingerprint(folder:Path)->dict:
+    if not (folder/"tcl8.6").is_dir():
+        return _zipfs9_fingerprint(folder)
     result={}
     for name in SENTINELS:
         file=folder/name
@@ -41,19 +91,28 @@ def _fingerprint(folder:Path)->dict:
 
 
 def locate_bundled_tcl(project:Path,*,explicit:Path|None=None)->Path:
+    import tkinter as tk
+    native_zipfs9=(tk.TclVersion>=9 and tk.TkVersion>=9)
     if explicit is not None:
         candidates=[Path(explicit)]
     else:
         candidates=[project/"python"/"tcl",
                     Path(sys.base_prefix)/"tcl",
                     Path(sys.executable).resolve().parent/"tcl"]
+        if native_zipfs9:
+            # Only the interpreter's own zipfs archives are authoritative.
+            # A different project's ZIPs must not attest the running Tcl 9.
+            candidates=[candidates[1]]
         library=os.environ.get("TCL_LIBRARY")
         if library:
             candidates.append(Path(library).parent)
     for candidate in candidates:
         try:
             if candidate.is_dir():
-                _fingerprint(candidate)
+                fingerprints=_fingerprint(candidate)
+                bundled_zipfs9=any(k.startswith("libtcl9.0.") for k in fingerprints)
+                if explicit is None and bundled_zipfs9!=native_zipfs9:
+                    continue
                 return candidate.resolve(strict=True)
         except (OSError,TclRuntimeError):
             continue
@@ -80,15 +139,21 @@ def _user_cache_root(project:Path)->Path:
 
 def prepare_tcl_env(project:Path,*,source:Path|None=None,
                     cache_root:Path|None=None)->dict[str,str]:
-    """Return verified process-local TCL_LIBRARY and TK_LIBRARY locations.
+    """Return the verified process-local Tcl/Tk bootstrap contract.
 
-    First call creates one atomic, content-addressed user-local cache;
-    follow-up calls merely validate critical .tcl bytes. Concurrent
-    processes sharing a cache never modify an existing final directory.
+    Tcl/Tk 8.6 uses an atomic, content-addressed user-local script cache.
+    Tcl/Tk 9 keeps Python's built-in zipfs mounting after validating its
+    archives, without creating a second cache or overriding library paths.
     """
     root=Path(project).resolve()
     shipped=locate_bundled_tcl(root,explicit=source)
     fingerprints=_fingerprint(shipped)
+    if any(name.startswith("libtcl9.0.") for name in fingerprints):
+        # Tcl/Tk 9 is already backed by Python's native zipfs mounts.
+        # Setting TCL_LIBRARY to an ordinary on-disk folder would bypass
+        # those verified mounts and break a healthy 3.14 interpreter.
+        return {"SPRITESUITE_TCL_RUNTIME_SOURCE":"native-verified-zipfs9",
+                "SPRITESUITE_TCL_RUNTIME_ROOT":str(shipped)}
     identity=sha256(json.dumps(fingerprints,sort_keys=True).encode()).hexdigest()[:16]
     base=Path(cache_root) if cache_root is not None else _user_cache_root(root)
     target=base/("py-tcl-"+identity)
@@ -144,6 +209,20 @@ def prepare_tcl_env(project:Path,*,source:Path|None=None,
 def install_tcl_env(project:Path,*,source:Path|None=None,
                     cache_root:Path|None=None)->dict[str,str]:
     values=prepare_tcl_env(project,source=source,cache_root=cache_root)
+    import tkinter as tk
+    native_zipfs9=(tk.TclVersion>=9 and tk.TkVersion>=9)
+    verified_zipfs9=(values.get("SPRITESUITE_TCL_RUNTIME_SOURCE")==
+                     "native-verified-zipfs9")
+    if native_zipfs9!=verified_zipfs9:
+        raise TclRuntimeError("Tcl/Tk-Laufzeit passt nicht zur Python-Version")
+    if verified_zipfs9 and (Path(values["SPRITESUITE_TCL_RUNTIME_ROOT"]).resolve()
+            !=(Path(sys.base_prefix)/"tcl").resolve()):
+        raise TclRuntimeError("Tcl/Tk 9-Quelle ist nicht die native Python-Laufzeit")
+    if verified_zipfs9:
+        # Only this process's environment is touched, never the host or
+        # existing Tcl/Tk library archives; Tcl 9 uses native zipfs mounts.
+        os.environ.pop("TCL_LIBRARY",None)
+        os.environ.pop("TK_LIBRARY",None)
     os.environ.update(values)
     return values
 

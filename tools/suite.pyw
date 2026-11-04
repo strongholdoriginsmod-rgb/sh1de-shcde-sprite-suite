@@ -830,6 +830,8 @@ class HomeTab(ttk.Frame):
         ttk.Button(quick, text="Anleitung öffnen", command=self.open_manual).pack(side="left", padx=6)
         ttk.Button(quick, text="Diagnose exportieren",
                    command=self.export_diagnostics).pack(side="left", padx=6)
+        ttk.Button(quick, text="Steam-Version prüfen",
+                   command=self.check_steam_compatibility).pack(side="left", padx=6)
 
         ttk.Label(readiness, text="Projektbereitschaft", style="Head.TLabel").pack(anchor="w")
         self.readiness = ttk.Treeview(
@@ -898,6 +900,14 @@ class HomeTab(ttk.Frame):
             )
             target = fallback
         self.app.open_tab(target)
+
+    def check_steam_compatibility(self) -> None:
+        """Check the local Steam build in the worker; never modify games."""
+        return self.app.run(
+            [str(TOOLS / "suite_steam_compatibility.py"), "--project",
+             str(PROJECT_ROOT)],
+            "Steam-Spielversion und Sprite-Mapping sicher prüfen",
+        )
 
     def export_diagnostics(self) -> None:
         """Offer a private opt-in report; never transfer private game files."""

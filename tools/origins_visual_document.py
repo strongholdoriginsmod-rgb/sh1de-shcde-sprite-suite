@@ -476,8 +476,10 @@ class VisualXamlDocument:
         # Keep editable history outside the packaged mod root: the asset
         # builder rightly accepts only Override/, Patches/ and Locales/.
         import hud_menu_workspace as work
-        identity=_sha(root.relative_to(work.WORK.resolve()).as_posix().encode())[:16]
-        base=work.WORK.resolve()/".origins-visual-revisions"/identity/name
+        # Portable metadata belongs to the exact editable workspace.
+        # It is archived by hud_menu_project_transfer, never shipped with
+        # an in-game static Mod ZIP.
+        base=work._metadata_dir(root)/"origins-revisions"/name
         if is_link_or_reparse(base):
             raise WorkshopError("Linked revision history is not allowed")
         base.mkdir(parents=True,exist_ok=True)

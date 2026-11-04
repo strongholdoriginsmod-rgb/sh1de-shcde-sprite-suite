@@ -61,12 +61,15 @@ class HudMenuWorkshop(ttk.Frame):
     def _build(self):
         header=ttk.Frame(self)
         header.pack(fill="x",padx=12,pady=(9,2))
+        ttk.Button(header,text="← Zur Mod-Werkstatt",
+                   command=self.goto_project).pack(side="right",padx=5)
         ttk.Label(header,text="HUD & Menüs",style="SectionTitle.TLabel"
                   ).pack(anchor="w")
         ttk.Label(header,
                   text="Grafiken öffnen, bearbeiten und frei auf einer Fläche anordnen.",
                   style="Description.TLabel").pack(anchor="w",pady=(2,5))
         journey=ttk.Frame(self)
+        self.journey=journey
         journey.pack(fill="x",padx=12,pady=(3,8))
         for label,callback in (
             ("1  Bild öffnen",self.import_images),
@@ -79,6 +82,7 @@ class HudMenuWorkshop(ttk.Frame):
                        command=callback).pack(side="left",padx=(0,5))
 
         project_toggle_row=ttk.Frame(self)
+        self.project_actions_row=project_toggle_row
         project_toggle_row.pack(fill="x",padx=12,pady=(0,2))
         ttk.Button(project_toggle_row,text="Projekt aus ZIP öffnen …",
                    command=self.import_project_archive).pack(side="right",padx=(4,0))
@@ -250,11 +254,20 @@ class HudMenuWorkshop(ttk.Frame):
 
     def toggle_tools(self):
         """Zusätzliche Werkzeugleisten und den Rohbild-Paketbau aufklappen."""
+        integrated=hasattr(self.app,"workflow_tab")
         if self.tools_row.winfo_manager() == "pack":
             for widget in (self.actions_row,self.tools_row,self.pipeline):
                 widget.pack_forget()
+            if integrated:
+                self.journey.pack_forget()
+                self.project_actions_row.pack_forget()
             self.tools_toggle.configure(text="Weitere Grafikwerkzeuge anzeigen")
         else:
+            if integrated:
+                self.journey.pack(before=self.panes,fill="x",
+                                  padx=12,pady=(3,6))
+                self.project_actions_row.pack(before=self.panes,fill="x",
+                                  padx=12,pady=3)
             self.actions_row.pack(before=self.panes,fill="x",
                                   padx=12,pady=(1,4))
             self.tools_row.pack(before=self.panes,fill="x",
@@ -1011,6 +1024,9 @@ class HudMenuWorkshop(ttk.Frame):
             [str(TOOLS/"se_asset_package.py"),"--source",str(self._project()),
              "--guid",guid,"--name",name],
             "HUD-/Menü-Assetpaket erstellen")
+
+    def goto_project(self):
+        self.app.open_tab(getattr(self.app,"workflow_tab",self.app.tab_home))
 
     def goto_sh1(self):
         self.app.open_tab(self.app.hud_tab)

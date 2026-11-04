@@ -207,7 +207,16 @@ def _metadata_dir(root: Path) -> Path:
 def _baseline(root: Path, relative: str) -> tuple[Path, Path]:
     token = _sha(relative.encode("utf-8"))
     baseline_dir = _metadata_dir(root) / "import-baselines"
-    return baseline_dir / (token + ".png"), baseline_dir / (token + ".json")
+    # Use a stable, compact 128-bit filename on every machine, not only when
+    # the current installation path happens to be long. This preserves the
+    # same baseline filenames when an editable project ZIP is relocated.
+    # Keep existing 64-character filenames readable without modifying them.
+    legacy = (baseline_dir / (token + ".png"),
+              baseline_dir / (token + ".json"))
+    if any(path.exists() or _linked(path) for path in legacy):
+        return legacy
+    short = token[:32]
+    return baseline_dir / (short + ".png"), baseline_dir / (short + ".json")
 
 
 def _record_new(root: Path, relative: str, png: bytes, *, source: str) -> Path:
@@ -384,7 +393,9 @@ def restore_image(relative: str, *, project: Path | str = DEFAULT) -> Path:
     # Keep the user's edited file in a non-package backup folder.
     history = _metadata_dir(root) / "revisions"
     history.mkdir(parents=True, exist_ok=True)
-    revision = history / (_sha(relative.encode()) + "-" + _sha(before)[:16] + ".png")
+    # Compact stable IDs keep private revision history inside Windows MAX_PATH
+    # even when the Suite is installed under a nested user directory.
+    revision = history / (_sha(relative.encode())[:32] + "-" + _sha(before)[:16] + ".png")
     if not revision.exists():
         _write_new(revision, before)
     write_png(relative, data, project=root, expected_sha256=_sha(before))

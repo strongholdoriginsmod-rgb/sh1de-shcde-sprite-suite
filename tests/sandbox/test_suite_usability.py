@@ -121,8 +121,10 @@ def test_all_primary_workflows_reachable_at_real_window_sizes(app_fixture,window
         app.update()
         assert app.notebook.select()==str(tab)
         assert app.quick_section.get()
-        assert app.quick_picker.winfo_ismapped()
-        assert _inside(app.quick_picker,app)
+        # The former top picker duplicated the new sidebar. Its controller
+        # remains available for search/legacy operations, but is not a second UI.
+        assert not app.quick_picker.winfo_ismapped()
+        assert app.modern_shell.rail.winfo_ismapped()
 
     app.open_tab(app.catalog_tab)
     app.update()
@@ -178,7 +180,7 @@ def test_quick_navigation_auto_reveals_advanced_tabs_and_persists(app_fixture):
     app.update()
     assert app.advanced.get() is False
     # The guided landing page is now always visible and selected on startup.
-    assert app.notebook.select()==str(app.tab_home)
+    assert app.notebook.select()==str(app.workflow_tab)
     assert app.notebook.tab(app.tab_home,"state")=="normal"
     app.quick_section.set("Start & Anleitung")
     app._quick_navigation_selected()
@@ -651,7 +653,9 @@ def test_bc7_and_tool_catalog_preserve_access_to_bottom_fields(app_fixture):
     assert app.bc7_scroller.scrollbar.winfo_ismapped()
     app.bc7_scroller.canvas.yview_moveto(1)
     app.update()
-    assert app.bc7_scroller.canvas.yview()[0]>0
+    # Freed vertical room may make the entire form visible without scrolling.
+    # Both a scrolled or already fully visible form must reach the bottom.
+    assert app.bc7_scroller.canvas.yview()[1]==1.0
     assert _find_buttons(app.bc7_page,"Cacheordner öffnen")
     app.open_tab(app.catalog_page)
     app.update()
@@ -865,6 +869,8 @@ def test_guided_home_all_seven_routes_are_safe_navigation_only(app_fixture,monke
     app.geometry("1020x680+25+25")
     app.update()
     home=app.tab_home
+    app.open_tab(home)  # Legacy guide is explicitly reachable after new project landing.
+    app.update()  # Tk maps the re-selected hidden legacy tab on the next idle pass.
     assert app.notebook.select()==str(home)
     assert tuple(app.notebook.tabs())[0]==str(home)
     assert app.notebook.tab(home,"state")=="normal"

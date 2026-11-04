@@ -118,7 +118,8 @@ def test_original_layout_gui_can_edit_controls_and_package_mod(
         assert b"MeineFreiEinstellbareAktion" in first
         assert source.read_bytes()==before
         from origins_visual_document import VisualXamlDocument
-        roots=list((project.parent/".origins-visual-revisions").rglob(
+        import hud_menu_workspace as hud
+        roots=list((hud._metadata_dir(project)/"origins-revisions").rglob(
                     "rev-0001/edited.xaml"))
         assert len(roots)==1
         reloaded=VisualXamlDocument.reopen(roots[0].parent)

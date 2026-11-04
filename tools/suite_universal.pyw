@@ -2658,6 +2658,12 @@ class Universal(center.Center):
         self.origins_graphics_tab = OriginsGraphicsTab(self.notebook, self)
         self.hud_menu_tab = HudMenuWorkshop(self.notebook, self)
         self.target_tab = TargetTab(self.notebook, self)
+        from suite_unified_workflow import UnifiedWorkflowTab
+        self.workflow_tab = UnifiedWorkflowTab(self.notebook, self)
+        # The shared project page is the only normal workflow guide.
+        # Specialist backup and five-step controls remain under More.
+        self.hud_menu_tab.journey.pack_forget()
+        self.hud_menu_tab.project_actions_row.pack_forget()
         self.notebook.insert(1, self.catalog_tab, text="Asset-Katalog")
         self.notebook.insert(2, self.diagnose_tab, text="Diagnose & Reparatur")
         self.notebook.insert(3, self.sandbox_tab, text="Sandkasten")
@@ -2666,6 +2672,7 @@ class Universal(center.Center):
         self.notebook.insert(6, self.origins_graphics_tab, text="ORIGINS Grafiken")
         self.notebook.insert(7, self.hud_menu_tab, text="HUD & Menüs")
         self.notebook.insert(8, self.target_tab, text="Ziele & Mods")
+        self.notebook.insert(1, self.workflow_tab, text="Mein Mod-Projekt")
         ttk.Button(
             self.command_bar, text="HUD & Menüs",
             command=lambda: self.open_tab(self.hud_menu_tab)
@@ -2681,7 +2688,7 @@ class Universal(center.Center):
         self._build_quick_navigation()
         from suite_modern_shell import ModernShell
         self.modern_shell = ModernShell(self)
-        self.open_tab(self.tab_home)
+        self.open_tab(self.workflow_tab)
         self._command_search = None
         self.bind_all("<Control-k>", self._command_search_shortcut, add="+")
         self.bind_all("<Control-K>", self._command_search_shortcut, add="+")
@@ -2695,6 +2702,7 @@ class Universal(center.Center):
     def _build_quick_navigation(self):
         """One accessible route to every major tab, including legacy tabs."""
         self._navigation_entries = (
+            ("Mein Mod-Projekt", "My mod project", self.workflow_tab),
             ("Einrichten", "Setup", self.setup_page),
             ("Sprites bearbeiten", "Edit sprites", self.tab_art),
             ("Asset-Katalog", "Asset catalogue", self.catalog_tab),
@@ -2715,6 +2723,7 @@ class Universal(center.Center):
         )
         self._primary_tabs = {
             str(tab): names for tab, names in (
+                (self.workflow_tab, ("Projekt", "Project")),
                 (self.tab_home, ("Start", "Start")),
                 (self.setup_page, ("Einrichten", "Setup")),
                 (self.tab_art, ("Sprites", "Sprites")),
@@ -2895,6 +2904,8 @@ class Universal(center.Center):
         if not hasattr(self, "_navigation_entries"):
             return
         selected = self.notebook.select()
+        if hasattr(self,"workflow_tab") and selected == str(self.workflow_tab):
+            self.workflow_tab.on_activate()
         position = 1 if LANG.code == "en" else 0
         for row in self._navigation_entries:
             if str(row[2]) == selected:

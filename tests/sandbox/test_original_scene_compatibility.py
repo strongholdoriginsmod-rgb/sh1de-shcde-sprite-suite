@@ -61,7 +61,7 @@ def test_original_sandbox_scene_is_not_silently_flattened(name,tmp_path):
 def test_original_sandbox_source_file_is_preserved_except_live_canvas_ownership(
     old_and_current,
 ):
-    """Original renderer pixels stay unchanged; only Tk image-owner fixes differ."""
+    """Original renderer pixels stay unchanged; only Tk ownership/bootstrap differs."""
     source=ORIGINAL/"tools/sandkasten.py"
     expected=source.read_text("utf8")
     for before, after in (
@@ -69,6 +69,10 @@ def test_original_sandbox_source_file_is_preserved_except_live_canvas_ownership(
          "ImageTk.PhotoImage(shown, master=canvas)"),
         ("ImageTk.PhotoImage(image)",
          "ImageTk.PhotoImage(image, master=canvas)"),
+        # The CLI window entry point also uses the guarded Tk bootstrap.
+        ("    import tkinter as tk\n\n    root = tk.Tk()",
+         "    from suite_tcl_runtime import create_tk_root\n\n"
+         "    root = create_tk_root(project=PROJECT_ROOT)"),
     ):
         assert expected.count(before)==1
         expected=expected.replace(before,after)

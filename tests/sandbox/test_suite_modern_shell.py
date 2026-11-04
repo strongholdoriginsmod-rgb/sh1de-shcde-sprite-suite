@@ -41,12 +41,12 @@ def ui(tmp_path,monkeypatch):
 def test_default_has_visible_sidebar_and_preserves_actual_notebook(ui):
     mod,app=ui
     shell=app.modern_shell
-    assert app.notebook.select()==str(app.tab_home)
+    assert app.notebook.select()==str(app.workflow_tab)
     assert app.notebook.cget("style")=="Modern.TNotebook"
     assert shell.rail.winfo_ismapped()
     assert shell.buttons["menus"].winfo_ismapped()
-    assert app.quick_picker.winfo_ismapped()
-    assert len(shell.PRIMARY)==9
+    assert not app.quick_picker.winfo_ismapped()
+    assert len(shell.PRIMARY)==5
     assert len(app.notebook.tabs())>=16
     # Sidebar navigation never runs a build, modifies games or imports files.
     app.run=lambda *a,**kw:pytest.fail("Navigation started a tool")
@@ -81,13 +81,13 @@ def test_sidebar_language_and_advanced_controls_track_suite_state(ui):
     shell=app.modern_shell
     app.set_language("en")
     app.update()
-    assert shell.buttons["menus"].cget("text")=="HUD & menus"
+    assert shell.buttons["menus"].cget("text")=="Pixels & layout"
     assert app.hud_menu_tab.project_summary.get().startswith("Active project:")
     assert shell.search_button.cget("text")=="Search (Ctrl+K)"
     assert app.tab_home.quick_buttons["designer"][0].cget("text")=="Arrange layout"
     app.set_language("de")
     app.update()
-    assert shell.buttons["menus"].cget("text")=="HUD & Menüs"
+    assert shell.buttons["menus"].cget("text")=="Pixel & Layout"
     assert app.hud_menu_tab.project_summary.get().startswith("Aktives Projekt:")
     # Other GUI tests may have enabled advanced mode in this process.
     # Verify the control toggles the current state, not a global default.
@@ -147,24 +147,34 @@ def test_project_archive_actions_are_visible_at_minimum_suite_width(ui):
     from tkinter import ttk
     _module, app=ui
     app.geometry("1020x680+32+32")
-    app.open_tab(app.hud_menu_tab)
+    app.open_tab(app.workflow_tab)
     app.update()
-    root=app.hud_menu_tab
+    # The two essential backup/restore actions now belong to the one
+    # shared project page, instead of a second HUD-specific wizard.
     found={}
-    queue=[root]
+    queue=[app.workflow_tab]
     while queue:
         widget=queue.pop()
         queue.extend(widget.winfo_children())
         if isinstance(widget,ttk.Button):
             label=widget.cget("text")
-            if label.startswith(("Projekt sichern", "Projekt aus ZIP")):
+            if label in ("Projekt sichern (ZIP)","Projekt-ZIP ?ffnen"):
                 found[label]=widget
-    assert len(found)==2
+    assert set(found)=={"Projekt sichern (ZIP)","Projekt-ZIP ?ffnen"}
     right=app.winfo_rootx()+app.winfo_width()
     for button in found.values():
         assert button.winfo_ismapped()
         assert button.winfo_rootx()>=app.winfo_rootx()
         assert button.winfo_rootx()+button.winfo_width()<=right
+    view=app.hud_menu_tab
+    assert view.project_actions_row.winfo_manager()==""
+    assert view.journey.winfo_manager()==""
+    # The old project actions remain reachable under specialists.
+    view.tools_toggle.invoke()
+    assert view.project_actions_row.winfo_manager()=="pack"
+    assert view.journey.winfo_manager()=="pack"
+    view.tools_toggle.invoke()
+    assert view.project_actions_row.winfo_manager()==""
 
 
 def test_project_archive_actions_translate_to_english(ui):

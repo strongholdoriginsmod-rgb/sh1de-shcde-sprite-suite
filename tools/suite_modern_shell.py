@@ -25,35 +25,23 @@ class ModernShell:
 
     # Ein Eintrag bezeichnet einen bestehenden, wirklichen Reiter.
     PRIMARY = (
-        ("start", "Start", "Home", "tab_home"),
-        ("menus", "HUD & Menüs", "HUD & menus", "hud_menu_tab"),
-        ("sprites", "Sprites bearbeiten", "Edit sprites", "tab_art"),
-        ("hud", "SH1 HUD-Studio", "SH1 HUD Studio", "hud_tab"),
-        ("origins", "ORIGINS-Grafiken", "ORIGINS graphics", "origins_graphics_tab"),
+        ("start", "Mein Mod-Projekt", "My mod project", "workflow_tab"),
+        ("menus", "Pixel & Layout", "Pixels & layout", "hud_menu_tab"),
         ("sandbox", "Spielvorschau", "Game preview", "sandbox_tab"),
-        ("diagnose", "Prüfen", "Check", "diagnose_tab"),
-        ("build", "Paket erstellen", "Build package", "bc7_page"),
-        ("targets", "Ziele & Mods", "Targets & mods", "target_tab"),
+        ("diagnose", "Pr?fen & Fehler", "Checks & errors", "diagnose_tab"),
+        ("targets", "Zielspiel & Mods", "Game target & mods", "target_tab"),
     )
     HINTS = {
-        "start": ("Wähle eine Aufgabe. Die übrigen Werkzeuge bleiben erreichbar.",
-                  "Choose a task. Every specialist tool remains available."),
-        "menus": ("1 Bild wählen  ·  2 bearbeiten  ·  3 anordnen  ·  4 exportieren",
-                  "1 Choose image  ·  2 edit  ·  3 arrange  ·  4 export"),
-        "sprites": ("Sprites ansehen und bestehende Grafiken bearbeiten.",
-                    "Browse sprites and edit existing artwork."),
-        "hud": ("Stronghold-1-HUD-Bilder bearbeiten und prüfen.",
-                "Edit and inspect Stronghold 1 HUD artwork."),
-        "origins": ("Grafikdateien aus einer geprüften Quelle übernehmen.",
-                    "Import artwork from a verified graphics source."),
-        "sandbox": ("Die Spielansicht öffnen und Bearbeitungen prüfen.",
-                    "Open the game preview and inspect edits."),
-        "diagnose": ("Dateien und Konfiguration prüfen, bevor etwas gebaut wird.",
-                     "Check files and settings before building."),
-        "build": ("Pakete erstellen; Voraussetzungen werden vor dem Bau geprüft.",
-                  "Build packages; required inputs are checked first."),
-        "targets": ("Zielspiel auswählen und fertige Pakete verwalten.",
-                    "Choose a target game and manage finished packages."),
+        "start": ("1 Quelle ? 2 Bearbeiten ? 3 Pr?fen ? 4 fertiges Mod-ZIP",
+                  "1 Source ? 2 Edit ? 3 Check ? 4 verified mod ZIP"),
+        "menus": ("Das Bild-/Layoutwerkzeug nutzt dasselbe Mod-Projekt.",
+                  "The image/layout editor uses the same mod project."),
+        "sandbox": ("Spielvorschau separat pr?fen; keine native Abnahme simulieren.",
+                    "Inspect game preview separately; no fake native QA."),
+        "diagnose": ("Pr?fergebnisse ansehen; kein ungepr?ftes Erfolgssignal.",
+                     "Inspect checks; never pretend unverified success."),
+        "targets": ("Spielziel verwalten; Paketbau installiert nichts automatisch.",
+                    "Manage targets; building a ZIP never installs it."),
     }
 
     def __init__(self, app):
@@ -67,6 +55,8 @@ class ModernShell:
         # Suchfunktion und historische Schalter weiter funktionieren.
         # Die überflüssige Sonderwerkzeugleiste ist nicht mehr sichtbar.
         app.command_bar.pack_forget()
+        # The secondary top navigation duplicated the sidebar.
+        app.quick_picker.master.pack_forget()
         # Beide Funktionen sind in der linken Leiste weiterhin erreichbar.
         # So bleibt die obere Navigation auf schmalen Monitoren frei.
         app.tab_strip_toggle.pack_forget()
@@ -149,14 +139,14 @@ class ModernShell:
 
         ttk.Label(body, text="BEREICHE", style="RailGroup.TLabel").pack(
             anchor="w", padx=11, pady=(14, 8))
-        for key in ("start", "menus", "sprites", "hud", "origins"):
+        for key in ("start", "menus"):
             self._button(body, key)
 
         self._separator(body)
         ttk.Label(body, text="PRÜFEN & AUSGEBEN",
                   style="RailGroup.TLabel").pack(
                       anchor="w", padx=11, pady=(7, 8))
-        for key in ("sandbox", "diagnose", "build", "targets"):
+        for key in ("sandbox", "diagnose", "targets"):
             self._button(body, key)
 
         self._separator(body)
@@ -176,11 +166,11 @@ class ModernShell:
         self.manual_button.pack(fill="x", padx=5, pady=2)
         self.demo_button=ttk.Button(body,text="Interaktiver Demo-Modus",
               style="Rail.TButton",command=self.open_demo)
-        self.demo_button.pack(fill="x",padx=5,pady=2)
+        self.demo_button.pack_forget()
         self.native_preview_button=ttk.Button(
               body,text="Noesis-Live-Pixel (Spiel)",
               style="Rail.TButton",command=self.open_native_preview)
-        self.native_preview_button.pack(fill="x",padx=5,pady=2)
+        self.native_preview_button.pack_forget()
         self.log_button=ttk.Button(body,text="Protokoll anzeigen",
               style="Rail.TButton",command=self.toggle_log)
         self.log_button.pack(fill="x",padx=5,pady=2)
@@ -202,6 +192,9 @@ class ModernShell:
         self.strict = ttk.Checkbutton(body, text="Strenge Prüfung",
                     variable=app.strict, command=app._strict_changed)
         self.strict.pack(anchor="w", padx=9, pady=(0, 9))
+        self.rail_hint=ttk.Label(body,text="",style="RailMuted.TLabel",
+                                 wraplength=174,justify="left")
+        self.rail_hint.pack(fill="x",padx=11,pady=(3,10))
         self.scroll.bind_mousewheel()
 
     def _button(self, parent, key):
@@ -234,7 +227,9 @@ class ModernShell:
 
     def _open_more(self, _event=None):
         dest = self._more_labels.get(self.extra_choice.get())
-        if dest is not None:
+        if callable(dest):
+            dest()
+        elif dest is not None:
             self.app.open_tab(dest)
 
     def open(self, attribute):
@@ -272,10 +267,17 @@ class ModernShell:
         position = 2 if english else 1
         for key, de, en, _ in self.PRIMARY:
             self.buttons[key].configure(text=en if english else de)
+        main_tabs={str(getattr(self.app,attr))
+                   for _key,_de,_en,attr in self.PRIMARY}
         self._more_labels = {
             (en if english else de): tab
             for de, en, tab in self.app._navigation_entries
+            if str(tab) not in main_tabs
         }
+        self._more_labels["Interactive demos" if english else
+                          "Interaktiver Demo-Modus"]=self.open_demo
+        self._more_labels["Native game pixels" if english else
+                          "Native Noesis-Spielpixel"]=self.open_native_preview
         self.extra.configure(values=list(self._more_labels))
         self.more_title.configure(text=("MORE WORKSPACES" if english
                                         else "WEITERE BEREICHE"))
@@ -318,5 +320,7 @@ class ModernShell:
                         if not english else
                         "Specialist workspace open · Browse more areas on the left.")
             self.app._workspace_hint.configure(text=hint)
+            if hasattr(self,"rail_hint"):
+                self.rail_hint.configure(text=hint)
         finally:
             self._syncing = False

@@ -180,7 +180,8 @@ def test_reference_screenshot_is_kept_with_editable_revision_not_in_mod(gui,tmp_
     win.save()
     import json
     import se_asset_package as package
-    root=Path(project.parent)/".origins-visual-revisions"
+    import hud_menu_workspace as hud
+    root=hud._metadata_dir(project)/"origins-revisions"
     recorded=list(root.glob("**/rev-0001/reference.png"))
     assert len(recorded)==1
     with Image.open(recorded[0]) as saved:

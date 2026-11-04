@@ -17,7 +17,7 @@ from PIL import Image, ImageTk
 from origins_visual_document import (
     VisualXamlDocument, apply_existing_patch, PRES, XNS, WorkshopError,
 )
-from hud_menu_workspace import import_image
+from hud_menu_workspace import import_image,workspace
 
 CONTAINERS={"UserControl","Page","Window","Grid","Canvas","StackPanel",
             "DockPanel","WrapPanel","Border","Viewbox","ScrollViewer",
@@ -68,6 +68,7 @@ class OriginsVisualEditor(tk.Toplevel):
         self.project=Path(project)
         self.after_export=after_export
         self.doc:VisualXamlDocument|None=None
+        self._saved_document_bytes:bytes|None=None
         self.selected:tuple[int,...]=()
         self._rows={}
         self._boxes={}
@@ -96,6 +97,7 @@ class OriginsVisualEditor(tk.Toplevel):
         self.bind("<Control-y>",lambda e:self.redo())
         self.bind("<Control-s>",lambda e:self.save())
         self.bind("<Delete>",lambda e:self.delete_selected())
+        self.protocol("WM_DELETE_WINDOW",self.close_editor)
         if source is not None:self.open_source(Path(source))
 
     def _build(self):
@@ -304,6 +306,7 @@ class OriginsVisualEditor(tk.Toplevel):
     def open_source(self,path:Path):
         try:
             self.doc=VisualXamlDocument(path)
+            self._saved_document_bytes=self.doc.edited_bytes()
             self.selected=()
             self.scope.set("Gesamtes Dokument")
             self.reference_image_path=None
@@ -339,6 +342,7 @@ class OriginsVisualEditor(tk.Toplevel):
         if not location:return
         try:
             self.doc=VisualXamlDocument.reopen(Path(location))
+            self._saved_document_bytes=self.doc.edited_bytes()
             self.selected=()
             self.scope.set("Gesamtes Dokument")
             reference=Path(location)/"reference.png"
@@ -695,6 +699,37 @@ class OriginsVisualEditor(tk.Toplevel):
         else:
             self._run("Element verschoben",lambda:self._doc().move(path,dx,dy))
 
+    def bind_project_image(self,resource:Path)->str:
+        """Bind one already-authored project PNG to a selected Noesis Image.
+
+        The project PNG is NOT copied or renamed a second time; the XAML patch
+        and the static Mod ZIP contain one coherent resource reference.
+        """
+        root=workspace(self.project)
+        candidate=Path(resource)
+        if not candidate.is_file() or candidate.is_symlink():
+            raise WorkshopError("Projektgrafik fehlt oder ist verkn?pft")
+        resolved=candidate.resolve()
+        if not resolved.is_relative_to(root):
+            raise WorkshopError("Grafik liegt nicht im aktiven Projekt")
+        relative=resolved.relative_to(root).as_posix()
+        if (not relative.startswith("Override/Assets/GUI/Images/") or
+                resolved.suffix.lower()!=".png"):
+            raise WorkshopError(
+                "Noesis-Quellverkn?pfung ben?tigt ein PNG unter Assets/GUI/Images")
+        node=self._doc()._target(self.selected)
+        if node.tag.split("}")[-1]!="Image":
+            raise WorkshopError(
+                "Zuerst im Noesis-Ebenenbaum genau ein Image-Element ausw?hlen")
+        source="../Images/"+resolved.name
+        self._doc().edit(self.selected,"Source",source)
+        self.refresh_tree()
+        self.status.set(
+            "Projektgrafik eingebunden: "+relative+
+            " ? Revision speichern, danach Mod-ZIP erstellen. "
+            "Native Noesis-Aufl?sung im Spiel separat pr?fen.")
+        return source
+
     def import_selected_image(self):
         if self.doc is None:return
         source=filedialog.askopenfilename(parent=self,
@@ -725,8 +760,20 @@ class OriginsVisualEditor(tk.Toplevel):
         ttk.Button(window,text="Änderungen ins Dokument übernehmen",
                    command=accept).pack(pady=7)
 
+    def is_dirty(self)->bool:
+        return (self.doc is not None and self._saved_document_bytes is not None
+                and self.doc.edited_bytes()!=self._saved_document_bytes)
+
+    def close_editor(self):
+        if self.is_dirty() and not messagebox.askyesno(
+            "Nicht gespeicherte Noesis-Änderungen",
+            "Änderungen an der Menüseite verwerfen?",parent=self,default="no"):
+            return False
+        self.destroy()
+        return True
+
     def save(self):
-        if self.doc is None:return
+        if self.doc is None:return False
         try:
             data=self.doc.save_revision(self.project,
                     publish=True,overwrite_existing=True)
@@ -739,8 +786,12 @@ class OriginsVisualEditor(tk.Toplevel):
             self.status.set(
                 "Version "+str(data["revision"])+" gespeichert · Patch: "+
                 str(data["patch"])+" · externe Spiel-Handler nicht automatisch erzeugt.")
+            self._saved_document_bytes=self.doc.edited_bytes()
             if self.after_export:self.after_export()
-        except (OSError,ValueError) as exc:self._message("Patch / Revision speichern",exc)
+            return True
+        except (OSError,ValueError) as exc:
+            self._message("Patch / Revision speichern",exc)
+            return False
 
     def build_mod(self):
         if self.doc is None:return

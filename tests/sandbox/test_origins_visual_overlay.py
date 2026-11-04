@@ -93,7 +93,8 @@ def test_gui_import_old_patch_and_save_reference_outside_mod(layout,monkeypatch)
         gui.choose_reference()
         assert gui.reference_image_path==reference
         gui.save()
-        revision=list((project.parent/".origins-visual-revisions").rglob("reference.png"))
+        import hud_menu_workspace as hud
+        revision=list((hud._metadata_dir(project)/"origins-revisions").rglob("reference.png"))
         assert len(revision)==1
         assert revision[0].is_file()
         output=package.build(project,"overlaydemo",name="Origins Overlay",author="QA")
