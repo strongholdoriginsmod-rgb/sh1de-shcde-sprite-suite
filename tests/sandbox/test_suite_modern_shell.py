@@ -343,3 +343,20 @@ def test_legacy_exchange_bottom_tools_can_be_reached_by_section_picker(ui):
         assert widget.winfo_ismapped()
         assert widget.winfo_rooty()>=app.winfo_rooty()
         assert widget.winfo_rooty()+widget.winfo_height()<=bottom
+
+
+def test_header_switches_language_without_navigation_or_reloading_project(ui):
+    _mod,app=ui
+    original=app.workflow_tab.pipeline.project
+    app.set_language("en")
+    app.update()
+    assert app.title()=="SpriteSuite – Graphics and mod packages"
+    subtitle=[x for x in app.status_label.master.winfo_children()
+              if hasattr(x,"cget") and "text" in x.keys()
+              and x.cget("text")=="Graphics workshop for Stronghold"]
+    assert subtitle
+    app.set_language("de")
+    app.update()
+    assert app.title()=="SpriteSuite – Grafiken und Modpakete"
+    assert subtitle[0].cget("text")=="Grafikwerkstatt für Stronghold"
+    assert app.workflow_tab.pipeline.project==original

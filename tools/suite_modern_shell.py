@@ -293,6 +293,8 @@ class ModernShell:
 
     def refresh_language(self):
         english = getattr(self.app.language, "get", lambda:"DE")().upper()=="EN"
+        self.app.title("SpriteSuite – Graphics and mod packages" if english
+                       else "SpriteSuite – Grafiken und Modpakete")
         position = 2 if english else 1
         for key, de, en, _ in self.PRIMARY:
             self.buttons[key].configure(text=en if english else de)

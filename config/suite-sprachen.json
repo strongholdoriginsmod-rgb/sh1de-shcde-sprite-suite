@@ -2,6 +2,7 @@
   "schema": "stronghold-europe.suite-sprachen.v1",
   "hinweis": "Oberflaechentexte der Universal-Suite: deutscher Originaltext -> englische Fassung. Fehlt ein Eintrag, bleibt der deutsche Text stehen. Frei erweiterbar.",
   "en": {
+    "Grafikwerkstatt für Stronghold": "Graphics workshop for Stronghold",
     "Mehr ▾": "More ▾",
     "MEIN MOD-PROJEKT": "MY MOD PROJECT",
     "PROJEKTDATEIEN": "PROJECT FILES",
