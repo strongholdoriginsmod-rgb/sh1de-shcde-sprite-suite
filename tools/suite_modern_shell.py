@@ -150,7 +150,7 @@ class ModernShell:
         self.search_button.pack(fill="x", padx=5, pady=(1, 3))
 
         self.more_toggle = ttk.Button(body,
-            text="Weitere Werkzeuge ▸", style="Rail.TButton",
+            text="Werkzeuge ▸", style="Rail.TButton",
             command=self._toggle_extra)
         self.more_toggle.pack(fill="x", padx=5, pady=(2, 5))
         self.more_panel = ttk.Frame(body, style="Rail.TFrame")
@@ -205,7 +205,7 @@ class ModernShell:
         self._separator(body)
         self.rail_hint = ttk.Label(
             body, text="", style="RailMuted.TLabel",
-            wraplength=165, justify="left")
+            wraplength=135, justify="left")
         self.rail_hint.pack(fill="x", padx=11, pady=(2, 8))
         self.scroll.bind_mousewheel()
 
@@ -218,9 +218,9 @@ class ModernShell:
             self.more_panel.pack_forget()
         english = self.app.language.get().upper() == "EN"
         self.more_toggle.configure(text=(
-            ("Tools & settings ▾" if english else "Werkzeuge & Einstellungen ▾")
+            ("Tools ▾" if english else "Werkzeuge ▾")
             if self.more_expanded else
-            ("Tools & settings ▸" if english else "Werkzeuge & Einstellungen ▸")
+            ("Tools ▸" if english else "Werkzeuge ▸")
         ))
 
     def _button(self, parent, key):
@@ -310,9 +310,9 @@ class ModernShell:
         self.search_button.configure(text="Search (Ctrl+K)" if english
                                      else "Suche (Strg+K)")
         self.more_toggle.configure(text=(
-            ("Tools & settings ▾" if english else "Werkzeuge & Einstellungen ▾")
+            ("Tools ▾" if english else "Werkzeuge ▾")
             if self.more_expanded else
-            ("Tools & settings ▸" if english else "Werkzeuge & Einstellungen ▸")
+            ("Tools ▸" if english else "Werkzeuge ▸")
         ))
         self.manual_button.configure(text="Open guide" if english
                                      else "Anleitung öffnen")

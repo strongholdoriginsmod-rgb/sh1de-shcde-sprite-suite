@@ -29,3 +29,7 @@ Projektwechsel, unsichere Eingabepfade, ungespeicherte Editorfenster, Noesis-/As
 ## Bereitstellung
 
 Dieser Zweig wird getrennt vom bisherigen technischen Release-Kandidaten erstellt, damit sich die neue Bedienoberfläche auf dem Zielrechner beurteilen lässt. Eine erfolgreiche Python-/Tk-/Qt-/ZIP-Prüfung ist kein Ersatz für einen unabhängigen Test mit einem realen Bild- und Noesis-Projekt und einem zweiten Windows-Rechner.
+
+## Kompakter Seitentitel
+
+Die eingeklappte Werkzeuggruppe verwendet auch im kleinsten unterstützten Fenster die kurze Beschriftung »Werkzeuge«; längere Aktionsbeschreibungen werden in der Seitenleiste umgebrochen statt seitlich abgeschnitten.
