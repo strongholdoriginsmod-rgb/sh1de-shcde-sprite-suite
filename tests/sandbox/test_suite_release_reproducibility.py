@@ -20,7 +20,7 @@ def test_release_version_consistent_with_package_metadata():
     meta=tomllib.loads((ROOT/"pyproject.toml").read_text("utf8"))
     assert version==builder.VERSION==meta["project"]["version"]
     assert builder.OUT_NAME.startswith(f"SpriteSuite-Windows-Portable-v{version}-")
-    assert meta["project"]["requires-python"]==">=3.13,<3.15"
+    assert meta["project"]["requires-python"]==">=3.13,<3.16"
     assets=meta["project"]["optional-dependencies"]["assets"]
     assert any(row.startswith("numpy==") for row in assets)
     assert any(row.startswith("scipy==") for row in assets)

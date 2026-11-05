@@ -3,8 +3,9 @@
 Some portable Python installations intermittently fail to source init.tcl /
 tk.tcl directly from developer toolchain paths despite files being present.
 For Tcl/Tk 8.6, load the shipped scripts from a verified user-local cache.
-For Python 3.14 with native Tcl/Tk 9 zipfs, validate the official library
-archives and preserve the interpreter's native zipfs mounting.
+For Python 3.14+ with native Tcl/Tk 9 zipfs, validate the official library
+archives OR the official Python 3.15 Tcl/Tk DLL-embedded zipfs and keep the
+interpreter's native mounting. Never use another Python installation's Tcl.
 
 No game directories, system Python directories or global environment are
 modified. The Tcl 8.6 cache is derived from bundled Python's own tcl/.
@@ -75,8 +76,51 @@ def _zipfs9_fingerprint(folder:Path)->dict[str,str]:
     return result
 
 
+def _embedded_zipfs9_fingerprint(folder:Path)->dict[str,str]:
+    """Python 3.15 full Windows ZIP embeds Tcl/Tk 9 in signed binary DLLs.
+
+    Validate only the CURRENT interpreter's DLLs and confirm Tcl+Tk actually
+    mount the embedded startup scripts. An arbitrary external DLL folder may
+    never attest a different interpreter.
+    """
+    current=(Path(sys.base_prefix)/"DLLs").resolve(strict=False)
+    if (folder.is_symlink() or folder.resolve(strict=False)!=current
+            or not folder.is_dir()):
+        raise TclRuntimeError("Tcl-9 DLL-Ordner ist nicht die native Laufzeit")
+    required=("tcl90.dll","tcl9tk90.dll")
+    result={}
+    for name in required:
+        binary=folder/name
+        if (not binary.is_file() or binary.is_symlink()
+                or not 1000000<=binary.stat().st_size<=40*1024*1024):
+            raise TclRuntimeError("Tcl-9 DLL fehlt oder ist ungültig: "+name)
+        result["embedded_"+name]=sha256(binary.read_bytes()).hexdigest()
+    import tkinter as tk
+    if tk.TclVersion!=9.0 or tk.TkVersion!=9.0:
+        raise TclRuntimeError("Eingebettetes Tcl/Tk passt nicht zum Interpreter")
+    interpreter=tk.Tcl()
+    if (interpreter.eval("file exists {//zipfs:/lib/tcl/tcl_library/init.tcl}")
+            !="1"):
+        raise TclRuntimeError("Tcl-9 embedded init.tcl ist nicht gemountet")
+    # Confirm the real Tk library is usable, not merely an existing DLL.
+    window=None
+    try:
+        window=tk.Tk()
+        window.withdraw()
+        if (window.eval("file exists {//zipfs:/lib/tk/tk_library/tk.tcl}")!="1"):
+            raise TclRuntimeError("Tk-9 embedded tk.tcl ist nicht gemountet")
+    except tk.TclError as exc:
+        raise TclRuntimeError("Tk-9 embedded GUI nicht startbar") from exc
+    finally:
+        if window is not None:
+            window.destroy()
+    return result
+
+
 def _fingerprint(folder:Path)->dict:
     if not (folder/"tcl8.6").is_dir():
+        if folder.name.casefold()=="dlls":
+            return _embedded_zipfs9_fingerprint(folder)
         return _zipfs9_fingerprint(folder)
     result={}
     for name in SENTINELS:
@@ -100,9 +144,11 @@ def locate_bundled_tcl(project:Path,*,explicit:Path|None=None)->Path:
                     Path(sys.base_prefix)/"tcl",
                     Path(sys.executable).resolve().parent/"tcl"]
         if native_zipfs9:
-            # Only the interpreter's own zipfs archives are authoritative.
-            # A different project's ZIPs must not attest the running Tcl 9.
-            candidates=[candidates[1]]
+            # Tcl 9 may be shipped in separate Tcl ZIPs (3.14) or directly
+            # embedded into the interpreter's Tcl/Tk DLLs (3.15).
+            # Both MUST belong to sys.base_prefix, never another project.
+            candidates=[Path(sys.base_prefix)/"tcl",
+                        Path(sys.base_prefix)/"DLLs"]
         library=os.environ.get("TCL_LIBRARY")
         if library:
             candidates.append(Path(library).parent)
@@ -110,7 +156,9 @@ def locate_bundled_tcl(project:Path,*,explicit:Path|None=None)->Path:
         try:
             if candidate.is_dir():
                 fingerprints=_fingerprint(candidate)
-                bundled_zipfs9=any(k.startswith("libtcl9.0.") for k in fingerprints)
+                bundled_zipfs9=any(
+                    k.startswith("libtcl9.0.") or k=="embedded_tcl90.dll"
+                    for k in fingerprints)
                 if explicit is None and bundled_zipfs9!=native_zipfs9:
                     continue
                 return candidate.resolve(strict=True)
@@ -148,11 +196,14 @@ def prepare_tcl_env(project:Path,*,source:Path|None=None,
     root=Path(project).resolve()
     shipped=locate_bundled_tcl(root,explicit=source)
     fingerprints=_fingerprint(shipped)
-    if any(name.startswith("libtcl9.0.") for name in fingerprints):
-        # Tcl/Tk 9 is already backed by Python's native zipfs mounts.
-        # Setting TCL_LIBRARY to an ordinary on-disk folder would bypass
-        # those verified mounts and break a healthy 3.14 interpreter.
-        return {"SPRITESUITE_TCL_RUNTIME_SOURCE":"native-verified-zipfs9",
+    if any(name.startswith("libtcl9.0.") or
+           name=="embedded_tcl90.dll" for name in fingerprints):
+        # Tcl/Tk 9 is backed by the current Python's own ZIP or native DLL
+        # resources; do not override those mounts with a foreign folder.
+        is_embedded="embedded_tcl90.dll" in fingerprints
+        return {"SPRITESUITE_TCL_RUNTIME_SOURCE":(
+                    "native-verified-embedded-zipfs9" if is_embedded
+                    else "native-verified-zipfs9"),
                 "SPRITESUITE_TCL_RUNTIME_ROOT":str(shipped)}
     identity=sha256(json.dumps(fingerprints,sort_keys=True).encode()).hexdigest()[:16]
     base=Path(cache_root) if cache_root is not None else _user_cache_root(root)
@@ -211,13 +262,16 @@ def install_tcl_env(project:Path,*,source:Path|None=None,
     values=prepare_tcl_env(project,source=source,cache_root=cache_root)
     import tkinter as tk
     native_zipfs9=(tk.TclVersion>=9 and tk.TkVersion>=9)
-    verified_zipfs9=(values.get("SPRITESUITE_TCL_RUNTIME_SOURCE")==
-                     "native-verified-zipfs9")
+    mode=values.get("SPRITESUITE_TCL_RUNTIME_SOURCE")
+    verified_zipfs9=mode in ("native-verified-zipfs9",
+                             "native-verified-embedded-zipfs9")
     if native_zipfs9!=verified_zipfs9:
         raise TclRuntimeError("Tcl/Tk-Laufzeit passt nicht zur Python-Version")
-    if verified_zipfs9 and (Path(values["SPRITESUITE_TCL_RUNTIME_ROOT"]).resolve()
-            !=(Path(sys.base_prefix)/"tcl").resolve()):
-        raise TclRuntimeError("Tcl/Tk 9-Quelle ist nicht die native Python-Laufzeit")
+    if verified_zipfs9:
+        rel="DLLs" if mode=="native-verified-embedded-zipfs9" else "tcl"
+        expected=(Path(sys.base_prefix)/rel).resolve(strict=False)
+        if Path(values["SPRITESUITE_TCL_RUNTIME_ROOT"]).resolve()!=expected:
+            raise TclRuntimeError("Tcl/Tk 9-Quelle ist nicht die native Python-Laufzeit")
     if verified_zipfs9:
         # Only this process's environment is touched, never the host or
         # existing Tcl/Tk library archives; Tcl 9 uses native zipfs mounts.

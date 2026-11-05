@@ -2,6 +2,17 @@
 
 Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Statische HUD-/Sprite-Pakete entstehen **ohne feste SE-Version und ohne eigene C#-DLL**; für optionale C#-Plugins gelten getrennte ABI-Schutzprüfungen. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
+## Aktuelle Python-/Spiele-Kompatibilität (05.11.2026)
+
+Die neue [Python-3.15-/Spielstruktur-Kompatibilitätsmatrix](docs/SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)
+unterscheidet **Quellunterstützung (3.13–3.15)**, die wirklich startende Tcl/Qt-Umgebung,
+nachinstallierbare Python-3.15-Quellbuilds und noch ungeprüfte native Spiel-ABI.
+Unter **Werkzeuge → Kompatibilität prüfen → Spielstruktur prüfen** kann ein
+ausgewählter Game-/SE-Ordner ohne Installation gelesen werden. Neue Versionen
+werden nicht pauschal ausgeschlossen, aber ohne echten Ingame-Beleg auch nicht
+als native Plugin-Freigabe behauptet. Die bisherige Python-3.13-Portable-Ausgabe
+bleibt vorerst die auslieferbare lokale Referenz.
+
 ## Interaktive Anleitung und bebildertes Handbuch (04.11.2026)
 
 **Sofort erreichbar:** Links **Anleitung (Strg+F1)** anklicken, Lernpfad auswählen, mit **Zurück / Weiter** durch echte Bedienelemente gehen. Ein markierter Befehl wird dadurch **nicht automatisch ausgeführt**. Der Lernfortschritt bleibt nutzerlokal; alle Projektdateien und Spielinstallationen bleiben unverändert.

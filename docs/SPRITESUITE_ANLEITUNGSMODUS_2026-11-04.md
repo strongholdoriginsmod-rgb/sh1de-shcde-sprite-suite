@@ -43,6 +43,16 @@ Kommandozeile für Entwickler/QA:
 
 Die Qt-Prüfung startet einen Offscreen-Unterprozess und die Steam-Prüfung liest ausschließlich lokale Metadaten. Es werden keine Abhängigkeiten heruntergeladen oder automatisch installiert.
 
+## Python 3.15 und neue Spielversionen
+
+Eine ergänzende [aktuelle Kompatibilitätsmatrix](SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)
+dokumentiert CPython 3.13, 3.14 und 3.15 sowie die echten
+Script-Extender-/Noesis-Quellstrukturen. Versionen werden beim *Lesen*
+nicht mehr anhand alter Freigabelisten ausgeschlossen; für native Hooks
+und Installationen bleibt eine gültige, konkret getestete ABI erforderlich.
+Die kompatible Tcl/Tk-9-Laufzeit kann unter Python 3.15 in den Laufzeit-DLLs
+eingebettet sein, statt aus einzelnen ZIP-Dateien zu bestehen.
+
 ## Bei Problemen
 
 - Die Windows-Portable-ZIP **vollständig in einen kurzen Ordner** wie `C:/SpriteSuite` oder `E:/SS` entpacken. Eine gezielte Belastungsprobe schlug bei einem vollständigen Qt-Dateipfad von 260 Zeichen fehl, während die Entpackung in `E:/SS QA äöü 20261104` erfolgreich war. Tief verschachtelte Downloads- oder Archivordner vermeiden. Danach `SpriteSuite\Suite starten.cmd` starten.

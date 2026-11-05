@@ -1,0 +1,59 @@
+# CPython 3.15.2 / Windows x64 - LOCAL EXPERIMENTAL HASHED WHEEL LOCK
+# Frozen from QA wheelhouse. NO public stable or independent PC attestation.
+# UnityPy 1.25.4 and lz4 4.4.5 are locally SOURCE-BUILT CPython 3.15 wheels.
+# Reinstall offline with: pip install --no-index --find-links <wheelhouse> --require-hashes -r this-file
+# Never use this file under CPython 3.13/3.14; each interpreter has a separate lock.
+archspec==0.2.7 \
+    --hash=sha256:b6d97c2d840d8538d3f63b70c7c45ace2d26b3d9591d7c93d5fb33e50b1bc592
+astc-encoder-py==0.1.12 \
+    --hash=sha256:a45d375fc6b0ff2cd3d772aab3eef19a6b7f3e067306e11fab37820ea9576121
+attrs==26.1.0 \
+    --hash=sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309
+brotli==1.2.1 \
+    --hash=sha256:09a2f112a638aca15a88f298571788795fc45d62f2bca7f3870c1152153ef399
+colorama==0.4.6 \
+    --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
+etcpak==0.9.15 \
+    --hash=sha256:669d902eeb774bc6d4df226183c09c3d03c9fc0f47b4c0c20030fc2b39eec2f2
+fmod_toolkit==0.1.3 \
+    --hash=sha256:a56432c291d0cfbf9e88dcb94e144bc9f244672590871398f8e1891d5d6f3c2e
+fsspec==2026.9.0 \
+    --hash=sha256:8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f
+iniconfig==2.3.1 \
+    --hash=sha256:9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7
+lz4==4.4.5 \
+    --hash=sha256:bfced1673ed4c817323240c703c278bffd5ecafc163d499e1da0aac1ef7f3278
+numpy==2.5.4 \
+    --hash=sha256:332f3378fe077dd850e677ec01bdcc4f22368fb5d50ef10b2c79230b1bf5a592
+packaging==26.3 \
+    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+pillow==13.0.0 \
+    --hash=sha256:d4737f50d23ddd11d6685faacbb9252887dde0bc7997127757247983d74399d6
+pluggy==1.7.0 \
+    --hash=sha256:7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec
+pyfmodex==0.7.2 \
+    --hash=sha256:1c42112b788e80ee7b4b57ae25bbbc0a98eb1e32a8e7c9e1246698cdf72efa9d
+Pygments==2.21.0 \
+    --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9
+PySide6==6.12.0 \
+    --hash=sha256:31a8d2893f2f28ab483b1534dde0438f27af6e234593de30425cb4729052d8f8
+PySide6_Addons==6.12.0 \
+    --hash=sha256:98d8d62010da6605344cee83e5c96fb846170a1f2d924523f10f5d92078b02b0
+PySide6_Essentials==6.12.0 \
+    --hash=sha256:c9a95102aa23c1f86516a30d5a9be37552d324eee7e567eb7508973f1218cb42
+PySide6_Pdf==6.12.0.140 \
+    --hash=sha256:4971ba1a0ca15e7c29cfd808e9600aeb46b2305dad01456eb09fa3197166268e
+PySide6_WebEngine==6.12.0.140 \
+    --hash=sha256:f9b61b1d457a591ee590a6b80515f25a3e61e2576a2a0a70566380f9d9de4ab0
+pytest==9.2.0 \
+    --hash=sha256:07acdcf88ec174f907dc01af70bf52d49b014bbab03faeeade31c96b18c2e588
+scipy==1.18.1 \
+    --hash=sha256:92c14f5bdbfb6216315ce33e78080474082de8b3830122ba97809bfbe65f75c0
+shiboken6==6.12.0 \
+    --hash=sha256:a1906cb8116869178c64b6bab52623bbc8b4ceed7b30bfc3c9aa0f6e67f6438e
+texture2ddecoder==1.0.6 \
+    --hash=sha256:1bad8209d9dfbfc7daf13ea2e545236ea2bbc1e423b2992b6e7563909975a47b
+tpk_ar==0.2.4 \
+    --hash=sha256:0fdc24f21cd18f90086cb7a811aabfba56e9d00c39adc309c6935ec5e8b6363b
+UnityPy==1.25.4 \
+    --hash=sha256:e6d4ae38ddddb6d6790f975ba605e119817f50f42d0d0e9a89e83c3021cd1195

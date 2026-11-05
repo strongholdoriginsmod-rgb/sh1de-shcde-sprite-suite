@@ -45,7 +45,7 @@ def fix_venv() -> None:
     lines = [
         f"home = {PYTHON_HOME}",
         "include-system-site-packages = false",
-        "version = 3.13.15",
+        f"version = {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         f"executable = {PYTHON_HOME / 'python.exe'}",
         f"command = {PYTHON_HOME / 'python.exe'} -m venv {VENV}",
     ]
@@ -105,7 +105,7 @@ def portable_self_test() -> int:
         "import os, sys, tkinter, PIL, UnityPy, PySide6; "
         "from stronghold_europe_de.sdk_toolchain import find_dotnet_sdk; "
         "from PySide6.QtWidgets import QApplication; "
-        "assert sys.version_info[:2] == (3, 13); "
+        f"assert sys.version_info[:2] == {tuple(sys.version_info[:2])!r}; "
         "from suite_tcl_runtime import create_tk_root; "
         "tk=create_tk_root(); tk.withdraw(); tk.destroy(); "
         "os.environ['QT_QPA_PLATFORM']='offscreen'; "
@@ -118,7 +118,10 @@ def portable_self_test() -> int:
     )
     from suite_tcl_runtime import prepare_tcl_env, TclRuntimeError
     try:
-        prepared=prepare_tcl_env(PROJECT,source=PYTHON_HOME/"tcl")
+        # Python 3.15 embeds Tcl/Tk 9 zipfs resources in its DLLs rather
+        # than shipping a separate python/tcl directory.
+        source=(PYTHON_HOME/"tcl" if (PYTHON_HOME/"tcl").is_dir() else None)
+        prepared=prepare_tcl_env(PROJECT,source=source)
     except (OSError,TclRuntimeError) as exc:
         print("PORTABLE_TCL_ERROR:", exc, file=sys.stderr)
         return 4

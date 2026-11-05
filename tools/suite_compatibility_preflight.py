@@ -18,6 +18,9 @@ import subprocess
 import sys
 
 ROOT=Path(__file__).resolve().parents[1]
+# Python 3.15 is supported at *source/API* level. The redistributable
+# Windows-x64 CPython 3.13 runtime remains the production-tested target.
+SOURCE_MINOR=(13,14,15)
 LOCK_PATTERN=re.compile(r"(?m)^([a-zA-Z][a-zA-Z0-9._-]*)==([0-9][a-zA-Z0-9._-]*)")
 
 
@@ -30,10 +33,14 @@ def _result(name,status,detail,de="",en=""):
 def _dependencies(root:Path,py_minor:int):
     lock=root/f"requirements-py3{py_minor}-win_amd64.lock"
     if not lock.is_file():
-        return _result("Python dependencies","limited",
-                       "No matching lock file: "+lock.name,
-                       "Nur die offiziell freigegebenen Python-Lockdateien verwenden.",
-                       "Use the officially supported Python lockfiles.")
+        suffix=("Source-level Python 3.15 is supported, but no audited "
+                "Windows-x64 dependency wheel lock exists yet"
+                if py_minor==15 else "No matching lock file: "+lock.name)
+        return _result("Python dependencies","limited",suffix,
+             "Kein ungeprüftes Paket als vollständig kompatibel freigeben. "
+             "Benötigte Wheels und Tcl/Qt unter der Zielversion getrennt prüfen.",
+             "Do not certify unverified packages. Validate wheels and Tcl/Qt "
+             "against this Python version separately.")
     try:
         pins=LOCK_PATTERN.findall(lock.read_text("utf-8"))
         if not pins:raise ValueError("Lock file has no version pins")
@@ -82,7 +89,16 @@ def _tcl(root:Path):
             return _result("Tcl/Tk","limited","Tcl/Tk scripts not found",
                 "Den Portable-Ordner vollständig entpacken.",
                 "Fully extract the portable directory.")
-        # Python 3.14 Tcl/Tk 9 zipfs builds are validated by their launcher.
+        # Tcl 9 can use separate ZIP libraries (3.14) or DLL-embedded
+        # ZIPFS (3.15). A damaged bundled Python must never be certified
+        # using the examiner PC\u0027s unrelated system interpreter.
+        bundled=root/"python"
+        if bundled.exists() or bundled.is_symlink():
+            if bundled.resolve(strict=False)!=Path(sys.base_prefix).resolve(strict=False):
+                return _result("Tcl/Tk","limited",
+                    "Bundled Python Tcl/Tk not running under the inspected interpreter",
+                    "Mitgeliefertes Python statt System-Python verwenden.",
+                    "Use the bundled Python interpreter, not a system Python.")
         from suite_tcl_runtime import locate_bundled_tcl
         path=locate_bundled_tcl(root)
         return _result("Tcl/Tk","ready","Tcl/Tk 9 zipfs: "+str(path))
@@ -156,7 +172,13 @@ def _dotnet():
         return _result(".NET SDK (optional)","limited",str(exc))
 
 
-def collect(root:Path=ROOT,*,check_steam:bool=False) -> dict:
+def supports_source_python(major:int,minor:int,*,cpython:bool=True,bits:int=64)->bool:
+    """Version policy only; wheel/runtime tests are required separately."""
+    return bool(cpython and major==3 and minor in SOURCE_MINOR and bits==64)
+
+
+def collect(root:Path=ROOT,*,check_steam:bool=False,
+            game_root:Path|None=None) -> dict:
     root=Path(root)
     bits=struct.calcsize("P")*8
     windows=sys.platform=="win32"
@@ -164,7 +186,8 @@ def collect(root:Path=ROOT,*,check_steam:bool=False) -> dict:
     minor=sys.version_info.minor
     machine=platform.machine().lower()
     host_x64=windows and bits==64 and machine in ("amd64","x86_64")
-    pyok=cpython and sys.version_info.major==3 and minor in (13,14) and bits==64
+    pyok=supports_source_python(
+        sys.version_info.major,minor,cpython=cpython,bits=bits)
     entries=[
        _result("Windows x64 host","ready" if host_x64 else "blocked",
                platform.system()+" / "+platform.machine()+f" / {bits}-bit",
@@ -172,8 +195,10 @@ def collect(root:Path=ROOT,*,check_steam:bool=False) -> dict:
                "SpriteSuite Portable targets Windows x64."),
        _result("Python runtime","ready" if pyok else "blocked",
                f"{platform.python_implementation()} {sys.version.split()[0]} / {bits}-bit",
-               "CPython 3.13/3.14 x64 und die jeweilige Lockdatei verwenden.",
-               "Use CPython 3.13/3.14 x64 with its matching lockfile."),
+               "CPython 3.13–3.15 x64 wird auf Quellcodeebene berücksichtigt. "
+               "Nur eine passend geprüfte Tcl/Qt-/Wheel-Umgebung gilt als einsatzbereit.",
+               "CPython 3.13–3.15 x64 has source-level support. A matching "
+               "tested Tcl/Qt/wheel environment is required for readiness."),
        _tcl(root),
        _dependencies(root,minor),
        _qt(),
@@ -200,6 +225,28 @@ def collect(root:Path=ROOT,*,check_steam:bool=False) -> dict:
         except (OSError,ValueError,ImportError) as exc:
             entries.append(_result("Local Steam discovery","limited",
                                    f"Read-only discovery error: {exc}"))
+    game_structure=None
+    if game_root is not None:
+        try:
+            from suite_native_game_capabilities import inspect
+            game_structure=inspect(Path(game_root))
+            count=game_structure["noesis_grid_target_count"]
+            found=all(item["present"] for item in game_structure[
+                "sha_pinned_current_references"].values())
+            entries.append(_result("Game XAML/Noesis source structure",
+                "ready" if count>0 and found else "limited",
+                f"{count} unique XAML Grid targets; Script Extender "
+                f"{game_structure['script_extender_version'] or 'not installed'}; "
+                "source structure only, never proof of native gameplay",
+                "Die XAML-Quelle wurde lesend geprüft; native Hooks und Pixel "
+                "sind weiterhin gesondert im laufenden Spiel nachzuweisen.",
+                "XAML source structure was inspected read-only. Native hooks "
+                "and actual game pixels still require in-game proof."))
+        except (OSError,ValueError,RuntimeError,ImportError) as exc:
+            entries.append(_result("Game XAML/Noesis source structure",
+                "limited","Read-only source inspection failed: "+str(exc)[:240],
+                "Spiel- und Script-Extender-Daten auf Vollständigkeit prüfen.",
+                "Verify the installed game and Script Extender files."))
     readiness={e["name"]:e["status"] for e in entries}
     host_ready=readiness.get("Windows x64 host")=="ready" and readiness.get("Python runtime")=="ready"
     core_ready=host_ready and readiness.get("Tcl/Tk")=="ready" and readiness.get("Python dependencies")=="ready"
@@ -213,6 +260,15 @@ def collect(root:Path=ROOT,*,check_steam:bool=False) -> dict:
             "host_ready":host_ready,
             "core_ui_ready":core_ready,
             "qt_sandbox_ready":qt_ready,
+            "python_source_supported":pyok,
+            "python_distribution_tier":(
+                 ("experimental_local_hash_locked"
+                  if readiness.get("Python dependencies")=="ready"
+                  else "experimental_source_needs_wheel_lock") if minor==15
+                 else "tested_with_version_specific_lock" if
+                       readiness.get("Python dependencies")=="ready"
+                 else "unverified_source_dependencies"),
+            "game_structural_inspection":game_structure,
             "native_game_approved":False,
             "writes_to_game":False}
 
@@ -222,9 +278,12 @@ def main(argv=None):
     parser.add_argument("--root",type=Path,default=ROOT)
     parser.add_argument("--steam",action="store_true",
                        help="Discover Steam installations read-only")
+    parser.add_argument("--game-root",type=Path,
+                       help="Inspect a chosen installed game/SE XAML read-only")
     parser.add_argument("--json",action="store_true")
     opts=parser.parse_args(argv)
-    result=collect(opts.root,check_steam=opts.steam)
+    result=collect(opts.root,check_steam=opts.steam,
+                   game_root=opts.game_root)
     if opts.json:
         print(json.dumps(result,ensure_ascii=False,indent=2))
     else:

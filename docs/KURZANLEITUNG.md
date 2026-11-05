@@ -7,7 +7,14 @@
 3. Im Bereich **Projekt & Dateien** die eigenen Bilder/XAML-Dateien importieren und eine bearbeitbare Projektsicherung erstellen. Bilder bearbeiten oder den Layout-Designer nutzen.
 4. **Änderungen prüfen**, Warnungen bewerten und erst anschließend **Geprüftes Mod-ZIP bauen**. Der Export kopiert **keine** Dateien automatisch in installierte Spiele.
 5. Unter **Werkzeuge > PDF-Handbuch** das [illustrierte PDF](SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf) öffnen. Unter **Werkzeuge > Kompatibilität prüfen** die lokale Windows-/Python-/Qt-/Tcl-/Steam-Situation ohne Installation prüfen.
-6. Die **26 Demo-Module** sind unter **Werkzeuge > Interaktiver Demo-Modus** zugänglich. Sie erzeugen eigene Demo-Projekte und verifizierbare Ausgaben; Originalspieldateien bleiben getrennt.
+6. Die neue **Quellcode-Kompatibilität Python 3.15.2** ist im gesonderten
+   [Kompatibilitätsnachweis](SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)
+   dokumentiert. Python 3.15 ist nicht automatisch Bestandteil des
+   bisherigen Windows-Portable-ZIP. Unter **Werkzeuge → Kompatibilität prüfen
+   → Spielstruktur prüfen** wird die echte Script-Extender-/Noesis-XAML-Struktur
+   versionsneutral und nur lesend geprüft; native Hooks benötigen weiterhin
+   gesonderte Ingame-Belege.
+7. Die **26 Demo-Module** sind unter **Werkzeuge > Interaktiver Demo-Modus** zugänglich. Sie erzeugen eigene Demo-Projekte und verifizierbare Ausgaben; Originalspieldateien bleiben getrennt.
 
 Eine echte Ingame-Freigabe für Unity, Noesis, Script Extender, Atlas-Rollback und private Sprite-Mappings benötigt weiterhin ausdrücklich autorisierte Spieltests. **Niemals** ungesicherte Originalspiel-Dateien durch einen synthetischen Demolauf ersetzen.
 

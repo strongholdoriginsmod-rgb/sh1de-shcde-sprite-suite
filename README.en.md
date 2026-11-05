@@ -2,6 +2,16 @@
 
 Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Static GUI/sprite packages use **no fixed SE version and no C# DLL**; optional C# runtimes retain separate ABI safety checks. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
 
+## Current Python and game compatibility (Nov 5, 2026)
+
+The [Python 3.15 / game-source compatibility matrix](docs/SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)
+separates **source support (3.13–3.15)**, actually running Tcl/Qt environments,
+Python 3.15 source-built wheels and unproven native game ABI hooks.
+Use **Tools → Compatibility check → Inspect game data** to inspect an installed
+game/Script Extender folder read-only, without relaxing safe installation
+guards. The original Python 3.13 Windows portable remains the local
+release baseline.
+
 ## Guided tutorial, illustrated manual and compatibility (Nov 4, 2026)
 
 Open **Tutorial (Ctrl+F1)** from the left sidebar, select a learning path and navigate with **Back / Next**. Highlighted real controls are never invoked automatically. Progress stays in per-user local settings.

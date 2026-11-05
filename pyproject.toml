@@ -7,22 +7,32 @@ name = "stronghold-europe-de"
 version = "2.0.0"
 description = "Private local builder for a Stronghold Europe-style SHCDE mod"
 readme = "README.md"
-requires-python = ">=3.13,<3.15"
+requires-python = ">=3.13,<3.16"
 license = { text = "Private local project; no game assets are licensed or distributed" }
 dependencies = []
 
 [project.optional-dependencies]
 # QtWidgets, QtGui and QtTest power the integrated Windows Sandbox Studio.
-gui = ["PySide6==6.10.2"]
+# Python 3.15 needs Qt for Python 6.12+; keep audited 3.13/3.14 pin.
+gui = [
+  "PySide6==6.10.2; python_version < '3.15'",
+  "PySide6>=6.12,<7; python_version >= '3.15'",
+]
 dev = [
   "pytest>=8,<9",
   "pytest-cov>=5,<7",
 ]
+# CPython 3.15 wheels evolve independently; preserve earlier tested versions.
+# Bounds below allow resolving newer 3.15 builds, but are NOT a tested lock.
 assets = [
-  "UnityPy==1.25.3",
-  "Pillow==12.3.0",
-  "numpy==2.5.2",
-  "scipy==1.18.0",
+  "UnityPy==1.25.3; python_version < '3.15'",
+  "UnityPy>=1.25.3,<2; python_version >= '3.15'",
+  "Pillow==12.3.0; python_version < '3.15'",
+  "Pillow>=12.3,<14; python_version >= '3.15'",
+  "numpy==2.5.2; python_version < '3.15'",
+  "numpy>=2.5,<3; python_version >= '3.15'",
+  "scipy==1.18.0; python_version < '3.15'",
+  "scipy>=1.18,<2; python_version >= '3.15'",
 ]
 
 [project.scripts]

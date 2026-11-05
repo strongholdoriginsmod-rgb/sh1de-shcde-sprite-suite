@@ -22,6 +22,7 @@ COMPONENT_DE={
     ".NET SDK (optional)":".NET-SDK (optional)",
     "Native game ABI":"Native Spiel-ABI",
     "Local Steam discovery":"Lokale Steam-Erkennung",
+    "Game XAML/Noesis source structure":"Spiel-XAML-/Noesis-Quellstruktur",
 }
 
 
@@ -53,6 +54,11 @@ def german_detail(message:str)->str:
     if message.endswith(" matching game installations (read-only)"):
         return message.replace(" matching game installations (read-only)",
                                " passende Spielinstallation(en) lesend erkannt")
+    if "unique XAML Grid targets; Script Extender" in message:
+        return (message.replace("unique XAML Grid targets; Script Extender",
+                "eindeutige XAML-Grids; Script Extender")
+                .replace("source structure only, never proof of native gameplay",
+                         "nur Quellstruktur, kein Nachweis nativer Spielfunktionen"))
     return message
 
 
@@ -67,6 +73,7 @@ class CompatibilityWindow(tk.Toplevel):
         self._job=None
         self._job_pending=False
         self.report=None
+        self._selected_game_root=None
         self.status=tk.StringVar(self)
         self.details=tk.StringVar(self)
         self.summary=tk.StringVar(self)
@@ -107,6 +114,8 @@ class CompatibilityWindow(tk.Toplevel):
         self.refresh_button.pack(side="left",padx=(0,6))
         self.steam_button=ttk.Button(footer,command=lambda:self.refresh(steam=True))
         self.steam_button.pack(side="left",padx=(0,6))
+        self.game_button=ttk.Button(footer,command=self.choose_game)
+        self.game_button.pack(side="left",padx=(0,6))
         self.save_button=ttk.Button(footer,command=self.save_report)
         self.save_button.pack(side="right")
 
@@ -126,20 +135,34 @@ class CompatibilityWindow(tk.Toplevel):
             self.table.heading(col,text=self._label(de,en))
         self.refresh_button.configure(text=self._label("Erneut prüfen","Recheck"))
         self.steam_button.configure(text=self._label("Steam nur lesen","Read Steam only"))
+        self.game_button.configure(text=self._label(
+            "Spielstruktur prüfen","Inspect game data"))
         self.save_button.configure(text=self._label("Bericht speichern …","Save report…"))
         if self.report:self._render()
 
-    def refresh(self,*,steam=False):
+    def choose_game(self):
+        """Read-only directory selection; never install or copy game assets."""
         if self._job_pending:return
+        root=filedialog.askdirectory(parent=self,title=self._label(
+            "Spielordner auswählen (nur lesen)","Select game folder (read only)"))
+        if root:
+            self.refresh(game_root=Path(root))
+
+    def refresh(self,*,steam=False,game_root:Path|None=None):
+        if self._job_pending:return
+        if game_root is not None:
+            self._selected_game_root=Path(game_root)
         self._job_pending=True
         self.refresh_button.configure(state="disabled")
         self.steam_button.configure(state="disabled")
+        self.game_button.configure(state="disabled")
         self.summary.set(self._label("Lokale Umgebung wird geprüft …",
                                      "Checking local environment…"))
         self._messages=queue.Queue()
         def task():
             try:
-                data=collect(check_steam=steam)
+                data=collect(check_steam=steam,
+                             game_root=self._selected_game_root)
                 self._messages.put(("result",data))
             except Exception as exc:
                 self._messages.put(("error",f"{type(exc).__name__}: {exc}"))
@@ -156,6 +179,7 @@ class CompatibilityWindow(tk.Toplevel):
         self._job_pending=False
         self.refresh_button.configure(state="normal")
         self.steam_button.configure(state="normal")
+        self.game_button.configure(state="normal")
         if kind=="result":
             self.report=data
             self._render()

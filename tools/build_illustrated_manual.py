@@ -247,11 +247,11 @@ def make():
     section_title(c,"Was geprüft wird",524,H-126)
     y=H-144
     for s in [
-       "Windows x64 und unterstützte CPython-Laufzeit (3.13 oder 3.14).",
+       "Windows x64 und Python 3.13/3.14; Python 3.15 als separat geprüfte Quellumgebung.",
        "Vorhandene Tcl/Tk-Skripte und Qt-Sandbox.",
        "Exakte Versionen aus der passenden Abhängigkeits-Lockdatei.",
        "Optionales .NET SDK: relevant für C#-Entwicklung, nicht für den normalen GUI-Start.",
-       "Steam-Libraries auf Wunsch nur lesend.",
+       "Steam- und Spiel-/Noesis-XAML-Strukturen auf Wunsch nur lesend prüfen.",
        "Native ABI bleibt ausdrücklich »Nicht bestätigt«.",
     ]:y=bullet(c,s,518,y,283,size=10.3,leading=14.4)
     next_page(c)
