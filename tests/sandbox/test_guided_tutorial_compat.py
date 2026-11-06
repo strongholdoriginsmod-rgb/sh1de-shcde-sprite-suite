@@ -255,7 +255,11 @@ def test_german_compatibility_table_and_diagnostics_translate_without_changes(ap
     assert "Qt-Spielvorschau" in names
     idx=next(k for k in window.table.get_children()
              if window.report["checks"][int(k)]["name"]=="Qt Sandbox")
-    assert "erfolgreich" in window.table.set(idx,"detail")
+    from suite_compatibility_window import german_detail
+    # The system Python may not have Qt; the UI must translate that real
+    # diagnostic, not incorrectly claim a successful import.
+    assert window.table.set(idx,"detail")==german_detail(
+        window.report["checks"][int(idx)]["detail"])
     before=window.report["checks"][int(idx)].copy()
     gui.set_language("en")
     gui.update()

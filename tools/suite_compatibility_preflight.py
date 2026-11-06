@@ -70,10 +70,12 @@ def _tcl(root:Path):
                     f"Tcl {major} and Tk {version} are not a supported pair")
         if major==8.6:
             bundled_home=root/"python"
-            script=bundled_home/"tcl"/"tcl8.6"/"init.tcl"
-            tk_script=bundled_home/"tcl"/"tk8.6"/"tk.tcl"
-            if (script.is_file() and tk_script.is_file()
-                    and not script.is_symlink() and not tk_script.is_symlink()):
+            from suite_tcl_runtime import SENTINELS
+            # A Tcl/Tk copy with only init.tcl and tk.tcl can still fail
+            # on ttk initialization. Verify all required bootstrap scripts.
+            scripts=[bundled_home/"tcl"/name for name in SENTINELS]
+            if all(script.is_file() and not script.is_symlink()
+                   for script in scripts):
                 return _result("Tcl/Tk","ready","Bundled Tcl/Tk 8.6 scripts present")
             # When a bundled Python directory exists, falling back to the
             # inspecting PC's global Tcl/Tk would falsely approve a broken

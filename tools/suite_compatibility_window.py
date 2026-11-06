@@ -240,8 +240,10 @@ class CompatibilityWindow(tk.Toplevel):
         try:
             dest=Path(target)
             if dest.is_symlink():raise ValueError("Symlink destination not allowed")
-            dest.write_text(json.dumps(self.report,ensure_ascii=False,indent=2)+"\n",
-                            encoding="utf-8")
+            # The save dialog does not authorize overwriting existing user files.
+            # Exclusive creation also closes the race between existence check and write.
+            with dest.open("x",encoding="utf-8") as handle:
+                handle.write(json.dumps(self.report,ensure_ascii=False,indent=2)+"\n")
         except (OSError,ValueError) as exc:
             messagebox.showerror(self._label("Speichern fehlgeschlagen","Save failed"),
                 str(exc),parent=self)
