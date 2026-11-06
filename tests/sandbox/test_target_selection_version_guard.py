@@ -46,7 +46,7 @@ def context(tmp_path,monkeypatch):
     monkeypatch.setattr(manager,"CONFIG",cfg/"installations.local.toml")
     yield tmp_path,qa,other,src
 
-def test_unknown_game_build_can_be_registered_but_requires_matching_map(context):
+def test_unknown_game_build_and_mismatched_mapping_can_be_selected(context):
     root,qa,other,source=context
     assert manager.targets()["aktiv"] is None
     assert manager.targets()["ziele"]=={}
@@ -56,10 +56,12 @@ def test_unknown_game_build_can_be_registered_but_requires_matching_map(context)
     assert manager.targets()["aktiv"] is None
     unknown=manager.targets()["ziele"]["old27"]["build_id"]
     assert unknown.startswith("installed-target-")
-    with pytest.raises(SystemExit,match="Mapping belongs"):
-        manager.cmd_aktivieren(SimpleNamespace(
-            name="old27",source_data=str(source)))
-    assert not manager.CONFIG.exists()
+    assert manager.cmd_aktivieren(SimpleNamespace(
+        name="old27",source_data=str(source))) == 0
+    assert manager.CONFIG.exists()
+    selected = guard.verify_target(other,root/"config"/"supported-builds.json",
+                                   root/"work"/"mapping"/"proposals.json.gz")
+    assert selected.build_id != selected.mapping_build_id
     assert guard.verify_target(qa,root/"config"/"supported-builds.json",
                                root/"work"/"mapping"/"proposals.json.gz").files_checked==5
 
@@ -104,7 +106,7 @@ def test_register_then_activate_requires_source_and_explicit_choice(context):
     for rel in CANON:assert (qa/guard.DATA/rel).read_bytes()==before[rel]
     assert not (qa/"_suite-sicherungen").exists()
 
-def test_mutated_target_prevents_activation_and_installation(context):
+def test_mutated_target_can_be_selected_and_is_reidentified(context):
     root,qa,other,source=context
     manager.cmd_hinzufuegen(SimpleNamespace(name="qa280",spiel=str(qa),anzeige=None))
     # Same file length, DIFFERENT HASH: size checks alone must not approve.
@@ -112,12 +114,12 @@ def test_mutated_target_prevents_activation_and_installation(context):
     before=changed.read_bytes()
     changed.write_bytes(b"Z"+before[1:])
     saved=manager.ZIELE.read_bytes()
-    with pytest.raises(SystemExit,match="Mapping belongs"):
-        manager.cmd_aktivieren(SimpleNamespace(name="qa280",source_data=str(source)))
-    assert not manager.CONFIG.exists()
-    assert manager.ZIELE.read_bytes()==saved
-    with pytest.raises(guard.TargetSelectionError):
-        manager.safe_target("qa280")
+    assert manager.cmd_aktivieren(SimpleNamespace(name="qa280",source_data=str(source))) == 0
+    assert manager.CONFIG.exists()
+    assert manager.ZIELE.read_bytes()!=saved
+    refreshed = manager.targets()["ziele"]["qa280"]["build_id"]
+    assert refreshed != "shc280"
+    assert manager.safe_target("qa280") == qa.resolve()
     assert not (qa/"_suite-sicherungen").exists()
 
 def test_unknown_mod_paths_and_unselected_target_are_denied(context):
@@ -141,7 +143,10 @@ def test_unknown_target_identity_matches_normal_sprite_suite_fingerprint(context
     assert info.build_id == installation_build_id("target", standard)
     assert info.files_checked == len(guard.CANONICAL)
     assert info.game_dir == unknown.resolve()
-    # Unknown content is valid input; another game's mapping is still invalid.
+    # Cross-build use stays available; an optional diagnostic can flag mismatches.
+    selected = guard.verify_target(unknown, root/"config"/"supported-builds.json",
+                                   root/"work/mapping/proposals.json.gz")
+    assert selected.mapping_build_id != selected.build_id
     with pytest.raises(guard.TargetSelectionError, match="Mapping belongs"):
         guard.verify_target(unknown, root/"config"/"supported-builds.json",
-                            root/"work/mapping/proposals.json.gz")
+                            root/"work/mapping/proposals.json.gz", strict_mapping=True)

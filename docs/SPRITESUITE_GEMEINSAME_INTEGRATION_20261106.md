@@ -2,7 +2,15 @@
 
 Diese Datei ist der Übergabepunkt für weitere Claude-, Codex- und ChatGPT-Arbeitszweige. Alle Pfade liegen auf DESKTOP-O008GV9. Andere Chatverläufe erhalten nicht automatisch den Gesprächskontext dieses Chats; der gemeinsame, überprüfbare Stand wird daher ausschließlich über Git-Commits, Tests und diese Datei koordiniert.
 
-## Kanonischer Integrationszweig
+## Aktuelle gemeinsame Weiterentwicklung
+
+- Arbeitsverzeichnis: `E:\\SpriteSuite_Converged_20261106`, Branch `integration/spritesuite-converged-20261106`.
+- Der ältere gemeinsame Stand `b50e8ea` und die parallele Weiterentwicklung `20bba53` wurden bereits im Merge `bb0b97e` vereinigt. Auf `80864c9` liegen die offenen Offline-Runtime-, Werkzeug- und freien Paketierungsfunktionen.
+- Die anschließende Zusammenführung des Gebäudeschaden-Reviews `d4dd387` bringt zustandsgebundene Qualitätsmetadaten, zusätzliche Rastertests und eine Erweiterung des HP-Browsertests. Der **freie Export aller Stufen** ist zusätzlich direkt im Editor verfügbar, ohne eine Qualitätsfreigabe zu verlangen.
+- Die geprüfte Exportvariante bleibt als ausdrücklich ausgewählte Option erhalten. Der Preflight kann ungebundene Stufen ebenfalls vorbereiten; nur bei `--require-bound-approval` werden Freigabedigests verlangt.
+- Der aktuelle Entwicklerzweig enthält keine automatische In-Game-HP-Spriteumschaltung. Auch eine exportierte Plugin-DLL im freien Mod-Bundle ist noch kein belegter funktionierender Runtime-Hook.
+
+## Historischer Integrationszweig vor der Zusammenführung
 
 - Worktree: `E:\SpriteSuite_Integrated_Final_20261106`
 - Branch: `integration/spritesuite-unified-damage-tools-20261106`
@@ -120,3 +128,18 @@ Isolierter Entwicklungszweig `feature/shcde-building-footprint-proof-20261106` i
 Enthalten: v2-HP-Tabelle mit Sprite-Rasterdimensionen und expliziter v1-Lesbarkeit ohne Renderfreigabe; Footprint-/Orientierungsanalyse, acht mögliche isometrische Richtungs-/Spiegelvarianten für einen rechteckig voll belegten quadratischen Fußabdruck; Tile-Eigentümer- und Global-ID-Prüfung auf den veröffentlichten SHCDESE-Methoden; Fehlermodi für unvollständige, überlappende, anders dimensionierte oder neu zugewiesene Gebäude-Tiles. Der vorhandene Suite-Katalog erschließt die neue Offline-QA. Exakte technische Analyse unter `docs/GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md`.
 
 Der neue Adapter hat **keinen** BepInEx-/Unity-Hook, schreibt keine Grafiken und wird beim normalen Pluginbau durch fehlende Compile-Definition ignoriert. Echte Script-Extender-DLLs wurden nur zur Signaturprüfung gelesen und verlinkt; die eigentliche Game-Renderer-Abnahme bleibt offen.
+
+### Ergänzender historischer Converged-Zweig (früherer Stand)
+
+## Konvergierte Suite: unabhängige QA und frei wählbare Schadenspakete
+
+Der gemeinsame Worktree unter `E:\SpriteSuite_Converged_20261106` enthält jetzt die zusammengeführten Änderungen aus `d4dd387` und `80864c9`. Vier identische C#-Runtime-Quelldateien verbleiben bewusst nur unter `runtime/BuildingDamageOffline/`; die reine Testlogik wurde nicht ungeprüft in das ausführbare Spielplugin übernommen. `qa_building_damage_runtime.py` baut die Offline-Klassen zusammen mit den Test-Harnesses ohne Spiel-DLL.
+
+- Über `Alle HP-Schadensmodelle exportieren…` werden sämtliche Stufen einschließlich Entwürfen, verworfenen und nach Änderungen nicht erneut freigegebenen Stufen als Grafikpaket exportiert. Das Manifest hält den vorhandenen Freigabestatus und `contentApproved` getrennt fest; es behauptet keine Runtime-Installation.
+- Über `HP-Schadensmodelle exportieren…` ist weiterhin ein ausdrücklich gewählter Export nur mit inhaltsgebundenen Freigaben möglich.
+- `building_damage_runtime_preflight.py --prepare` bereitet auch nicht freigegebene Stufen als Testdaten vor. Mit `--require-bound-approval` lässt sich eine freiwillige strengere Auswahl treffen.
+- Die frühere Begrenzung des allgemeinen `se_asset_package.py` auf statische Assets und `work/` ist nicht mehr Standard, und ausgewählte Katalogwerkzeuge starten ohne einen zweiten Bestätigungsdialog.
+
+Beobachtete Regressionsläufe im zusammengeführten Worktree: **137/137 Node-Tests**, **49/49 reguläre Edge-Browserprüfungen**, **16/16 direkte Edge-Gebäudeschadenprüfungen einschließlich freiem Download**, **167 Python-pytest bestanden, 2 mangels QA-Spielressourcen übersprungen**, **10/10 Python-Codex-unittest**, **18/18 Python-Schadens-Preflight**, **56 C#-Selektor- und 29 C#-Leseadapter-Assertions**, **162/162 SHA-256-Prüfungen** und reproduzierbare deutsche/englische HTML-Ausgabe.
+
+Offen bleiben: die tatsächliche dynamische HP-/Feuer-Spriteumschaltung im Spiel, der unabhängige GUI-/Windows-Portable-Endtest aus genau diesem Integrationscommit sowie die individuelle Überprüfung noch abweichender Änderungen in GitLab, Origins, Steam und den großen SHCDE-Runtime-Quellbäumen. Nicht vorhandene Spiel- oder Drittanbieterbeweise dürfen nicht aus Testattrappen abgeleitet werden.

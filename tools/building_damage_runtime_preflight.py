@@ -337,8 +337,6 @@ def table_lines(report: dict) -> list[str]:
         if game_type is None:
             continue
         for stage in profile["stages"]:
-            if stage.get("approvalDigest") is None:
-                continue  # Never promote legacy, unbound approvals into C# runtime candidates.
             lines.append("\t".join((str(game_type), profile["buildingGroupId"],
                                     str(profile["spriteA"]), str(profile["spriteB"]),
                                     stage["damageKind"], str(stage["hpAtOrBelow"]),
@@ -351,6 +349,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--package", required=True, type=Path)
     parser.add_argument("--expected-sha256", help="Optional erwarteter SHA-256 des ZIPs")
     parser.add_argument("--output", type=Path, help="Neuer Ordner für read-only Testplan")
+    parser.add_argument("--require-bound-approval", action="store_true",
+                        help="Optional: nur Pakete mit gebundenen Abnahmen vorbereiten")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--prepare", action="store_true", help="Generierte Referenzdaten in einen neuen Ordner schreiben")
     mode.add_argument("--dry-run", action="store_true", help="Nur das ZIP ohne Schreibzugriffe prüfen (Standard)")
@@ -363,8 +363,9 @@ def main(argv: list[str] | None = None) -> int:
         report["tableLines"] = len(table_lines(report)) - 4
         report["prepared"] = bool(args.prepare)
         if args.prepare:
-            must(not report["unboundApprovedStages"],
-                 "Ältere Schadensstufen ohne Zustandsprüfsumme müssen im Sprite Editor erneut abgenommen werden.")
+            if args.require_bound_approval:
+                must(not report["unboundApprovedStages"],
+                     "Der gewählte Prüfmodus verlangt gebundene Abnahmen für alle Stufen.")
             must(args.output is not None, "--prepare benötigt --output.")
             must(not args.output.exists(), "Ausgabeordner existiert bereits.")
             args.output.mkdir(parents=True, exist_ok=False)

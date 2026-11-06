@@ -112,18 +112,24 @@ class DamageRuntimePreflightTests(unittest.TestCase):
         self.assertEqual(len(P.table_lines(report)), 4)
 
 
-    def test_legacy_unbound_approval_is_auditable_but_never_prepared(self):
+    def test_unbound_stage_is_available_for_creative_work_with_optional_strict_audit(self):
         manifest = deepcopy(self.manifest)
         del manifest["buildings"][0]["stages"][0]["approvalDigest"]
         save(self.package, manifest, self.entries)
         report = P.read_library(self.package)
         self.assertEqual(report["unboundApprovedStages"], ["g_abbey:d_mechanical75"])
-        self.assertEqual(len(P.table_lines(report)), 6, "one missing stage is excluded from runtime TSV")
+        self.assertEqual(len(P.table_lines(report)), 7, "unreviewed art is usable by choice")
         output = self.base / "unbound-output"
         self.assertEqual(P.main(["--package", str(self.package), "--dry-run"]), 0)
         self.assertEqual(P.main(["--package", str(self.package), "--prepare",
-                                 "--output", str(output)]), 2)
-        self.assertFalse(output.exists(), "incomplete package cannot become a prepared table")
+                                 "--output", str(output)]), 0)
+        self.assertTrue((output / "building-damage-candidate.tsv").is_file())
+        self.assertEqual(len((output / "building-damage-candidate.tsv").read_text().splitlines()), 7)
+        strict_output = self.base / "strict-output"
+        self.assertEqual(P.main(["--package", str(self.package), "--prepare",
+                                 "--require-bound-approval",
+                                 "--output", str(strict_output)]), 2)
+        self.assertFalse(strict_output.exists(), "strict audit stays optional")
 
     def test_forged_malformed_state_digest_rejected(self):
         manifest = deepcopy(self.manifest)

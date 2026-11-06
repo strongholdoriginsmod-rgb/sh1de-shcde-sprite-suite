@@ -32,7 +32,9 @@ Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek*
 - **Qualität abnehmen…** erfordert eine bewusste Bestätigung. Änderungen an Stufen-Tiles, Raster, HP-Zuordnung oder dem Original setzen zuvor erteilte Freigaben zurück.
 
 ## Export
-**HP-Schadensmodelle exportieren…** erzeugt ein separates ZIP mit `damage-manifest.json` und ausschließlich freigegebenen Tile-Bildern. Das Manifest enthält Ursache, HP-Schwelle, Tile-Zuordnungen und Geometrie. Es implementiert bewusst noch **keinen** C#-Runtime-Hook. Der bestehende Export von Mod-Overrides schließt diese zusätzlichen Schadensstufen aus, um nicht versehentlich das intakte Standardgebäude zu überschreiben.
+**Alle HP-Schadensmodelle exportieren…** erzeugt ohne Pflichtfreigabe ein ZIP mit allen Stufen, auch Entwürfen und verworfenen Varianten. Im `damage-manifest.json` stehen die HP-Schwelle, Ursache, Pixeldateien, Geometrie, `reviewStatus` und `contentApproved`. Für nicht oder nicht mehr inhaltsgebundene Stufen ist `approvalDigest` null. Die Erstellung dieses Pakets setzt keine bestimmte Bildveränderung oder Qualitätsabnahme voraus.
+
+**HP-Schadensmodelle exportieren…** bleibt als freiwillige geprüfte Ausgabe erhalten und enthält nur Stufen mit weiterhin gültiger Inhaltsfreigabe. Beide Ausgaben enthalten eigenständige Bilddaten und HP-Zuordnungen; ein aktiver C#-Runtime-Hook wird nicht vorgetäuscht. Der normale globale Sprite-Override-Export bleibt hiervon getrennt.
 
 ## Grenzen
 - Die Engine-Integration erfordert einen nachweislich funktionierenden Zugriff auf konkrete Gebäudeinstanz, deren aktuelle/maximale HP, Brandursache und den zugeordneten Renderer sowie eine sichere Asset-Lebensdauer. Die vorhandenen Schadens-Events allein beweisen diese Schnittstelle nicht.
@@ -50,12 +52,12 @@ Das freigegebene Schadens-ZIP kann jetzt mit `python tools/building_damage_runti
 
 Die vollständige Offline-Prüfung kann über `python tools/qa_building_damage_runtime.py` aus dem SpriteSuite-Projektverzeichnis gestartet werden.
 
-## Freigaben gegen nachträgliche Änderungen absichern
+## Freiwillige Freigabeprüfung nach Änderungen
 
-Abgenommene Stufen erhalten jetzt eine SHA-256-Zustandsprüfsumme (`approvalDigest`). Sie bindet die tatsächlichen RGBA-Pixel des intakten Gebäudes und aller Schadens-Tiles, die vorhandenen Materialmasken, Rasterkoordinaten, Pivots, PPU, HP-Schwelle, Gebäudetyp und gewählte Generierungseinstellungen. Die Zustimmung bleibt eine **manuelle visuelle Qualitätsabnahme**, die Prüfsumme ist ein Konsistenznachweis und keine digitale Unterschrift. Vor jedem Export wird sie erneut berechnet. Sind Bilddaten, HP oder relevante Einstellungen nach der Freigabe verändert worden, ist der Export gesperrt, bis das Modell erneut geprüft wurde.
+Abgenommene Stufen erhalten jetzt eine SHA-256-Zustandsprüfsumme (`approvalDigest`). Sie bindet die tatsächlichen RGBA-Pixel des intakten Gebäudes und aller Schadens-Tiles, die vorhandenen Materialmasken, Rasterkoordinaten, Pivots, PPU, HP-Schwelle, Gebäudetyp und gewählte Generierungseinstellungen. Die Zustimmung bleibt eine **manuelle visuelle Qualitätsabnahme**, die Prüfsumme ist ein Konsistenznachweis und keine digitale Unterschrift. Beim freiwilligen Export ausschließlich freigegebener Stufen wird sie erneut berechnet. Sind Bilddaten, HP oder relevante Einstellungen verändert worden, bleibt dieser geprüfte Export bis zur erneuten Abnahme zurückgestellt. **Der freie Export ist weiterhin möglich.**
 
 Alte `.shsprite`-Projekte mit angeblich freigegebenen Schadensstufen, die noch keine Zustandsprüfsumme besitzen, werden weiterhin geöffnet. Ihre früheren Freigaben gehen aber aus Sicherheitsgründen in **Entwurf** über und müssen nach Sichtvergleich erneut bestätigt werden. Ein veränderter Prompt oder die Auswahl eines anderen GPT-Image-Modells setzt die Freigabe ebenfalls zurück; eine reine Änderung der Bezeichnung nicht.
 
 Der **Vorschau-Modus** kann zwischen allen Entwürfen und ausschließlich freigegebenen, exportierbaren Modellen wechseln. Bei der Abnahme werden neben Original und aktuellem Modell auch andere bereits freigegebene Stufen derselben Schadensursache zum Vergleich angezeigt. Eine Prüfung markiert auffällig wiedererscheinende Gebäudeteile bei stärkerer Zerstörung sowie relevante Maskenpixel auf inzwischen transparenten Flächen. Solche Befunde erfordern einen bewussten Abnahmevermerk, da ein Pixelvergleich nicht entscheidet, ob z. B. ein Trümmerteil an derselben Stelle sinnvoll ist.
 
-Der rein lesende Runtime-Preflight akzeptiert ältere Export-ZIPs weiterhin zur Diagnose, verweigert aber mit `--prepare` die Erstellung einer angeblich verwendbaren Zuordnungstabelle, sobald freigegebene Stufen ohne Zustandsprüfsumme enthalten sind. Diese Stufen müssen im aktuellen Editor erneut freigegeben und neu exportiert werden.
+Der Offline-Runtime-Preflight gibt auch Entwürfe und Stufen ohne Zustandsprüfsumme als HP-Testkandidaten aus. `--prepare --output <neuer-ordner>` ist standardmäßig frei nutzbar. Wer ausdrücklich nur inhaltsgebundene Freigaben prüfen möchte, ergänzt `--require-bound-approval`. Die Tabelle stellt weder eine Spieldateiinstallation noch eine tatsächliche Zuordnung zu Game-Renderern dar.

@@ -1293,12 +1293,8 @@ class Center(workshop.Suite):
     def catalog_run(self):
         try:args=tokens_for(self.active_command,self.active_fields,[v.get() for v in self.field_values],self.extra.get())
         except ValueError as exc:messagebox.showerror('Eingaben',str(exc),parent=self);return
-        from suite_tool_policy import explain
-        risk=explain(self.catalog_tool.get(),args)
-        prompt=(self.catalog_tool.get()+'\n'+' '.join(args)+'\n\n'+risk+
-                '\n\nMit diesen Eingaben ausführen?')
-        if messagebox.askyesno('Werkzeug starten',prompt,parent=self):
-            self.run_catalog(args)
+        # User-selected actions run directly; informational diagnostics never block.
+        self.run_catalog(args)
 
 
 if __name__=='__main__':

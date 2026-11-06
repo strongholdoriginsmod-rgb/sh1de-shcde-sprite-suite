@@ -838,11 +838,13 @@
             }, 'Schadensstufe entfernt');
         });
     }
-    async function damageExportPackage() {
+    async function damageExportPackage(includeDrafts = false) {
         await task('Schadensbibliothek exportieren', async opts => {
-            const result = await DI.exportPackage(state(), store(), opts);
-            download(result.bytes, C.safeName(state().project.name) + '_gebaeudeschaden.zip');
-            message('Freigegebene Stufen und HP-Manifest exportiert; keine automatische Spielinstallation.');
+            const result = await DI.exportPackage(state(), store(), { ...opts, includeDrafts });
+            const suffix = includeDrafts ? '_gebaeudeschaden_alle.zip' : '_gebaeudeschaden.zip';
+            download(result.bytes, C.safeName(state().project.name) + suffix);
+            message(includeDrafts ? 'Alle Schadensstufen frei exportiert, einschließlich Entwürfen.' :
+                'Freigegebene Stufen und HP-Manifest exportiert.');
         });
     }
     function damageSection() {
@@ -927,8 +929,9 @@
             ]));
         }
         sections.push(section('Ausgabe', [
-            buttons(button('HP-Schadensmodelle exportieren…', damageExportPackage)),
-            note('Das ZIP enthält nur freigegebene Tile-Sätze samt HP-Manifest. Keine unbewiesene Umschaltung im laufenden Spiel, keine Änderungen an Spieldateien.')
+            buttons(button('Alle HP-Schadensmodelle exportieren…', () => damageExportPackage(true)),
+                button('HP-Schadensmodelle exportieren…', () => damageExportPackage(false))),
+            note('Freier Export: alle Stufen einschließlich Entwürfen und verworfenen Varianten. Der zweite Export enthält nur nach Inhaltsabgleich freigegebene Stufen. Beide ZIPs sind eigenständige Grafikpakete.')
         ]));
         return sections;
     }

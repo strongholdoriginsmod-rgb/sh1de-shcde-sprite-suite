@@ -97,6 +97,17 @@ async function run() {
         await wait(page, () => window.SpriteEditor.inspect().state.damageProfiles[0].gameBuildingType === 108);
         checks.push('Expliziter Gebäudetyp wird mit dem Profil gespeichert');
 
+        await clickLabel(page, 'Alle HP-Schadensmodelle exportieren…');
+        const freeZip = await waitForZip(tmp, '_gebaeudeschaden_alle.zip');
+        const freeFiles = await K.unzip(new Uint8Array(fs.readFileSync(freeZip)));
+        const freeManifest = JSON.parse(K.decodeText(freeFiles.find(e => e.name === 'damage-manifest.json').data));
+        assert.equal(freeManifest.exportMode, 'all-stages');
+        assert.equal(freeManifest.buildings[0].stages[0].reviewStatus, 'draft');
+        assert.equal(freeManifest.buildings[0].stages[0].contentApproved, false);
+        assert(freeFiles.some(e => e.name.endsWith('/0000.png')));
+        fs.unlinkSync(freeZip);
+        checks.push('Freier ZIP-Export umfasst auch unbearbeitete Entwürfe ohne Pflichtfreigabe');
+
         await field(page, 'Verbleibende HP · %', 80);
         assert((await page.$eval('.inspector-content', n=>n.innerText)).includes('Original / unbeschädigt'));
         await field(page, 'Verbleibende HP · %', 60);

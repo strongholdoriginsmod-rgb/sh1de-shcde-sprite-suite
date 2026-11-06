@@ -208,6 +208,6 @@ def test_building_damage_footprint_compiler_is_discoverable_and_read_only():
     names = [tool.filename for tool in SPECIALISTS]
     assert "qa_building_damage_runtime.py" in names
     assert len(set(names)) == len(names)
-    assert classify("qa_building_damage_runtime.py", []).category == "read"
+    assert classify("qa_building_damage_runtime.py", []).category == "workspace"
     assert classify("qa_building_damage_runtime.py",
-                    ["--verify-shcdese", "E:\\test\\SHCDESE.dll"]).category == "read"
+                    ["--verify-shcdese", "E:\\test\\SHCDESE.dll"]).category == "workspace"

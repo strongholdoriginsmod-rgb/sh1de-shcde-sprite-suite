@@ -13,7 +13,7 @@ from pathlib import Path
 class ToolPolicy:
     category: str
     de: str
-    requires_confirmation: bool = True
+    requires_confirmation: bool = False
 
 
 READ=ToolPolicy("read","Nur lesende Diagnose")
@@ -24,8 +24,11 @@ UNKNOWN=ToolPolicy("unknown","Seiteneffekte nicht klassifiziert – Eingaben sor
 
 RISK_TOOLS: dict[str,ToolPolicy]={
     "suite_tool_inventory.py":READ,
-    "qa_building_damage_runtime.py":READ,
+    "qa_building_damage_runtime.py":WORK,
     "building_damage_codex.py":NETWORK,
+    "building_damage_runtime_preflight.py":READ,
+    "suite_live_noesis_log_audit.py":READ,
+    "qa_workstream_census.py":READ,
     "build_portable_windows.py":WORK,
     "background_v2_pipeline.py":WORK,
     "ui_atlas_layout_port.py":WORK,
@@ -59,6 +62,10 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         return WORK
     if name=="building_damage_runtime_preflight.py":
         return WORK if "--prepare" in command else READ
+    if name=="suite_live_noesis_log_audit.py":
+        return WORK if "--out" in command else READ
+    if name=="qa_workstream_census.py":
+        return WORK if "--out" in command else READ
     if name=="building_damage_codex.py":
         return NETWORK if "--execute" in command else READ
     if name=="ziel_se211.py":

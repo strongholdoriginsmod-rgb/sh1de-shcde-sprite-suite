@@ -258,3 +258,35 @@ test('approved damage tiles export exact material-mask SHA-256 for runtime verif
     A.ok(maskFile);
     A.equal(t.maskSha256, await K.sha256(maskFile.data));
 });
+
+
+test('free damage export includes drafts, rejected variants and edited approved art without a review gate', async () => {
+    const f = stageFixture(), draft = await DI.exportPackage(f.s, f.store, { includeDrafts: true });
+    A.equal(draft.manifest.exportMode, 'all-stages');
+    A.equal(draft.manifest.buildings.length, 1);
+    A.equal(draft.manifest.buildings[0].stages[0].reviewStatus, 'draft');
+    A.equal(draft.manifest.buildings[0].stages[0].contentApproved, false);
+    A.equal(draft.manifest.buildings[0].stages[0].approvalDigest, null);
+    A.ok((await K.unzip(draft.bytes)).some(x => x.name.endsWith('/0000.png')));
+    const discarded = I.clone(f.s);
+    discarded.damageProfiles[0].stages[0].status = 'rejected';
+    const rejectedPack = await DI.exportPackage(discarded, f.store, { includeDrafts: true });
+    A.equal(rejectedPack.manifest.buildings[0].stages[0].reviewStatus, 'rejected');
+
+    const imported = DI.withCandidate(f.s, f.store, f.stageId, damageCandidate(f));
+    const applied = DI.applyCandidate(imported.state, imported.store, f.stageId);
+    const accepted = DI.approveStage(applied.state, applied.store, f.stageId,
+        'Für die optionale Prüfung bestätigt', true);
+    const approved = await DI.exportPackage(accepted.state, accepted.store);
+    A.equal(approved.manifest.exportMode, 'approved-only');
+    A.equal(approved.manifest.buildings[0].stages[0].contentApproved, true);
+    const altered = I.clone(accepted.state);
+    altered.damageProfiles[0].stages[0].hpAtOrBelow = 60;
+    await A.rejects(DI.exportPackage(altered, accepted.store), /Freigabe.*gültig/);
+    const free = await DI.exportPackage(altered, accepted.store, { includeDrafts: true });
+    const entry = free.manifest.buildings[0].stages[0];
+    A.equal(entry.hpAtOrBelow, 60);
+    A.equal(entry.reviewStatus, 'approved');
+    A.equal(entry.contentApproved, false);
+    A.equal(entry.approvalDigest, null);
+});

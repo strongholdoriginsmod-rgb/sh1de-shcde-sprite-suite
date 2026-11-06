@@ -46,7 +46,17 @@ async function produce() {
         const review = DI.qualityReport(split.state, split.store, result.stageId);
         if (review.errors.length)
             throw new Error('Fixture split not exact: ' + review.errors.join(' | '));
-        const accepted = DI.approveStage(split.state, split.store,
+        const reviewed = I.clone(split.state);
+        // Also cover material-mask export on the actual full tile-splitting path.
+        if (kind === 'mechanical') {
+            const frame = reviewed.frames.find(f => f.groupId === result.sceneId);
+            if (!frame) throw new Error('Stage tile not found');
+            const tile = split.store.get(frame.imageId);
+            const mask = C.image(tile.width, tile.height);
+            mask.data.set([200, 150, 90, 255], 0);
+            frame.maskId = split.store.add(mask);
+        }
+        const accepted = DI.approveStage(I.validate(reviewed, split.store), split.store,
             result.stageId, 'Testfreigabe nur für synthetische Beispiele', true);
         state = accepted.state;
         store = accepted.store;

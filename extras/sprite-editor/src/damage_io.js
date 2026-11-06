@@ -403,13 +403,16 @@
         return { bytes: K.zip(entries), request };
     }
     async function exportPackage(state, store, options = {}) {
+        // Free creative export is independent of the optional approval workflow.
+        const includeDrafts = options.includeDrafts === true;
         const entries = [], buildings = [];
         for (const profile of state.damageProfiles || []) {
             const base = state.scenes.find(g => g.id === profile.buildingGroupId);
             const stages = [];
-            for (const stage of profile.stages.filter(x => x.status === 'approved')) {
-                if (!stage.approvalDigest ||
-                    approvalSignature(state, store, stage.id) !== stage.approvalDigest)
+            for (const stage of profile.stages.filter(x => includeDrafts || x.status === 'approved')) {
+                const contentApproved = stage.status === 'approved' && !!stage.approvalDigest &&
+                    approvalSignature(state, store, stage.id) === stage.approvalDigest;
+                if (!includeDrafts && !contentApproved)
                     fail('Freigabe ist nach Änderung der Sprite-/Projektdaten nicht mehr gültig: ' + stage.id + '. Qualität erneut abnehmen.');
                 const scene = state.scenes.find(g => g.id === stage.sceneId);
                 const frames = state.frames.filter(f => f.groupId === stage.sceneId)
@@ -435,7 +438,9 @@
                 stages.push({
                     id: stage.id, damageKind: stage.kind, hpAtOrBelow: stage.hpAtOrBelow,
                     scene: stage.sceneId, label: stage.label, model: stage.model,
-                    reviewNotes: stage.reviewNotes, approvalDigest: stage.approvalDigest,
+                    reviewNotes: stage.reviewNotes,
+                    reviewStatus: stage.status, contentApproved,
+                    approvalDigest: contentApproved ? stage.approvalDigest : null,
                     settings: scene.settings, tiles
                 });
             }
@@ -443,17 +448,21 @@
                 buildings.push({ id: base.id, name: base.name, intactScene: base.id,
                     gameBuildingType: profile.gameBuildingType ?? null, gameBuildingTypeVerifiedInGame: false, stages });
         }
-        if (!buildings.length) fail('Noch keine freigegebenen Schadensmodelle.');
+        if (!buildings.length) fail(includeDrafts ? 'Noch keine Schadensmodelle vorhanden.' :
+            'Noch keine freigegebenen Schadensmodelle.');
         const manifest = {
             format: 'stronghold-building-damage-library', version: 1,
             target: 'Stronghold Crusader: Definitive Edition',
             runtimeHookInstalled: false, hpUnit: 'percent_of_maximum_hp',
+            exportMode: includeDrafts ? 'all-stages' : 'approved-only',
             rule: 'Use lowest threshold T where current HP percent <= T; otherwise show intact. Fire uses mechanical fallback only if no fire stages exist.',
             buildings
         };
         entries.unshift({ name: 'damage-manifest.json', data: JSON.stringify(manifest, null, 2) });
         entries.push({ name: 'README.txt', data:
-            'Freigegebene Schadenssprites und HP-Auswahlmanifest. KEINE aktive SHCDE-Runtime-Umschaltung.\n' +
+            (includeDrafts ? 'Frei exportierte Schadenssprites (auch Entwürfe und verworfene Stufen).\n' :
+                'Freigegebene Schadenssprites.\n') +
+            'HP-Auswahlmanifest. KEINE aktive SHCDE-Runtime-Umschaltung.\n' +
             'Zur Darstellung im Spiel ist eine separat geprüfte Gebäude-/Schadensereignis-Renderer-Integration nötig.\n' +
             'Tiles max. 64 px, beim Zerlegen mit 1px Overlap und allen hinteren Reihen.\n' });
         return { bytes: K.zip(entries), manifest };

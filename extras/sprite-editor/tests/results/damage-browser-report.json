@@ -5,6 +5,7 @@
     "Gebäude-Demo geladen",
     "Stufe inklusive Clone, Scene und HP-Schwelle erstellt",
     "Expliziter Gebäudetyp wird mit dem Profil gespeichert",
+    "Freier ZIP-Export umfasst auch unbearbeitete Entwürfe ohne Pflichtfreigabe",
     "HP-Vorschau 80 % intakt / 60 % beschädigt",
     "Freigabe-Vorschau unterdrückt unfertige Schadensmodelle",
     "Codex ZIP mit unverändertem Original, Modellreferenz und Prompt",
@@ -20,7 +21,7 @@
   "directFileUrl": true,
   "pageErrors": [],
   "networkRequests": [],
-  "htmlSHA256": "02d610384b1a14c4c828969e6634b48f100bb9366dfcd4622aefe3a2490e2cae",
+  "htmlSHA256": "cdcc1264380a40c63a984cc5ed2a45afeeaff79a50eea3c2c599230ac4a3b792",
   "browser": "Edg/156.0.4314.58",
   "inGameTested": false,
   "apiCalled": false

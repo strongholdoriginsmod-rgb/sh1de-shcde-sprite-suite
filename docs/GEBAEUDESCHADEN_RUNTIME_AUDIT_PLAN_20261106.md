@@ -29,10 +29,10 @@
 
 ## 4. Implementierter Read-only-Status
 
-- `runtime/StrongholdEuropeDE.Runtime/BuildingDamageStageSelector.cs`: begrenzte, exakte Ganzzahl-HP-Auswahl; Feuerzustand hält bis zur vollständigen Reparatur; Global-ID-Wechsel leert veraltete Historie.
-- `runtime/StrongholdEuropeDE.Runtime/BuildingDamageProfileTable.cs`: strikt geprüfte HP-/Gebäudetyp-Tabelle aus SHA-256-verifiziertem ZIP, keine Rendering-Aktion.
-- `runtime/StrongholdEuropeDE.Runtime/BuildingDamageReadOnlyProbe.cs`: Main-Thread-Polling-Abstraktion mit vollständigem Snapshot vor Zustandscommit, ID-Duplikatsperre, endlicher Kapazität und Fail-closed-Stopp bis explizitem Reset.
-- `runtime/StrongholdEuropeDE.Runtime/BuildingDamageGameBuildingSource.cs`: hochstufige `GameBuildingManagerAPI`-Lesezugriffe; prüft `IsValid` und `GetGlobalId` vor **und** nach der Abfrage. Kompiliert absichtlich nur, wenn `SHCDE_BUILDING_DAMAGE_READONLY_API` gesetzt wird. Der Standard-Runtime-Build und Spiel-Host verändern ihren Ablauf nicht.
+- `runtime/BuildingDamageOffline/BuildingDamageStageSelector.cs`: begrenzte, exakte Ganzzahl-HP-Auswahl; Feuerzustand hält bis zur vollständigen Reparatur; Global-ID-Wechsel leert veraltete Historie.
+- `runtime/BuildingDamageOffline/BuildingDamageProfileTable.cs`: strikt geprüfte HP-/Gebäudetyp-Tabelle aus SHA-256-verifiziertem ZIP, keine Rendering-Aktion.
+- `runtime/BuildingDamageOffline/BuildingDamageReadOnlyProbe.cs`: Main-Thread-Polling-Abstraktion mit vollständigem Snapshot vor Zustandscommit, ID-Duplikatsperre, endlicher Kapazität und Fail-closed-Stopp bis explizitem Reset.
+- `runtime/BuildingDamageOffline/BuildingDamageGameBuildingSource.cs`: hochstufige `GameBuildingManagerAPI`-Lesezugriffe; prüft `IsValid` und `GetGlobalId` vor **und** nach der Abfrage. Kompiliert absichtlich nur, wenn `SHCDE_BUILDING_DAMAGE_READONLY_API` gesetzt wird. Der Standard-Runtime-Build und Spiel-Host verändern ihren Ablauf nicht.
 - `tools/building_damage_runtime_preflight.py`: vollständiger PNG-Chunk-/IDAT-/Zeilenfiltertest, CRC, SHA-256, ZIP/JSON-Validierung, Materialmaskenprüfung, eindeutige Typen/HP-Stufen und normalisierte TSV-Tabelle. Nur `--prepare` schreibt Dateien, ausschließlich in einen neuen Ausgabeordner.
 - `tools/qa_building_damage_runtime.py` erstellt und prüft das echte ZIP eines 5×5-Testgebäudes in einem temporären Verzeichnis: 16 Python-Regressionen, 56 C#-Selector/TSV-Assertions, 29 C#-API-Adapter-Assertions. Der Shader, Unity-Renderer und das Spiel werden nicht angesprochen.
 - Strg+K-Werkzeugkatalog: Runtime-Preflight aufgenommen, Risikoetikett bei `--dry-run` lesend und bei `--prepare` Arbeitsdateien; Codex-Generierung mit `--execute` weiterhin separat als Netzwerkoperation.
@@ -54,22 +54,22 @@ Vor der Renderer-Integration weiter nachweisen:
 
 ## 6. Letzter vollständiger Offline-Abgleich (06.11.2026)
 
-- `node --test ...` im Sprite Editor: **128/128** Tests bestanden.
+- `node --test ...` im Sprite Editor: **137/137** Tests bestanden.
 - Vollständige ältere Edge-Browser-Workflows: **49/49**, keine Anwendungs-Netzwerkanfragen.
-- Direkter `file://`-Edge-Browsertest für Gebäudeschäden und KI-Übergabe: **13/13**, keine Anwendungs-Netzwerkanfragen.
+- Direkter `file://`-Edge-Browsertest für Gebäudeschäden, freie Ausgabe und KI-Übergabe: **16/16**, keine Anwendungs-Netzwerkanfragen.
 - Vorhandene Suite-/Werkzeugkatalog-/Policy-Tests: **23/23** bestanden.
 - Codex-/GPT-Image-Bridge Offline-Mocks: **10/10** bestanden.
-- Runtime-Preflight inklusive manipuliertem PNG/ZIP/JSON: **16/16** Python-Tests.
+- Runtime-Preflight inklusive manipuliertem PNG/ZIP/JSON und freier Ausgabe: **18/18** Python-Tests.
 - C#-Schwellen-, Feuer-/Reparatur- und ZIP-/TSV-Abgleich: **56** erfolgreiche Assertions.
 - C#-Leseadapter mit synthetischen SHCDESE-Signaturen und ID-Reuse-Fehlern: **29** erfolgreiche Assertions.
-- `verify_release.py`: deterministische deutsche und englische HTML-Fassungen, beide Browserberichte und **160** SHA-256-Prüfsummen erfolgreich.
+- `verify_release.py`: deterministische deutsche und englische HTML-Fassungen, beide Browserberichte und **162** SHA-256-Prüfsummen erfolgreich.
 - `git -c core.whitespace=cr-at-eol diff --check`: keine Konflikte.
 
-**Schnittstelle für die spätere Renderer-Arbeit:** Die öffentlich dokumentierten Gebäude-APIs sind [GameBuildingManagerAPI](https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/api/SHCDESE.API.GameBuildingManagerAPI.html) und die [Asset API](https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/docs/guides/asset-api.html). Die Asset API beschreibt globale bzw. namespace-lokale Overrides, nicht einen nachgewiesenen per-Gebäude- und per-Tile-Zustandsrenderer. Deshalb ist nur die Leseebene implementiert; ein aktiver Spielpatch bleibt gesperrt.
+**Schnittstelle für die spätere Renderer-Arbeit:** Die öffentlich dokumentierten Gebäude-APIs sind [GameBuildingManagerAPI](https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/api/SHCDESE.API.GameBuildingManagerAPI.html) und die [Asset API](https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/docs/guides/asset-api.html). Die Asset API beschreibt globale bzw. namespace-lokale Overrides, nicht einen nachgewiesenen per-Gebäude- und per-Tile-Zustandsrenderer. Deshalb ist zunächst nur die Leseebene implementiert; die dynamische Spielrenderer-Anbindung ist weiterhin eine offene Entwicklungsaufgabe.
 
-## Freigabegebundener Runtime-Preflight
+## Freier Runtime-Preflight und freiwillige Freigabekontrolle
 
-Das neue `approvalDigest` wird beim SpriteSuite-Export neben den freigegebenen Tiles dokumentiert. Der Offline-Preflight prüft, dass es syntaktisch ein SHA-256-Wert ist; er kann die interne Projektdatei nicht auf Echtheit attestieren. Fehlt es in älteren Paketen, wird die Stufe in `unboundApprovedStages` aufgeführt, aus einem vorbereiteten Kandidaten-TSV ausgeschlossen und die Option `--prepare` für das ganze Paket gesperrt. Die Option `--dry-run` bleibt zur Diagnose verfügbar. Es findet keine Spielinstallation statt.
+Das neue `approvalDigest` wird beim SpriteSuite-Export neben den freigegebenen Tiles dokumentiert. Der Offline-Preflight prüft, dass es syntaktisch ein SHA-256-Wert ist; er kann die interne Projektdatei nicht auf Echtheit attestieren. Fehlt es in älteren oder bewusst frei exportierten Paketen, wird die Stufe in `unboundApprovedStages` dokumentiert. `--prepare` erzeugt standardmäßig auch für diese Stufen eine Testtabelle. Erst die ausdrücklich gewählte Option `--require-bound-approval` verlangt für jede Stufe einen gültigen Digest. Die Option `--dry-run` bleibt für reine Analysen verfügbar; es findet keine Spielinstallation statt.
 
 Der synthetische Exporttest setzt den vorgesehenen Zielgebäudetyp jetzt **vor** der Modellfreigabe, damit die Änderung der Zuordnung keine bereits abgenommene Stufe unbemerkt ungültig macht.
 
@@ -84,3 +84,7 @@ Die freigegebenen Gebäude-Datenpakete liefern jetzt eine versionsgeprüfte, **r
 Die pure C#-Footprint-Analyse und der getrennte, nur auf expliziten Compiler-Schalter aktivierbare Gebäude-/Tile-Leseadapter stehen in `BuildingDamageFootprintAudit.cs` und `BuildingDamageFootprintGameSource.cs`. Es wurden zwei vorhandene SHCDESE-Assembly-Versionen (1.44.0 und 2.14.3) ohne Spielausführung erfolgreich **zur Compile-Zeit** geprüft. Der konkrete Bericht mit SHA-256, Quelldokumentation und noch offenen In-Game-Abnahmekriterien ist [GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md](GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md).
 
 Die entscheidende Erkenntnis bleibt: Gameplay-belegte Tile-IDs und SpriteSuite-Grafikslots sind nicht automatisch dasselbe. Jede reale Modellumschaltung bleibt blockiert, bis ein gemessener per-Instanz-Spritepfad, Ausrichtung sowie Masken-/Renderer-Rollback existiert.
+
+### Ergänzender historischer Converged-Zweig (früherer Stand)
+
+Das vollständige Runtime-QA-Kommando `python tools/qa_building_damage_runtime.py` besteht nach der Aktualisierung des Freigabevertrags mit **18** Python-Preflight-Tests, **56** C#-Selector-/ZIP-Assertions und **29** schreibfreien API-Adapter-Assertions. Die gezielt synthetische Gebäude-ID wird vor der Modellfreigabe gesetzt, danach bleibt sie im SHA-256-gebundenen Zustand unverändert. Alte Datenpakete ohne Freigabehash können ebenfalls als ungebundene Runtime-Testkandidaten vorbereitet werden; der Freigabestatus bleibt transparent. Die aktive Renderer-Zuordnung bleibt bewusst deaktiviert.
