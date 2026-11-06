@@ -291,3 +291,7 @@ Zusätzlich zur bisherigen visuellen Freigabe bindet eine SHA-256-Zustandsprüfs
 ### Gebäude-Footprints prüfen, bevor Sprite-Modelle umgeschaltet werden
 
 Die neue optionale Offline-QA `python tools/qa_building_damage_runtime.py` prüft zusätzlich die tatsächlich belegten Spiel-Kacheln gegenüber den SpriteSuite-Rastermaßen, ohne ungeprüfte Richtungen oder Grafikslot-Zuordnungen zu übernehmen. Über `--verify-shcdese <Pfad-zur-SHCDESE.dll>` können auch die tatsächlichen Signaturen einer lokal vorhandenen Script-Extender-Version **nur kompiliert** werden. Details und offene Spielabnahme: [Gebäude-Footprint-Audit](docs/GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md).
+
+### Echte SHCDE-Grafiklayer-Messung und ein-Kachel-Kanarientest
+
+Die aktuelle Entwicklung enthält unter `tools/building_damage_layer_audit.py` eine SHA-256-gebundene, reproduzierbare Auswertung der grafischen Gebäude-Tiles gegenüber den tatsächlich belegten Spielkacheln. Ein zusätzlicher, **nur explizit im markierten QA-Klon** einschaltbarer Test `qa_building_damage_live.py --qa-save <QA-Save> --qa-canary --install-qa` setzt höchstens ein Originalspiel-Sprite kurz auf ein kompatibles anderes Native-Sprite und stellt es anschließend über die originale Engine-Methode wieder her. Die Standardfassung bleibt lesend. Dieser QA-Eingriff ersetzt keine vollständige automatische HP-/Feuerschaden-Umschaltung. Nachweise, Sicherheitsgrenzen und Spielprotokolle: [SHCDE Renderer-QA](docs/GEBAEUDESCHADEN_SPIEL_RENDERER_QA_20261106.md).

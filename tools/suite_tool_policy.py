@@ -24,6 +24,7 @@ UNKNOWN=ToolPolicy("unknown","Seiteneffekte nicht klassifiziert – Eingaben sor
 
 RISK_TOOLS: dict[str,ToolPolicy]={
     "suite_tool_inventory.py":READ,
+    "building_damage_layer_audit.py":READ,
     "qa_building_damage_runtime.py":WORK,
     "qa_building_damage_live.py":GAME,
     "building_damage_codex.py":NETWORK,
@@ -67,6 +68,8 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         if "--verify-log" in command:
             return READ
         return WORK  # build-only compiles into isolated temporary workspace
+    if name=="building_damage_layer_audit.py":
+        return WORK if "--output" in command else READ
     if name=="building_damage_runtime_preflight.py":
         return WORK if "--prepare" in command else READ
     if name=="suite_live_noesis_log_audit.py":

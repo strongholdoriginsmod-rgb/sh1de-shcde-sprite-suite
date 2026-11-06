@@ -95,6 +95,22 @@ class ReadOnlyLivePluginTests(unittest.TestCase):
         with self.assertRaisesRegex(Q.QAFailure, "Unbekannte Dateien"):
             Q.remove_qa(qa)
 
+    def test_canary_receipt_requires_explicit_non_readonly_mode_and_hash_lock(self):
+        qa = self.base / "qa_canary"
+        (qa / "BepInEx" / "plugins").mkdir(parents=True)
+        source = self.base / "canary.dll"
+        source.write_bytes(b"fake-canary-test-only")
+        result = Q.install_qa(qa, self.base, {
+            "dll": source, "qaCanary": True,
+            "gameSha256": Q.GAME_SHA,
+            "scriptExtenderSha256": Q.SE_SHA
+        })
+        receipt = result["receipt"]
+        self.assertIs(receipt["readOnly"], False)
+        self.assertIs(receipt["rendererWrites"], True)
+        self.assertIs(receipt["qaCanary"], True)
+        self.assertTrue(Q.remove_qa(qa)["removedQA"])
+
     def test_log_report_requires_actual_live_observations(self):
         log = self.base / "LogOutput.log"
         log.write_text("[Info] SHCDE_DAMAGE_QA|event=start|status=read_only|renderer_modified=false\n"
@@ -102,6 +118,7 @@ class ReadOnlyLivePluginTests(unittest.TestCase):
                        "[Info] SHCDE_DAMAGE_QA|event=building_footprint|building_id=9|global_id=111|grid=5|tiles=301:10,20;302:11,20\n",
                        encoding="utf-8")
         report = Q.evaluate_log(log)
+        self.assertEqual(report["sourceLogSHA256"], hashlib.sha256(log.read_bytes()).hexdigest())
         self.assertTrue(report["readOnlyProbeStarted"])
         self.assertEqual(report["tileGraphicObservations"], 1)
         self.assertEqual(report["buildingFootprintObservations"], 1)
@@ -119,11 +136,56 @@ class ReadOnlyLivePluginTests(unittest.TestCase):
                        encoding="utf-8")
         self.assertFalse(Q.evaluate_log(log)["readOnlyProbeStarted"])
 
+    def test_direct_building_sprite_samples_require_real_assigned_pixels(self):
+        log = self.base / "delayed_render.log"
+        log.write_text("\n".join([
+            "SHCDE_DAMAGE_QA|event=start|status=read_only",
+            "SHCDE_DAMAGE_QA|event=building_render_tiles|building_id=12|global_id=202|type=26|assigned_sprites=0|tilemap_sprites=0|renderer_modified=false",
+            "SHCDE_DAMAGE_QA|event=building_render_tiles|building_id=12|global_id=202|type=26|assigned_sprites=12|tilemap_sprites=0|renderer_modified=false",
+            "SHCDE_DAMAGE_QA|event=building_render_tiles|building_id=14|global_id=204|type=19|assigned_sprites=9|tilemap_sprites=3|renderer_modified=false",
+            "SHCDE_DAMAGE_QA|event=building_render_tiles|building_id=18|global_id=208|type=99|assigned_sprites=8|tilemap_sprites=8|renderer_modified=true",
+        ]), encoding="utf-8")
+        result = Q.evaluate_log(log)
+        self.assertEqual(result["buildingRendererTileSamples"], 4)
+        self.assertEqual(result["buildingSamplesWithAssignedSprite"], 2)
+        self.assertEqual(result["buildingSamplesWithTilemapSprite"], 1)
+        self.assertEqual(result["directlySampledBuildingTypes"], ["19", "26"])
+        self.assertFalse(result["liveGraphicMappingProved"])
+        self.assertFalse(result["rendererReplacementProved"])
+
+    def test_canary_log_requires_actual_single_rebind_and_verified_restore(self):
+        log = self.base / "canary.log"
+        lines = [
+            "SHCDE_DAMAGE_QA|event=start|status=qa_sprite_canary",
+            "SHCDE_DAMAGE_QA|event=qa_canary|status=applied|building_id=8|global_id=901|tile_id=111|writes=1",
+            "SHCDE_DAMAGE_QA|event=qa_canary|status=restored|building_id=8|global_id=901|tile_id=111|original_restored=True|writes=2",
+            "SHCDE_DAMAGE_QA|event=shutdown|status=unpatched|sprite_writes=2",
+        ]
+        log.write_text("\n".join(lines), encoding="utf-8")
+        report = Q.evaluate_log(log)
+        self.assertTrue(report["qaSpriteCanaryStarted"])
+        self.assertTrue(report["qaCanaryTileRestoredVerified"])
+        self.assertTrue(report["qaCanaryCleanShutdownVerified"])
+        self.assertTrue(report["qaCanaryRebindAndRestoreVerified"])
+        self.assertEqual(report["qaCanaryApplications"], 1)
+        self.assertEqual(report["qaCanaryRestorations"], 1)
+        self.assertFalse(report["inGameFullDamageSwitchingProved"])
+        log.write_text("\n".join(lines[:-1]), encoding="utf-8")
+        self.assertTrue(Q.evaluate_log(log)["qaCanaryTileRestoredVerified"])
+        self.assertFalse(Q.evaluate_log(log)["qaCanaryRebindAndRestoreVerified"])
+        changed = lines.copy()
+        changed[2] = changed[2].replace("global_id=901", "global_id=902")
+        log.write_text("\n".join(changed), encoding="utf-8")
+        self.assertFalse(Q.evaluate_log(log)["qaCanaryRebindAndRestoreVerified"])
+
     def test_probe_source_contains_no_sprite_or_game_state_writes(self):
         source = Q.SRC.read_text(encoding="utf-8")
         self.assertIn("sprite_writes=0", source)
-        self.assertIsNone(re.search(r"\btile\.tileImage\s*=(?!=)", source))
-        self.assertIsNone(re.search(r"\bsprRenderer\.sprite\s*=(?!=)", source))
+        # The default read-only assembly excludes all explicitly opt-in
+        # SHCDE_QA_SPRITE_CANARY compilation blocks.
+        default_source = re.sub(r"(?ms)^#if SHCDE_QA_SPRITE_CANARY\n.*?^#endif\n", "", source)
+        self.assertIsNone(re.search(r"\btile\.tileImage\s*=(?!=)", default_source))
+        self.assertIsNone(re.search(r"\bsprRenderer\.sprite\s*=(?!=)", default_source))
         self.assertNotIn("SetCurrentHealth", source)
         self.assertNotIn("SetTileGraphic", source)
         self.assertIn("renderer_modified=false", source)
