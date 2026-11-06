@@ -23,6 +23,7 @@ NETWORK=ToolPolicy("external","Kann externe Ressourcen abrufen")
 UNKNOWN=ToolPolicy("unknown","Seiteneffekte nicht klassifiziert – Eingaben sorgfältig prüfen")
 
 RISK_TOOLS: dict[str,ToolPolicy]={
+    "suite_tool_inventory.py":READ,
     "build_portable_windows.py":WORK,
     "background_v2_pipeline.py":WORK,
     "ui_atlas_layout_port.py":WORK,

@@ -2,6 +2,12 @@
 
 Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Statische HUD-/Sprite-Pakete entstehen **ohne feste SE-Version und ohne eigene C#-DLL**; für optionale C#-Plugins gelten getrennte ABI-Schutzprüfungen. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
+## Gemeinsame Stronghold-Fachwerkzeuge (Entwicklungszweig, 06.11.2026)
+
+**Strg+K** findet nun auch 16 vorhandene CLI-Fachwerkzeuge und die neue historische Toolmatrix nach Aufgabe und deutschem/englischem Namen. Ein Treffer öffnet ausschließlich das passende Formular unter **Alle Werkzeuge**; er startet kein Skript, keinen Build und keine Installation. Der normale Projektablauf und alle vorhandenen Schutzprüfungen bleiben unverändert.
+
+Die neue lesende Toolmatrix vergleicht historische Stronghold-/SpriteSuite-Entwicklungsordner anhand von SHA-256, vorhandenen Einstiegspunkten und Risikoklassen, ohne Programme zu importieren oder auszuführen: `python tools/suite_tool_inventory.py --compare "E:\SU_base" --format markdown`. [Technische Analyse](docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_ANALYSE_20261106.md) · [Umsetzungsplan](docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_IMPLEMENTIERUNGSPLAN_20261106.md). Kein neuer Release.
+
 ## Aktuelle Python-/Spiele-Kompatibilität (05.11.2026)
 
 Die neue [Python-3.15-/Spielstruktur-Kompatibilitätsmatrix](docs/SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)

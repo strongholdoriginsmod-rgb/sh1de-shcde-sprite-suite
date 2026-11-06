@@ -1,5 +1,5 @@
 {
-  "htmlSHA256": "420a754ef07c09e521a544be6c751970690d3ca60f4110b59e88f076e2e8f37b",
+  "htmlSHA256": "39009a11f347f941d9a3538817fb7b0d9f9a27aecc29855097dec00c50a51e3a",
   "browser": "156.0.4314.58",
   "load": "unmodified HTML via page.set_content; opaque origin",
   "nativeIndexedDBTested": false,
@@ -10,67 +10,67 @@
     {
       "name": "Unmodified standalone HTML initializes without network resources",
       "passed": true,
-      "seconds": 0.009
+      "seconds": 0.032
     },
     {
       "name": "Unavailable local recovery is handled without blocking editing",
       "passed": true,
-      "seconds": 0.028
+      "seconds": 0.077
     },
     {
       "name": "Built-in synthetic 5x5 example loads 25 sprites",
       "passed": true,
-      "seconds": 0.026
+      "seconds": 0.024
     },
     {
       "name": "Workspace scene changes without errors",
       "passed": true,
-      "seconds": 0.016
+      "seconds": 0.024
     },
     {
       "name": "Workspace sprite changes without errors",
       "passed": true,
-      "seconds": 0.016
+      "seconds": 0.017
     },
     {
       "name": "Workspace animation changes without errors",
       "passed": true,
-      "seconds": 0.016
+      "seconds": 0.025
     },
     {
       "name": "Workspace atlas changes without errors",
       "passed": true,
-      "seconds": 0.013
+      "seconds": 0.016
     },
     {
       "name": "Workspace split changes without errors",
       "passed": true,
-      "seconds": 0.013
+      "seconds": 0.02
     },
     {
       "name": "Merged PNG is emitted with alpha and nonzero artwork",
       "passed": true,
-      "seconds": 0.029
+      "seconds": 0.1
     },
     {
       "name": "Project stores every demo original byte-for-byte",
       "passed": true,
-      "seconds": 0.033
+      "seconds": 0.055
     },
     {
       "name": "OpenRaster validates independently and matches merged PNG",
       "passed": true,
-      "seconds": 0.028
+      "seconds": 0.096
     },
     {
       "name": "Compose-to-cut enables 1px overlap and rear sharing without changing geometry",
       "passed": true,
-      "seconds": 0.126
+      "seconds": 0.212
     },
     {
       "name": "Cut ZIP independently reassembles to the same RGBA image",
       "passed": true,
-      "seconds": 0.047
+      "seconds": 0.034
     },
     {
       "name": "Ownership brush commits one undoable stroke",
@@ -80,27 +80,27 @@
     {
       "name": "Undo restores the exact ownership map",
       "passed": true,
-      "seconds": 0.011
+      "seconds": 0.016
     },
     {
       "name": "Cut tiles become an independently editable second group",
       "passed": true,
-      "seconds": 0.075
+      "seconds": 0.072
     },
     {
       "name": "Saved project reopens through the normal UI",
       "passed": true,
-      "seconds": 0.072
+      "seconds": 0.035
     },
     {
       "name": "Original export survives project reopen without changed bytes",
       "passed": true,
-      "seconds": 0.013
+      "seconds": 0.021
     },
     {
       "name": "Actual previous v0.1 demo opens through the file dialog",
       "passed": true,
-      "seconds": 0.035
+      "seconds": 0.029
     },
     {
       "name": "Transparent trim records nonzero anchor compensation",
@@ -110,22 +110,22 @@
     {
       "name": "Original reset removes trim compensation while preserving manual offsets",
       "passed": true,
-      "seconds": 0.005
+      "seconds": 0.006
     },
     {
       "name": "4096-frame project renders with a bounded virtual file list",
       "passed": true,
-      "seconds": 2.562
+      "seconds": 2.235
     },
     {
       "name": "Virtual file list reaches the last frame without expanding all rows",
       "passed": true,
-      "seconds": 0.012
+      "seconds": 0.014
     },
     {
       "name": "PNG series imports color-mask pairs and SHDE provenance",
       "passed": true,
-      "seconds": 0.02
+      "seconds": 0.025
     },
     {
       "name": "Source metadata is imported explicitly",
@@ -140,52 +140,52 @@
     {
       "name": "Target mapping and independent reference metadata match",
       "passed": true,
-      "seconds": 0.022
+      "seconds": 0.035
     },
     {
       "name": "Valid target references clear all formal export errors",
       "passed": true,
-      "seconds": 0.011
+      "seconds": 0.005
     },
     {
       "name": "Actual downloaded ZIP and SEMOD contain exact pixels, masks and target pivots",
       "passed": true,
-      "seconds": 0.025
+      "seconds": 0.048
     },
     {
       "name": "Single override exports source PNG bytes exactly and only after dimension validation",
       "passed": true,
-      "seconds": 0.017
+      "seconds": 0.01
     },
     {
       "name": "Batch nearest-neighbor resize applies to masks and PPU coherently",
       "passed": true,
-      "seconds": 0.02
+      "seconds": 0.012
     },
     {
       "name": "Single override now fails dimensions instead of silently installing resized assets",
       "passed": true,
-      "seconds": 0.011
+      "seconds": 0.006
     },
     {
       "name": "Undo restores all original image IDs after batch transformation",
       "passed": true,
-      "seconds": 0.014
+      "seconds": 0.004
     },
     {
       "name": "Redo and second undo preserve synchronized color and mask dimensions",
       "passed": true,
-      "seconds": 0.015
+      "seconds": 0.004
     },
     {
       "name": "Animation playback advances using the selected sequence",
       "passed": true,
-      "seconds": 0.021
+      "seconds": 0.032
     },
     {
       "name": "Animation pauses without moving the frame index",
       "passed": true,
-      "seconds": 0.058
+      "seconds": 0.009
     },
     {
       "name": "Corrupt multi-file import rolls back state, group selection and asset store",
@@ -195,12 +195,12 @@
     {
       "name": "Reducing the cut grid regenerates a valid map atomically",
       "passed": true,
-      "seconds": 0.024
+      "seconds": 0.026
     },
     {
       "name": "Grid change is undoable including the original ownership map",
       "passed": true,
-      "seconds": 0.024
+      "seconds": 0.023
     },
     {
       "name": "No document overflow at 1920 x 1080",
@@ -210,37 +210,37 @@
     {
       "name": "No document overflow at 1440 x 960",
       "passed": true,
-      "seconds": 0.004
+      "seconds": 0.006
     },
     {
       "name": "No document overflow at 1024 x 768",
       "passed": true,
-      "seconds": 0.008
+      "seconds": 0.007
     },
     {
       "name": "No document overflow at 768 x 1024",
       "passed": true,
-      "seconds": 0.006
+      "seconds": 0.007
     },
     {
       "name": "No document overflow at 390 x 844",
       "passed": true,
-      "seconds": 0.005
+      "seconds": 0.006
     },
     {
       "name": "Mobile inspector opens as a drawer",
       "passed": true,
-      "seconds": 0.011
+      "seconds": 0.004
     },
     {
       "name": "Mobile file list opens independently",
       "passed": true,
-      "seconds": 0.008
+      "seconds": 0.005
     },
     {
       "name": "Project save finishes and clears unsaved indicator",
       "passed": true,
-      "seconds": 0.022
+      "seconds": 0.011
     },
     {
       "name": "No unhandled JavaScript exceptions throughout workflows",

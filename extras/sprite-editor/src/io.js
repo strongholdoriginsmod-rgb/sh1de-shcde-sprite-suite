@@ -3,12 +3,13 @@
     'use strict';
     const C = typeof module === 'object' && module.exports ? require('./core.js') : root.SpriteCore;
     const K = typeof module === 'object' && module.exports ? require('./codec.js') : root.SpriteCodec;
-    const api = factory(C, K);
+    const D = typeof module === 'object' && module.exports ? require('./damage.js') : root.SpriteDamage;
+    const api = factory(C, K, D);
     if (typeof module === 'object' && module.exports)
         module.exports = api;
     else
         root.SpriteIO = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (C, K) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (C, K, D) {
     'use strict';
     const FORMAT = 'stronghold-sprite-editor', SCHEMA = 2;
     const uid = prefix => {
@@ -36,7 +37,7 @@
     const tick = () => new Promise(r => setTimeout(r, 0));
     function blank() {
         return {
-            format: FORMAT, version: SCHEMA, project: { name: 'Unbenannt', author: '', id: 'sprite-port', version: '1.0.0', description: '', provenance: '' }, scenes: [], frames: [], references: [], split: null,
+            format: FORMAT, version: SCHEMA, project: { name: 'Unbenannt', author: '', id: 'sprite-port', version: '1.0.0', description: '', provenance: '' }, scenes: [], frames: [], references: [], damageProfiles: [], split: null,
             export: { mode: 'atlas', material: 'Auto', padding: 2, extrude: 1, maxSide: 8192 }
         };
     }
@@ -114,6 +115,10 @@
             for (const k of ['imageId', 'maskId', 'mapId'])
                 if (state.split[k])
                     ids.add(state.split[k]);
+        for (const profile of state.damageProfiles || [])
+            for (const stage of profile.stages)
+                if (stage.candidateId)
+                    ids.add(stage.candidateId);
         return ids;
     }
     function validate(raw, store) {
@@ -212,6 +217,7 @@
                 imageId: r.imageId, mapId, maskId, settings, anchorX: C.integer(r.anchorX, 'Schnittanker X'), anchorY: C.integer(r.anchorY, 'Schnittanker Y'), extend: bool(r.extend, true), overlap, rearShare, group: text(r.group, 'Schnittgruppe', 120), start: C.integer(r.start, 'Schnittstart', 0, 1000000), source: source(r.source)
             };
         }
+        s.damageProfiles = D.validate(raw.damageProfiles ?? [], s.scenes, store);
         return s;
     }
     class History {
@@ -552,7 +558,7 @@
         }
         return { state: out, count };
     }
-    function preflight(state, store, frames = state.frames.filter(f => f.visible), mode = state.export.mode) {
+    function preflight(state, store, frames = state.frames.filter(f => f.visible && !D.stageScenes(state.damageProfiles || []).has(f.groupId)), mode = state.export.mode) {
         const issues = [], add = (level, code, message, f = null) => issues.push({ level, code, message, frameId: f?.id || null, name: f?.name || null });
         if (!frames.length)
             add('error', 'EMPTY', 'Keine sichtbaren Sprites für den Export.');
@@ -683,7 +689,9 @@
         return entries;
     }
     async function exportMod(state, store, options = {}) {
-        const frames = state.frames.filter(f => f.visible), issues = preflight(state, store, frames);
+        // Damage variants are NEVER installed as global defaults: they need a verified runtime switcher.
+        const stageIds = D.stageScenes(state.damageProfiles || []);
+        const frames = state.frames.filter(f => f.visible && !stageIds.has(f.groupId)), issues = preflight(state, store, frames);
         const errors = issues.filter(i => i.level === 'error');
         if (errors.length)
             C.fail(`Modexport gesperrt: ${errors.length} Fehler. ${errors[0].message}`);

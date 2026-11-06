@@ -175,3 +175,23 @@ def test_game_map_destination_reveals_actual_canvas_not_only_tk_tab():
     )
     suite.SandboxTab.show_game_map(fake)
     assert visited==[fake,"Qt map"]
+
+
+def test_specialist_search_opens_real_existing_cli_form_without_running_it(
+    suite_gui, monkeypatch,
+):
+    _suite, app = suite_gui
+    calls = []
+    monkeypatch.setattr(app, "run", lambda *args, **kw: calls.append(args))
+    monkeypatch.setattr(app, "cli", lambda *args, **kw: calls.append(args))
+    targets = build_navigation_targets(app)
+    target = next(t for t in targets if t.key == "tool:sprites.py")
+    assert "sprites.py" in [row.key.rsplit(":", 1)[-1] for row in
+                            find_targets(targets, "sprite export")]
+    target.navigate()
+    app.update()
+    assert app.notebook.select() == str(app.catalog_page)
+    assert app.catalog_tool.get() == "sprites.py"
+    assert app.catalog["fields"]
+    assert app.catalog["commands"]
+    assert calls == []
