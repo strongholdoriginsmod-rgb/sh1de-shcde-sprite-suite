@@ -19,6 +19,32 @@ class ReadOnlyLivePluginTests(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.base = Path(self.tmp.name)
 
+    def test_runner_is_independent_of_chainloader_plugin_and_heartbeats(self):
+        source = Q.SRC.read_text(encoding="utf-8")
+        self.assertIn("internal sealed class BuildingDamageRuntimeObserver", source)
+        self.assertIn("BuildingDamageRuntimeObserver.Start(Logger);", source)
+        self.assertNotIn("new UnityEngine.GameObject", source)
+        self.assertNotIn("UnityEngine.MonoBehaviour", source)
+        self.assertIn("UnityEngine.Application.onBeforeRender += OnBeforeRender;", source)
+        self.assertIn("UnityEngine.Application.quitting += OnQuitting;", source)
+        self.assertIn("UnityEngine.Application.onBeforeRender -= OnBeforeRender;", source)
+        self.assertIn("_harmony.UnpatchSelf();", source)
+        self.assertIn("static BuildingDamageRuntimeObserver _active", source)
+        self.assertIn("event=runner_heartbeat", source)
+        self.assertIn("event=host_destroyed", source)
+        self.assertIn("private void OnDestroy()", source)
+        log = self.base / "runner.log"
+        log.write_text("\n".join([
+            "SHCDE_DAMAGE_QA|event=start|status=read_only",
+            "SHCDE_DAMAGE_QA|event=host_destroyed|runner_independent=true",
+            "SHCDE_DAMAGE_QA|event=runner_heartbeat|frames=60",
+            "SHCDE_DAMAGE_QA|event=runner_heartbeat|frames=300",
+        ]), encoding="utf-8")
+        outcome = Q.evaluate_log(log)
+        self.assertEqual(outcome["runnerHeartbeatCount"], 2)
+        self.assertTrue(outcome["runnerSurvivedHost"])
+        self.assertFalse(outcome["rendererReplacementProved"])
+
     def test_marker_blocks_random_game_directories(self):
         with self.assertRaisesRegex(Q.QAFailure, "QA-Klon"):
             Q.verify_root(self.base)

@@ -193,6 +193,10 @@ def evaluate_log(path: Path) -> dict:
     running = bool(start) and all(e.get("status") == "read_only" for e in start)
     disabled = any(e.get("status") == "disabled" for e in start)
     shutdown = sum(e.get("event") == "shutdown" for e in events)
+    heartbeats = [i for i, e in enumerate(events) if e.get("event") == "runner_heartbeat"]
+    host_destroyed = [i for i, e in enumerate(events) if e.get("event") == "host_destroyed"]
+    runner_survived_host = bool(host_destroyed and
+        any(i > host_destroyed[0] for i in heartbeats))
     tiles = [e for e in events if e.get("event") == "tile_graphic"]
     footprints = [e for e in events if e.get("event") == "building_footprint"]
     failures = [e for e in events if e.get("event") == "read_error"]
@@ -221,6 +225,9 @@ def evaluate_log(path: Path) -> dict:
         "readOnlyProbeStarted": running,
         "probeDisabled": disabled,
         "shutdownEvents": shutdown,
+        "runnerHeartbeatCount": len(heartbeats),
+        "hostDestroyedCount": len(host_destroyed),
+        "runnerSurvivedHost": runner_survived_host,
         "tileGraphicObservations": len(tiles),
         "buildingFootprintObservations": len(footprints),
         "readErrors": len(failures),

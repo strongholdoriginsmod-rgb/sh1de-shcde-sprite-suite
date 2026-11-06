@@ -23,6 +23,32 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                  "0.1.0")]
     public sealed class BuildingDamageLiveAudit : BaseUnityPlugin
     {
+        private void Awake()
+        {
+            try
+            {
+                BuildingDamageRuntimeObserver.Start(Logger);
+                Logger.LogInfo("SHCDE_DAMAGE_QA|event=host_bootstrap|status=static_observer");
+            }
+            catch (Exception error)
+            {
+                Logger.LogError("SHCDE_DAMAGE_QA|event=host_bootstrap|status=disabled|exception="
+                    + error.GetType().Name);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Chainloader removes plugin components during startup. The plain
+            // C# observer must NOT be stopped here: it is held by the static
+            // Harmony callback and Unity.Application delegates until quitting.
+            Logger.LogInfo("SHCDE_DAMAGE_QA|event=host_destroyed|static_observer_independent=true");
+        }
+    }
+
+    internal sealed class BuildingDamageRuntimeObserver
+    {
+        private BepInEx.Logging.ManualLogSource Logger;
         private const string ApprovedSeSha256 = "__SE_SHA256__";
         private const string ApprovedGameSha256 = "__GAME_SHA256__";
         private const string QaMarker = "SpriteSuite isolated Steam build 24816905 QA clone; originals are read-only.";
@@ -41,7 +67,7 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
         private bool _enabled;
         private readonly HashSet<string> _seenTiles = new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> _seenFootprints = new HashSet<string>(StringComparer.Ordinal);
-        private static BuildingDamageLiveAudit _active;
+        private static BuildingDamageRuntimeObserver _active;
 
         private static string Hex(byte[] bytes)
         {
@@ -60,15 +86,27 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                 return Hex(hasher.ComputeHash(file));
         }
 
-        private void Awake()
+        private BuildingDamageRuntimeObserver(BepInEx.Logging.ManualLogSource logger)
+        {
+            if (logger == null) throw new ArgumentNullException("logger");
+            Logger = logger;
+        }
+
+        internal static void Start(BepInEx.Logging.ManualLogSource logger)
+        {
+            if (_active != null) return;
+            var instance = new BuildingDamageRuntimeObserver(logger);
+            _active = instance;
+            instance.Begin();
+        }
+
+        private void Begin()
         {
             _mainThread = Thread.CurrentThread.ManagedThreadId;
             try
             {
-                // The game changes Unity scenes while loading. Keep this
-                // QA-only observer alive for the map session, mirroring the
-                // existing persistent runtime host. No renderer is modified.
-                UnityEngine.Object.DontDestroyOnLoad(gameObject);
+                // The observer has no Unity GameObject. Static Harmony and
+                // Application event delegates outlive scene transitions.
                 string root = Paths.GameRootPath;
                 if (string.IsNullOrWhiteSpace(root))
                     throw new InvalidOperationException("game_root_missing");
@@ -104,7 +142,7 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                     null,
                     new Type[] { typeof(GameMapTile), typeof(int), typeof(int), typeof(int) },
                     null);
-                MethodInfo postfix = typeof(BuildingDamageLiveAudit).GetMethod(
+                MethodInfo postfix = typeof(BuildingDamageRuntimeObserver).GetMethod(
                     "ObserveTilePostfix",
                     BindingFlags.Static | BindingFlags.NonPublic);
                 if (target == null || target.ReturnType != typeof(void) || postfix == null)
@@ -116,18 +154,22 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                 _active = this;
                 _harmony = new Harmony("org.spritesuite.shcde.damage.liveaudit");
                 _harmony.Patch(target, postfix: new HarmonyMethod(postfix));
+                UnityEngine.Application.onBeforeRender += OnBeforeRender;
+                UnityEngine.Application.quitting += OnQuitting;
                 _enabled = true;
                 Logger.LogInfo("SHCDE_DAMAGE_QA|event=start|status=read_only|se_sha256=" +
                     se + "|game_sha256=" + game + "|renderer_modified=false");
             }
             catch (Exception e)
             {
-                _active = null;
+                _enabled = false;
+                try { UnityEngine.Application.onBeforeRender -= OnBeforeRender; } catch (Exception) { }
+                try { UnityEngine.Application.quitting -= OnQuitting; } catch (Exception) { }
                 if (_harmony != null)
                 {
                     try { _harmony.UnpatchSelf(); } catch (Exception) { }
                 }
-                _enabled = false;
+                _active = null;
                 Logger.LogError("SHCDE_DAMAGE_QA|event=start|status=disabled|error=" +
                     e.GetType().Name + "|reason=" + Sanitize(e.Message, 96));
             }
@@ -135,7 +177,7 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
 
         private static void ObserveTilePostfix(GameMapTile tile, int file, int image)
         {
-            BuildingDamageLiveAudit app = _active;
+            BuildingDamageRuntimeObserver app = _active;
             if (app == null || !app._enabled || tile == null ||
                 Thread.CurrentThread.ManagedThreadId != app._mainThread ||
                 app._tileReports >= MaximumTileReports)
@@ -203,11 +245,22 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                     context + "|exception=" + ex.GetType().Name);
         }
 
+        private void OnBeforeRender()
+        {
+            Update();
+        }
+
         private void Update()
         {
             if (!_enabled || Thread.CurrentThread.ManagedThreadId != _mainThread)
                 return;
             _frames++;
+            if (_frames == 60 || _frames == 300 || _frames == 900)
+                Logger.LogInfo("SHCDE_DAMAGE_QA|event=runner_heartbeat|frames=" + _frames
+                    + "|thread=" + Thread.CurrentThread.ManagedThreadId
+                    + "|tile_reports=" + _tileReports
+                    + "|footprints=" + _footprintReports
+                    + "|renderer_modified=false");
             if (_frames % FootprintPollInterval != 0 ||
                 _footprintReports >= MaximumFootprintReports)
                 return;
@@ -274,16 +327,27 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
             }
         }
 
-        private void OnDestroy()
+        private void OnQuitting()
         {
+            Shutdown("application_quitting");
+        }
+
+        private void Shutdown(string reason)
+        {
+            if (!_enabled && _harmony == null) return;
             _enabled = false;
-            _active = null;
+            try { UnityEngine.Application.onBeforeRender -= OnBeforeRender; }
+            catch (Exception e) { ReportFailure("unsubscribe_before_render", e); }
+            try { UnityEngine.Application.quitting -= OnQuitting; }
+            catch (Exception e) { ReportFailure("unsubscribe_quitting", e); }
             if (_harmony != null)
             {
                 try { _harmony.UnpatchSelf(); } catch (Exception e) { ReportFailure("unpatch", e); }
                 _harmony = null;
             }
-            Logger.LogInfo("SHCDE_DAMAGE_QA|event=shutdown|status=unpatched|sprite_writes=0");
+            if (ReferenceEquals(_active, this)) _active = null;
+            Logger.LogInfo("SHCDE_DAMAGE_QA|event=shutdown|status=unpatched|reason=" +
+                reason + "|sprite_writes=0");
         }
     }
 }

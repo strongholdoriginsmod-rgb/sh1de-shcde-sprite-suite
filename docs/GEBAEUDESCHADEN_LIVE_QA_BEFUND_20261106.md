@@ -29,3 +29,23 @@ Das neue Logformat unterscheidet das bloße Laden des Plugins von tatsächlichen
 Eine interaktiv zugängliche QA-Spielkarte muss für mindestens ein einfaches und ein mehrkacheliges Gebäude belegen, welche Tile-/SpriteRenderer-/Material-/Masken-Objekte mit welcher HP-/Feuerursache verknüpft sind. Insbesondere muss die Lebensdauer des BepInEx-Beobachters über den Mapwechsel überprüft werden. Danach erst per-Instanz- und per-Kachel-Spriteumschaltung implementieren, Vanilla-Rollback, Feuer/Mechanik/Reparatur/Mapreload prüfen und erst dann Runtime-Hook aktivieren.
 
 **Ein vollständiger aktivierter und spielgetesteter Schadensrenderer ist mit diesem QA-Stand nicht belegt.**
+
+## Korrektur und nachgewiesener Spiel-Lebenszyklus (06.11.2026, 17:24 MEZ)
+
+Die vorherige Schlussfolgerung, dass ein zweites `DontDestroyOnLoad`-GameObject den BepInEx-Lebenszyklus dauerhaft stabilisiert, wurde durch den echten dritten Spielstart **widerlegt**: Auch dessen `OnDestroy` lief unmittelbar nach dem Chainloader-Start. Diese Änderung ist deshalb **nicht** der finale Implementierungsstand.
+
+Die korrigierte Fassung unter `runtime/StrongholdEuropeDE.BuildingDamage.LiveAudit/BuildingDamageLiveAudit.cs` nutzt einen **gewöhnlichen C#-Zustandsbeobachter ohne eigenes Unity-GameObject**, gehalten von einer statischen Referenz und den Harmony-/`Application.onBeforeRender`-Callbacks. Nur die BepInEx-Startkomponente kann zerstört werden; der Beobachter wird beim Spielende durch `Application.quitting` mit `Harmony.UnpatchSelf()` abgebaut.
+
+Der konkrete, vierte Start aus der markierten QA-Kopie `E:\SSLiveGame_20261105` hat Folgendes protokolliert:
+
+- `event=start|status=read_only` gegen den exakt geprüften SHCDESE-2.14.3- und `Assembly-CSharp.dll`-Hash;
+- `event=host_bootstrap|status=static_observer` und anschließend `event=host_destroyed|static_observer_independent=true`;
+- **drei spätere** `event=runner_heartbeat`-Signale bei **60**, **300** und **900** Frames, alle auf **Thread 1**;
+- beim regulären Beenden des QA-Spiels `event=shutdown|status=unpatched|reason=application_quitting|sprite_writes=0`;
+- **0** Lese-Fehler, **0** Sprite-Schreibzugriffe, **0** Tile-Graphic-/Footprint-Beobachtungen, da keine interaktive Spielkarte geladen wurde.
+
+Originalprotokoll (unverändert und mit SHA-256 nach dem Schließen der QA-Prozessinstanz gesichert): `E:\SpriteSuite_FinalAudit_20261106\LiveGameQA\StaticObserverSuccess_20261106-172451.log`, SHA-256 `61da999880e1e0ea315ea5d5d5d185f61d29a12d88489377e16bfb6debd2732b`. Maschinenlesbare Abnahme: `StaticObserverSuccess_20261106-172451_report.json` am selben Ort.
+
+Die temporäre QA-Plugin-Installation wurde **nach dem Spielende** per Receipt-, Game-, SHCDESE- und Plugin-SHA-256 geprüft und vollständig mit `--remove-qa` entfernt. Die normale Steam-Installation sowie alle Originalspiel-Sprites wurden nicht verändert.
+
+**Beweisgrenze:** Damit ist der **Lebenszyklus** der nur lesenden Spiel-Integration im tatsächlich gestarteten QA-Spiel erstmals bestätigt. Eine Per-Gebäude-Sprite-/Masken-/Renderer-Zuordnung oder aktivierte, spielgetestete HP-abhängige Schadensmodellumschaltung ist weiterhin **nicht** bestätigt. Ein echter Szenen-/Gebäudebefund muss folgen, sobald auf der entsperrten Desktop-Sitzung eine Spielkarte geladen werden kann.
