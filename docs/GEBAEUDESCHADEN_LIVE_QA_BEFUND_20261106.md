@@ -49,3 +49,19 @@ Originalprotokoll (unverändert und mit SHA-256 nach dem Schließen der QA-Proze
 Die temporäre QA-Plugin-Installation wurde **nach dem Spielende** per Receipt-, Game-, SHCDESE- und Plugin-SHA-256 geprüft und vollständig mit `--remove-qa` entfernt. Die normale Steam-Installation sowie alle Originalspiel-Sprites wurden nicht verändert.
 
 **Beweisgrenze:** Damit ist der **Lebenszyklus** der nur lesenden Spiel-Integration im tatsächlich gestarteten QA-Spiel erstmals bestätigt. Eine Per-Gebäude-Sprite-/Masken-/Renderer-Zuordnung oder aktivierte, spielgetestete HP-abhängige Schadensmodellumschaltung ist weiterhin **nicht** bestätigt. Ein echter Szenen-/Gebäudebefund muss folgen, sobald auf der entsperrten Desktop-Sitzung eine Spielkarte geladen werden kann.
+
+## Statischer Renderer-Pfad der tatsächlich installierten Game-Assembly
+
+Die lokale, mit SHA-256 `bc8b6a395f01d48557db413600c8dd8d1fdfd3abdf97bfbbb68a3c56b04fd789` gepinnte `Assembly-CSharp.dll` wurde zusätzlich über `Mono.Cecil.dll` **nur gelesen**; der Spielprozess musste dafür nicht gestartet werden.
+
+Das geprüfte IL zeigt:
+
+- `GameMapTile::tileImage` ist ein Feld vom Typ `UnityEngine.Sprite`; `GameMapTile::tilemapRef` ist eine `UnityEngine.Tilemaps.Tilemap`.
+- `SpriteMapping::setGenericBuildingTileGraphic(GameMapTile,int,int,int)` enthält **22** `stfld GameMapTile::tileImage`-Anweisungen für die verschiedenen Gebäude-/GM-Verzweigungen.
+- `SpriteMapping::setOpenTileGraphic(GameMapTile)` schreibt ebenfalls das Sprite, und `GameMap::wipeTiles()` kann dieses Feld zurücksetzen.
+- `gameTile::GetTileData(Vector3Int,ITilemap,ref TileData)` liest `GameMapTile::tileImage` an IL-Offsets **357** und **506** und führt Sprite-Schreibzugriffe in `TileData.set_sprite` aus (u. a. Offsets **386** und **511**).
+- `GameMap::processTestMap` liest die bestehende Kachel-Bildreferenz.
+
+Damit ist eine **Unity-Tilemap-Versorgung über `GameMapTile.tileImage`** für den exakt geprüften Spiel-Build strukturell nachgewiesen. Nicht nachgewiesen ist, dass die SpriteSuite-Slotnummer unmittelbar einer bestimmten Spiel-Kachel entspricht, oder dass eine spätere Änderung am Feld ohne korrektes `RefreshTile`, Teamfarben-/Materialmasken, Kollisionen und Map-Lifecycle vollständig und fehlerfrei sichtbar bleibt. Ebenso könnten reguläre SpriteMapping-Aufrufe neu gesetzte Bildreferenzen überschreiben. Ein geplanter Schadensmodell-Renderer muss deshalb ursprüngliche Sprite-/Materialwerte instanzspezifisch protokollieren und im Fehlerfall vollständig wiederherstellen, statt allein einen globalen GM-Atlas auszutauschen.
+
+Der tatsächlich ausgeführte QA-Beobachter ist weiterhin nur lesend. Ein aktiver, grafikändernder Mod-Hook gehört **nicht** zum nachgewiesenen aktuellen Stand.
