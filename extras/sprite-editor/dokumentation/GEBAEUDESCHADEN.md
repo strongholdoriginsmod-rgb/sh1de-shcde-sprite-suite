@@ -43,3 +43,9 @@ Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek*
 - `node --test tests/test_core.cjs tests/test_seam_overlap.cjs tests/test_split_integration.cjs tests/test_damage.cjs` im Verzeichnis `extras/sprite-editor`.
 - `python -m unittest discover -s tests -p test_building_damage_codex.py -q` im SpriteSuite-Projektverzeichnis.
 - `node tests/test_damage_browser.cjs` im Verzeichnis `extras/sprite-editor`; benötigt lokal verfügbare Puppeteer-/Edge-Bibliotheken.
+
+## Runtime-Übergabe zur späteren HP-Anbindung
+
+Das freigegebene Schadens-ZIP kann jetzt mit `python tools/building_damage_runtime_preflight.py --package <gebaeudeschaden.zip> --dry-run` vollständig offline geprüft werden. `--prepare --output <neuer-ordner>` erzeugt eine SHA-gebundene, rein lesende Kandidatentabelle, sofern Gebäudetyp und Geometrie gültig sind. Eine nicht im Zielspiel bestätigte Gebäudetyp-ID wird nicht automatisch als verifiziert markiert. Im nächsten Schritt kann die C#-Auswahllogik die HP-/Feuerschwellen anhand dieser Tabelle prüfen. Die Sprite-Renderer-Umsetzung erfordert eine eigene In-Game-Abnahme; das ZIP wird nicht als unmittelbar installierbarer Runtime-Patch behandelt.
+
+Die vollständige Offline-Prüfung kann über `python tools/qa_building_damage_runtime.py` aus dem SpriteSuite-Projektverzeichnis gestartet werden.

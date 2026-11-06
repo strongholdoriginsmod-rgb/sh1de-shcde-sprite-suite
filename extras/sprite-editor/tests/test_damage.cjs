@@ -223,3 +223,38 @@ test('draft and rejected stages are excluded from damage manifest and standard m
     const mod = await I.exportMod(f.s, f.store);
     A.equal(mod.report.mappings.length, 1);
 });
+
+
+test('approved damage tiles export exact material-mask SHA-256 for runtime verification', async () => {
+    const f = stageFixture();
+    const mask = C.image(64, 32);
+    const src = f.store.get(f.imageId);
+    for (let i = 0; i < src.data.length; i += 4)
+        if (src.data[i + 3]) mask.data.set([35, 110, 20, 255], i);
+    const maskId = f.store.add(mask);
+    for (const frame of f.s.frames) {
+        frame.maskId = maskId;
+        frame.originalMaskId = maskId;
+    }
+    const stageFrame = f.s.frames.find(x => x.groupId === f.sceneId);
+    const damaged = C.image(src.width, src.height, new Uint8Array(src.data));
+    let altered = 0;
+    for (let i = 0; i < damaged.data.length && altered < 12; i += 4)
+        if (damaged.data[i + 3]) {
+            damaged.data[i] = (damaged.data[i] + 75) % 256;
+            altered++;
+        }
+    A.ok(altered >= 10);
+    const imageId = f.store.add(damaged);
+    stageFrame.imageId = stageFrame.originalId = imageId;
+    const approved = DI.approveStage(f.s, f.store, f.stageId,
+        'Masken und Farbänderungen einzeln geprüft', true);
+    const exported = await DI.exportPackage(approved.state, approved.store);
+    const t = exported.manifest.buildings[0].stages[0].tiles[0];
+    A.ok(t.mask && t.mask.endsWith('_m.png'));
+    A.match(t.maskSha256, /^[a-f0-9]{64}$/);
+    const files = await K.unzip(exported.bytes);
+    const maskFile = files.find(row => row.name === t.mask);
+    A.ok(maskFile);
+    A.equal(t.maskSha256, await K.sha256(maskFile.data));
+});

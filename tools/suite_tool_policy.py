@@ -56,6 +56,10 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         if "check" in command or "doctor" in command or "verify" in command:
             return READ
         return WORK
+    if name=="building_damage_runtime_preflight.py":
+        return WORK if "--prepare" in command else READ
+    if name=="building_damage_codex.py":
+        return NETWORK if "--execute" in command else READ
     if name=="ziel_se211.py":
         if {"installieren","deinstallieren","zurueckspielen"} & command:
             return GAME

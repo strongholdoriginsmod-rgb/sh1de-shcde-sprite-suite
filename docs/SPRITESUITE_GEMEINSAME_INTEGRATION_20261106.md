@@ -88,3 +88,13 @@ Abnahme am 06.11.2026 auf DESKTOP-O008GV9, getrennt vom uncommitteten Hauptarbei
 - **0** Schreibzugriffe auf die SHCDE- oder SHDE-Spielinstallation und **0** echte GPT-Image-Aufrufe. Die native HP-gesteuerte Spielrenderer-Umschaltung bleibt ein separat zu implementierender und in-game zu testender Funktionsblock.
 
 Alle Änderungen sind lokal im isolierten Integrationszweig. Andere Chats können dessen aktuellen HEAD lesen und ihre Änderungen über eigene Worktrees zurückführen. Eine tatsächliche Kommunikation zwischen Chats wird durch diesen Dateivermerk nicht behauptet.
+
+## Fortsetzung: geprüfter HP-Runtime-Vertrag
+
+Neuer isolierter Entwicklungszweig `feature/building-damage-runtime-contract-20261106` unter `E:\SpriteSuite_DamageRuntime_20261106`, ausgehend von `20bba53`. Er übernimmt die bestehende 1-px-Tile-Überlappung, die getrennten HP-Schadensmodelle und den Codex-Bildworkflow unverändert.
+
+Umgesetzt sind ein vollständig prüfendes Preflight für das vom Sprite Editor erzeugte Schadens-ZIP, eine SHA-256-gebundene, nur lesende TSV-Übergabe, der exakte C#-HP-/Feuer-Selektor und ein fail-closed Leseadapter für die dokumentierten SHCDESE-Gebäudeabfragen. Das Runtime-Plugin und die SpriteRenderer-Kopplung bleiben unverändert. Der GameBuilding-API-Adapter ist ausschließlich bei expliziter Compile-Option `SHCDE_BUILDING_DAMAGE_READONLY_API` vorhanden; ohne diese Option besteht keine neue Spiel-DLL-Abhängigkeit.
+
+Ein gemeinsamer Offline-Testlauf kann mit `python tools/qa_building_damage_runtime.py` gestartet werden. Der Test baut eine echte SpriteSuite-Schadensbibliothek aus dem synthetischen 5×5-Steinhof, prüft ZIP/PNG und generiert die TSV-Tabelle, kompiliert die C#-Entscheidungslogik sowie den API-Adapter gegen synthetische Methoden und beendet sämtliche Abläufe ohne Installations- oder Netzwerkanfrage. Details, Funktionsgrenzen und der nächste In-Game-QA-Nachweis stehen in `docs/GEBAEUDESCHADEN_RUNTIME_AUDIT_PLAN_20261106.md`.
+
+Der tatsächliche Renderer- und Gebäude-Slot-Nachweis bleibt offen; insbesondere dürfen `GetOccupiedTileIds` und die SpriteSuite-Tile-Reihenfolge noch nicht ungeprüft gleichgesetzt werden. Das neue Manifest ist deshalb weiterhin kein installierbarer dynamischer Gebäudeschadens-Mod.

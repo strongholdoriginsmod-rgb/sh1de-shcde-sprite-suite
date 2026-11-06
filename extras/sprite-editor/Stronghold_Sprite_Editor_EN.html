@@ -3885,7 +3885,9 @@ label {
                         dx: f.dx, dy: f.dy, pivot: f.pivot, ppu: f.ppu };
                     if (f.maskId) {
                         m.mask = target + String(f.slot).padStart(4, '0') + '_m.png';
-                        entries.push({ name: m.mask, data: await store.bytes(f.maskId, options.signal) });
+                        const maskData = await store.bytes(f.maskId, options.signal);
+                        m.maskSha256 = await K.sha256(maskData);
+                        entries.push({ name: m.mask, data: maskData });
                     }
                     tiles.push(m);
                 }
