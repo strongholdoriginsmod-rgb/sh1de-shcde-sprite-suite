@@ -66,3 +66,13 @@ Vor der Renderer-Integration weiter nachweisen:
 - `git -c core.whitespace=cr-at-eol diff --check`: keine Konflikte.
 
 **Schnittstelle für die spätere Renderer-Arbeit:** Die öffentlich dokumentierten Gebäude-APIs sind [GameBuildingManagerAPI](https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/api/SHCDESE.API.GameBuildingManagerAPI.html) und die [Asset API](https://rawra-stronghold-crusader.gitlab.io/shcde-script-extender/docs/guides/asset-api.html). Die Asset API beschreibt globale bzw. namespace-lokale Overrides, nicht einen nachgewiesenen per-Gebäude- und per-Tile-Zustandsrenderer. Deshalb ist nur die Leseebene implementiert; ein aktiver Spielpatch bleibt gesperrt.
+
+## Freigabegebundener Runtime-Preflight
+
+Das neue `approvalDigest` wird beim SpriteSuite-Export neben den freigegebenen Tiles dokumentiert. Der Offline-Preflight prüft, dass es syntaktisch ein SHA-256-Wert ist; er kann die interne Projektdatei nicht auf Echtheit attestieren. Fehlt es in älteren Paketen, wird die Stufe in `unboundApprovedStages` aufgeführt, aus einem vorbereiteten Kandidaten-TSV ausgeschlossen und die Option `--prepare` für das ganze Paket gesperrt. Die Option `--dry-run` bleibt zur Diagnose verfügbar. Es findet keine Spielinstallation statt.
+
+Der synthetische Exporttest setzt den vorgesehenen Zielgebäudetyp jetzt **vor** der Modellfreigabe, damit die Änderung der Zuordnung keine bereits abgenommene Stufe unbemerkt ungültig macht.
+
+## Abschluss der aktuellen Offline-Gates
+
+Das vollständige Runtime-QA-Kommando `python tools/qa_building_damage_runtime.py` besteht nach der Aktualisierung des Freigabevertrags mit **18** Python-Preflight-Tests, **56** C#-Selector-/ZIP-Assertions und **29** schreibfreien API-Adapter-Assertions. Die gezielt synthetische Gebäude-ID wird vor der Modellfreigabe gesetzt, danach bleibt sie im SHA-256-gebundenen Zustand unverändert. Alte Datenpakete ohne eine solche Freigabehash-Bindung können diagnostiziert, aber nicht als angeblich geprüfte Runtime-Tabelle vorbereitet werden. Die aktive Renderer-Zuordnung bleibt bewusst deaktiviert.

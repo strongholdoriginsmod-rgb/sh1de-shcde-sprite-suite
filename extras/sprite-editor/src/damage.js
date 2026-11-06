@@ -66,9 +66,15 @@
                     const candidateId = stage.candidateId === null || stage.candidateId === undefined ? null : ident(stage.candidateId, 'Kandidatenbild');
                     if (candidateId && store && !store.has(candidateId))
                         fail('Kandidatenbild fehlt.');
-                    const status = stage.status ?? 'draft';
-                    if (!['draft', 'approved', 'rejected'].includes(status))
+                    const requestedStatus = stage.status ?? 'draft';
+                    if (!['draft', 'approved', 'rejected'].includes(requestedStatus))
                         fail('Unbekannter Freigabestatus.');
+                    const suppliedDigest = stage.approvalDigest ?? null;
+                    if (suppliedDigest !== null && (typeof suppliedDigest !== 'string' || !/^[a-f0-9]{64}$/.test(suppliedDigest)))
+                        fail('Ungültige Zustandsprüfsumme der Schadensfreigabe.');
+                    // Legacy approvals predate content binding. Never silently export them as reviewed.
+                    const status = requestedStatus === 'approved' && !suppliedDigest ? 'draft' : requestedStatus;
+                    const approvalDigest = status === 'approved' ? suppliedDigest : null;
                     const model = stage.model ?? MODELS[0];
                     if (!MODELS.includes(model)) fail('Unbekanntes GPT-Image-Modell.');
                     return {
@@ -76,7 +82,7 @@
                         label: limited(stage.label ?? '', 'Stufenname', 120),
                         changeRequest: limited(stage.changeRequest ?? '', 'Nachbesserung', 2000),
                         reviewNotes: limited(stage.reviewNotes ?? '', 'Abnahmevermerk', 2000),
-                        model, candidateId, status
+                        model, candidateId, status, approvalDigest
                     };
                 }).sort((a, b) => KINDS.indexOf(a.kind) - KINDS.indexOf(b.kind) || b.hpAtOrBelow - a.hpAtOrBelow)
             };
@@ -180,6 +186,10 @@
                 if (!old || old.status !== 'approved' || stage.status !== 'approved')
                     continue;
                 const changed = old.hpAtOrBelow !== stage.hpAtOrBelow ||
+                    old.kind !== stage.kind ||
+                    old.model !== stage.model ||
+                    old.changeRequest !== stage.changeRequest ||
+                    old.candidateId !== stage.candidateId ||
                     (oldProfiles.get(profile.buildingGroupId)?.gameBuildingType ?? null) !== (profile.gameBuildingType ?? null) ||
                     JSON.stringify(oldScenes.get(profile.buildingGroupId)) !== JSON.stringify(after.scenes.find(g => g.id === profile.buildingGroupId)?.settings) ||
                     JSON.stringify(before.frames.filter(f => f.groupId === profile.buildingGroupId)) !==
@@ -188,7 +198,10 @@
                     JSON.stringify(before.frames.filter(f => f.groupId === stage.sceneId)) !==
                         JSON.stringify(after.frames.filter(f => f.groupId === stage.sceneId)) ||
                     after.frames.some(f => f.groupId === stage.sceneId && !oldFrames.has(f.id));
-                if (changed) stage.status = 'draft';
+                if (changed) {
+                    stage.status = 'draft';
+                    stage.approvalDigest = null;
+                }
             }
         return after;
     }

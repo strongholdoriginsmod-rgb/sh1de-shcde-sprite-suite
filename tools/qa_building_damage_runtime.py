@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -65,9 +66,10 @@ def main(argv: list[str] | None = None) -> int:
             logs = run([sys.executable, "-m", "unittest", "discover", "-s",
                         str(TESTS), "-p", "test_building_damage_runtime_preflight.py", "-q"],
                        ROOT, "Python-Preflight-Test")
-            if "OK" not in logs or "Ran 16 tests" not in logs:
+            count = re.search(r"Ran (\d+) tests?", logs)
+            if not count or int(count.group(1)) < 18 or "OK" not in logs:
                 raise RuntimeError("Python-Preflight-Tests enthalten keine vollständige Abnahme.")
-            mark("16 Python-Preflight-Regressionen")
+            mark(count.group(1) + " Python-Preflight-Regressionen")
 
             built = run([node, str(TESTS / "building_damage_export_fixture.cjs"),
                          str(package)], ROOT, "SpriteSuite-Export")
@@ -83,7 +85,8 @@ def main(argv: list[str] | None = None) -> int:
             if (preflight.get("runtimeHookInstalled") is not False or
                 preflight.get("inGameTested") is not False or
                 preflight.get("rendererMappingValidated") is not False or
-                preflight.get("mappedTypes") != [108]):
+                preflight.get("mappedTypes") != [108] or
+                preflight.get("unboundApprovedStages")):
                 raise RuntimeError("Unverifiziertes Renderer- oder Spielmapping wurde als erfolgreich behauptet.")
             if "\r" in table.read_text(encoding="utf-8"):
                 raise RuntimeError("Kandidaten-TSV enthält nicht-normalisierte Zeilenenden.")
@@ -97,9 +100,10 @@ def main(argv: list[str] | None = None) -> int:
             run(compile_select, ROOT, "Offline-C#-Selector-Kompilation")
             log = run([str(selection), str(table), str(package)], ROOT,
                       "C#-Paket-/HP-Selektor")
-            if "56 assertions" not in log:
+            count = re.search(r"(\d+) assertions", log)
+            if not count or int(count.group(1)) < 56:
                 raise RuntimeError("C#-Selektor führte nicht alle Assertions aus.")
-            mark("56 C#-Selector-/TSV-/ZIP-Assertions")
+            mark(count.group(1) + " C#-Selector-/TSV-/ZIP-Assertions")
 
             compile_probe = [str(csc), "/nologo",
                              "/define:SHCDE_BUILDING_DAMAGE_READONLY_API",
@@ -110,9 +114,10 @@ def main(argv: list[str] | None = None) -> int:
                              str(TESTS / "building_damage_probe_harness.cs")]
             run(compile_probe, ROOT, "Opt-in-API-Adapter-Kompilation")
             log = run([str(observer)], ROOT, "API-Adapter/ReadOnly-Probe")
-            if "29 assertions" not in log:
+            count = re.search(r"(\d+) assertions", log)
+            if not count or int(count.group(1)) < 29:
                 raise RuntimeError("API-Adapter-Testabdeckung ist nicht vollständig.")
-            mark("29 Read-only-Building-API-Assertions")
+            mark(count.group(1) + " Read-only-Building-API-Assertions")
 
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0

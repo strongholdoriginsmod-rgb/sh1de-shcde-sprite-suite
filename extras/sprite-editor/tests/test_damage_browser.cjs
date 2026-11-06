@@ -102,6 +102,11 @@ async function run() {
         await field(page, 'Verbleibende HP · %', 60);
         assert((await page.$eval('.inspector-content', n=>n.innerText)).includes('Leichte Schäden'));
         checks.push('HP-Vorschau 80 % intakt / 60 % beschädigt');
+        await field(page, 'Vorschau-Modus', 'approved');
+        assert((await page.evaluate(() => [...document.querySelectorAll('.info-line')]
+            .find(e => e.querySelector('span')?.textContent.startsWith('Modell bei'))?.textContent)).includes('Original / unbeschädigt'));
+        await field(page, 'Vorschau-Modus', 'all');
+        checks.push('Freigabe-Vorschau unterdrückt unfertige Schadensmodelle');
 
         await page.screenshot({path:path.join(tmp, 'damage-de.png')});
         await clickLabel(page, 'Codex-Prompt + Original exportieren…');
@@ -193,6 +198,12 @@ async function run() {
             throw new Error('Cannot approve modified stage: ' + JSON.stringify(diagnostic));
         }
         checks.push('Verändertes Schadensmodell nur nach manueller Abnahme freigegeben');
+        assert.match((await state(page)).damageProfiles[0].stages[0].approvalDigest, /^[a-f0-9]{64}$/);
+        await field(page, 'Vorschau-Modus', 'approved');
+        assert((await page.evaluate(() => [...document.querySelectorAll('.info-line')]
+            .find(e => e.querySelector('span')?.textContent.startsWith('Modell bei'))?.textContent)).includes('Leichte Schäden'));
+        await field(page, 'Vorschau-Modus', 'all');
+        checks.push('Freigegebene Vorschau und Pixelzustandsprüfsumme sind gültig');
 
         await clickLabel(page, 'HP-Schadensmodelle exportieren…');
         const damageZip = await waitForZip(tmp, '_gebaeudeschaden.zip');
@@ -202,6 +213,7 @@ async function run() {
         assert.equal(manifest.buildings.length, 1);
         assert.equal(manifest.buildings[0].stages.length, 1);
         assert.equal(manifest.buildings[0].stages[0].hpAtOrBelow, 75);
+        assert.match(manifest.buildings[0].stages[0].approvalDigest, /^[a-f0-9]{64}$/);
         assert.equal(manifest.buildings[0].gameBuildingType, 108);
         assert.equal(manifest.buildings[0].gameBuildingTypeVerifiedInGame, false);
         checks.push('Freigegebenes HP-Schadenspaket enthält korrektes Manifest und Tiles');

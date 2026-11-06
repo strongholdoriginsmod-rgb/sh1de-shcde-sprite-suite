@@ -46,6 +46,7 @@ def fixture(mask=False, mapped=True):
             row.update(mask=mask_name, maskSha256=hashlib.sha256(png).hexdigest())
         stages.append({
             "id": "d_" + kind + str(hp), "damageKind": kind, "hpAtOrBelow": hp,
+            "approvalDigest": "a" * 64,  # synthetic self-consistency marker, never a signature
             "scene": "g_" + kind + str(hp),
             "settings": {"a": 1, "b": 1, "width": 64, "height": 32,
                          "anchor": "bottom", "order": "ascending"},
@@ -106,6 +107,27 @@ class DamageRuntimePreflightTests(unittest.TestCase):
         self.assertEqual(report["mappedTypes"], [])
         self.assertEqual(report["unmappedBuildingGroups"], ["g_abbey"])
         self.assertEqual(len(P.table_lines(report)), 4)
+
+
+    def test_legacy_unbound_approval_is_auditable_but_never_prepared(self):
+        manifest = deepcopy(self.manifest)
+        del manifest["buildings"][0]["stages"][0]["approvalDigest"]
+        save(self.package, manifest, self.entries)
+        report = P.read_library(self.package)
+        self.assertEqual(report["unboundApprovedStages"], ["g_abbey:d_mechanical75"])
+        self.assertEqual(len(P.table_lines(report)), 6, "one missing stage is excluded from runtime TSV")
+        output = self.base / "unbound-output"
+        self.assertEqual(P.main(["--package", str(self.package), "--dry-run"]), 0)
+        self.assertEqual(P.main(["--package", str(self.package), "--prepare",
+                                 "--output", str(output)]), 2)
+        self.assertFalse(output.exists(), "incomplete package cannot become a prepared table")
+
+    def test_forged_malformed_state_digest_rejected(self):
+        manifest = deepcopy(self.manifest)
+        manifest["buildings"][0]["stages"][1]["approvalDigest"] = "1234notsha"
+        save(self.package, manifest, self.entries)
+        with self.assertRaisesRegex(P.PreflightError, "Freigabe-Zustandsprüfsumme"):
+            P.read_library(self.package)
 
     def test_masks_require_sha_and_match_image_dimensions(self):
         manifest, entries = fixture(mask=True)

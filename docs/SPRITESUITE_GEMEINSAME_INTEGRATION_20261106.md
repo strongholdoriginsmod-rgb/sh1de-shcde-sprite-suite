@@ -98,3 +98,17 @@ Umgesetzt sind ein vollständig prüfendes Preflight für das vom Sprite Editor 
 Ein gemeinsamer Offline-Testlauf kann mit `python tools/qa_building_damage_runtime.py` gestartet werden. Der Test baut eine echte SpriteSuite-Schadensbibliothek aus dem synthetischen 5×5-Steinhof, prüft ZIP/PNG und generiert die TSV-Tabelle, kompiliert die C#-Entscheidungslogik sowie den API-Adapter gegen synthetische Methoden und beendet sämtliche Abläufe ohne Installations- oder Netzwerkanfrage. Details, Funktionsgrenzen und der nächste In-Game-QA-Nachweis stehen in `docs/GEBAEUDESCHADEN_RUNTIME_AUDIT_PLAN_20261106.md`.
 
 Der tatsächliche Renderer- und Gebäude-Slot-Nachweis bleibt offen; insbesondere dürfen `GetOccupiedTileIds` und die SpriteSuite-Tile-Reihenfolge noch nicht ungeprüft gleichgesetzt werden. Das neue Manifest ist deshalb weiterhin kein installierbarer dynamischer Gebäudeschadens-Mod.
+
+## Fortsetzung: adversariale Schadensmodell- und Abnahmesicherung
+
+Isolierter Entwicklungsstand: `E:\SpriteSuite_DamageHardening_20261106`, Branch `fix/spritesuite-damage-hardening-20261106`, Basis `7bdd125`. Der parallel bearbeitete Zweig `E:\SpriteSuite_Converged_20261106` enthält zusätzliche uncommittete Änderungen und wurde daher ausschließlich lesend auf Konflikte geprüft, niemals überschrieben.
+
+Ergänzt wurden: (1) `approvalDigest` als konsistente SHA-256-Bindung von Original, Stufenbitmap, Masken, HP, Pivots, Raster und Generatorparametern, (2) automatischer Entwurfstatus für alte nicht gebundene Freigaben, (3) erneute Exportprüfung der tatsächlichen Pixel und Einstellungen, (4) ein umschaltbarer HP-Vorschaumodus für Entwürfe oder nur freigegebene Stufen, (5) zusätzliche Hinweise auf nicht-monotone Zerstörung und maskierte, transparente Bereiche, (6) sicherer Offline-Preflight für Altbestände ohne Digest, bei dem `--prepare` gesperrt wird, und (7) ein reproduzierbarer Test über 144 unterschiedliche Rastergeometrien.
+
+Der C#-Runtime-Observer und die Opt-in-API-Abfrage bleiben unverändert read-only. Die eigentliche Per-Gebäude-SpriteRenderer-Umschaltung wird erst nach Nachweis des Instanz-/Tile-Mappings und In-Game-Abnahme ergänzt. Die Zustandsprüfsumme ist ausdrücklich keine kryptografische Bestätigung der Identität des abnehmenden Menschen.
+
+## Abnahme der gehärteten Gebäudeschaden-Freigabe – 06.11.2026
+
+Prüfungen im isolierten Zweig `fix/spritesuite-damage-hardening-20261106` (ausgehend von `7bdd125`): **136/136 Node-Tests**, davon 144 variierte isometrische Rasterkombinationen, **15/15** Schadensmodell-Browserprüfungen im lokalen Edge-`file://`-Betrieb, **49/49** bisherige Browserprüfungen, **18/18** Python-Runtime-Preflight-Tests, **23/23** Suite-/Werkzeugkatalogtests, **10/10** Codex-Adaptertests und **56 + 29** C#-Selector-/API-Assertions. Über `verify_release.py` stimmen beide HTML-Versionen mit ihren Quellen, beide Browserreports mit dem HTML-Hash und **162** Datei-SHA-256-Werte überein. Kein In-Game-Renderer-Test, keine API-Bildgenerierung, keine Änderung an Spielinstallationen.
+
+Eine parallele Entwicklungsarbeit unter `E:\SpriteSuite_Converged_20261106`, Commit `80864c9`, wurde nur lesend gesichtet. Sie enthält unabhängige Änderungen an Paket- und Installationstools einschließlich einer Änderung der Ausführungsbestätigungen. Diese werden nicht ungetestet in den gemeinsamen Integrationszweig übernommen; der jeweilige Ursprungscode und die eigene Entwicklungsarbeit bleiben unberührt.

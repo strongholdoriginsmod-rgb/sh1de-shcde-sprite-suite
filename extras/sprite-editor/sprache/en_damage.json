@@ -60,5 +60,15 @@
   "Sichtbar veränderte Pixel": "Visibly changed pixels",
   "Veränderung · % Original": "Changes · % original",
   "Für diese Schadensstufe erforderlich": "Required for this damage stage",
-  "Bilder und Zerstörungsreihenfolge anhand echter SHCDE-Referenzen prüfen; formale Pixelwerte ersetzen keine visuelle Abnahme.": "Inspect images and destruction order against genuine SHCDE references; pixel metrics cannot replace visual review."
+  "Bilder und Zerstörungsreihenfolge anhand echter SHCDE-Referenzen prüfen; formale Pixelwerte ersetzen keine visuelle Abnahme.": "Inspect images and destruction order against genuine SHCDE references; pixel metrics cannot replace visual review.",
+  "Vorschau-Modus": "Preview mode",
+  "Alle Modelle einschließlich Entwürfen": "All stages including drafts",
+  "Nur freigegebene Modelle (Export)": "Approved stages only (export)",
+  "Freigabestatus": "Approval status",
+  "Original": "Original",
+  "Bereits freigegeben · 75% HP": "Previously approved · 75% HP",
+  "Entfernte opake Originalpixel": "Removed opaque original pixels",
+  "Neue opake Bildpixel": "New opaque image pixels",
+  "Maskenpixel ohne sichtbare Bilddeckung": "Mask pixels outside visible image coverage",
+  "Freigaben sind an den Pixel-, Masken-, HP- und Generatorstand gebunden. Änderungen und ältere Freigaben ohne Zustandsprüfsumme müssen erneut abgenommen werden.": "Approvals are bound to the exact pixels, masks, HP setting and generator details. Changes and older approvals without a state checksum must be reviewed again."
 }

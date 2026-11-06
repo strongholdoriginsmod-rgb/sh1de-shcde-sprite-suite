@@ -2636,9 +2636,15 @@ label {
                     const candidateId = stage.candidateId === null || stage.candidateId === undefined ? null : ident(stage.candidateId, 'Kandidatenbild');
                     if (candidateId && store && !store.has(candidateId))
                         fail('Kandidatenbild fehlt.');
-                    const status = stage.status ?? 'draft';
-                    if (!['draft', 'approved', 'rejected'].includes(status))
+                    const requestedStatus = stage.status ?? 'draft';
+                    if (!['draft', 'approved', 'rejected'].includes(requestedStatus))
                         fail('Unbekannter Freigabestatus.');
+                    const suppliedDigest = stage.approvalDigest ?? null;
+                    if (suppliedDigest !== null && (typeof suppliedDigest !== 'string' || !/^[a-f0-9]{64}$/.test(suppliedDigest)))
+                        fail('Ungültige Zustandsprüfsumme der Schadensfreigabe.');
+                    // Legacy approvals predate content binding. Never silently export them as reviewed.
+                    const status = requestedStatus === 'approved' && !suppliedDigest ? 'draft' : requestedStatus;
+                    const approvalDigest = status === 'approved' ? suppliedDigest : null;
                     const model = stage.model ?? MODELS[0];
                     if (!MODELS.includes(model)) fail('Unbekanntes GPT-Image-Modell.');
                     return {
@@ -2646,7 +2652,7 @@ label {
                         label: limited(stage.label ?? '', 'Stufenname', 120),
                         changeRequest: limited(stage.changeRequest ?? '', 'Nachbesserung', 2000),
                         reviewNotes: limited(stage.reviewNotes ?? '', 'Abnahmevermerk', 2000),
-                        model, candidateId, status
+                        model, candidateId, status, approvalDigest
                     };
                 }).sort((a, b) => KINDS.indexOf(a.kind) - KINDS.indexOf(b.kind) || b.hpAtOrBelow - a.hpAtOrBelow)
             };
@@ -2750,6 +2756,10 @@ label {
                 if (!old || old.status !== 'approved' || stage.status !== 'approved')
                     continue;
                 const changed = old.hpAtOrBelow !== stage.hpAtOrBelow ||
+                    old.kind !== stage.kind ||
+                    old.model !== stage.model ||
+                    old.changeRequest !== stage.changeRequest ||
+                    old.candidateId !== stage.candidateId ||
                     (oldProfiles.get(profile.buildingGroupId)?.gameBuildingType ?? null) !== (profile.gameBuildingType ?? null) ||
                     JSON.stringify(oldScenes.get(profile.buildingGroupId)) !== JSON.stringify(after.scenes.find(g => g.id === profile.buildingGroupId)?.settings) ||
                     JSON.stringify(before.frames.filter(f => f.groupId === profile.buildingGroupId)) !==
@@ -2758,7 +2768,10 @@ label {
                     JSON.stringify(before.frames.filter(f => f.groupId === stage.sceneId)) !==
                         JSON.stringify(after.frames.filter(f => f.groupId === stage.sceneId)) ||
                     after.frames.some(f => f.groupId === stage.sceneId && !oldFrames.has(f.id));
-                if (changed) stage.status = 'draft';
+                if (changed) {
+                    stage.status = 'draft';
+                    stage.approvalDigest = null;
+                }
             }
         return after;
     }
@@ -3717,6 +3730,35 @@ label {
         const actual = result.stats.changedPixels || 0;
         result.stats.minimumVisibleChanges = minimum;
         result.stats.visibleChangesPercent = pixels ? Math.round(actual * 10000 / pixels) / 100 : 0;
+        if (intact.width === damaged.width && intact.height === damaged.height) {
+            let lostOpaque = 0, newOpaque = 0;
+            for (let i = 0; i < intact.data.length; i += 4) {
+                const a = intact.data[i + 3], b = damaged.data[i + 3];
+                if (a >= 200 && b <= 20) lostOpaque++;
+                else if (a <= 20 && b >= 200) newOpaque++;
+            }
+            result.stats.structuralLossPixels = lostOpaque;
+            result.stats.newOpaquePixels = newOpaque;
+            if (stage.kind === 'mechanical' && stage.hpAtOrBelow <= 15 &&
+                lostOpaque < Math.max(8, Math.ceil(pixels * .01)))
+                result.warnings.push('Nahezu vollständig zerstörtes mechanisches Modell: kaum Silhouette abgetragen. Einsturz und Bruchkanten besonders prüfen.');
+            const stageFrames = state.frames.filter(f => f.groupId === scene.id);
+            if (stageFrames.some(f => f.maskId)) {
+                const stageLayout = C.layout(stageFrames, scene.settings, key => store.get(key));
+                const mask = C.compose(stageLayout, key => store.get(key), true);
+                let masked = 0, orphan = 0;
+                for (let i = 0; i < mask.data.length; i += 4)
+                    if (mask.data[i] || mask.data[i + 1] || mask.data[i + 2] || mask.data[i + 3]) {
+                        masked++;
+                        if (damaged.data[i + 3] === 0) orphan++;
+                    }
+                result.stats.maskedPixels = masked;
+                result.stats.orphanMaskPixels = orphan;
+                if (orphan > Math.max(8, Math.ceil(masked * .01)))
+                    result.warnings.push('Materialmaske: ' + orphan +
+                        ' Pixel liegen über vollständig transparentem Schadensbild. Masken-/Teamfarben im Zielspiel prüfen.');
+            }
+        }
         if (actual < minimum)
             result.errors.push('Für den gewählten Zerstörungsgrad sind nur ' + actual +
                 ' von mindestens ' + minimum + ' sichtbar veränderten Pixeln vorhanden. Modell weiter beschädigen.');
@@ -3726,8 +3768,25 @@ label {
                 continue;
             const otherScene = state.scenes.find(g => g.id === other.sceneId);
             if (!otherScene) continue;
-            const prev = D.checkCandidate(intact, baseComposite(state, store, otherScene.id).image);
+            const comparison = baseComposite(state, store, otherScene.id).image;
+            const prev = D.checkCandidate(intact, comparison);
             const count = prev.stats.changedPixels || 0;
+            if (intact.width === comparison.width && intact.height === comparison.height &&
+                intact.width === damaged.width && intact.height === damaged.height) {
+                const weaker = other.hpAtOrBelow > percent ? comparison : damaged;
+                const stronger = other.hpAtOrBelow > percent ? damaged : comparison;
+                let removedInWeaker = 0, restoredInStronger = 0;
+                for (let i = 0; i < intact.data.length; i += 4)
+                    if (intact.data[i + 3] >= 200 && weaker.data[i + 3] <= 20) {
+                        removedInWeaker++;
+                        if (stronger.data[i + 3] >= 200) restoredInStronger++;
+                    }
+                if (removedInWeaker >= 8 &&
+                    restoredInStronger > Math.max(4, Math.ceil(removedInWeaker * .06)))
+                    result.warnings.push('Zerstörungsfolge ' + other.hpAtOrBelow + '% / ' +
+                        percent + '% HP: ' + restoredInStronger +
+                        ' zuvor entfernte opake Bildpixel erscheinen bei stärkerer Zerstörung erneut. Wiederhergestellte Gebäudeteile prüfen.');
+            }
             if (other.hpAtOrBelow > percent && actual < count)
                 result.warnings.push('Diese stärker zerstörte Stufe unterscheidet sich in weniger Pixeln vom Original als die bereits freigegebene mildere Stufe bei ' +
                     other.hpAtOrBelow + '% HP. Zerstörungsreihenfolge bildlich prüfen.');
@@ -3738,6 +3797,47 @@ label {
         return { ...result, intact, damaged };
     }
 
+    function approvalSignature(state, store, stageId) {
+        // Self-consistency fingerprint, NOT a signature or proof of who reviewed.
+        // Bind every rendered pixel and all layout/target metadata that may
+        // silently shift the approved art, including original and masks.
+        // Avoid PNG re-encoding: raw RGBA is canonical and exact.
+        const { profile, stage, base, scene } = getStage(state, stageId);
+        const processed = new Map();
+        const asset = key => {
+            if (!key) return null;
+            if (processed.has(key)) return processed.get(key);
+            const img = store.get(key);
+            const bytes = new Uint8Array(img.data.buffer,
+                img.data.byteOffset, img.data.byteLength);
+            const info = [img.width, img.height, K.sha256Fallback(bytes)];
+            processed.set(key, info);
+            return info;
+        };
+        const group = g => ({
+            settings: g.settings,
+            frames: state.frames.filter(f => f.groupId === g.id)
+                .map(f => ({
+                    slot: f.slot, visible: f.visible, locked: f.locked,
+                    name: f.name, index: f.index, dx: f.dx, dy: f.dy,
+                    pivot: f.pivot, ppu: f.ppu,
+                    trimOffsetX: f.trimOffsetX, trimOffsetY: f.trimOffsetY,
+                    image: asset(f.imageId), original: asset(f.originalId),
+                    mask: asset(f.maskId), originalMask: asset(f.originalMaskId)
+                }))
+                .sort((x, y) => x.slot - y.slot)
+        });
+        const payload = {
+            version: 1, stageId: stage.id, sceneId: stage.sceneId,
+            buildingGroupId: profile.buildingGroupId,
+            gameBuildingType: profile.gameBuildingType ?? null,
+            kind: stage.kind, hpAtOrBelow: stage.hpAtOrBelow,
+            model: stage.model, changeRequest: stage.changeRequest,
+            candidate: asset(stage.candidateId),
+            original: group(base), damage: group(scene)
+        };
+        return K.sha256Fallback(K.encodeText(JSON.stringify(payload)));
+    }
     function approveStage(state, store, stageId, notes, visualConfirmed) {
         if (visualConfirmed !== true)
             fail('Visuelle Prüfung von Schäden, Perspektive, Bodenanker und Reihenfolge ausdrücklich bestätigen.');
@@ -3768,6 +3868,7 @@ label {
         if (review.warnings.length && !String(notes || '').trim())
             fail('Qualitätswarnungen müssen geprüft und im Abnahmevermerk dokumentiert werden.');
         stage.reviewNotes = String(notes || '').slice(0, 2000);
+        stage.approvalDigest = approvalSignature(out, store, stageId);
         stage.status = 'approved';
         return { state: I.validate(out, store), store };
     }
@@ -3870,6 +3971,9 @@ label {
             const base = state.scenes.find(g => g.id === profile.buildingGroupId);
             const stages = [];
             for (const stage of profile.stages.filter(x => x.status === 'approved')) {
+                if (!stage.approvalDigest ||
+                    approvalSignature(state, store, stage.id) !== stage.approvalDigest)
+                    fail('Freigabe ist nach Änderung der Sprite-/Projektdaten nicht mehr gültig: ' + stage.id + '. Qualität erneut abnehmen.');
                 const scene = state.scenes.find(g => g.id === stage.sceneId);
                 const frames = state.frames.filter(f => f.groupId === stage.sceneId)
                     .sort((a, b) => a.slot - b.slot);
@@ -3894,7 +3998,8 @@ label {
                 stages.push({
                     id: stage.id, damageKind: stage.kind, hpAtOrBelow: stage.hpAtOrBelow,
                     scene: stage.sceneId, label: stage.label, model: stage.model,
-                    reviewNotes: stage.reviewNotes, settings: scene.settings, tiles
+                    reviewNotes: stage.reviewNotes, approvalDigest: stage.approvalDigest,
+                    settings: scene.settings, tiles
                 });
             }
             if (stages.length)
@@ -3917,7 +4022,7 @@ label {
         return { bytes: K.zip(entries), manifest };
     }
     return { getStage, baseComposite, createStage, withCandidate, applyCandidate,
-        qualityReport, approveStage, makeRequestBundle, exportPackage };
+        qualityReport, approvalSignature, approveStage, makeRequestBundle, exportPackage };
 });
 </script><script>/* Stronghold Sprite Editor. DOM and canvas view; all exports use the independent RGBA codec. */
 (function () {
@@ -3946,7 +4051,7 @@ label {
         return n;
     };
     let history = new I.History(I.blank(), new I.AssetStore()), groupId = '', selected = new Set(), lastSelected = null, view = 'scene', panel = 'properties', dirty = false, busy = false, modalHandler = null, pendingFiles = [], toastTimer = null, aborter = null;
-    let damageBuildingId = '', damageKind = 'mechanical', damageHp = 100;
+    let damageBuildingId = '', damageKind = 'mechanical', damageHp = 100, damageApprovedOnly = false;
     let playing = false, animIndex = 0, lastFrameTime = 0, pivotTool = false, brushTool = false, brushMap = null, drag = null, spaceDown = false, renderQueued = false, model = null, layoutError = '', fitNext = true, atlasGroup = '';
     let recoveryCandidate = null, recoveryTimer = null, recoveryRunning = false, recoveryAgain = false, recoveryEnabled = true, sessionId = I.uid('s'), autosaveGeneration = 0;
     try {
@@ -4711,16 +4816,30 @@ label {
         ]);
     }
     function damageApproveDialog(stageId) {
-        const { stage } = DI.getStage(state(), stageId);
+        const { stage, profile } = DI.getStage(state(), stageId);
         const review = DI.qualityReport(state(), store(), stageId);
+        const closestApproved = profile.stages.filter(s => s.id !== stage.id &&
+            s.kind === stage.kind && s.status === 'approved')
+            .sort((a, b) => Math.abs(a.hpAtOrBelow - stage.hpAtOrBelow) -
+                Math.abs(b.hpAtOrBelow - stage.hpAtOrBelow))[0] || null;
         const summary = [
             line('Sichtbar veränderte Pixel', (review.stats.changedPixels || 0).toLocaleString('de-DE')),
             line('Veränderung · % Original', (review.stats.visibleChangesPercent ?? 0) + '%'),
-            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel')
+            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel'),
+            ...(review.stats.structuralLossPixels === undefined ? [] : [
+                line('Entfernte opake Originalpixel', review.stats.structuralLossPixels),
+                line('Neue opake Bildpixel', review.stats.newOpaquePixels)
+            ]),
+            ...(review.stats.maskedPixels === undefined ? [] : [
+                line('Maskenpixel ohne sichtbare Bilddeckung', review.stats.orphanMaskPixels)
+            ])
         ];
         modal('Schadensmodell abnehmen', [
             el('div', { class: 'damage-review-gallery' }, [
-                damagePreview(review.intact, 'Original'), damagePreview(review.damaged, 'Schadensmodell')
+                damagePreview(review.intact, 'Original'),
+                ...(closestApproved ? [damagePreview(DI.baseComposite(state(), store(), closestApproved.sceneId).image,
+                    'Bereits freigegeben · ' + closestApproved.hpAtOrBelow + '% HP')] : []),
+                damagePreview(review.damaged, 'Schadensmodell')
             ]),
             ...summary,
             ...review.errors.map(msg => el('p', { class: 'error-text', text: msg })),
@@ -4764,7 +4883,9 @@ label {
             damageBuildingId = buildings.some(g => g.id === groupId) ? groupId : buildings[0].id;
         const base = buildings.find(g => g.id === damageBuildingId);
         const profile = (state().damageProfiles || []).find(p => p.buildingGroupId === base.id);
-        const selectedStage = D.choose(profile, damageKind, damageHp);
+        const previewProfile = profile && damageApprovedOnly ?
+            { stages: profile.stages.filter(s => s.status === 'approved') } : profile;
+        const selectedStage = D.choose(previewProfile, damageKind, damageHp);
         const info = [
             fields(field('Gebäude', damageBuildingId, { wide: true,
                 options: buildings.map(g => [g.id, g.name]),
@@ -4784,6 +4905,13 @@ label {
                 damageHp = C.number(v, 'HP', 0, 100);
                 renderInspector();
             }, { min: 0, max: 100 })),
+            fields(field('Vorschau-Modus', damageApprovedOnly ? 'approved' : 'all', {
+                wide: true, options: [['all', 'Alle Modelle einschließlich Entwürfen'],
+                    ['approved', 'Nur freigegebene Modelle (Export)']],
+                onchange: v => { damageApprovedOnly = v === 'approved'; renderInspector(); }
+            })),
+            line('Freigabestatus', selectedStage ?
+                ({draft:'Entwurf', approved:'Freigegeben', rejected:'Verworfen'}[selectedStage.status] || 'Entwurf') : 'Original'),
             line('Modell bei ' + damageHp + '% HP', selectedStage ? (selectedStage.label ||
                 selectedStage.kind + ' ≤' + selectedStage.hpAtOrBelow + '%') : 'Original / unbeschädigt'),
             buttons(button('Vorschau anzeigen', () => damageOpenScene(selectedStage ? selectedStage.sceneId : base.id))),
@@ -4821,7 +4949,7 @@ label {
                 buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
                     button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
                 buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),
-                note('Freigaben werden nach jeder Tile- oder Rasteränderung automatisch zurückgesetzt. Modell- und HP-Werte sind gesondert zu prüfen.')
+                note('Freigaben sind an den Pixel-, Masken-, HP- und Generatorstand gebunden. Änderungen und ältere Freigaben ohne Zustandsprüfsumme müssen erneut abgenommen werden.')
             ]));
         }
         sections.push(section('Ausgabe', [

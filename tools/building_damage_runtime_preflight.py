@@ -192,7 +192,7 @@ def read_library(package: Path) -> dict:
         must(isinstance(buildings, list) and 1 <= len(buildings) <= MAX_PROFILES,
              "Ungültige Gebäudeanzahl.")
         used_names, used_types, referenced, validated = set(), set(), set(), []
-        unmapped = []
+        unmapped, unbound = [], []
         for raw in buildings:
             group = require_keys(raw, ("id", "name", "intactScene", "stages"),
                                  "Gebäude")
@@ -225,6 +225,11 @@ def read_library(package: Path) -> dict:
                 kind = stage["damageKind"]
                 must(kind in ("mechanical", "fire"), "Unbekannte Schadensursache.")
                 hp = exact_int(stage["hpAtOrBelow"], 0, 99, "HP-Schwelle")
+                approval = stage.get("approvalDigest")
+                if approval is not None:
+                    digest(approval, "Freigabe-Zustandsprüfsumme")
+                else:
+                    unbound.append(f"{group_id}:{stage_id}")
                 must((kind, hp) not in step_keys and stage_id not in stage_names,
                      "Doppelte HP-Schwelle oder Stufen-ID.")
                 step_keys.add((kind, hp))
@@ -288,7 +293,8 @@ def read_library(package: Path) -> dict:
                                         "width": iw, "height": ih})
                 sorted_stages.append({
                     "id": stage_id, "sceneId": scene_id, "damageKind": kind,
-                    "hpAtOrBelow": hp, "tiles": sorted(tile_report, key=lambda t: t["slot"])
+                    "hpAtOrBelow": hp, "approvalDigest": approval,
+                    "tiles": sorted(tile_report, key=lambda t: t["slot"])
                 })
             sorted_stages.sort(key=lambda row: (
                 0 if row["damageKind"] == "mechanical" else 1, -row["hpAtOrBelow"]))
@@ -304,6 +310,7 @@ def read_library(package: Path) -> dict:
                            (b["gameBuildingType"] is None,
                             b["gameBuildingType"] or -1, b["buildingGroupId"])),
         "unmappedBuildingGroups": sorted(unmapped),
+        "unboundApprovedStages": sorted(unbound),
         "mappedTypes": sorted(used_types),
         "readOnly": True, "runtimeHookInstalled": False,
         "rendererMappingValidated": False,
@@ -322,6 +329,8 @@ def table_lines(report: dict) -> list[str]:
         if game_type is None:
             continue
         for stage in profile["stages"]:
+            if stage.get("approvalDigest") is None:
+                continue  # Never promote legacy, unbound approvals into C# runtime candidates.
             lines.append("\t".join((str(game_type), profile["buildingGroupId"],
                                     stage["damageKind"], str(stage["hpAtOrBelow"]),
                                     stage["id"], stage["sceneId"])))
@@ -345,6 +354,8 @@ def main(argv: list[str] | None = None) -> int:
         report["tableLines"] = len(table_lines(report)) - 4
         report["prepared"] = bool(args.prepare)
         if args.prepare:
+            must(not report["unboundApprovedStages"],
+                 "Ältere Schadensstufen ohne Zustandsprüfsumme müssen im Sprite Editor erneut abgenommen werden.")
             must(args.output is not None, "--prepare benötigt --output.")
             must(not args.output.exists(), "Ausgabeordner existiert bereits.")
             args.output.mkdir(parents=True, exist_ok=False)
