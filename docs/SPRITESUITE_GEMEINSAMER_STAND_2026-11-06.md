@@ -17,8 +17,11 @@ den vorher veröffentlichten Python-3.15-/Guide-Quellstand
 - `feature/building-damage-workflow-20261106`: eigenständiger
   Gebäudeschaden-Workflow mit HP-Schwellen, mechanischen/Feuer-Stufen,
   Klonen der Basis-Tiles, sicherem Kandidatenimport und getrenntem
-  Schadensmanifest. Der am 06.11. vorhandene **uncommittete** Code wurde
-  byteidentisch und nur lesend als Snapshot übernommen.
+  Schadensmanifest. Nach dem ersten Snapshot hat der parallel arbeitende
+  Zweig die echte Revision `76728355d3960c98e3c5c3691008ba783756d393`
+  veröffentlicht. Sie wurde anschließend mit Merge-Commit `4a3d9c1`
+  in die Integration übernommen; die neueren Browser-Tests und die
+  eigene Gebäudeschaden-Anleitung stammen aus diesem Commit.
 - `feature/stronghold-tool-consolidation-20261106`: kuratierte
   Spezialwerkzeug-Registry, navigierende Strg+K-Erweiterung und historische
   SHA-256-Werkzeugmatrix. Auch hier wurde ausschließlich der vorhandene
@@ -30,6 +33,12 @@ den vorher veröffentlichten Python-3.15-/Guide-Quellstand
 - Die älteren UX-/Handbuch-/Python-Arbeitszweige sind bereits in der
   aktuellen Basis enthalten; nicht erneut mit veralteten Dateien
   überschreiben.
+
+Der erste Entwicklungs-Snapshot der Gebäudeschadenarbeit ist historisch
+weiter protokolliert. **Aktuell gilt der echte, spätere Commit `7672835`
+als Quelle für diesen Teil.** Der Werkzeugkonsolidierungsstand wartet
+noch auf einen eigenen abgeschlossenen Git-Commit, bleibt aber als
+nachvollziehbarer Snapshot im Integrationszweig.
 
 Die unveränderten Ursprungsstände befinden sich unter
 `E:\SpriteSuite_BuildingDamage_20261106` und
@@ -79,8 +88,10 @@ Quellbilder und die absichtlich getrennte Bestätigung.
 - Vorhandene Editor-Browserregression: **49 bestanden, 0 Fehler**
   einschließlich Downloads, Undo, Export, 64px-Overlap und
   Bildschirmgrößen.
-- Sprite-Editor-Paketmanifest: **156 geprüfte Dateihashes**;
-  deutscher und englischer HTML-Build reproduzierbar.
+- Sprite-Editor-Paketmanifest: **158 geprüfte Dateihashes**,
+  einschließlich der eigenen Gebäudeschaden-Anleitung und des
+  tatsächlichen Edge-Browser-Abnahmeberichts. Deutsch/Englisch
+  werden reproduzierbar gebaut.
 - Die erste größere Python-3.15-Kombinationsprüfung des neuen
   Integrationsstands zeigte einen **Tcl/Tk-9-Windows-Zugriffsfehler
   beim Schließen eines erneut geöffneten Lernassistenten**. Die
