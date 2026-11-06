@@ -69,6 +69,66 @@ class LayerAuditTests(unittest.TestCase):
         with self.assertRaisesRegex(L.AuditError, "Malformed render"):
             L.parse_render_samples("111:10,20:only_three_parts")
 
+    def test_full_drawn_square_uses_sprite_suite_diagonal_order_without_approving_orientation(self):
+        drawing = []
+        for y in range(3):
+            for x in range(3):
+                drawing.append({"tileId": 100 + y * 3 + x, "x": 10 + x,
+                    "y": 20 + y, "gm": "6", "image": str(200 + y * 3 + x),
+                    "withinGameFootprint": x < 2 and y < 2})
+        plan = L.graphics_slot_hypotheses(list(reversed(drawing)))
+        self.assertEqual(plan["status"], "complete_drawn_rectangle_orientation_unverified")
+        self.assertFalse(plan["verified"])
+        self.assertTrue(plan["orientationChoiceRequired"])
+        self.assertEqual(len(plan["hypotheses"]), 8)
+        normal = next(p for p in plan["hypotheses"] if p["orientation"] == "xy+u+v")
+        self.assertEqual((normal["spriteA"], normal["spriteB"]), (3, 3))
+        self.assertEqual([slot["tileId"] for slot in normal["slots"]],
+                         [100, 101, 103, 102, 104, 106, 105, 107, 108])
+        self.assertEqual(sum(s["inNativeFootprint"] for s in normal["slots"]), 4)
+        self.assertFalse(normal["verified"])
+        # Permuting incoming engine callback order never changes the slot list.
+        permuted = L.graphics_slot_hypotheses(drawing[3:] + drawing[:3])
+        other = next(p for p in permuted["hypotheses"] if p["orientation"] == "xy+u+v")
+        self.assertEqual(normal["slots"], other["slots"])
+
+    def test_full_visual_rectangle_uses_all_drawing_tiles_not_occupied_subset(self):
+        drawing = []
+        for y in range(3):
+            for x in range(2):
+                drawing.append({"tileId": 100 + y * 2 + x,
+                    "x": 20 + x, "y": 30 + y, "gm": "6",
+                    "image": str(300 + y * 2 + x),
+                    "withinGameFootprint": x == 0})
+        plan = L.graphics_slot_hypotheses(drawing)
+        self.assertEqual(len(plan["hypotheses"]), 8)
+        self.assertEqual({(o["spriteA"], o["spriteB"])
+                          for o in plan["hypotheses"]}, {(2, 3), (3, 2)})
+        self.assertEqual([o["orientation"] for o in plan["hypotheses"][:2]],
+                         ["xy+u+v", "xy+u-v"])
+
+    def test_single_tile_never_becomes_approved_renderer_mapping(self):
+        single = [{"tileId": 29, "x": 2, "y": 3,
+                   "gm": "1", "image": "2", "withinGameFootprint": True}]
+        plan = L.graphics_slot_hypotheses(single)
+        self.assertEqual(len(plan["hypotheses"]), 1)
+        self.assertFalse(plan["verified"])
+        self.assertFalse(plan["hypotheses"][0]["verified"])
+
+    def test_incomplete_duplicate_or_inconsistent_drawings_never_generate_targets(self):
+        original = [{"tileId": i, "x": i % 3, "y": i // 3,
+                     "gm": "6", "image": str(100 + i),
+                     "withinGameFootprint": True} for i in range(9)]
+        incomplete = L.graphics_slot_hypotheses(original[:7])
+        self.assertEqual(incomplete["status"], "incomplete_graphics_rectangle")
+        self.assertEqual(incomplete["hypotheses"], [])
+        duplicate_graphic = original[:] + [dict(original[0], image="changed")]
+        self.assertEqual(L.graphics_slot_hypotheses(duplicate_graphic)["status"],
+                         "multiple_graphics_per_coordinate")
+        moved = original[:] + [dict(original[0], x=20)]
+        self.assertEqual(L.graphics_slot_hypotheses(moved)["status"],
+                         "same_graphic_tile_id_at_multiple_positions")
+
     def test_sha_pinned_output_is_exclusive(self):
         checksum = hashlib.sha256(self.raw).hexdigest()
         out = self.directory / "report.json"

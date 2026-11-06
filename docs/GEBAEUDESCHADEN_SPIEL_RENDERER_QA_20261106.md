@@ -59,3 +59,26 @@ Damit ist für eine einzelne Instanz die **technische Rebind-/Restore-Fähigkeit
 6. Erst danach einen aktiven, standardmäßig installierbaren Schadens-Renderer über einen versionsgebundenen Funktionsschalter freigeben.
 
 Die QA-Kanarie selbst wird in den Quellstand aufgenommen, jedoch **nicht** automatisch ins Spiel installiert oder als fertige Schadensmodell-Umschaltung bezeichnet.
+
+## 4. Ausgewertete grafische Sprite-Raster – Orientierungsvergleich
+
+Das bestehende, SHA-256-gebundene Layer-Audit wurde um `graphics_slot_hypotheses` ergänzt. Es vergleicht **nur die tatsächlich gezeichneten** `tile_graphic`-Koordinaten, nicht allein das native Gameplay-Belegungsraster. Für vollständig geschlossene Grafikrechtecke werden die SpriteSuite-Slots anhand der isometrischen Diagonalfolge (aufsteigende `u+v`-Diagonale, innerhalb der Diagonale absteigendes `u`) bestimmt. Die Kandidaten berücksichtigen die beiden Achszuordnungen und jeweils zwei mögliche Richtungswechsel pro Achse.
+
+Die echte, zuvor eingefrorene Spielbeweisdatei `CorrelatedTileLayer_20261106.log` mit SHA-256 `f6d4bf905053b16cbcb4facbc22bec057277a6623ffe98ea79e9bbf94bfa6cee` ergibt nach dieser Erweiterung:
+
+- **11 vollständige grafische Gebäude-Raster**, zusammen **88 unbestätigte** Ausrichtungshypothesen.
+- Gebäude **77**, Global-ID **661027**, Spieltyp **104**: **8×8**, 64 tatsächlich gezeichnete Grafik-Tiles; **36 innerhalb und 28 außerhalb** des Gameplay-Footprints.
+- Gebäude **7**, Global-ID **7331383**, Spieltyp **55**: **7×7**, 49 Grafik-Tiles; 24 innerhalb und 25 außerhalb.
+- Gebäude **172**, Global-ID **7333542**, Spieltyp **19**: **4×4**, 16 Grafik-Tiles; alle innerhalb.
+- Acht vollständige 2×2-Raster von Spieltyp **10**, jeweils vier gezeichnete Tiles außerhalb der belegten Gameplay-Zone.
+- Unvollständige, doppelt belegte oder widersprüchliche Grafikrechtecke ergeben **keine** schreibbaren Slot-Ziele.
+
+Versionierter JSON-Beleg mit allen hypothetischen Slot-IDs, Pixelgrafiknummern und Positionen: `E:\SpriteSuite_FinalAudit_20261106\LiveGameQA\CorrelatedTileLayer_20261106_VisualSlots.json`, SHA-256 `84997ce1c545cf2807147f5ec77065255bcecb5ec9157141724c39832abf0521a0`.
+
+Reproduktion ausschließlich lesend:
+
+```powershell
+python tools/building_damage_layer_audit.py --log "E:\SpriteSuite_FinalAudit_20261106\LiveGameQA\CorrelatedTileLayer_20261106.log" --expected-sha256 f6d4bf905053b16cbcb4facbc22bec057277a6623ffe98ea79e9bbf94bfa6cee
+```
+
+**Nicht bestanden/noch offen:** Die von `graphics_slot_hypotheses` aufgelisteten Rotationen/Spiegelungen sind geometrisch plausibel, aber nicht mit einer originalen Sprite-Gesamtbildrekonstruktion oder einer echten Ruinen-/Abtei-Referenz visuell abgeglichen. Sie bleiben durchgehend `verified=false`; eine finale schreibende HP-Stage-Auswahl wird dadurch **nicht** aktiviert. Der tatsächlich erfolgreiche, reversible **Einzelkachel-Kanarientest** wird nicht als vollständiger 8×8-Runtime-Renderer-Nachweis interpretiert.

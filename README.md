@@ -295,3 +295,7 @@ Die neue optionale Offline-QA `python tools/qa_building_damage_runtime.py` prüf
 ### Echte SHCDE-Grafiklayer-Messung und ein-Kachel-Kanarientest
 
 Die aktuelle Entwicklung enthält unter `tools/building_damage_layer_audit.py` eine SHA-256-gebundene, reproduzierbare Auswertung der grafischen Gebäude-Tiles gegenüber den tatsächlich belegten Spielkacheln. Ein zusätzlicher, **nur explizit im markierten QA-Klon** einschaltbarer Test `qa_building_damage_live.py --qa-save <QA-Save> --qa-canary --install-qa` setzt höchstens ein Originalspiel-Sprite kurz auf ein kompatibles anderes Native-Sprite und stellt es anschließend über die originale Engine-Methode wieder her. Die Standardfassung bleibt lesend. Dieser QA-Eingriff ersetzt keine vollständige automatische HP-/Feuerschaden-Umschaltung. Nachweise, Sicherheitsgrenzen und Spielprotokolle: [SHCDE Renderer-QA](docs/GEBAEUDESCHADEN_SPIEL_RENDERER_QA_20261106.md).
+
+#### Tatsächliche Grafikslots gegenüber Gameplay-Footprints
+
+`tools/building_damage_layer_audit.py` kann aus einem echten, SHA-256-gesicherten QA-Spielprotokoll nun auch **alle unbestätigten SpriteSuite-Rasterorientierungen** für vollständig gezeichnete Gebäudesprites berechnen. Beispiel: 8×8-Bildraster mit 64 Grafik-Tiles, von denen im Spiel 28 **außerhalb** der Gameplay-Belegungsfläche liegen. Ergebnisse sind reine Prüf- und Zuordnungshypothesen, keine automatischen Renderer-Eingriffe. Nähere Angaben: [Gebäude-Renderer-QA](docs/GEBAEUDESCHADEN_SPIEL_RENDERER_QA_20261106.md).

@@ -86,6 +86,89 @@ def parse_render_samples(value: str) -> list[dict]:
         })
     return items
 
+def graphics_slot_hypotheses(drawing: list[dict]) -> dict:
+    """Enumerate SpriteSuite diagonal-order slot mappings for *drawn* graphics.
+
+    Gameplay occupancy does not define the visual tile coverage. This helper
+    only offers geometry proposals, never a verified renderer target.
+    """
+    if not drawing:
+        return {"status": "no_graphic_events", "verified": False,
+                "hypotheses": []}
+    positions = {}
+    tile_locations = {}
+    for row in drawing:
+        xy = (row["x"], row["y"])
+        recorded = tile_locations.get(row["tileId"])
+        if recorded is not None and recorded != xy:
+            return {"status": "same_graphic_tile_id_at_multiple_positions",
+                    "verified": False, "hypotheses": []}
+        tile_locations[row["tileId"]] = xy
+        existing = positions.get(xy)
+        if existing is not None:
+            if (existing["tileId"] != row["tileId"] or
+                    existing["gm"] != row["gm"] or
+                    existing["image"] != row["image"]):
+                return {"status": "multiple_graphics_per_coordinate",
+                        "verified": False, "hypotheses": []}
+        positions[xy] = row
+    min_x = min(x for x, _ in positions)
+    min_y = min(y for _, y in positions)
+    width = max(x for x, _ in positions) - min_x + 1
+    height = max(y for _, y in positions) - min_y + 1
+    info = {"originX": min_x, "originY": min_y,
+            "graphicsWidth": width, "graphicsHeight": height,
+            "distinctGraphicTiles": len(positions), "verified": False,
+            "stageA": None, "stageB": None, "hypotheses": []}
+    if width * height != len(positions):
+        info["status"] = "incomplete_graphics_rectangle"
+        return info
+    if width > 64 or height > 64 or len(positions) > 128:
+        info["status"] = "graphics_grid_exceeds_safe_audit_budget"
+        return info
+    info["status"] = "complete_drawn_rectangle_orientation_unverified"
+    proposals = []
+    signatures = set()
+    for swap in (False, True):
+        a, b = (width, height) if not swap else (height, width)
+        by_uv = {}
+        order = 0
+        for diagonal in range(a + b - 1):
+            for u in range(min(a - 1, diagonal),
+                           max(0, diagonal - b + 1) - 1, -1):
+                by_uv[(u, diagonal - u)] = order
+                order += 1
+        for flip_u in (False, True):
+            for flip_v in (False, True):
+                table = [None] * len(positions)
+                for (x, y), row in positions.items():
+                    u = (y - min_y) if swap else (x - min_x)
+                    v = (x - min_x) if swap else (y - min_y)
+                    if flip_u:
+                        u = a - 1 - u
+                    if flip_v:
+                        v = b - 1 - v
+                    table[by_uv[(u, v)]] = {
+                        "tileId": row["tileId"],
+                        "x": row["x"], "y": row["y"],
+                        "gm": row["gm"], "image": row["image"],
+                        "inNativeFootprint": row["withinGameFootprint"],
+                    }
+                signature = tuple(entry["tileId"] for entry in table)
+                if signature in signatures:
+                    continue
+                signatures.add(signature)
+                proposals.append({
+                    "orientation": ("yx" if swap else "xy") +
+                        ("-u" if flip_u else "+u") +
+                        ("-v" if flip_v else "+v"),
+                    "spriteA": a, "spriteB": b,
+                    "verified": False, "slots": table,
+                })
+    info["hypotheses"] = proposals
+    info["orientationChoiceRequired"] = True
+    return info
+
 def analyze_events(events: list[dict[str, str]]) -> dict:
     by_id = {}
     totals = collections.Counter()
@@ -160,6 +243,12 @@ def analyze_events(events: list[dict[str, str]]) -> dict:
         summary["graphics_outside_gameplay_footprint"] += native_outside
         summary["drawable_tile_events"] += len(drawing)
         summary["terrain_or_default_layer_samples"] += len(render)
+        slot_candidates = graphics_slot_hypotheses(drawing)
+        if slot_candidates["status"] == "complete_drawn_rectangle_orientation_unverified":
+            summary["complete_unverified_graphic_grids"] += 1
+            summary["graphic_orientation_hypotheses"] += len(slot_candidates["hypotheses"])
+            if drawing and native_outside:
+                summary["complete_grids_with_outside_footprint_graphics"] += 1
         if f is not None:
             summary["footprints"] += 1
         if drawing and f is not None:
@@ -176,6 +265,7 @@ def analyze_events(events: list[dict[str, str]]) -> dict:
             "defaultLayerSamples": len(render),
             "defaultLayerSpriteFamilies": dict(sorted(terrain_family.items())),
             "drawingGraphics": drawing,
+            "graphicSlotCandidates": slot_candidates,
             "defaultLayer": render,
             "rendererMappingVerified": False,
             "writableGameTileBindingVerified": False,
