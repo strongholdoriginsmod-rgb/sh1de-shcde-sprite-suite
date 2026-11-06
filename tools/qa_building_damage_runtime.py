@@ -7,6 +7,7 @@ Requires Python 3.11+, Node and the Windows .NET Framework C# compiler.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -44,6 +45,8 @@ def run(command: list[str], cwd: Path, label: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csc", help="Expliziter C#-Compilerpfad")
+    parser.add_argument("--verify-shcdese", action="append", type=Path, default=[],
+                        help="Lokale SHCDESE.dll ausschließlich für Compile-Time-API-Kompatibilität prüfen; mehrfach verwendbar")
     args = parser.parse_args(argv)
     try:
         node = shutil.which("node")
@@ -62,12 +65,13 @@ def main(argv: list[str] | None = None) -> int:
             table = prepare / "building-damage-candidate.tsv"
             selection = folder / "selector.exe"
             observer = folder / "read-only-observer.exe"
+            footprint = folder / "footprint-evidence.exe"
 
             logs = run([sys.executable, "-m", "unittest", "discover", "-s",
                         str(TESTS), "-p", "test_building_damage_runtime_preflight.py", "-q"],
                        ROOT, "Python-Preflight-Test")
             count = re.search(r"Ran (\d+) tests?", logs)
-            if not count or int(count.group(1)) < 18 or "OK" not in logs:
+            if not count or int(count.group(1)) < 19 or "OK" not in logs:
                 raise RuntimeError("Python-Preflight-Tests enthalten keine vollständige Abnahme.")
             mark(count.group(1) + " Python-Preflight-Regressionen")
 
@@ -101,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
             log = run([str(selection), str(table), str(package)], ROOT,
                       "C#-Paket-/HP-Selektor")
             count = re.search(r"(\d+) assertions", log)
-            if not count or int(count.group(1)) < 56:
+            if not count or int(count.group(1)) < 62:
                 raise RuntimeError("C#-Selektor führte nicht alle Assertions aus.")
             mark(count.group(1) + " C#-Selector-/TSV-/ZIP-Assertions")
 
@@ -118,6 +122,51 @@ def main(argv: list[str] | None = None) -> int:
             if not count or int(count.group(1)) < 29:
                 raise RuntimeError("API-Adapter-Testabdeckung ist nicht vollständig.")
             mark(count.group(1) + " Read-only-Building-API-Assertions")
+
+            compile_footprint = [str(csc), "/nologo",
+                                 "/define:SHCDE_BUILDING_DAMAGE_FOOTPRINT_API",
+                                 "/target:exe", "/out:" + str(footprint),
+                                 str(RUNTIME / "BuildingDamageStageSelector.cs"),
+                                 str(RUNTIME / "BuildingDamageProfileTable.cs"),
+                                 str(RUNTIME / "BuildingDamageFootprintAudit.cs"),
+                                 str(RUNTIME / "BuildingDamageFootprintGameSource.cs"),
+                                 str(TESTS / "building_damage_footprint_harness.cs")]
+            run(compile_footprint, ROOT, "Opt-in-Footprint-Audit-Kompilation")
+            log = run([str(footprint), str(table), str(package)], ROOT,
+                      "Footprint-/Orientierungsanalyse ohne Renderer")
+            count = re.search(r"(\d+) assertions", log)
+            if not count or int(count.group(1)) < 47 or "renderer not installed" not in log:
+                raise RuntimeError("Footprint-Audit muss Rasterabweichungen und fehlende Renderer-Freigabe nachweisen.")
+            mark(count.group(1) + " sichere Footprint-/Orientierungs-Assertions")
+
+            # Optional: bind our opt-in adapter to actual, caller-selected
+            # local Script Extender assembly metadata. Compiles only: no
+            # assembly execution, plugin install or game process is touched.
+            result["sdkCompileChecks"] = []
+            for index, shcdese in enumerate(args.verify_shcdese):
+                sdk = shcdese.resolve(strict=True)
+                if sdk.name.lower() != "shcdese.dll" or not sdk.is_file():
+                    raise RuntimeError("--verify-shcdese benötigt eine reale SHCDESE.dll-Datei.")
+                refs = [sdk]
+                for dependency in ("RedBird.Core.dll", "netstandard.dll"):
+                    probe = sdk.parent / dependency
+                    if probe.is_file():
+                        refs.append(probe)
+                output = folder / ("footprint-sdk-surface-" + str(index) + ".dll")
+                command = [str(csc), "/nologo", "/target:library",
+                           "/define:SHCDE_BUILDING_DAMAGE_FOOTPRINT_API",
+                           "/out:" + str(output)]
+                command += ["/r:" + str(item) for item in refs]
+                command += [str(RUNTIME / "BuildingDamageStageSelector.cs"),
+                            str(RUNTIME / "BuildingDamageFootprintAudit.cs"),
+                            str(RUNTIME / "BuildingDamageFootprintGameSource.cs")]
+                run(command, ROOT, "Reale SHCDESE-API-Signaturen Compile-Test")
+                result["sdkCompileChecks"].append({
+                    "sha256": hashlib.sha256(sdk.read_bytes()).hexdigest(),
+                    "compiled": True, "executedInGame": False,
+                    "dependenciesReferenced": [item.name for item in refs]
+                })
+                mark("Tatsächliche lokale SHCDESE-DLL: Compile-Time-Footprint-API kompatibel")
 
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0

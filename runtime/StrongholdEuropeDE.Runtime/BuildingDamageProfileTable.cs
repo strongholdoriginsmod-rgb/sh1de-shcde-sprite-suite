@@ -16,8 +16,11 @@ namespace StrongholdEuropeDE.Runtime
     /// </summary>
     internal static class BuildingDamageProfileTable
     {
-        internal const string Schema = "stronghold-building-damage-runtime-table-v1";
+        internal const string Schema = "stronghold-building-damage-runtime-table-v2";
+        private const string LegacySchema = "stronghold-building-damage-runtime-table-v1";
         private const string Header =
+            "building_type\tbuilding_group\tsprite_a\tsprite_b\tdamage_kind\thp_le\tstage_id\tscene_id";
+        private const string LegacyHeader =
             "building_type\tbuilding_group\tdamage_kind\thp_le\tstage_id\tscene_id";
         private const string Warning =
             "# Generated from SHA-verified damage library; not an active game mod";
@@ -73,9 +76,11 @@ namespace StrongholdEuropeDE.Runtime
             if (table.IndexOf('\r') >= 0 || table.IndexOf('\0') >= 0)
                 throw new FormatException("Candidate table requires normalized UTF-8/LF.");
             string[] lines = table.Split('\n');
+            bool versionTwo = lines.Length >= 5 && lines[0] == "# " + Schema;
+            bool legacyVersion = lines.Length >= 5 && lines[0] == "# " + LegacySchema;
             if (lines.Length < 5 || lines[lines.Length - 1] != "" ||
-                lines[0] != "# " + Schema || lines[1] != Warning ||
-                lines[3] != Header)
+                (!versionTwo && !legacyVersion) || lines[1] != Warning ||
+                lines[3] != (versionTwo ? Header : LegacyHeader))
                 throw new FormatException("Unknown damage candidate table format.");
             const string digestPrefix = "# package-sha256 ";
             if (!lines[2].StartsWith(digestPrefix, StringComparison.Ordinal) ||
@@ -84,16 +89,20 @@ namespace StrongholdEuropeDE.Runtime
             string digest = lines[2].Substring(digestPrefix.Length);
             var data = new Dictionary<int, List<BuildingDamageStageSelector.Stage>>();
             var groupByType = new Dictionary<int, string>();
+            var dimensionsByType = new Dictionary<int, int[]>();
             var visited = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 4; i < lines.Length - 1; i++)
             {
                 string[] fields = lines[i].Split('\t');
-                if (fields.Length != 6)
+                if (fields.Length != (versionTwo ? 8 : 6))
                     throw new FormatException("Candidate table column count mismatch.");
                 int type = ParseInteger(fields[0], 0, 4095);
-                string group = fields[1], kind = fields[2];
-                int hp = ParseInteger(fields[3], 0, 99);
-                string id = fields[4], sceneId = fields[5];
+                int spriteA = versionTwo ? ParseInteger(fields[2], 1, 64) : 0;
+                int spriteB = versionTwo ? ParseInteger(fields[3], 1, 64) : 0;
+                string group = fields[1], kind = fields[versionTwo ? 4 : 2];
+                int hp = ParseInteger(fields[versionTwo ? 5 : 3], 0, 99);
+                string id = fields[versionTwo ? 6 : 4];
+                string sceneId = fields[versionTwo ? 7 : 5];
                 if (!Identity(group) || !Identity(id) || !Identity(sceneId) ||
                     (kind != "mechanical" && kind != "fire") ||
                     !visited.Add(type.ToString(CultureInfo.InvariantCulture) + ":" + kind +
@@ -104,8 +113,15 @@ namespace StrongholdEuropeDE.Runtime
                 {
                     if (existing != group)
                         throw new FormatException("A building type cannot reference two groups.");
+                    int[] earlier = dimensionsByType[type];
+                    if (earlier[0] != spriteA || earlier[1] != spriteB)
+                        throw new FormatException("Inconsistent damage sprite grid within a building type.");
                 }
-                else groupByType.Add(type, group);
+                else
+                {
+                    groupByType.Add(type, group);
+                    dimensionsByType.Add(type, new[] { spriteA, spriteB });
+                }
                 List<BuildingDamageStageSelector.Stage> stages;
                 if (!data.TryGetValue(type, out stages))
                 {
@@ -126,7 +142,8 @@ namespace StrongholdEuropeDE.Runtime
             var profiles = new List<BuildingDamageStageSelector.Profile>();
             foreach (int type in keys)
                 profiles.Add(new BuildingDamageStageSelector.Profile(
-                    type, groupByType[type], data[type]));
+                    type, groupByType[type], data[type],
+                    dimensionsByType[type][0], dimensionsByType[type][1]));
             return new Document(digest, profiles.ToArray());
         }
 

@@ -95,9 +95,12 @@ class DamageRuntimePreflightTests(unittest.TestCase):
         self.assertEqual([stage["hpAtOrBelow"] for stage in result["profiles"][0]["stages"]],
                          [75, 40, 50])
         table = P.table_lines(result)
-        self.assertEqual(table[0], "# stronghold-building-damage-runtime-table-v1")
+        self.assertEqual(table[0], "# stronghold-building-damage-runtime-table-v2")
+        self.assertEqual(result["profiles"][0]["spriteA"], 1)
+        self.assertEqual(result["profiles"][0]["spriteB"], 1)
+        self.assertEqual(table[3], "building_type\tbuilding_group\tsprite_a\tsprite_b\tdamage_kind\thp_le\tstage_id\tscene_id")
         self.assertTrue(table[2].endswith(hashlib.sha256(self.package.read_bytes()).hexdigest()))
-        self.assertEqual(table[-1].split("\t")[2], "fire")
+        self.assertEqual(table[-1].split("\t")[4], "fire")
         self.assertEqual(len(table), 7)
 
     def test_unmapped_building_produces_no_runtime_candidate(self):
@@ -174,6 +177,13 @@ class DamageRuntimePreflightTests(unittest.TestCase):
         manifest["buildings"].append(second)
         save(self.package, manifest, self.entries)
         with self.assertRaisesRegex(P.PreflightError, "Spiel-Gebäudetyp mehrfach"):
+            P.read_library(self.package)
+
+    def test_mixed_stage_sprite_grids_are_refused_before_csharp_mapping(self):
+        manifest = deepcopy(self.manifest)
+        manifest["buildings"][0]["stages"][1]["settings"]["a"] = 2
+        save(self.package, manifest, self.entries)
+        with self.assertRaisesRegex(P.PreflightError, "dasselbe a×b-Raster"):
             P.read_library(self.package)
 
     def test_invalid_sprite_geometry_refused(self):

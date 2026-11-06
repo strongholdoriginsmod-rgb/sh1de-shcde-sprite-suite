@@ -266,3 +266,7 @@ The tool `tools/building_damage_runtime_preflight.py` validates approved SpriteS
 ### Content-bound building-damage review
 
 Approved building damage models now carry a SHA-256 self-consistency digest of the intact art, altered tiles, masks, HP settings, geometry, and relevant generator inputs. Any subsequent change blocks silent export until manually reviewed. The HP preview can show all drafts or exportable, approved stages only. Legacy approved projects without this digest remain readable, but must be reviewed again before export. See [building damage guide](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md).
+
+### Read-only building footprint and sprite mapping audit
+
+`python tools/qa_building_damage_runtime.py` now checks building occupancy versus the SpriteSuite grid while leaving all renderer mappings unverified. Use `--verify-shcdese <local-SHCDESE.dll-path>` to compile-check an actual local Script Extender API surface without loading or running the game. See [building footprint audit](docs/GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md).

@@ -76,3 +76,11 @@ Der synthetische Exporttest setzt den vorgesehenen Zielgebäudetyp jetzt **vor**
 ## Abschluss der aktuellen Offline-Gates
 
 Das vollständige Runtime-QA-Kommando `python tools/qa_building_damage_runtime.py` besteht nach der Aktualisierung des Freigabevertrags mit **18** Python-Preflight-Tests, **56** C#-Selector-/ZIP-Assertions und **29** schreibfreien API-Adapter-Assertions. Die gezielt synthetische Gebäude-ID wird vor der Modellfreigabe gesetzt, danach bleibt sie im SHA-256-gebundenen Zustand unverändert. Alte Datenpakete ohne eine solche Freigabehash-Bindung können diagnostiziert, aber nicht als angeblich geprüfte Runtime-Tabelle vorbereitet werden. Die aktive Renderer-Zuordnung bleibt bewusst deaktiviert.
+
+## Erweiterung des Renderer-Vorabnachweises – Footprint-Audit
+
+Die freigegebenen Gebäude-Datenpakete liefern jetzt eine versionsgeprüfte, **rückwärtskompatible** Raster-Schnittstelle: `runtime-table-v2` enthält `sprite_a` und `sprite_b`. Historische `v1`-Tabellen behalten ihre HP-Auswahl, dürfen aber mangels Rasterkoordinaten nicht zur Rendererzuordnung verwendet werden. Ein fehlerhaft gemischtes Raster wird bereits im Python-Preflight verweigert.
+
+Die pure C#-Footprint-Analyse und der getrennte, nur auf expliziten Compiler-Schalter aktivierbare Gebäude-/Tile-Leseadapter stehen in `BuildingDamageFootprintAudit.cs` und `BuildingDamageFootprintGameSource.cs`. Es wurden zwei vorhandene SHCDESE-Assembly-Versionen (1.44.0 und 2.14.3) ohne Spielausführung erfolgreich **zur Compile-Zeit** geprüft. Der konkrete Bericht mit SHA-256, Quelldokumentation und noch offenen In-Game-Abnahmekriterien ist [GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md](GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md).
+
+Die entscheidende Erkenntnis bleibt: Gameplay-belegte Tile-IDs und SpriteSuite-Grafikslots sind nicht automatisch dasselbe. Jede reale Modellumschaltung bleibt blockiert, bis ein gemessener per-Instanz-Spritepfad, Ausrichtung sowie Masken-/Renderer-Rollback existiert.

@@ -21,7 +21,7 @@ import zlib
 
 FORMAT = "stronghold-building-damage-library"
 CANDIDATE_FORMAT = "stronghold-building-damage-runtime-preflight"
-TABLE_SCHEMA = "stronghold-building-damage-runtime-table-v1"
+TABLE_SCHEMA = "stronghold-building-damage-runtime-table-v2"
 MAX_BYTES = 192 * 1024 * 1024
 MAX_UNPACKED = 192 * 1024 * 1024
 MAX_ENTRIES = 12288
@@ -217,6 +217,7 @@ def read_library(package: Path) -> dict:
             must(isinstance(stages, list) and 1 <= len(stages) <= MAX_STAGES,
                  "Ungültige Zahl Schadensstufen.")
             step_keys, stage_names, sorted_stages = set(), set(), []
+            profile_grid = None
             for item in stages:
                 stage = require_keys(item, ("id", "damageKind", "hpAtOrBelow",
                                             "scene", "settings", "tiles"), "Stufe")
@@ -238,6 +239,11 @@ def read_library(package: Path) -> dict:
                     ("a", "b", "width", "height", "anchor", "order"), "Tile-Einstellungen")
                 a = exact_int(settings["a"], 1, 64, "Raster links")
                 b = exact_int(settings["b"], 1, 64, "Raster rechts")
+                if profile_grid is None:
+                    profile_grid = (a, b)
+                else:
+                    must(profile_grid == (a, b),
+                         "Alle Schadensstufen eines Gebäudes benötigen dasselbe a×b-Raster.")
                 width = exact_int(settings["width"], 2, 64, "Tile-Breite")
                 height = exact_int(settings["height"], 2, 2048, "Rautenhöhe")
                 must(width % 2 == height % 2 == 0 and
@@ -294,12 +300,14 @@ def read_library(package: Path) -> dict:
                 sorted_stages.append({
                     "id": stage_id, "sceneId": scene_id, "damageKind": kind,
                     "hpAtOrBelow": hp, "approvalDigest": approval,
+                    "spriteA": a, "spriteB": b,
                     "tiles": sorted(tile_report, key=lambda t: t["slot"])
                 })
             sorted_stages.sort(key=lambda row: (
                 0 if row["damageKind"] == "mechanical" else 1, -row["hpAtOrBelow"]))
             validated.append({"buildingGroupId": group_id,
                               "name": building_name, "gameBuildingType": game_type,
+                              "spriteA": profile_grid[0], "spriteB": profile_grid[1],
                               "stages": sorted_stages})
         unexpected = set(names) - referenced - {"damage-manifest.json", "README.txt"}
         must(not unexpected, "Paket enthält unreferenzierte Tile-/Maskendateien.")
@@ -323,7 +331,7 @@ def table_lines(report: dict) -> list[str]:
     lines = [f"# {TABLE_SCHEMA}",
              "# Generated from SHA-verified damage library; not an active game mod",
              "# package-sha256 " + report["packageSHA256"],
-             "building_type\tbuilding_group\tdamage_kind\thp_le\tstage_id\tscene_id"]
+             "building_type\tbuilding_group\tsprite_a\tsprite_b\tdamage_kind\thp_le\tstage_id\tscene_id"]
     for profile in report["profiles"]:
         game_type = profile["gameBuildingType"]
         if game_type is None:
@@ -332,6 +340,7 @@ def table_lines(report: dict) -> list[str]:
             if stage.get("approvalDigest") is None:
                 continue  # Never promote legacy, unbound approvals into C# runtime candidates.
             lines.append("\t".join((str(game_type), profile["buildingGroupId"],
+                                    str(profile["spriteA"]), str(profile["spriteB"]),
                                     stage["damageKind"], str(stage["hpAtOrBelow"]),
                                     stage["id"], stage["sceneId"])))
     return lines

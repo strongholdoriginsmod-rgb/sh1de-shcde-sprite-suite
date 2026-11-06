@@ -32,6 +32,8 @@ SPECIALISTS: tuple[Specialist, ...] = (
                "Prüfen", "Inspection", ("fehler", "kacheln", "pivots")),
     Specialist("qa_suite_build_readiness.py", "Bauvoraussetzungen prüfen", "Check build readiness",
                "Prüfen", "Inspection", ("unity", "dotnet", "profil", "build")),
+    Specialist("qa_building_damage_runtime.py", "Gebäude-Runtime und Footprint prüfen", "Audit building damage runtime and footprint",
+               "Prüfen", "Inspection", ("footprint", "occupied tiles", "shcdese", "buildings", "csharp", "hp", "damage", "renderer", "sha256")),
     Specialist("building_damage_runtime_preflight.py", "Gebäude-Schadensmodelle prüfen", "Validate building damage libraries",
                "Prüfen", "Inspection", ("damage", "hp", "fire", "mechanical", "sha256", "runtime", "gebaude", "schaden")),
     Specialist("building_damage_codex.py", "Gebäude-Schadensmodelle mit GPT Image 2.6", "Building damage models with GPT Image 2.6",

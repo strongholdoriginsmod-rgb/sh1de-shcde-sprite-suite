@@ -287,3 +287,7 @@ Unter `tools/building_damage_runtime_preflight.py` lassen sich freigegebene Spri
 ### Abnahmeprüfung für Gebäude-Schadensmodelle
 
 Zusätzlich zur bisherigen visuellen Freigabe bindet eine SHA-256-Zustandsprüfsumme jetzt die tatsächlich exportierten Original-/Schadensbilder, Masken, Raster, HP-Werte und relevante Generatorangaben. Änderungen nach der Abnahme verhindern einen stillen Export. Im Reiter **Schaden** kann die Vorschau zwischen allen Entwürfen und nur freigegebenen Modellen wechseln. Ältere freigegebene Projekte ohne die neue Prüfsumme sind weiterhin lesbar, müssen vor erneutem Export aber neu abgenommen werden. Details: [Gebäudeschäden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md).
+
+### Gebäude-Footprints prüfen, bevor Sprite-Modelle umgeschaltet werden
+
+Die neue optionale Offline-QA `python tools/qa_building_damage_runtime.py` prüft zusätzlich die tatsächlich belegten Spiel-Kacheln gegenüber den SpriteSuite-Rastermaßen, ohne ungeprüfte Richtungen oder Grafikslot-Zuordnungen zu übernehmen. Über `--verify-shcdese <Pfad-zur-SHCDESE.dll>` können auch die tatsächlichen Signaturen einer lokal vorhandenen Script-Extender-Version **nur kompiliert** werden. Details und offene Spielabnahme: [Gebäude-Footprint-Audit](docs/GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md).

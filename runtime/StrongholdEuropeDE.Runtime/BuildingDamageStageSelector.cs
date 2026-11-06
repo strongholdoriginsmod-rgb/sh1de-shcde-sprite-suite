@@ -42,12 +42,25 @@ namespace StrongholdEuropeDE.Runtime
             internal readonly string SourceGroupId;
             internal readonly Stage[] Stages;
             internal readonly bool HasFireStages;
+            internal readonly int SpriteA;
+            internal readonly int SpriteB;
 
+            // Legacy tables had no sprite grid. Preserve the old HP decision
+            // logic, but never treat absent geometry as renderer evidence.
             internal Profile(int buildingType, string sourceGroupId, IEnumerable<Stage> stages)
+                : this(buildingType, sourceGroupId, stages, 0, 0) { }
+
+            internal Profile(int buildingType, string sourceGroupId,
+                IEnumerable<Stage> stages, int spriteA, int spriteB)
             {
                 if (buildingType < 0 || buildingType > 4095 ||
                     string.IsNullOrWhiteSpace(sourceGroupId))
                     throw new ArgumentException("Unverified or missing game building type.");
+                if ((spriteA == 0) != (spriteB == 0) ||
+                    spriteA < 0 || spriteA > 64 || spriteB < 0 || spriteB > 64)
+                    throw new ArgumentException("Invalid or partial SpriteSuite grid dimensions.");
+                SpriteA = spriteA;
+                SpriteB = spriteB;
                 BuildingType = buildingType;
                 SourceGroupId = sourceGroupId;
                 List<Stage> copy = new List<Stage>();

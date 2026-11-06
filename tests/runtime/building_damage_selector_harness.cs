@@ -160,6 +160,42 @@ internal static class BuildingDamageSelectorHarness
         catch (FormatException) { formatError = true; }
         Check(formatError, "table-duplicate-threshold-rejected");
 
+        string v2 = "# stronghold-building-damage-runtime-table-v2\n" +
+            "# Generated from SHA-verified damage library; not an active game mod\n" +
+            "# package-sha256 ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\n" +
+            "building_type\tbuilding_group\tsprite_a\tsprite_b\tdamage_kind\thp_le\tstage_id\tscene_id\n";
+        var parsedGrid = BuildingDamageProfileTable.Parse(v2 +
+            "108\tg_abbey\t5\t5\tmechanical\t75\td_light\tg_light\n" +
+            "108\tg_abbey\t5\t5\tfire\t40\td_fire\tg_fire\n");
+        Check(parsedGrid.Profiles.Length == 1 &&
+            parsedGrid.Profiles[0].SpriteA == 5 &&
+            parsedGrid.Profiles[0].SpriteB == 5,
+            "v2 includes sprite grid dimensions");
+        Check(parsed.Profiles[0].SpriteA == 0 && parsed.Profiles[0].SpriteB == 0,
+            "v1 continues to parse but has no verified grid");
+        formatError = false;
+        try {
+            BuildingDamageProfileTable.Parse(v2 +
+                "108\tg_abbey\t5\t5\tmechanical\t75\td_light\tg_light\n" +
+                "108\tg_abbey\t3\t3\tfire\t40\td_fire\tg_fire\n");
+        }
+        catch (FormatException) { formatError = true; }
+        Check(formatError, "v2 rejects inconsistent grid dimensions");
+        formatError = false;
+        try {
+            BuildingDamageProfileTable.Parse(v2 +
+                "108\tg_abbey\t0\t5\tmechanical\t75\td_light\tg_light\n");
+        }
+        catch (FormatException) { formatError = true; }
+        Check(formatError, "v2 rejects missing grid dimension");
+        formatError = false;
+        try {
+            BuildingDamageProfileTable.Parse(v2 +
+                "108\tg_abbey\t5\t5\tmechanical\t75\td_light\tg_light\ttrailing\n");
+        }
+        catch (FormatException) { formatError = true; }
+        Check(formatError, "v2 rejects unknown columns");
+
         if (args.Length != 0)
         {
             Check(args.Length == 2, "integration-requires-table-and-zip");
@@ -170,6 +206,9 @@ internal static class BuildingDamageSelectorHarness
             Check(tableDoc.Profiles.Length == 1, "real-asset-building-count");
             Check(tableDoc.Profiles[0].BuildingType == 108, "real-asset-building-type");
             Check(tableDoc.Profiles[0].Stages.Length == 2, "real-asset-stages-count");
+            Check(tableDoc.Profiles[0].SpriteA == 5 &&
+                  tableDoc.Profiles[0].SpriteB == 5,
+                  "real-export-preserves-5x5-sprite-footprint");
             var live = new BuildingDamageStageSelector.Observer(tableDoc.Profiles);
             var at75 = live.Observe(1, 7001, 108, 75, 100, 0);
             var at40 = live.Observe(1, 7001, 108, 40, 100, 0);
