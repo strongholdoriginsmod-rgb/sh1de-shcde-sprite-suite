@@ -415,14 +415,20 @@
         if (mask && (mask.width !== src.width || mask.height !== src.height))
             fail('Maske und Schnittbild haben unterschiedliche Größen.');
         let unassigned = 0, visible = 0, overwide = 0;
+        let partialAlphaPixels = 0, materialMaskPixels = 0;
         const bounds = ps.map(p => ({ slot: p.slot, left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity, pixels: 0 }));
         for (let y = 0; y < src.height; y++)
             for (let x = 0; x < src.width; x++) {
                 const i = y * src.width + x;
-                const meaningful = src.data[i * 4 + 3] || (mask && (mask.data[i * 4] || mask.data[i * 4 + 1] || mask.data[i * 4 + 2] || mask.data[i * 4 + 3]));
-                if (!meaningful)
+                const alpha = src.data[i * 4 + 3];
+                const maskChannels = mask && (mask.data[i * 4] || mask.data[i * 4 + 1] || mask.data[i * 4 + 2] || mask.data[i * 4 + 3]);
+                if (!(alpha || maskChannels))
                     continue;
                 visible++;
+                if (alpha > 0 && alpha < 255)
+                    partialAlphaPixels++;
+                if (maskChannels)
+                    materialMaskPixels++;
                 const slot = map[i];
                 if (slot < 0) {
                     unassigned++;
@@ -448,10 +454,22 @@
         if (totalPixels > LIMITS.totalPixels)
             fail('Schnittergebnis überschreitet das Bildbudget.');
         rects.forEach(r => dimensions(r.width, r.height));
-        return { visible, unassigned, overwide, rects, totalPixels, complete: unassigned === 0 && overwide === 0 };
+        return { visible, unassigned, overwide, partialAlphaPixels, materialMaskPixels, rects, totalPixels, complete: unassigned === 0 && overwide === 0 };
     }
-    function split(src, map, raw, anchorX, anchorY, mask = null) {
-        const a = splitAnalysis(src, map, raw, anchorX, anchorY, mask);
+    function split(src, map, raw, anchorX, anchorY, mask = null, options = {}) {
+        // A split's ownership map stays disjoint: it is the reversible source
+        // of truth. Only safe extra samples are copied into the already
+        // allocated overlap of neighbouring tile rectangles.
+        if (!options || typeof options !== 'object' || Array.isArray(options))
+            fail('Ungültige Überlappungseinstellungen.');
+        const overlap = integer(options.overlap ?? 0, 'Überlappung', 0, 1);
+        const rearShare = options.rearShare ?? false;
+        if (typeof rearShare !== 'boolean' || (rearShare && !overlap))
+            fail('Hintere Überlappung benötigt einen aktiven 1-Pixel-Rand.');
+        const s = scene(raw);
+        if (overlap && s.width > 64)
+            fail('Überlappende Tiles dürfen höchstens 64 Pixel breit sein.');
+        const a = splitAnalysis(src, map, s, anchorX, anchorY, mask);
         if (a.unassigned)
             fail(`${a.unassigned} Bild- oder Maskenpixel sind keinem Tile zugeordnet.`);
         if (a.overwide)
@@ -472,7 +490,117 @@
                 if (mask)
                     t.mask.data.set(mask.data.subarray(i * 4, i * 4 + 4), d);
             }
-        return { ...a, tiles };
+        const seamStats = {
+            edgeSamples: 0, rearSharedSamples: 0, transparentRGBBleed: 0,
+            guardedPartialAlphaPixels: a.partialAlphaPixels,
+            guardedMaterialMaskPixels: a.materialMaskPixels
+        };
+        if (overlap) {
+            const ps = positions(s);
+            // Each shrinking/rear diagonal must share its existing half-tile
+            // footprint, not merely the final diagonal with one raster slot.
+            // Precompute the two possible grid neighbours to keep large
+            // 4096-frame splits bounded rather than scanning all rear tiles.
+            const rearStart = Math.ceil((s.a + s.b - 1) / 2);
+            const slotByUV = new Int32Array(s.a * s.b);
+            for (const p of ps)
+                slotByUV[p.u * s.b + p.v] = p.slot;
+            const rearTargets = ps.map(p => {
+                if (!rearShare || p.diagonal + 1 < rearStart)
+                    return [];
+                const candidates = [];
+                if (p.u + 1 < s.a)
+                    candidates.push(slotByUV[(p.u + 1) * s.b + p.v]);
+                if (p.v + 1 < s.b)
+                    candidates.push(slotByUV[p.u * s.b + p.v + 1]);
+                return candidates;
+            });
+            // Opaque-only duplication is mathematically source-over neutral:
+            // repainting the same RGB/alpha=255 produces exactly the same
+            // image in either draw order. Fractional alpha must NOT be copied:
+            // overpainting it would change opacity and make dark halos worse.
+            // Meaningful mask channels are never duplicated automatically.
+            const copySample = (slot, owner, x, y, i, rearSample) => {
+                if (slot < 0 || slot === owner || slot >= tiles.length)
+                    return;
+                const tp = ps[slot], op = ps[owner];
+                if (Math.abs(tp.u - op.u) > 1 || Math.abs(tp.v - op.v) > 1)
+                    return;
+                const t = tiles[slot], xx = x - t.x, yy = y - t.y;
+                if (xx < 0 || yy < 0 || xx >= t.width || yy >= t.height)
+                    return; // Never enlarge a 64 px tile or shift its pivot.
+                const si = i * 4;
+                if (src.data[si + 3] !== 255)
+                    return;
+                if (mask && (mask.data[si] || mask.data[si + 1] ||
+                             mask.data[si + 2] || mask.data[si + 3]))
+                    return;
+                const di = (yy * t.width + xx) * 4;
+                if (t.image.data[di + 3] !== 0)
+                    return;
+                t.image.data.set(src.data.subarray(si, si + 4), di);
+                if (mask)
+                    t.mask.data.set(mask.data.subarray(si, si + 4), di);
+                seamStats[rearSample ? 'rearSharedSamples' : 'edgeSamples']++;
+            };
+            // 8-neighbour sampling protects diagonal corners as well as
+            // horizontal/vertical boundaries, including the back perimeter.
+            for (let y = 0; y < src.height; y++)
+                for (let x = 0; x < src.width; x++) {
+                    const i = y * src.width + x, owner = map[i];
+                    if (owner < 0 || src.data[i * 4 + 3] !== 255)
+                        continue;
+                    const y0 = Math.max(0, y - overlap);
+                    const y1 = Math.min(src.height - 1, y + overlap);
+                    const x0 = Math.max(0, x - overlap);
+                    const x1 = Math.min(src.width - 1, x + overlap);
+                    for (let ny = y0; ny <= y1; ny++)
+                        for (let nx = x0; nx <= x1; nx++) {
+                            // Nearly every interior neighbour has the same
+                            // owner. Avoid a function call for those pixels;
+                            // only genuine border candidates can overlap.
+                            const target = map[ny * src.width + nx];
+                            if (target >= 0 && target !== owner)
+                                copySample(target, owner, x, y, i, false);
+                        }
+                    // Every rear diagonal can share half a tile with the
+                    // preceding diagonal. This also covers 1×N rectangular
+                    // rasters; pixels remain inside the original 64px boxes.
+                    for (const target of rearTargets[owner])
+                        copySample(target, owner, x, y, i, true);
+                }
+            // Alpha dilation is an independent GPU sampling safeguard. Keep
+            // alpha == 0, preserve any already meaningful hidden RGB and do
+            // not modify mask channels. This cannot change the flattened
+            // image under source-over, but prevents black RGB from leaking
+            // through bilinear filtering at transparent sprite boundaries.
+            for (const t of tiles)
+                for (let y = 0; y < t.height; y++)
+                    for (let x = 0; x < t.width; x++) {
+                        const di = (y * t.width + x) * 4, d = t.image.data;
+                        if (d[di + 3] || d[di] || d[di + 1] || d[di + 2])
+                            continue;
+                        if (t.mask && (t.mask.data[di] || t.mask.data[di + 1] ||
+                                       t.mask.data[di + 2] || t.mask.data[di + 3]))
+                            continue;
+                        let best = -1, strength = 0;
+                        for (let ny = Math.max(0, y - 1); ny <= Math.min(t.height - 1, y + 1); ny++)
+                            for (let nx = Math.max(0, x - 1); nx <= Math.min(t.width - 1, x + 1); nx++) {
+                                const ni = (ny * t.width + nx) * 4, alpha = d[ni + 3];
+                                if (alpha > strength) {
+                                    strength = alpha;
+                                    best = ni;
+                                }
+                            }
+                        if (best !== -1) {
+                            d[di] = d[best];
+                            d[di + 1] = d[best + 1];
+                            d[di + 2] = d[best + 2];
+                            seamStats.transparentRGBBleed++;
+                        }
+                    }
+        }
+        return { ...a, tiles, seamStats };
     }
     function pack(items, options = {}) {
         if (!items.length)

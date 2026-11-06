@@ -81,15 +81,17 @@ with sync_playwright() as pw:
     tree=ET.fromstring(z.read('stack.xml'));assert_(len(tree.findall('.//layer'))==25)
     equal_images(Image.open(io.BytesIO(z.read('mergedimage.png'))).convert('RGBA'),png(merged))
   check('OpenRaster validates independently and matches merged PNG',ora_check)
-  # Use exact source origin for new disjoint cuts, then actually export/reassemble.
+  # Keep the source ownership unambiguous while output tiles share safe pixel content.
   view(page,'split');page.locator('[data-action="scene-to-split"]').click();quiet(page)
-  check('Compose-to-cut transfers exact geometry instead of guessing the anchor',lambda:assert_(snap(page)['state']['split']['settings']['a']==5 and snap(page)['state']['split']['anchorX']>0))
+  check('Compose-to-cut enables 1px overlap and rear sharing without changing geometry',lambda:assert_(snap(page)['state']['split']['settings']['a']==5 and snap(page)['state']['split']['anchorX']>0 and snap(page)['state']['split']['overlap']==1 and snap(page)['state']['split']['rearShare'] is True and page.get_by_label('Tile-Überlappung · px').input_value()=='1' and page.get_by_label('Tilebreite · px').get_attribute('max')=='64'))
   cut=export(page,'split','example-cut.zip')
   def cut_check():
    source=png(merged);out=Image.new('RGBA',source.size)
    with zipfile.ZipFile(cut) as z:
     meta=json.loads(z.read('schnitt.json'));assert_(len(meta['tiles'])==25)
-    # Disjoint masks, so every nontransparent sample is preserved exactly.
+    assert_(meta['overlap']==1 and meta['rearShare'] is True and meta['seamStats']['edgeSamples']>0)
+    assert_(all(tile['width']==64 for tile in meta['tiles']),'overlap increased 64px tile width')
+    # Ownership remains disjoint; opaque samples may safely occur in multiple tiles.
     for t in meta['tiles']:
      im=Image.open(io.BytesIO(z.read(t['name']))).convert('RGBA');layer=Image.new('RGBA',source.size);layer.paste(im,(t['x'],t['y']));out=Image.alpha_composite(out,layer)
    equal_images(out,source)

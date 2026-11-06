@@ -1,5 +1,11 @@
 # Änderungen gegenüber v0.1
 
+## 1.0.0 – Schnitt-/Nahtkorrektur vom 06.11.2026
+
+Der Sprite Editor verwendet für neue Schnitte eine 1-Pixel-Überlappung innerhalb der unveränderten maximal 64 Pixel breiten Tiles. Sämtliche hinteren Reihen teilen die bereits vorhandenen halben Tileflächen; vorletzte Reihen sind nicht mehr ausgenommen. Wiederholte Ownership-Kopieraufrufe für identische Nachbarn wurden zugunsten großer Bilder entfernt. Die Ownership-Maske und die Positionen werden nicht verändert. Vollständig deckende RGBA-Samples werden für Nachbarn dupliziert; teiltransparente Pixel und bedeutungstragende Materialmasken bleiben eindeutig. RGB-Farbwerte angrenzender transparenter Pixel werden bei Alpha 0 sicher ausgefüllt, um dunkles Texture-Bleeding zu mindern.
+
+Alte Projektdateien behalten die disjunkte Verarbeitung. Zwei UI-Parameter steuern die neue Schnittlogik; Projektdatei, Schnitt-ZIP und Übernahme in die Sprite-Gruppe erhalten die Einstellungen. Core-, PNG-, Browser-, Export- und Rückwärtskompatibilitätstests wurden ergänzt.
+
 ## 1.0.0 — 29.09.2026
 
 Oberfläche und Datenverarbeitung neu aufgebaut. Kompakte Dateiliste, Arbeitsfläche und Inspektor statt erklärungsreicher Startoberfläche. Fünf Arbeitsansichten; responsive Seitenleisten, Tastaturbedienung und virtualisierte Dateiliste.

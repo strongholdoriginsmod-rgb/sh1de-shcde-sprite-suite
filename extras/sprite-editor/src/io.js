@@ -202,8 +202,14 @@
                 if (m.width !== img.width || m.height !== img.height)
                     C.fail('Schnittbild und Farbmaske haben unterschiedliche Größen.');
             }
+            const overlap = C.integer(r.overlap ?? 0, 'Überlappung', 0, 1);
+            const rearShare = bool(r.rearShare, false);
+            if (rearShare && !overlap)
+                C.fail('Hintere Überlappung benötigt einen aktiven 1-Pixel-Rand.');
+            if (overlap && settings.width > 64)
+                C.fail('Überlappende Tiles dürfen höchstens 64 Pixel breit sein.');
             s.split = {
-                imageId: r.imageId, mapId, maskId, settings, anchorX: C.integer(r.anchorX, 'Schnittanker X'), anchorY: C.integer(r.anchorY, 'Schnittanker Y'), extend: bool(r.extend, true), group: text(r.group, 'Schnittgruppe', 120), start: C.integer(r.start, 'Schnittstart', 0, 1000000), source: source(r.source)
+                imageId: r.imageId, mapId, maskId, settings, anchorX: C.integer(r.anchorX, 'Schnittanker X'), anchorY: C.integer(r.anchorY, 'Schnittanker Y'), extend: bool(r.extend, true), overlap, rearShare, group: text(r.group, 'Schnittgruppe', 120), start: C.integer(r.start, 'Schnittstart', 0, 1000000), source: source(r.source)
             };
         }
         return s;
@@ -711,7 +717,7 @@
         const r = state.split;
         if (!r)
             C.fail('Kein Schnittbild vorhanden.');
-        const src = store.get(r.imageId), map = C.ownershipMap(store.get(r.mapId), r.settings.a * r.settings.b), result = C.split(src, map, r.settings, r.anchorX, r.anchorY, r.maskId ? store.get(r.maskId) : null), entries = [], layout = [];
+        const src = store.get(r.imageId), map = C.ownershipMap(store.get(r.mapId), r.settings.a * r.settings.b), result = C.split(src, map, r.settings, r.anchorX, r.anchorY, r.maskId ? store.get(r.maskId) : null, { overlap: r.overlap ?? 0, rearShare: r.rearShare ?? false }), entries = [], layout = [];
         const group = C.targetName(r.group + '-' + r.start).group;
         for (const t of result.tiles) {
             const name = `${group}-${r.start + t.slot}.png`;
@@ -723,7 +729,7 @@
         }
         entries.push({
             name: 'schnitt.json', data: JSON.stringify({
-                format: 'stronghold-sprite-cut', version: 1, sourceWidth: src.width, sourceHeight: src.height, settings: r.settings, anchorX: r.anchorX, anchorY: r.anchorY, tiles: layout
+                format: 'stronghold-sprite-cut', version: 1, sourceWidth: src.width, sourceHeight: src.height, settings: r.settings, anchorX: r.anchorX, anchorY: r.anchorY, overlap: r.overlap ?? 0, rearShare: r.rearShare ?? false, seamStats: result.seamStats, tiles: layout
             }, null, 2)
         });
         return { bytes: K.zip(entries), result };
@@ -732,7 +738,7 @@
         const r = state.split;
         if (!r)
             C.fail('Kein Schnittbild vorhanden.');
-        const src = store.get(r.imageId), map = C.ownershipMap(store.get(r.mapId), r.settings.a * r.settings.b), res = C.split(src, map, r.settings, r.anchorX, r.anchorY, r.maskId ? store.get(r.maskId) : null), out = clone(state), next = store.fork(), gid = uid('g');
+        const src = store.get(r.imageId), map = C.ownershipMap(store.get(r.mapId), r.settings.a * r.settings.b), res = C.split(src, map, r.settings, r.anchorX, r.anchorY, r.maskId ? store.get(r.maskId) : null, { overlap: r.overlap ?? 0, rearShare: r.rearShare ?? false }), out = clone(state), next = store.fork(), gid = uid('g');
         C.targetName(r.group + '-' + r.start);
         out.scenes.push({ id: gid, name: r.group, source: r.source, settings: { ...r.settings, anchor: 'bottom' } });
         for (const t of res.tiles) {

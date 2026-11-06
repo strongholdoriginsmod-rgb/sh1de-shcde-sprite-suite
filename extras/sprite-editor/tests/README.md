@@ -14,4 +14,4 @@ Der Browserlauf benötigt Playwright und Pillow; die Anwendung selbst nicht. Er 
 
 Testausgaben und Berichte werden in `tests/results/` geschrieben. Dateien mit den synthetischen Namen `body_source`, `body_target`, `body_capacity` oder `tile_beispiel` sind keine installierbaren Referenzmods für reale Spiel-IDs. Negative ZIP-/PNG-Fixtures enthalten absichtlich ungültige Strukturen; sie sind ausschließlich Parser-Testdaten und dürfen nicht als Assetarchiv verwendet werden.
 
-99 benannte Tests sind keine Aussage über vollständige Codeabdeckung oder formale Verifikation. Browser-Prüfungen ergänzen, ersetzen aber keine Tests in einer Spielinstallation. Einzelheiten und verbleibende Grenzen stehen in `dokumentation/TESTBERICHT.md`.
+114 benannte Kern-, Schnitt- und Integrationstests sind keine Aussage über vollständige Codeabdeckung oder formale Verifikation. Browser-Prüfungen ergänzen, ersetzen aber keine Tests in einer Spielinstallation. Einzelheiten und verbleibende Grenzen stehen in `dokumentation/TESTBERICHT.md`.

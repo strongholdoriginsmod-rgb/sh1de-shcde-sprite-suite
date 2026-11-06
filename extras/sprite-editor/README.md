@@ -15,7 +15,7 @@ Lokaler Editor für exportierte PNG-Assets. Arbeitsrichtung: **Stronghold: Defin
 | Aufbau | Isometrisches Raster, variable Sprite-Höhen, Rasterplätze, Ebenenreihenfolge, Versatz und Sichtbarkeit. |
 | Sprite | Pivot, Original-/Zielvergleich, Differenzbild, Farb- und Maskenkanäle, Ersetzen und Stapeltransformationen. |
 | Animation | Ausgewählte Frames oder sichtbare Gruppe; Wiedergabe, Einzelschritt, gemeinsamer Pivot und vorheriger Frame. |
-| Schnitt | Gesamtbild mit anpassbaren Rautenflächen und manuell korrigierbarer Pixelzuordnung in Tiles zerlegen. |
+| Schnitt | Gesamtbild mit anpassbaren Rautenflächen und manuell korrigierbarer Pixelzuordnung zerlegen; neue Schnitte verwenden einen sicheren 1-Pixel-Überlappungsrand und zusätzliche gemeinsame Bildbereiche in sämtlichen hinteren Reihen, ohne die Tilebreite über 64 Pixel zu vergrößern. |
 | Atlas | Zielgruppen zusammenpacken, Abstände und Randwiederholung prüfen, Masken synchron mitführen. |
 
 Rechts liegen **Eigenschaften**, **Ziel** und **Prüfung**. Quelldateiname, Rasterplatz und SHCDE-Zielname sind getrennte Größen. Es gibt keine automatische, behauptete ID-Übersetzung zwischen den Spielen.
@@ -34,9 +34,9 @@ Die Originaldateien bleiben getrennt von Bearbeitungen erhalten. `.shsprite` ent
 
 ## Prüfung und Grenzen
 
-Der beigefügte Bericht dokumentiert **99 bestandene Kern-/Format-Tests und 49 bestandene Browser-Prüfungen**. Dazu gehören echte Importdialoge und Downloads, unabhängige PNG-Vergleiche, der Import des ursprünglichen v0.1-Beispiels sowie ein 4096-Frame-Projekt mit virtualisierter Liste.
+Der aktuelle Teststand umfasst **114 bestandene Kern-/Format-/Überlappungs-Tests und 49 bestandene Browser-Prüfungen**, einschließlich sichtbarer 1-Pixel-Schnittüberlappung und sicher geteilter hinterer Reihen. Dazu gehören echte Importdialoge und Downloads, unabhängige PNG-Vergleiche, der Import des ursprünglichen v0.1-Beispiels sowie ein 4096-Frame-Projekt mit virtualisierter Liste.
 
-**Nicht durchgeführt:** In-Game-Test, Prüfung an originalen extrahierten Spielassets, native Windows-/macOS-Prüfung, direkter `file://`-Start und dauerhafte native IndexedDB-Wiederherstellung. Die Browserprüfung verwendete die unveränderte HTML-Datei in Chromium per `page.set_content`. Dies ist kein Ersatz für eine Abnahme in der konkreten Spielinstallation.
+**Noch offen:** In-Game-Abnahme der drei konkreten Ruinen, Prüfung an deren extrahierten Original-Tiles, native macOS-Prüfung und dauerhafte native IndexedDB-Wiederherstellung. Der direkte `file://`-Start wurde inzwischen unter Windows mit Edge in Deutsch und Englisch getestet. Die Browserprüfung verwendete die unveränderte HTML-Datei in Chromium per `page.set_content`. Dies ist kein Ersatz für eine Abnahme in der konkreten Spielinstallation.
 
 16 Megapixel je Bild, 32 Megapixel an gehaltenen Bilddaten einschließlich Originalen und Historie, maximal 4096 Sprites. PNG mit 16 Bit pro Kanal und APNG werden abgewiesen; keine stille Reduktion. Große Verarbeitungsschritte laufen im Hauptthread; Abbruch wird an definierten Verarbeitungsgrenzen wirksam, nicht mitten in jeder Pixelschleife.
 
@@ -46,4 +46,4 @@ Kein GM1-Binärpatcher, kein AssetBundle- oder DDS-Editor, kein automatischer Me
 
 `beispiele/` enthält ausschließlich synthetische Daten. `dokumentation/ANLEITUNG.md` beschreibt die Bedienung, `RECHERCHE.md` die Quellen und Fallstricke, `ARCHITEKTUR.md` die technischen Verträge und `TESTBERICHT.md` die tatsächlich ausgeführten Prüfungen. `src/` enthält den lesbaren Quellcode, `tests/` die reproduzierbaren Prüfprogramme. `SHA256SUMS.txt` erlaubt die Kontrolle der Paketdateien.
 
-Neu bauen: `python build.py`. Kernprüfungen: `node --test tests/test_core.cjs`. Weitere Testbefehle stehen im Testbericht. Für die reine Benutzung wird weder Python noch Node benötigt.
+Neu bauen: `python build.py`, anschließend `python sprache/einbauen.py`. Kernprüfungen: `node --test tests/test_core.cjs tests/test_seam_overlap.cjs tests/test_split_integration.cjs`. Weitere Testbefehle stehen im Testbericht. Für die reine Benutzung wird weder Python noch Node benötigt.

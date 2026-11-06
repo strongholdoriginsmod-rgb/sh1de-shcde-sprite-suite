@@ -383,8 +383,10 @@
                         throw new Error('Genau ein Gesamtbild auswählen.');
                     const next = store().fork(), imageId = await next.decode(colors[0].data, opts), img = next.get(imageId), maskEntry = entries.find(e => e.name.toLowerCase() === colors[0].name.replace(/\.png$/i, '_m.png').toLowerCase()), maskId = maskEntry ? await next.decode(maskEntry.data, opts) : null;
                     const settings = C.scene(currentGroup()?.settings || C.DEFAULT_SCENE), anchorX = Math.round(img.width / 2 + (settings.a - settings.b) * settings.width / 4), anchorY = img.height - settings.padding;
+                    if (settings.width > 64)
+                        throw new Error('Neue Schnitte mit Überlappung benötigen höchstens 64 Pixel Tilebreite. Raster vorher anpassen.');
                     const map = C.partition(img, settings, anchorX, anchorY, true), mapId = next.add(C.ownershipImage(map, img.width, img.height)), s = I.clone(state());
-                    s.split = { imageId, maskId, mapId, settings, anchorX, anchorY, extend: true, group: 'tile_custom', start: 0, source: optsBase.source };
+                    s.split = { imageId, maskId, mapId, settings, anchorX, anchorY, extend: true, overlap: 1, rearShare: true, group: 'tile_custom', start: 0, source: optsBase.source };
                     result = { state: s, store: next, count: 1 };
                 }
                 else if (type === 'ownership') {
@@ -587,9 +589,13 @@
     function splitSection() {
         const r = state().split;
         if (!r)
-            return section('Schnitt', [button('Gesamtbild laden…', () => importDialog([], 'split')), note('Das Bild wird in disjunkte Tiles zerlegt. Verdeckte Originalpixel lassen sich aus einem flachen PNG nicht rekonstruieren.')]);
+            return section('Schnitt', [button('Gesamtbild laden…', () => importDialog([], 'split')), note('Die Schnittmaske bleibt eindeutig. Neue Tiles teilen einen 1-Pixel-Rand; hinterste Reihen dürfen innerhalb der 64-Pixel-Breite Bildbereiche gemeinsam enthalten. Verdeckte Originalpixel lassen sich nicht rekonstruieren.')]);
         const s = r.settings, change = (key, v) => edit(st => {
             st.split[key] = v;
+            if (key === 'overlap' && v === 0)
+                st.split.rearShare = false;
+            if (key === 'rearShare' && v)
+                st.split.overlap = 1;
         }, 'Schnittparameter'), setting = (key, v) => {
             const next = store().fork(), st = I.clone(state());
             st.split.settings = C.scene({ ...st.split.settings, [key]: v });
@@ -606,11 +612,18 @@
             stats = { error: e.message };
         }
         return section('Schnittraster', [
-            fields(num('Links', s.a, v => setting('a', C.integer(v, 'Links', 1, 64)), { min: 1, max: 64 }), num('Rechts', s.b, v => setting('b', C.integer(v, 'Rechts', 1, 64)), { min: 1, max: 64 }), num('Tilebreite · px', s.width, v => setting('width', C.integer(v, 'Tilebreite', 2, 2048)), { min: 2, max: 2048, step: 2 }), num('Rautenhöhe · px', s.height, v => setting('height', C.integer(v, 'Rautenhöhe', 2, 2048)), { min: 2, max: 2048, step: 2 }), num('Frontanker X', r.anchorX, v => change('anchorX', C.integer(v, 'Anker X'))), num('Frontanker Y', r.anchorY, v => change('anchorY', C.integer(v, 'Anker Y')))),
+            fields(num('Links', s.a, v => setting('a', C.integer(v, 'Links', 1, 64)), { min: 1, max: 64 }), num('Rechts', s.b, v => setting('b', C.integer(v, 'Rechts', 1, 64)), { min: 1, max: 64 }), num('Tilebreite · px', s.width, v => setting('width', C.integer(v, 'Tilebreite', 2, r.overlap ? 64 : 2048)), { min: 2, max: r.overlap ? 64 : 2048, step: 2 }), num('Rautenhöhe · px', s.height, v => setting('height', C.integer(v, 'Rautenhöhe', 2, 2048)), { min: 2, max: 2048, step: 2 }), num('Frontanker X', r.anchorX, v => change('anchorX', C.integer(v, 'Anker X'))), num('Frontanker Y', r.anchorY, v => change('anchorY', C.integer(v, 'Anker Y')))),
             buttons(checkbox('Hintere Flächen nach oben verlängern', r.extend, '', v => change('extend', v))), buttons(button('Raster anwenden', regenerateSplit)),
+            fields(num('Tile-Überlappung · px', r.overlap ?? 0, v => change('overlap', C.integer(v, 'Überlappung', 0, 1)), { min: 0, max: 1, step: 1 })),
+            buttons(checkbox('Hintere Reihen: halbe Tileflächen teilen', r.rearShare ?? false, '', v => change('rearShare', v))),
             fields(field('Zielgruppe', r.group, { wide: true, onchange: v => change('group', v) }), num('Startindex', r.start, v => change('start', C.integer(v, 'Startindex', 0, 1000000)), { min: 0, max: 1000000 })),
-            ...(stats.error ? [note(stats.error)] : [line('Nicht zugeordnet', stats.unassigned.toLocaleString('de-DE') + ' Pixel'), line('Breite überschritten', stats.overwide + ' Tiles')]),
-            buttons(button('Maske importieren…', () => importDialog([], 'ownership')), button('Schnitt exportieren', () => exportDirect('split'))), note('Rastergrößenänderungen und „Raster anwenden“ ersetzen die manuelle Zuordnung. Änderungen bleiben rückgängig machbar. Schnittflächen werden als RGB-Indexbild gespeichert.')
+            ...(stats.error ? [note(stats.error)] : [
+                line('Nicht zugeordnet', stats.unassigned.toLocaleString('de-DE') + ' Pixel'),
+                line('Breite überschritten', stats.overwide + ' Tiles'),
+                ...(r.overlap && stats.partialAlphaPixels ? [line('Teiltransparente Pixel ohne Doppelung', stats.partialAlphaPixels.toLocaleString('de-DE'))] : []),
+                ...(r.overlap && stats.materialMaskPixels ? [line('Materialmasken-Pixel ohne Doppelung', stats.materialMaskPixels.toLocaleString('de-DE'))] : [])
+            ]),
+            buttons(button('Maske importieren…', () => importDialog([], 'ownership')), button('Schnitt exportieren', () => exportDirect('split'))), note('1 px Überlappung kopiert nur voll deckende Bildpixel in benachbarte 64-px-Tiles. Halbtransparente Pixel und Materialmasken bleiben eindeutig, damit keine Doppelkonturen entstehen. Hintere Reihen teilen zusätzliche Bildflächen. Ältere Projekte behalten ihren bisherigen Schnittmodus. Rasteränderungen ersetzen die manuelle Zuordnung.')
         ]);
     }
     function atlasGroups() {
@@ -924,8 +937,10 @@
             if (ff.some(f => f.maskId))
                 throw new Error('Für maskierte Quellen einzelne Ebenen beibehalten. Eine überlagerte Farbmaske kann nicht shaderneutral abgeflacht werden.');
             const img = next.get(imageId), settings = { ...g.settings, anchor: 'bottom' }, map = C.partition(img, settings, l.originX, l.originY, true);
+            if (settings.width > 64)
+                throw new Error('Neue Schnitte mit Überlappung benötigen höchstens 64 Pixel Tilebreite. Raster vorher anpassen.');
             s.split = {
-                imageId, maskId, mapId: next.add(C.ownershipImage(map, img.width, img.height)), settings, anchorX: l.originX, anchorY: l.originY, extend: true, group: g.name, start: Math.min(...ff.map(f => f.index ?? 0)), source: g.source
+                imageId, maskId, mapId: next.add(C.ownershipImage(map, img.width, img.height)), settings, anchorX: l.originX, anchorY: l.originY, extend: true, overlap: 1, rearShare: true, group: g.name, start: Math.min(...ff.map(f => f.index ?? 0)), source: g.source
             };
             commit(s, 'Aufbau als Schnittbild', next, { fit: true });
             view = 'split';
