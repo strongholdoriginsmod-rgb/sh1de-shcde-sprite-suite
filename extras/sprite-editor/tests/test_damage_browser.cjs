@@ -130,15 +130,6 @@ async function run() {
         await page.evaluate(() => { window.__damageImageBefore = window.SpriteEditor.inspect().state.frames.find(f =>
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId; });
         await clickLabel(page, 'PNG als Tiles zerlegen');
-        await nap(900);
-        console.log('APPLY_DIAG', await page.evaluate(() => ({
-            before: window.__damageImageBefore,
-            after: window.SpriteEditor.inspect().state.frames.find(f =>
-                f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId,
-            toast: document.querySelector('#toast')?.textContent,
-            open: document.querySelector('#busy-dialog')?.open,
-            candidate: window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].candidateId
-        })));
         await wait(page, () => window.SpriteEditor.inspect().state.frames.find(f =>
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId !== window.__damageImageBefore);
         await clickLabel(page, 'Qualität abnehmen…');
@@ -166,28 +157,17 @@ async function run() {
         const decodedChanged = await K.decodePNG(new Uint8Array(fs.readFileSync(modifiedPath)));
         const decodedOriginal = await K.decodePNG(original);
         assert.notDeepEqual(Array.from(decodedChanged.data), Array.from(decodedOriginal.data), 'PNG modification must survive codec');
-        console.log('MODIFIED_PIXEL', changedIndex, decodedOriginal.data[changedIndex], decodedChanged.data[changedIndex]);
         await page.evaluate(id => { window.__damageCandidateBefore = id; }, s.candidateId);
         const chooserChanged = page.waitForFileChooser();
         await clickLabel(page, 'Generiertes PNG importieren…');
         await (await chooserChanged).accept([modifiedPath]);
         await nap(200);
-        console.log('SECOND_IMPORT', s.candidateId, (await state(page)).damageProfiles[0].stages[0].candidateId, await page.evaluate(() => document.querySelector('#toast')?.textContent));
         await wait(page, () => window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].candidateId !== window.__damageCandidateBefore);
         await wait(page, () => !document.querySelector('#busy-dialog').open);
         await nap(100);
         await page.evaluate(() => { window.__damageImageBefore = window.SpriteEditor.inspect().state.frames.find(f =>
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId; });
         await clickLabel(page, 'PNG als Tiles zerlegen');
-        await nap(900);
-        console.log('APPLY_DIAG', await page.evaluate(() => ({
-            before: window.__damageImageBefore,
-            after: window.SpriteEditor.inspect().state.frames.find(f =>
-                f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId,
-            toast: document.querySelector('#toast')?.textContent,
-            open: document.querySelector('#busy-dialog')?.open,
-            candidate: window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].candidateId
-        })));
         await wait(page, () => window.SpriteEditor.inspect().state.frames.find(f =>
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId !== window.__damageImageBefore);
         await clickLabel(page, 'Qualität abnehmen…');
@@ -247,7 +227,13 @@ async function run() {
         assert.deepEqual(errors,[], 'Browser JavaScript errors');
         assert.deepEqual(requests,[], 'No network requests by the editor');
         checks.push('Kein Browserfehler / keine Netzwerkanfragen');
-        console.log(JSON.stringify({pass:true,checks,downloads:fs.readdirSync(tmp).filter(x=>/\.(png|zip)$/.test(x))},null,2));
+        const report = { pass: true, checks, directFileUrl: true, pageErrors: errors, networkRequests: requests,
+            htmlSHA256: require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'Stronghold_Sprite_Editor.html'))).digest('hex'),
+            browser: await browser.version(), inGameTested: false, apiCalled: false };
+        const resultDir = path.join(ROOT, 'tests', 'results');
+        fs.mkdirSync(resultDir, {recursive: true});
+        fs.writeFileSync(path.join(resultDir, 'damage-browser-report.json'), JSON.stringify(report,null,2)+'\n','utf8');
+        console.log(JSON.stringify(report, null, 2));
     } finally {
         await browser.close();
         // Keep temporary screenshots only for the duration of this test;

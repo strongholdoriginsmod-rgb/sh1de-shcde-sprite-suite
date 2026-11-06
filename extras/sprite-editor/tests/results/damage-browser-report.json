@@ -1,0 +1,24 @@
+{
+  "pass": true,
+  "checks": [
+    "Editor direkt via file:// geladen",
+    "Gebäude-Demo geladen",
+    "Stufe inklusive Clone, Scene und HP-Schwelle erstellt",
+    "HP-Vorschau 80 % intakt / 60 % beschädigt",
+    "Codex ZIP mit unverändertem Original, Modellreferenz und Prompt",
+    "Kandidat über echten Dateidialog importiert, nicht automatisch freigegeben",
+    "Identisches KI-Bild wird trotz ausdrücklichem Klick nicht freigegeben",
+    "Verändertes Schadensmodell nur nach manueller Abnahme freigegeben",
+    "Freigegebenes HP-Schadenspaket enthält korrektes Manifest und Tiles",
+    "Eigener Feuer-Zweig mit 40-%-Grenze",
+    "Englische Oberfläche zeigt Damage-Workflow",
+    "Kein Browserfehler / keine Netzwerkanfragen"
+  ],
+  "directFileUrl": true,
+  "pageErrors": [],
+  "networkRequests": [],
+  "htmlSHA256": "39009a11f347f941d9a3538817fb7b0d9f9a27aecc29855097dec00c50a51e3a",
+  "browser": "Edg/156.0.4314.58",
+  "inGameTested": false,
+  "apiCalled": false
+}
