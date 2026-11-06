@@ -20,7 +20,7 @@ Lokaler Editor für exportierte PNG-Assets. Arbeitsrichtung: **Stronghold: Defin
 
 Rechts liegen **Eigenschaften**, **Ziel** und **Prüfung**. Quelldateiname, Rasterplatz und SHCDE-Zielname sind getrennte Größen. Es gibt keine automatische, behauptete ID-Übersetzung zwischen den Spielen.
 
-## Portierung
+## Gebäude-Schadensmodelle und Codex\n\nDer neue Inspector-Reiter **Schaden** ergänzt den normalen Gebäude-Workflow: Gebäudegruppe wählen, mechanische oder Feuer-Zerstörungsstufen mit eigenen HP-Schwellen (0–99 %) anlegen, bestehende Tiles bearbeiten oder Referenz-PNG und präzisen Prompt für **GPT Image 2.6** exportieren. Codex kann über `tools/building_damage_codex.py` Bilder erzeugen und getrennt zur Qualitätsprüfung ablegen. Neue PNGs werden erst nach explizitem Import, verlustgeprüfter 64-px-Zerlegung und visueller Freigabe als Schadensmodelle ausgegeben. Projektdatei, Undo, vorhandene Tile-Überlappungen und Originale bleiben erhalten.\n\nDie Schadensbibliothek enthält freigegebene Tiles und `damage-manifest.json`; die **dynamische Engine-Umschaltung** ist noch nicht belegt und wird **nicht** als fertiger Spiel-Hook ausgegeben. Der normale Mod-Export schließt zusätzliche Schadensstufen bewusst aus. Bedienung, Codex-Kommandos und Grenzen: [dokumentation/GEBAEUDESCHADEN.md](dokumentation/GEBAEUDESCHADEN.md).\n\n## Portierung
 
 Quell-PNGs und zugehörige `_m.png`-Masken importieren. Vorhandene Quellmetadaten hinzufügen. SHCDE-Zielreferenzen und deren Metadaten separat laden. Zielnamen für die ausgewählten Frames einzeln, als Serie oder per CSV zuordnen. Pivot, Auflösung, PPU und Material abgleichen. Unter **Prüfung** Fehler bearbeiten; erst anschließend das Modpaket exportieren.
 

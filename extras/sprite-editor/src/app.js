@@ -1,7 +1,7 @@
 /* Stronghold Sprite Editor. DOM and canvas view; all exports use the independent RGBA codec. */
 (function () {
     'use strict';
-    const C = window.SpriteCore, K = window.SpriteCodec, I = window.SpriteIO, $ = id => document.getElementById(id);
+    const C = window.SpriteCore, K = window.SpriteCodec, I = window.SpriteIO, D = window.SpriteDamage, DI = window.SpriteDamageIO, $ = id => document.getElementById(id);
     if (!window.crypto?.getRandomValues || !window.CompressionStream || !window.DecompressionStream || !window.structuredClone) {
         document.body.textContent = 'Dieser Browser unterstützt die benötigten lokalen Datei- und Kompressionsfunktionen nicht. Die HTML-Datei in einer aktuellen Chromium-basierten Desktop-Version öffnen.';
         return;
@@ -25,6 +25,7 @@
         return n;
     };
     let history = new I.History(I.blank(), new I.AssetStore()), groupId = '', selected = new Set(), lastSelected = null, view = 'scene', panel = 'properties', dirty = false, busy = false, modalHandler = null, pendingFiles = [], toastTimer = null, aborter = null;
+    let damageBuildingId = '', damageKind = 'mechanical', damageHp = 100;
     let playing = false, animIndex = 0, lastFrameTime = 0, pivotTool = false, brushTool = false, brushMap = null, drag = null, spaceDown = false, renderQueued = false, model = null, layoutError = '', fitNext = true, atlasGroup = '';
     let recoveryCandidate = null, recoveryTimer = null, recoveryRunning = false, recoveryAgain = false, recoveryEnabled = true, sessionId = I.uid('s'), autosaveGeneration = 0;
     try {
@@ -76,6 +77,8 @@
         render();
     }
     function commit(next, label = 'Bearbeitung', nextStore = store(), options = {}) {
+        if (!options.keepDamageApproval)
+            D.invalidateApprovals(state(), next);
         if (history.commit(next, nextStore, label))
             afterChange(options);
     }
@@ -709,6 +712,169 @@
         nodes.push(button('Prüfbericht exportieren', () => exportDirect('report')), note('Geprüft werden Daten, Zuordnung und Exportregeln. Rendering, Animationsbedeutung und Nutzungsrechte sind keine automatisch verifizierbaren Eigenschaften.'));
         return section('Exportprüfung', nodes);
     }
+    function damageOpenScene(sceneId, editTiles = false) {
+        if (!state().scenes.some(g => g.id === sceneId))
+            throw new Error('Schadensmodell-Gruppe fehlt.');
+        groupId = sceneId;
+        selected = new Set(state().frames.filter(f => f.groupId === groupId).slice(0, 1).map(f => f.id));
+        view = 'scene';
+        if (editTiles) panel = 'properties';
+        fitNext = true;
+        render();
+    }
+    function damageStageEdit(stageId, updater, label = 'Schadensstufe bearbeiten') {
+        edit(s => {
+            const stage = (s.damageProfiles || []).flatMap(p => p.stages).find(x => x.id === stageId);
+            if (!stage) throw new Error('Schadensstufe fehlt.');
+            updater(stage);
+        }, label);
+    }
+    function damageCreateDialog() {
+        if (!damageBuildingId) throw new Error('Zuerst ein Gebäude wählen.');
+        modal('Schadensstufe hinzufügen', [
+            note('Die neue Stufe übernimmt die bestehenden Tiles als unabhängige, bearbeitbare Szene. Der normale Mod-Export ignoriert sie.'),
+            fields(field('Schadensart', damageKind, { name: 'kind', wide: true, options: [['mechanical', 'Mechanisch'], ['fire', 'Feuer']] }),
+                num('Anzeigen ab HP ≤ %', 75, null, { name: 'hp', min: 0, max: 99 })),
+            fields(field('Name der Stufe', '', { name: 'label', wide: true, placeholder: 'Beschädigt / schwer beschädigt / Ruine' }))
+        ], 'Stufe erstellen', data => {
+            const result = DI.createStage(state(), store(), damageBuildingId,
+                String(data.get('kind')), C.integer(data.get('hp'), 'HP-Schwelle', 0, 99),
+                String(data.get('label') || ''));
+            commit(result.state, 'Schadensstufe angelegt', result.store);
+            damageKind = String(data.get('kind'));
+            damageOpenScene(result.sceneId);
+            message('Schadensmodell angelegt; Tiles jetzt bearbeiten oder KI-Referenz exportieren.');
+        });
+    }
+    async function damageRequestBundle(stageId) {
+        await task('Codex-Referenz vorbereiten', async opts => {
+            const { stage, base } = DI.getStage(state(), stageId);
+            const result = await DI.makeRequestBundle(state(), store(), stageId, opts);
+            download(result.bytes, C.safeName(base.name + '_' + stage.kind + '_' + stage.hpAtOrBelow) + '_codex.zip');
+            message('Referenz, GPT-Image-2.6-Prompt und Codex-Anweisung exportiert.');
+        });
+    }
+    async function damageImportCandidate(stageId) {
+        const files = await askFiles('.png', false);
+        if (!files.length) return;
+        await task('Kandidatenbild prüfen', async opts => {
+            if (files.length !== 1 || !/\.png$/i.test(files[0].name))
+                throw new Error('Genau eine RGBA-PNG-Datei wählen.');
+            const img = await K.decodePNG(new Uint8Array(await files[0].arrayBuffer()), opts);
+            const result = DI.withCandidate(state(), store(), stageId, img);
+            commit(result.state, 'Schadensmodell-Kandidat importiert', result.store);
+            const problems = [...result.report.errors, ...result.report.warnings];
+            message(problems.length ? 'Kandidat gespeichert, Prüfung: ' + problems.slice(0, 2).join(' ') :
+                'Kandidat gespeichert. Original und Modell vergleichen, dann als Tiles übernehmen.', !!result.report.errors.length);
+        });
+    }
+    async function damageApplyCandidate(stageId) {
+        await task('Schadensmodell als 64px-Tiles zerlegen', async () => {
+            const result = DI.applyCandidate(state(), store(), stageId);
+            commit(result.state, 'Kandidat als Schadens-Tiles übernommen', result.store, { fit: true });
+            const { scene } = DI.getStage(result.state, stageId);
+            damageOpenScene(scene.id);
+            message('Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Freigabe noch ausstehend.');
+        });
+    }
+    function damageApproveDialog(stageId) {
+        const { stage } = DI.getStage(state(), stageId);
+        modal('Schadensmodell abnehmen', [
+            note('Nur freigegebene Stufen werden in das separate HP-Schadenspaket aufgenommen. Prüfung im Spiel bleibt zusätzlich erforderlich.'),
+            checkbox('Perspektive, sichtbare Zerstörungsreihenfolge, Bodenanker, Transparenz, schwarze Punkte und Materialmasken geprüft', false, 'confirmed'),
+            fields(field('Abnahmevermerk', stage.reviewNotes, { name: 'notes', type: 'textarea', wide: true }))
+        ], 'Verbindlich freigeben', data => {
+            const result = DI.approveStage(state(), store(), stageId, data.get('notes'), data.has('confirmed'));
+            commit(result.state, 'Schadensstufe freigegeben', result.store, { keepDamageApproval: true });
+            message('Schadensmodell freigegeben. Weitere Tile-Änderungen setzen es auf Entwurf zurück.');
+        });
+    }
+    function damageRemove(stageId) {
+        const { stage } = DI.getStage(state(), stageId);
+        confirmDialog('Schadensstufe entfernen', 'Nur diese Schadensstufe mit ihrer Szene entfernen? Im Projektverlauf kann sie rückgängig gemacht werden.', () => {
+            edit(s => {
+                for (const p of s.damageProfiles) p.stages = p.stages.filter(x => x.id !== stageId);
+                s.damageProfiles = s.damageProfiles.filter(p => p.stages.length);
+                s.scenes = s.scenes.filter(g => g.id !== stage.sceneId);
+                s.frames = s.frames.filter(f => f.groupId !== stage.sceneId);
+            }, 'Schadensstufe entfernt');
+        });
+    }
+    async function damageExportPackage() {
+        await task('Schadensbibliothek exportieren', async opts => {
+            const result = await DI.exportPackage(state(), store(), opts);
+            download(result.bytes, C.safeName(state().project.name) + '_gebaeudeschaden.zip');
+            message('Freigegebene Stufen und HP-Manifest exportiert; keine automatische Spielinstallation.');
+        });
+    }
+    function damageSection() {
+        const stageSceneIds = D.stageScenes(state().damageProfiles || []);
+        const buildings = state().scenes.filter(g => g.settings.category === 'building' && !stageSceneIds.has(g.id));
+        if (!buildings.length)
+            return [section('Gebäudeschäden', [
+                note('Zuerst eine Gebäude-PNG-Serie oder ein Projekt importieren. Schadenstufen sind zusätzliche Szenen, keine neuen Gameplay-Gebäude.'),
+                buttons(button('Gebäudesprites importieren…', () => importDialog([], 'png')))
+            ])];
+        if (!buildings.some(g => g.id === damageBuildingId))
+            damageBuildingId = buildings.some(g => g.id === groupId) ? groupId : buildings[0].id;
+        const base = buildings.find(g => g.id === damageBuildingId);
+        const profile = (state().damageProfiles || []).find(p => p.buildingGroupId === base.id);
+        const selectedStage = D.choose(profile, damageKind, damageHp);
+        const info = [
+            fields(field('Gebäude', damageBuildingId, { wide: true,
+                options: buildings.map(g => [g.id, g.name]),
+                onchange: v => { damageBuildingId = v; renderInspector(); } })),
+            fields(field('Schadensursache', damageKind, {
+                options: [['mechanical', 'Mechanisch'], ['fire', 'Feuerschaden']],
+                onchange: v => { damageKind = v; renderInspector(); }
+            }), num('Verbleibende HP · %', damageHp, v => {
+                damageHp = C.number(v, 'HP', 0, 100);
+                renderInspector();
+            }, { min: 0, max: 100 })),
+            line('Modell bei ' + damageHp + '% HP', selectedStage ? (selectedStage.label ||
+                selectedStage.kind + ' ≤' + selectedStage.hpAtOrBelow + '%') : 'Original / unbeschädigt'),
+            buttons(button('Vorschau anzeigen', () => damageOpenScene(selectedStage ? selectedStage.sceneId : base.id))),
+            buttons(button('Neue Schadensstufe…', damageCreateDialog)),
+            note('Schwellen gelten inklusive Grenzwert. Beispiel 75/40/0: 100–76 % intakt, 75–41 % leicht, 40–1 % schwer, 0 % zerstört. Feuer nutzt nur dann mechanische Stufen als Fallback, wenn keine Feuerstufe existiert.')
+        ];
+        const sections = [section('Gebäude und HP-Test', info)];
+        const stages = profile ? profile.stages.filter(s => s.kind === damageKind) : [];
+        if (!stages.length)
+            sections.push(section('Schadensmodelle', [note('Für diesen Schadenstyp sind noch keine eigenen Stufen vorhanden.')]));
+        for (const stage of stages) {
+            const status = { draft: 'Entwurf', approved: 'Freigegeben', rejected: 'Verworfen' }[stage.status];
+            sections.push(section((stage.label || damageKind) + ' · ' + status, [
+                fields(num('Modell ab HP ≤ %', stage.hpAtOrBelow, v => damageStageEdit(stage.id, s => {
+                    s.hpAtOrBelow = C.integer(v, 'HP-Schwelle', 0, 99);
+                    s.status = 'draft';
+                }), { min: 0, max: 99 })),
+                fields(field('Bezeichnung', stage.label, { wide: true, onchange: v =>
+                    damageStageEdit(stage.id, s => s.label = v) })),
+                fields(field('GPT Image 2.6', stage.model, { wide: true,
+                    options: [['gpt-image-2.6-sunburst', 'Sunburst · detailgetreu'], ['gpt-image-2.6-flare', 'Flare · schnelle Entwürfe']],
+                    onchange: v => damageStageEdit(stage.id, s => s.model = v) })),
+                fields(field('Nachbesserung / Änderungswunsch', stage.changeRequest, {
+                    type: 'textarea', wide: true, onchange: v =>
+                        damageStageEdit(stage.id, s => s.changeRequest = v)
+                })),
+                line('Kandidaten-PNG', stage.candidateId ? 'Im Projekt gesichert' : 'Noch nicht vorhanden'),
+                buttons(button('Tiles bearbeiten', () => damageOpenScene(stage.sceneId, true)),
+                    button('Vorschau', () => damageOpenScene(stage.sceneId))),
+                buttons(button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
+                buttons(button('Generiertes PNG importieren…', () => damageImportCandidate(stage.id)),
+                    button('PNG als Tiles zerlegen', () => damageApplyCandidate(stage.id), { disabled: !stage.candidateId })),
+                buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
+                    button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
+                buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),
+                note('Freigaben werden nach jeder Tile- oder Rasteränderung automatisch zurückgesetzt. Modell- und HP-Werte sind gesondert zu prüfen.')
+            ]));
+        }
+        sections.push(section('Ausgabe', [
+            buttons(button('HP-Schadensmodelle exportieren…', damageExportPackage)),
+            note('Das ZIP enthält nur freigegebene Tile-Sätze samt HP-Manifest. Keine unbewiesene Umschaltung im laufenden Spiel, keine Änderungen an Spieldateien.')
+        ]));
+        return sections;
+    }
     function renderInspector() {
         const root = $('inspector-content');
         root.replaceChildren();
@@ -717,6 +883,8 @@
         try {
             if (panel === 'target')
                 root.append(...targetSection());
+            else if (panel === 'damage')
+                root.append(...damageSection());
             else if (panel === 'checks')
                 root.append(renderChecks());
             else {
@@ -1871,6 +2039,8 @@
     });
     $('group-select').onchange = () => {
         groupId = $('group-select').value;
+        const matched = (state().damageProfiles || []).find(p => p.stages.some(s => s.sceneId === groupId));
+        damageBuildingId = matched ? matched.buildingGroupId : groupId;
         selected = new Set(groupFrames().slice(0, 1).map(f => f.id));
         $('asset-list').scrollTop = 0;
         animIndex = 0;
