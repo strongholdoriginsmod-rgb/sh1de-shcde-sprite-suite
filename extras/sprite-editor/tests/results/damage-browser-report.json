@@ -4,6 +4,7 @@
     "Editor direkt via file:// geladen",
     "Gebäude-Demo geladen",
     "Stufe inklusive Clone, Scene und HP-Schwelle erstellt",
+    "Expliziter Gebäudetyp wird mit dem Profil gespeichert",
     "HP-Vorschau 80 % intakt / 60 % beschädigt",
     "Codex ZIP mit unverändertem Original, Modellreferenz und Prompt",
     "Kandidat über echten Dateidialog importiert, nicht automatisch freigegeben",
@@ -17,7 +18,7 @@
   "directFileUrl": true,
   "pageErrors": [],
   "networkRequests": [],
-  "htmlSHA256": "39009a11f347f941d9a3538817fb7b0d9f9a27aecc29855097dec00c50a51e3a",
+  "htmlSHA256": "8350a9685071413ea4eecfd1070a85d1f64c8a1e357108f515e2a463d2808e30",
   "browser": "Edg/156.0.4314.58",
   "inGameTested": false,
   "apiCalled": false

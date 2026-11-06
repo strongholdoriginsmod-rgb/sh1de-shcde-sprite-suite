@@ -32,6 +32,8 @@ SPECIALISTS: tuple[Specialist, ...] = (
                "Prüfen", "Inspection", ("fehler", "kacheln", "pivots")),
     Specialist("qa_suite_build_readiness.py", "Bauvoraussetzungen prüfen", "Check build readiness",
                "Prüfen", "Inspection", ("unity", "dotnet", "profil", "build")),
+    Specialist("building_damage_codex.py", "Gebäude-Schadensmodelle mit GPT Image 2.6", "Building damage models with GPT Image 2.6",
+               "Grafik", "Graphics", ("zerstoerung", "destruction", "fire", "mechanical", "hp", "damage", "codex", "gpt image")),
     Specialist("sprites.py", "Sprites exportieren und bearbeiten", "Export and edit sprites",
                "Grafik", "Graphics", ("png", "import", "frames", "katalog")),
     Specialist("kachelraster_gm1.py", "GM1-Kachelraster", "GM1 tile grid",

@@ -91,7 +91,8 @@ def build_navigation_targets(app) -> tuple[SearchTarget, ...]:
             "Mehrteilige Gebaeude als Ebenen": "Multi-tile buildings / OpenRaster",
         }.get(section, section)
         aliases = {
-            "HTML-Sprite-Editor": ("edit png", "sprite editor", "import zip", "html"),
+            "HTML-Sprite-Editor": ("edit png", "sprite editor", "import zip", "html",
+                                   "gebaeudeschaden", "gebaude schaden", "damage", "destruction", "fire", "hp", "gpt image 2.6"),
             "SE-Atlas mit AtlasBuilder": ("atlas", "bc7", "dds", "atlasbuilder"),
             "Pivot-Vermessung aus dem Spiel": (
                 "zinnen", "lineal", "zinnenlineal", "pivot", "anker", "pivot review",

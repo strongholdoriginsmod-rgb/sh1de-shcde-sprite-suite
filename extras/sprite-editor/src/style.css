@@ -1116,3 +1116,36 @@ label {
         gap:4px
     }
 }
+
+/* Pixel-perfect side-by-side inspection of an intact building and its damage model. */
+.damage-review-gallery {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(185px,1fr));
+    gap:12px;
+    margin:10px 0 16px;
+}
+.damage-review-image {
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:10px;
+    background:var(--subtle);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+}
+.damage-review-canvas {
+    display:block;
+    max-width:100%;
+    height:auto;
+    image-rendering:pixelated;
+    border:1px solid var(--border);
+    background-color:#e0e0e0;
+    background-image:linear-gradient(45deg,#fff 25%,transparent 25%),
+        linear-gradient(-45deg,#fff 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#fff 75%),
+        linear-gradient(-45deg,transparent 75%,#fff 75%);
+    background-size:16px 16px;
+    background-position:0 0,0 8px,8px -8px,-8px 0;
+}

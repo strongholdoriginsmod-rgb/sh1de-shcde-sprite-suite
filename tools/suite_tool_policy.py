@@ -24,6 +24,7 @@ UNKNOWN=ToolPolicy("unknown","Seiteneffekte nicht klassifiziert – Eingaben sor
 
 RISK_TOOLS: dict[str,ToolPolicy]={
     "suite_tool_inventory.py":READ,
+    "building_damage_codex.py":NETWORK,
     "build_portable_windows.py":WORK,
     "background_v2_pipeline.py":WORK,
     "ui_atlas_layout_port.py":WORK,

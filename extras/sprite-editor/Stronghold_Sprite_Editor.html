@@ -1124,6 +1124,39 @@ label {
         gap:4px
     }
 }
+
+/* Pixel-perfect side-by-side inspection of an intact building and its damage model. */
+.damage-review-gallery {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(185px,1fr));
+    gap:12px;
+    margin:10px 0 16px;
+}
+.damage-review-image {
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:10px;
+    background:var(--subtle);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+}
+.damage-review-canvas {
+    display:block;
+    max-width:100%;
+    height:auto;
+    image-rendering:pixelated;
+    border:1px solid var(--border);
+    background-color:#e0e0e0;
+    background-image:linear-gradient(45deg,#fff 25%,transparent 25%),
+        linear-gradient(-45deg,#fff 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#fff 75%),
+        linear-gradient(-45deg,transparent 75%,#fff 75%);
+    background-size:16px 16px;
+    background-position:0 0,0 8px,8px -8px,-8px 0;
+}
 </style>
 </head>
 <body>
@@ -2564,7 +2597,7 @@ label {
         if (!Array.isArray(profiles) || profiles.length > 128)
             fail('Höchstens 128 Gebäude-Schadensprofile erlaubt.');
         const sceneById = new Map(scenes.map(g => [g.id, g]));
-        const seenBuildings = new Set(), usedScenes = new Set(), usedStages = new Set();
+        const seenBuildings = new Set(), usedScenes = new Set(), usedStages = new Set(), gameTypes = new Set();
         const clean = profiles.map(profile => {
             const buildingGroupId = ident(profile.buildingGroupId, 'Gebäudegruppe');
             const base = sceneById.get(buildingGroupId);
@@ -2573,11 +2606,16 @@ label {
             if (seenBuildings.has(buildingGroupId))
                 fail('Doppelte Gebäudeschadensgruppe.');
             seenBuildings.add(buildingGroupId);
+            const gameBuildingType = profile.gameBuildingType === null || profile.gameBuildingType === undefined ?
+                null : C.integer(profile.gameBuildingType, 'Gebäudetyp im Spiel', 0, 4095);
+            if (gameBuildingType !== null && gameTypes.has(gameBuildingType))
+                fail('Spiel-Gebäudetyp ist mehreren Gebäuden zugewiesen.');
+            if (gameBuildingType !== null) gameTypes.add(gameBuildingType);
             if (!Array.isArray(profile.stages) || profile.stages.length > 32)
                 fail('Höchstens 32 Schadensmodelle pro Gebäude.');
             const thresholds = new Set();
             return {
-                buildingGroupId,
+                buildingGroupId, gameBuildingType,
                 stages: profile.stages.map(stage => {
                     const id = ident(stage.id, 'Schadensstufe'), sceneId = ident(stage.sceneId, 'Stufen-Szene');
                     if (usedStages.has(id)) fail('Doppelte Schadensstufen-ID.');
@@ -2705,12 +2743,14 @@ label {
         const oldScenes = new Map(before.scenes.map(g => [g.id, g.settings]));
         const oldFrames = new Map(before.frames.map(f => [f.id, f]));
         const oldStages = new Map((before.damageProfiles || []).flatMap(p => p.stages.map(s => [s.id, s])));
+        const oldProfiles = new Map((before.damageProfiles || []).map(p => [p.buildingGroupId, p]));
         for (const profile of after.damageProfiles || [])
             for (const stage of profile.stages) {
                 const old = oldStages.get(stage.id);
                 if (!old || old.status !== 'approved' || stage.status !== 'approved')
                     continue;
                 const changed = old.hpAtOrBelow !== stage.hpAtOrBelow ||
+                    (oldProfiles.get(profile.buildingGroupId)?.gameBuildingType ?? null) !== (profile.gameBuildingType ?? null) ||
                     JSON.stringify(oldScenes.get(profile.buildingGroupId)) !== JSON.stringify(after.scenes.find(g => g.id === profile.buildingGroupId)?.settings) ||
                     JSON.stringify(before.frames.filter(f => f.groupId === profile.buildingGroupId)) !==
                         JSON.stringify(after.frames.filter(f => f.groupId === profile.buildingGroupId)) ||
@@ -3559,7 +3599,7 @@ label {
         }
         let profile = out.damageProfiles.find(p => p.buildingGroupId === buildingGroupId);
         if (!profile) {
-            profile = { buildingGroupId, stages: [] };
+            profile = { buildingGroupId, gameBuildingType: null, stages: [] };
             out.damageProfiles.push(profile);
         }
         profile.stages.push({
@@ -3619,12 +3659,85 @@ label {
             f.targetConfirmed = false;
             out.frames.push(f);
         }
+        // C.layout normalizes every group to its own geometric extents. A
+        // freshly split stage may have less transparent headroom than the
+        // original. Preserve the exact original canvas by padding ONE upper
+        // tile with transparent rows, without changing its visible pixels,
+        // 64px width, bottom anchor, or any neighbouring tile coordinates.
+        const stageFrames = out.frames.filter(f => f.groupId === stage.sceneId);
+        let stageLayout = C.layout(stageFrames, settings, key => next.get(key));
+        const missingHeadroom = stageLayout.top - ref.layout.top;
+        if (stageLayout.left !== ref.layout.left ||
+            stageLayout.bottom !== ref.layout.bottom ||
+            stageLayout.width !== ref.layout.width || missingHeadroom < 0)
+            fail('Schadensmodell verlässt die Original-Canvasgeometrie. Keine stillschweigende Verschiebung.');
+        if (missingHeadroom > 0) {
+            const upper = stageLayout.placed.reduce((best, item) =>
+                !best || item.y < best.y ? item : best, null);
+            if (!upper)
+                fail('Keine Stufen-Tiles für die Geometrieanpassung.');
+            const img = next.get(upper.frame.imageId);
+            const padded = C.image(img.width, img.height + missingHeadroom);
+            C.blit(padded, img, 0, missingHeadroom);
+            const id = next.add(padded);
+            const f = stageFrames.find(item => item.id === upper.frame.id);
+            f.imageId = f.originalId = id;
+            stageLayout = C.layout(stageFrames, settings, key => next.get(key));
+        }
+        if (stageLayout.top !== ref.layout.top ||
+            stageLayout.left !== ref.layout.left ||
+            stageLayout.width !== ref.layout.width ||
+            stageLayout.height !== ref.layout.height)
+            fail('Stufengeometrie weicht von der Originalfläche ab.');
+        const stageImage = C.compose(stageLayout, key => next.get(key));
+        for (let i = 0; i < candidate.data.length; i += 4) {
+            const a = candidate.data, b = stageImage.data;
+            if (a[i + 3] !== b[i + 3] || (a[i + 3] &&
+                (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2])))
+                fail('Die bearbeitbare Gebäudegruppe ist nicht pixelgleich zum importierten Gesamtbild.');
+        }
         // Never carry a colour/team material mask over a changed silhouette.
         stage.status = 'draft';
         const hadMasks = oldFrames.some(f => f.maskId);
         if (hadMasks) report.warnings.push('Original hatte Masken. Neue Tiles erhalten keine erfundenen Materialmasken; vor Abnahme manuell nachbearbeiten.');
         return { state: I.validate(out, next), store: next, report, seamStats: cut.seamStats };
     }
+    function qualityReport(state, store, stageId) {
+        const { profile, stage, base, scene } = getStage(state, stageId);
+        const intact = baseComposite(state, store, base.id).image;
+        const damaged = baseComposite(state, store, scene.id).image;
+        const result = D.checkCandidate(intact, damaged);
+        const pixels = result.stats.original?.visible || 0;
+        const percent = stage.hpAtOrBelow;
+        // These are minimum evidence checks, NOT a substitute for an expert
+        // visual judgement of actual structural or fire damage.
+        const fraction = percent <= 15 ? 0.035 : percent <= 45 ? 0.015 :
+            percent <= 75 ? 0.0075 : 0.0025;
+        const minimum = pixels ? Math.min(pixels, Math.max(4, Math.ceil(pixels * fraction))) : 0;
+        const actual = result.stats.changedPixels || 0;
+        result.stats.minimumVisibleChanges = minimum;
+        result.stats.visibleChangesPercent = pixels ? Math.round(actual * 10000 / pixels) / 100 : 0;
+        if (actual < minimum)
+            result.errors.push('Für den gewählten Zerstörungsgrad sind nur ' + actual +
+                ' von mindestens ' + minimum + ' sichtbar veränderten Pixeln vorhanden. Modell weiter beschädigen.');
+        if (result.errors.length) return { ...result, intact, damaged };
+        for (const other of profile.stages) {
+            if (other.id === stage.id || other.kind !== stage.kind || other.status !== 'approved')
+                continue;
+            const otherScene = state.scenes.find(g => g.id === other.sceneId);
+            if (!otherScene) continue;
+            const prev = D.checkCandidate(intact, baseComposite(state, store, otherScene.id).image);
+            const count = prev.stats.changedPixels || 0;
+            if (other.hpAtOrBelow > percent && actual < count)
+                result.warnings.push('Diese stärker zerstörte Stufe unterscheidet sich in weniger Pixeln vom Original als die bereits freigegebene mildere Stufe bei ' +
+                    other.hpAtOrBelow + '% HP. Zerstörungsreihenfolge bildlich prüfen.');
+            if (other.hpAtOrBelow < percent && actual > count)
+                result.warnings.push('Diese mildere Stufe unterscheidet sich in mehr Pixeln vom Original als die bereits freigegebene stärkere Stufe bei ' +
+                    other.hpAtOrBelow + '% HP. Zerstörungsreihenfolge bildlich prüfen.');
+        }
+        return { ...result, intact, damaged };
+    }
+
     function approveStage(state, store, stageId, notes, visualConfirmed) {
         if (visualConfirmed !== true)
             fail('Visuelle Prüfung von Schäden, Perspektive, Bodenanker und Reihenfolge ausdrücklich bestätigen.');
@@ -3649,28 +3762,11 @@ label {
             if (ids.has(f.id) || slots.has(f.slot)) fail('Doppelte Tiles im Schadensmodell.');
             ids.add(f.id); slots.add(f.slot);
         }
-        const originalImage = baseComposite(out, store, base.id).image;
-        const stageImage = baseComposite(out, store, scene.id).image;
-        if (originalImage.width === stageImage.width && originalImage.height === stageImage.height) {
-            let different = false;
-            for (let i = 0; i < originalImage.data.length; i += 4) {
-                const a = originalImage.data, b = stageImage.data;
-                if (a[i + 3] !== b[i + 3] || (a[i + 3] &&
-                    (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2]))) {
-                    different = true;
-                    break;
-                }
-            }
-            if (!different)
-                fail('Schadensmodell ist sichtbar identisch mit dem Original. Erst tatsächliche Schäden bearbeiten.');
-        }
-        if (stage.candidateId) {
-            const report = D.checkCandidate(originalImage, store.get(stage.candidateId));
-            if (report.errors.length)
-                fail('Kandidatenprüfung fehlgeschlagen: ' + report.errors.join(' '));
-            if (!report.stats.changedPixels)
-                fail('KI-Kandidat ist sichtbar identisch mit dem Original. Zerstörungsdetails nachbessern.');
-        }
+        const review = qualityReport(out, store, stageId);
+        if (review.errors.length)
+            fail('Qualitätsprüfung: ' + review.errors.join(' '));
+        if (review.warnings.length && !String(notes || '').trim())
+            fail('Qualitätswarnungen müssen geprüft und im Abnahmevermerk dokumentiert werden.');
         stage.reviewNotes = String(notes || '').slice(0, 2000);
         stage.status = 'approved';
         return { state: I.validate(out, store), store };
@@ -3800,7 +3896,8 @@ label {
                 });
             }
             if (stages.length)
-                buildings.push({ id: base.id, name: base.name, intactScene: base.id, stages });
+                buildings.push({ id: base.id, name: base.name, intactScene: base.id,
+                    gameBuildingType: profile.gameBuildingType ?? null, gameBuildingTypeVerifiedInGame: false, stages });
         }
         if (!buildings.length) fail('Noch keine freigegebenen Schadensmodelle.');
         const manifest = {
@@ -3818,7 +3915,7 @@ label {
         return { bytes: K.zip(entries), manifest };
     }
     return { getStage, baseComposite, createStage, withCandidate, applyCandidate,
-        approveStage, makeRequestBundle, exportPackage };
+        qualityReport, approveStage, makeRequestBundle, exportPackage };
 });
 </script><script>/* Stronghold Sprite Editor. DOM and canvas view; all exports use the independent RGBA codec. */
 (function () {
@@ -4599,10 +4696,34 @@ label {
             message('Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Freigabe noch ausstehend.');
         });
     }
+    function damagePreview(img, label) {
+        const scale = Math.min(1, 235 / img.width, 200 / img.height);
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const small = width === img.width && height === img.height ? img : C.resize(img, width, height);
+        const canvas = el('canvas', { class: 'damage-review-canvas', width, height,
+            title: label, 'aria-label': label });
+        canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(small.data), width, height), 0, 0);
+        return el('div', { class: 'damage-review-image' }, [
+            el('strong', { text: label }), canvas
+        ]);
+    }
     function damageApproveDialog(stageId) {
         const { stage } = DI.getStage(state(), stageId);
+        const review = DI.qualityReport(state(), store(), stageId);
+        const summary = [
+            line('Sichtbar veränderte Pixel', (review.stats.changedPixels || 0).toLocaleString('de-DE')),
+            line('Veränderung · % Original', (review.stats.visibleChangesPercent ?? 0) + '%'),
+            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel')
+        ];
         modal('Schadensmodell abnehmen', [
-            note('Nur freigegebene Stufen werden in das separate HP-Schadenspaket aufgenommen. Prüfung im Spiel bleibt zusätzlich erforderlich.'),
+            el('div', { class: 'damage-review-gallery' }, [
+                damagePreview(review.intact, 'Original'), damagePreview(review.damaged, 'Schadensmodell')
+            ]),
+            ...summary,
+            ...review.errors.map(msg => el('p', { class: 'error-text', text: msg })),
+            ...review.warnings.map(msg => el('p', { class: 'warning-text', text: msg })),
+            note('Bilder und Zerstörungsreihenfolge anhand echter SHCDE-Referenzen prüfen; formale Pixelwerte ersetzen keine visuelle Abnahme.'),
             checkbox('Perspektive, sichtbare Zerstörungsreihenfolge, Bodenanker, Transparenz, schwarze Punkte und Materialmasken geprüft', false, 'confirmed'),
             fields(field('Abnahmevermerk', stage.reviewNotes, { name: 'notes', type: 'textarea', wide: true }))
         ], 'Verbindlich freigeben', data => {
@@ -4646,6 +4767,14 @@ label {
             fields(field('Gebäude', damageBuildingId, { wide: true,
                 options: buildings.map(g => [g.id, g.name]),
                 onchange: v => { damageBuildingId = v; renderInspector(); } })),
+            ...(profile ? [fields(field('Spiel-Gebäudetyp (optional)', profile.gameBuildingType ?? '', {
+                wide: true, placeholder: 'Z. B. 108 – aus Zielspiel-Metadaten prüfen',
+                onchange: v => edit(s => {
+                    const p = s.damageProfiles.find(x => x.buildingGroupId === base.id);
+                    p.gameBuildingType = String(v).trim() === '' ? null :
+                        C.integer(v, 'Gebäudetyp im Spiel', 0, 4095);
+                }, 'Spiel-Gebäudetyp zuordnen')
+            }))] : []),
             fields(field('Schadensursache', damageKind, {
                 options: [['mechanical', 'Mechanisch'], ['fire', 'Feuerschaden']],
                 onchange: v => { damageKind = v; renderInspector(); }
@@ -4685,6 +4814,8 @@ label {
                 buttons(button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
                 buttons(button('Generiertes PNG importieren…', () => damageImportCandidate(stage.id)),
                     button('PNG als Tiles zerlegen', () => damageApplyCandidate(stage.id), { disabled: !stage.candidateId })),
+                ...(stage.candidateId ? [buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,
+                    s => { s.candidateId = null; s.status = 'draft'; })))] : []),
                 buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
                     button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
                 buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),

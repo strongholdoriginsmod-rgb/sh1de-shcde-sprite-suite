@@ -49,7 +49,7 @@
         }
         let profile = out.damageProfiles.find(p => p.buildingGroupId === buildingGroupId);
         if (!profile) {
-            profile = { buildingGroupId, stages: [] };
+            profile = { buildingGroupId, gameBuildingType: null, stages: [] };
             out.damageProfiles.push(profile);
         }
         profile.stages.push({
@@ -109,12 +109,85 @@
             f.targetConfirmed = false;
             out.frames.push(f);
         }
+        // C.layout normalizes every group to its own geometric extents. A
+        // freshly split stage may have less transparent headroom than the
+        // original. Preserve the exact original canvas by padding ONE upper
+        // tile with transparent rows, without changing its visible pixels,
+        // 64px width, bottom anchor, or any neighbouring tile coordinates.
+        const stageFrames = out.frames.filter(f => f.groupId === stage.sceneId);
+        let stageLayout = C.layout(stageFrames, settings, key => next.get(key));
+        const missingHeadroom = stageLayout.top - ref.layout.top;
+        if (stageLayout.left !== ref.layout.left ||
+            stageLayout.bottom !== ref.layout.bottom ||
+            stageLayout.width !== ref.layout.width || missingHeadroom < 0)
+            fail('Schadensmodell verlässt die Original-Canvasgeometrie. Keine stillschweigende Verschiebung.');
+        if (missingHeadroom > 0) {
+            const upper = stageLayout.placed.reduce((best, item) =>
+                !best || item.y < best.y ? item : best, null);
+            if (!upper)
+                fail('Keine Stufen-Tiles für die Geometrieanpassung.');
+            const img = next.get(upper.frame.imageId);
+            const padded = C.image(img.width, img.height + missingHeadroom);
+            C.blit(padded, img, 0, missingHeadroom);
+            const id = next.add(padded);
+            const f = stageFrames.find(item => item.id === upper.frame.id);
+            f.imageId = f.originalId = id;
+            stageLayout = C.layout(stageFrames, settings, key => next.get(key));
+        }
+        if (stageLayout.top !== ref.layout.top ||
+            stageLayout.left !== ref.layout.left ||
+            stageLayout.width !== ref.layout.width ||
+            stageLayout.height !== ref.layout.height)
+            fail('Stufengeometrie weicht von der Originalfläche ab.');
+        const stageImage = C.compose(stageLayout, key => next.get(key));
+        for (let i = 0; i < candidate.data.length; i += 4) {
+            const a = candidate.data, b = stageImage.data;
+            if (a[i + 3] !== b[i + 3] || (a[i + 3] &&
+                (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2])))
+                fail('Die bearbeitbare Gebäudegruppe ist nicht pixelgleich zum importierten Gesamtbild.');
+        }
         // Never carry a colour/team material mask over a changed silhouette.
         stage.status = 'draft';
         const hadMasks = oldFrames.some(f => f.maskId);
         if (hadMasks) report.warnings.push('Original hatte Masken. Neue Tiles erhalten keine erfundenen Materialmasken; vor Abnahme manuell nachbearbeiten.');
         return { state: I.validate(out, next), store: next, report, seamStats: cut.seamStats };
     }
+    function qualityReport(state, store, stageId) {
+        const { profile, stage, base, scene } = getStage(state, stageId);
+        const intact = baseComposite(state, store, base.id).image;
+        const damaged = baseComposite(state, store, scene.id).image;
+        const result = D.checkCandidate(intact, damaged);
+        const pixels = result.stats.original?.visible || 0;
+        const percent = stage.hpAtOrBelow;
+        // These are minimum evidence checks, NOT a substitute for an expert
+        // visual judgement of actual structural or fire damage.
+        const fraction = percent <= 15 ? 0.035 : percent <= 45 ? 0.015 :
+            percent <= 75 ? 0.0075 : 0.0025;
+        const minimum = pixels ? Math.min(pixels, Math.max(4, Math.ceil(pixels * fraction))) : 0;
+        const actual = result.stats.changedPixels || 0;
+        result.stats.minimumVisibleChanges = minimum;
+        result.stats.visibleChangesPercent = pixels ? Math.round(actual * 10000 / pixels) / 100 : 0;
+        if (actual < minimum)
+            result.errors.push('Für den gewählten Zerstörungsgrad sind nur ' + actual +
+                ' von mindestens ' + minimum + ' sichtbar veränderten Pixeln vorhanden. Modell weiter beschädigen.');
+        if (result.errors.length) return { ...result, intact, damaged };
+        for (const other of profile.stages) {
+            if (other.id === stage.id || other.kind !== stage.kind || other.status !== 'approved')
+                continue;
+            const otherScene = state.scenes.find(g => g.id === other.sceneId);
+            if (!otherScene) continue;
+            const prev = D.checkCandidate(intact, baseComposite(state, store, otherScene.id).image);
+            const count = prev.stats.changedPixels || 0;
+            if (other.hpAtOrBelow > percent && actual < count)
+                result.warnings.push('Diese stärker zerstörte Stufe unterscheidet sich in weniger Pixeln vom Original als die bereits freigegebene mildere Stufe bei ' +
+                    other.hpAtOrBelow + '% HP. Zerstörungsreihenfolge bildlich prüfen.');
+            if (other.hpAtOrBelow < percent && actual > count)
+                result.warnings.push('Diese mildere Stufe unterscheidet sich in mehr Pixeln vom Original als die bereits freigegebene stärkere Stufe bei ' +
+                    other.hpAtOrBelow + '% HP. Zerstörungsreihenfolge bildlich prüfen.');
+        }
+        return { ...result, intact, damaged };
+    }
+
     function approveStage(state, store, stageId, notes, visualConfirmed) {
         if (visualConfirmed !== true)
             fail('Visuelle Prüfung von Schäden, Perspektive, Bodenanker und Reihenfolge ausdrücklich bestätigen.');
@@ -139,28 +212,11 @@
             if (ids.has(f.id) || slots.has(f.slot)) fail('Doppelte Tiles im Schadensmodell.');
             ids.add(f.id); slots.add(f.slot);
         }
-        const originalImage = baseComposite(out, store, base.id).image;
-        const stageImage = baseComposite(out, store, scene.id).image;
-        if (originalImage.width === stageImage.width && originalImage.height === stageImage.height) {
-            let different = false;
-            for (let i = 0; i < originalImage.data.length; i += 4) {
-                const a = originalImage.data, b = stageImage.data;
-                if (a[i + 3] !== b[i + 3] || (a[i + 3] &&
-                    (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2]))) {
-                    different = true;
-                    break;
-                }
-            }
-            if (!different)
-                fail('Schadensmodell ist sichtbar identisch mit dem Original. Erst tatsächliche Schäden bearbeiten.');
-        }
-        if (stage.candidateId) {
-            const report = D.checkCandidate(originalImage, store.get(stage.candidateId));
-            if (report.errors.length)
-                fail('Kandidatenprüfung fehlgeschlagen: ' + report.errors.join(' '));
-            if (!report.stats.changedPixels)
-                fail('KI-Kandidat ist sichtbar identisch mit dem Original. Zerstörungsdetails nachbessern.');
-        }
+        const review = qualityReport(out, store, stageId);
+        if (review.errors.length)
+            fail('Qualitätsprüfung: ' + review.errors.join(' '));
+        if (review.warnings.length && !String(notes || '').trim())
+            fail('Qualitätswarnungen müssen geprüft und im Abnahmevermerk dokumentiert werden.');
         stage.reviewNotes = String(notes || '').slice(0, 2000);
         stage.status = 'approved';
         return { state: I.validate(out, store), store };
@@ -290,7 +346,8 @@
                 });
             }
             if (stages.length)
-                buildings.push({ id: base.id, name: base.name, intactScene: base.id, stages });
+                buildings.push({ id: base.id, name: base.name, intactScene: base.id,
+                    gameBuildingType: profile.gameBuildingType ?? null, gameBuildingTypeVerifiedInGame: false, stages });
         }
         if (!buildings.length) fail('Noch keine freigegebenen Schadensmodelle.');
         const manifest = {
@@ -308,5 +365,5 @@
         return { bytes: K.zip(entries), manifest };
     }
     return { getStage, baseComposite, createStage, withCandidate, applyCandidate,
-        approveStage, makeRequestBundle, exportPackage };
+        qualityReport, approveStage, makeRequestBundle, exportPackage };
 });

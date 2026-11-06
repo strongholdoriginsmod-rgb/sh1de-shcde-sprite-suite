@@ -252,3 +252,9 @@ See [Script Extender compatibility and unverified runtime ABI](docs/SCRIPT_EXTEN
 The **ORIGINS Grafiken** workspace indexes all **13,562** versioned entries from the [Stronghold Europe graphics repository](https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten), including **4,086 HUD/GUI assets**, Noesis XAML, historic blue/silver color schemes and the GUI atlases. Start the Universal Suite, open **ORIGINS Grafiken**, search and filter every source path, and select an authorized local Git-LFS clone to verify SHA-256 provenance and create isolated editable copies. The native Stronghold 1 DE HUD Studio remains accessible.
 
 Large and partly game-derived binary resources remain in the access-managed graphics repository. The Suite source contains the complete path/Git-ID catalog and processing tools. [Setup and limitations](docs/ORIGINS_GRAFIKDATEN_KATALOG.md).
+
+## Shared integration: building damage and tool consolidation (2026-11-06)
+
+The isolated integration branch combines the reviewed one-pixel tile-overlap fix with the building damage stage workflow (mechanical and fire paths, HP thresholds, side-by-side review), an explicit GPT Image 2.6 Codex bridge, and the safe shared tool catalog plus historical SHA comparison. The HTML sprite editor remains offline. Approved stages are exported as a separate manifest-and-tile data package; this is not an unverified live-game sprite switching patch.
+
+See [building damage instructions](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md) and the [integration handoff / test matrix](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).

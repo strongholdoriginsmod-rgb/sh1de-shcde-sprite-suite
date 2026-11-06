@@ -273,3 +273,9 @@ Weitere Einschränkungen und Testgrenzen: [Script Extender und Asset-Mods](docs/
 Der Arbeitsbereich **ORIGINS Grafiken** umfasst alle **13.562** bekannten Dateien aus dem versionierten [Stronghold-Europe-Grafikdaten-Projekt](https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten), darunter **4.086 HUD-/GUI-Elemente**, Noesis-XAML, das Blau/Silber-HUD und die GUI-Atlanten. Über **Suite starten.cmd → ORIGINS Grafiken** lassen sich alle Dateinamen suchen, filtern und per Git-/LFS-SHA-256 prüfen. Berechtigte Mitwirkende wählen ihren lokalen Git-LFS-Klon und erzeugen daraus getrennte Bearbeitungskopien mit Herkunftsnachweis. Das originale Stronghold-1-HUD bleibt zusätzlich im eigenen **SH1 HUD-Studio** erreichbar.
 
 Die großen, teilweise spielabgeleiteten Binärdaten verbleiben im zugangsverwalteten Grafikdatenprojekt. Im Sprite-Suite-Quellcode liegen der vollständige Katalog mit den Original-Git-IDs und die Verarbeitung. [Einrichtung und Grenzen](docs/ORIGINS_GRAFIKDATEN_KATALOG.md).
+
+## Gemeinsamer Entwicklungsstand: Gebäudeschäden und Werkzeugkonsolidierung (06.11.2026)
+
+Der isolierte Integrationszweig bündelt die geprüfte 1-Pixel-Kachelüberlappung, den Gebäude-Schadensstufen-Workflow (mechanisch/Feuer, HP-Schwellen, visuelle Abnahme), einen ausdrücklich aufrufbaren GPT-Image-2.6-Codex-Adapter sowie den gemeinsamen Fachwerkzeugkatalog und den historischen SHA-Versionsvergleich. Der bestehende HTML-Sprite-Editor bleibt offline nutzbar; KI-Referenzpakete und generierte Bilddateien werden getrennt importiert. Schadensmodelle werden als freigegebenes Daten-/Tile-ZIP ausgegeben, nicht als unbelegte dynamische Spieländerung.
+
+Bedienung: [Gebäudeschaden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md). Arbeitszweige, Konfliktregeln, Tests und Übergaben: [Gemeinsame Integration](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).
