@@ -29,6 +29,29 @@ def verify() -> None:
     if report.get('htmlSHA256') != sha256(html):
         raise ValueError('Browser results do not describe the delivered HTML.')
 
+    # The integrated damage workflow has an independent direct-file Edge run.
+    damage_report = json.loads((root / 'tests/results/damage-browser-report.json').read_text(encoding='utf-8'))
+    if not damage_report.get('pass') or len(damage_report.get('checks', [])) != 13:
+        raise ValueError('Building-damage browser test count or result is unexpected.')
+    if damage_report.get('htmlSHA256') != sha256(html):
+        raise ValueError('Damage browser results do not describe the delivered HTML.')
+    if (damage_report.get('pageErrors') or damage_report.get('networkRequests')
+            or not damage_report.get('directFileUrl')):
+        raise ValueError('Damage browser check requires real file:// navigation without network/page errors.')
+
+    # The language wrapper must match the exact German editor build plus the
+    # deterministic bilingual translation payload.
+    from sprache.einbauen import SCRIPT, HERE
+    table = json.loads((HERE / 'en.json').read_text(encoding='utf-8'))
+    table.update(json.loads((HERE / 'en_damage.json').read_text(encoding='utf-8')))
+    language_script = SCRIPT.replace('__TABLE__',
+        json.dumps(table, ensure_ascii=False).replace('</', '<\\/'))
+    raw = html.read_text(encoding='utf-8')
+    first, last = raw.rsplit('</body>', 1)
+    expected_en = first + language_script + '</body>' + last
+    if (root / 'Stronghold_Sprite_Editor_EN.html').read_text(encoding='utf-8') != expected_en:
+        raise ValueError('English editor does not match source and translation table.')
+
     manifest = root / 'SHA256SUMS.txt'
     checked = 0
     for line in manifest.read_text(encoding='utf-8').splitlines():
@@ -41,7 +64,7 @@ def verify() -> None:
         if sha256(path) != digest:
             raise ValueError(f'Checksum mismatch: {relative}')
         checked += 1
-    print(f'PASS: deterministic HTML build, 49 browser checks, {checked} file hashes.')
+    print(f'PASS: deterministic DE/EN HTML builds, 49 legacy + 13 damage browser checks, {checked} file hashes.')
     print('This verifies package integrity, not game compatibility or native local storage.')
 
 

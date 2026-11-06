@@ -6,7 +6,7 @@ Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek*
 1. Im Sprite Editor eine Gebäude-PNG-Serie öffnen oder ein vorhandenes `.shsprite` laden.
 2. Rechts **Schaden** öffnen. Im Feld **Gebäude** die gewünschte Gebäude-/Tilegruppe auswählen.
 3. **Neue Schadensstufe…** wählen, **Mechanisch** oder **Feuer**, HP-Schwelle 0–99 % und einen eindeutigen Titel angeben.
-4. Für weitere Abstufungen wiederholen. Die Liste ist je Schadensart absteigend nach HP sortiert. Die einschließende Schwellenregel lautet: ab 75 % verbleibenden HP Stufe 75, ab 40 % Stufe 40, bei 100 % die intakte Basis.
+4. Für weitere Abstufungen wiederholen. Die Liste ist je Schadensart absteigend nach HP sortiert. Die einschließende Schwellenregel lautet: ab 75 % verbleibenden HP Stufe 75, ab 40 % Stufe 40, bei 100 % die intakte Basis. Optional kann nach Anlegen einer Stufe der **Spiel-Gebäudetyp** (numerische Zielspiel-ID) zugeordnet werden. Seine Bedeutung ist im Zielspiel gesondert zu prüfen; doppelte Zuordnungen werden abgelehnt.
 5. **Tiles bearbeiten** öffnet die eigenständige Szene dieser Stufe. Die Originalszene wird nicht verändert. Jede Ausgangskachel bleibt kopiert oder später als eigenes Asset gespeichert. Über den normalen Sprite-Editor sind Bild- und Maskenimporte, Pivots und Layoutbearbeitung möglich.
 6. Über die HP-Testvorschau können mechanische und Feuerzustände getrennt durchgespielt werden. Feuer fällt nur dann auf mechanische Modelle zurück, wenn für das Gebäude **keine** Feuerstufe definiert ist.
 
@@ -27,8 +27,8 @@ Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek*
 
 ## Qualitätsabnahme
 - Die Pixelgröße, Bodenanker und transparente Registrierung müssen exakt passen. Aus dem Gesamtbild wird ausschließlich unter der bestehenden 1-px-Overlap-/Hinterreihenlogik zerlegt. Die gesamte sichtbare Rekonstruktion muss pixelgleich sein. Tiles werden nie breiter als 64 px.
-- Der Editor verhindert die Abnahme eines gegenüber dem Ausgangsbild sichtbaren unveränderten Kandidaten. Perspektive, Architektur, Material, beleuchtete Flächen, Doppelkonturen, schwarze Nahtpixel und Fortschritt gegenüber früheren Stufen müssen **visuell** gegen Original und vorangegangenes Schadensmodell geprüft werden.
-- Falls die Original-Tiles `_m.png`-Masken haben, dürfen materialrelevante Kanäle nicht automatisch erfunden oder entfernt werden. Fehlende Masken blockieren die Abnahme.
+- Im Abnahmedialog erscheinen Original und Schadensmodell nebeneinander. Der Editor verhindert auch praktisch unveränderte Modelle: je nach HP-Stufe ist eine Mindestanzahl sichtbarer Pixeländerungen erforderlich (ab 75 % HP mindestens 0,75 %; bei schwereren Schäden entsprechend mehr). Diese Messgröße ist nur ein Mindestbeleg, keine visuelle Bewertung der Zerstörung. Perspektive, Architektur, Material, beleuchtete Flächen, Doppelkonturen, schwarze Nahtpixel und Fortschritt gegenüber früheren Stufen müssen **visuell** gegen Original und vorangegangenes Schadensmodell geprüft werden.
+- Falls die Original-Tiles `_m.png`-Masken haben, dürfen materialrelevante Kanäle nicht automatisch erfunden oder entfernt werden. Fehlende Masken blockieren die Abnahme. Einen nicht mehr passenden KI-Kandidaten kann man unter **Kandidat verwerfen** entfernen, ohne die bereits bearbeiteten Tiles zu löschen.
 - **Qualität abnehmen…** erfordert eine bewusste Bestätigung. Änderungen an Stufen-Tiles, Raster, HP-Zuordnung oder dem Original setzen zuvor erteilte Freigaben zurück.
 
 ## Export

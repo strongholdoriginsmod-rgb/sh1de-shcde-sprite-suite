@@ -52,5 +52,13 @@
   "Für diesen Schadenstyp sind noch keine eigenen Stufen vorhanden.": "No separate stages exist for this damage type yet.",
   "Schwellen gelten inklusive Grenzwert. Beispiel 75/40/0: 100–76 % intakt, 75–41 % leicht, 40–1 % schwer, 0 % zerstört. Feuer nutzt nur dann mechanische Stufen als Fallback, wenn keine Feuerstufe existiert.": "Thresholds are inclusive. Example 75/40/0: 100–76% intact, 75–41% light, 40–1% heavy, 0% destroyed. Fire falls back to mechanical only when no fire stages exist.",
   "Nur freigegebene Stufen werden in das separate HP-Schadenspaket aufgenommen. Prüfung im Spiel bleibt zusätzlich erforderlich.": "Only approved stages are included in the separate HP damage pack. In-game verification is still required.",
-  "Einfach zusätzliche Gebäudeschäden modellieren": "Create additional building damage states"
+  "Einfach zusätzliche Gebäudeschäden modellieren": "Create additional building damage states",
+  "Spiel-Gebäudetyp (optional)": "Game building type (optional)",
+  "Z. B. 108 – aus Zielspiel-Metadaten prüfen": "For example 108 – verify against target game metadata",
+  "Kandidat verwerfen": "Discard candidate",
+  "Schadensmodell": "Damage model",
+  "Sichtbar veränderte Pixel": "Visibly changed pixels",
+  "Veränderung · % Original": "Changes · % original",
+  "Für diese Schadensstufe erforderlich": "Required for this damage stage",
+  "Bilder und Zerstörungsreihenfolge anhand echter SHCDE-Referenzen prüfen; formale Pixelwerte ersetzen keine visuelle Abnahme.": "Inspect images and destruction order against genuine SHCDE references; pixel metrics cannot replace visual review."
 }

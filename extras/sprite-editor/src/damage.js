@@ -27,7 +27,7 @@
         if (!Array.isArray(profiles) || profiles.length > 128)
             fail('Höchstens 128 Gebäude-Schadensprofile erlaubt.');
         const sceneById = new Map(scenes.map(g => [g.id, g]));
-        const seenBuildings = new Set(), usedScenes = new Set(), usedStages = new Set();
+        const seenBuildings = new Set(), usedScenes = new Set(), usedStages = new Set(), gameTypes = new Set();
         const clean = profiles.map(profile => {
             const buildingGroupId = ident(profile.buildingGroupId, 'Gebäudegruppe');
             const base = sceneById.get(buildingGroupId);
@@ -36,11 +36,16 @@
             if (seenBuildings.has(buildingGroupId))
                 fail('Doppelte Gebäudeschadensgruppe.');
             seenBuildings.add(buildingGroupId);
+            const gameBuildingType = profile.gameBuildingType === null || profile.gameBuildingType === undefined ?
+                null : C.integer(profile.gameBuildingType, 'Gebäudetyp im Spiel', 0, 4095);
+            if (gameBuildingType !== null && gameTypes.has(gameBuildingType))
+                fail('Spiel-Gebäudetyp ist mehreren Gebäuden zugewiesen.');
+            if (gameBuildingType !== null) gameTypes.add(gameBuildingType);
             if (!Array.isArray(profile.stages) || profile.stages.length > 32)
                 fail('Höchstens 32 Schadensmodelle pro Gebäude.');
             const thresholds = new Set();
             return {
-                buildingGroupId,
+                buildingGroupId, gameBuildingType,
                 stages: profile.stages.map(stage => {
                     const id = ident(stage.id, 'Schadensstufe'), sceneId = ident(stage.sceneId, 'Stufen-Szene');
                     if (usedStages.has(id)) fail('Doppelte Schadensstufen-ID.');
@@ -168,12 +173,14 @@
         const oldScenes = new Map(before.scenes.map(g => [g.id, g.settings]));
         const oldFrames = new Map(before.frames.map(f => [f.id, f]));
         const oldStages = new Map((before.damageProfiles || []).flatMap(p => p.stages.map(s => [s.id, s])));
+        const oldProfiles = new Map((before.damageProfiles || []).map(p => [p.buildingGroupId, p]));
         for (const profile of after.damageProfiles || [])
             for (const stage of profile.stages) {
                 const old = oldStages.get(stage.id);
                 if (!old || old.status !== 'approved' || stage.status !== 'approved')
                     continue;
                 const changed = old.hpAtOrBelow !== stage.hpAtOrBelow ||
+                    (oldProfiles.get(profile.buildingGroupId)?.gameBuildingType ?? null) !== (profile.gameBuildingType ?? null) ||
                     JSON.stringify(oldScenes.get(profile.buildingGroupId)) !== JSON.stringify(after.scenes.find(g => g.id === profile.buildingGroupId)?.settings) ||
                     JSON.stringify(before.frames.filter(f => f.groupId === profile.buildingGroupId)) !==
                         JSON.stringify(after.frames.filter(f => f.groupId === profile.buildingGroupId)) ||

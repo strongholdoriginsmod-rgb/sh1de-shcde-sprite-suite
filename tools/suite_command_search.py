@@ -91,7 +91,8 @@ def build_navigation_targets(app) -> tuple[SearchTarget, ...]:
             "Mehrteilige Gebaeude als Ebenen": "Multi-tile buildings / OpenRaster",
         }.get(section, section)
         aliases = {
-            "HTML-Sprite-Editor": ("edit png", "sprite editor", "import zip", "html"),
+            "HTML-Sprite-Editor": ("edit png", "sprite editor", "import zip", "html",
+                                   "gebaeudeschaden", "gebaude schaden", "damage", "destruction", "fire", "hp", "gpt image 2.6"),
             "SE-Atlas mit AtlasBuilder": ("atlas", "bc7", "dds", "atlasbuilder"),
             "Pivot-Vermessung aus dem Spiel": (
                 "zinnen", "lineal", "zinnenlineal", "pivot", "anker", "pivot review",
@@ -169,6 +170,16 @@ def build_navigation_targets(app) -> tuple[SearchTarget, ...]:
         "Build packages",
         ("build", "qa", "release", "freigabe", "checksum"),
         lambda: app.open_tab(app.bc7_page))
+
+    # Link the EXISTING expert catalog to Ctrl+K. Only show specialists
+    # actually present there; choosing one NEVER executes its CLI.
+    from suite_tool_registry import available_specialists, open_specialist
+    for specialist in available_specialists(app):
+        add("tool:" + specialist.filename,
+            specialist.title_de, specialist.title_en,
+            specialist.category_de, specialist.category_en,
+            (*specialist.keywords, specialist.filename),
+            lambda name=specialist.filename: open_specialist(app, name))
     return tuple(targets)
 
 

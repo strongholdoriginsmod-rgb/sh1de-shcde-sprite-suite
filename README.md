@@ -2,6 +2,12 @@
 
 Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Statische HUD-/Sprite-Pakete entstehen **ohne feste SE-Version und ohne eigene C#-DLL**; für optionale C#-Plugins gelten getrennte ABI-Schutzprüfungen. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
+## Gemeinsame Stronghold-Fachwerkzeuge (Entwicklungszweig, 06.11.2026)
+
+**Strg+K** findet nun auch 16 vorhandene CLI-Fachwerkzeuge und die neue historische Toolmatrix nach Aufgabe und deutschem/englischem Namen. Ein Treffer öffnet ausschließlich das passende Formular unter **Alle Werkzeuge**; er startet kein Skript, keinen Build und keine Installation. Der normale Projektablauf und alle vorhandenen Schutzprüfungen bleiben unverändert.
+
+Die neue lesende Toolmatrix vergleicht historische Stronghold-/SpriteSuite-Entwicklungsordner anhand von SHA-256, vorhandenen Einstiegspunkten und Risikoklassen, ohne Programme zu importieren oder auszuführen: `python tools/suite_tool_inventory.py --compare "E:\SU_base" --format markdown`. [Technische Analyse](docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_ANALYSE_20261106.md) · [Umsetzungsplan](docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_IMPLEMENTIERUNGSPLAN_20261106.md). Kein neuer Release.
+
 ## Aktuelle Python-/Spiele-Kompatibilität (05.11.2026)
 
 Die neue [Python-3.15-/Spielstruktur-Kompatibilitätsmatrix](docs/SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)
@@ -267,3 +273,9 @@ Weitere Einschränkungen und Testgrenzen: [Script Extender und Asset-Mods](docs/
 Der Arbeitsbereich **ORIGINS Grafiken** umfasst alle **13.562** bekannten Dateien aus dem versionierten [Stronghold-Europe-Grafikdaten-Projekt](https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten), darunter **4.086 HUD-/GUI-Elemente**, Noesis-XAML, das Blau/Silber-HUD und die GUI-Atlanten. Über **Suite starten.cmd → ORIGINS Grafiken** lassen sich alle Dateinamen suchen, filtern und per Git-/LFS-SHA-256 prüfen. Berechtigte Mitwirkende wählen ihren lokalen Git-LFS-Klon und erzeugen daraus getrennte Bearbeitungskopien mit Herkunftsnachweis. Das originale Stronghold-1-HUD bleibt zusätzlich im eigenen **SH1 HUD-Studio** erreichbar.
 
 Die großen, teilweise spielabgeleiteten Binärdaten verbleiben im zugangsverwalteten Grafikdatenprojekt. Im Sprite-Suite-Quellcode liegen der vollständige Katalog mit den Original-Git-IDs und die Verarbeitung. [Einrichtung und Grenzen](docs/ORIGINS_GRAFIKDATEN_KATALOG.md).
+
+## Gemeinsamer Entwicklungsstand: Gebäudeschäden und Werkzeugkonsolidierung (06.11.2026)
+
+Der isolierte Integrationszweig bündelt die geprüfte 1-Pixel-Kachelüberlappung, den Gebäude-Schadensstufen-Workflow (mechanisch/Feuer, HP-Schwellen, visuelle Abnahme), einen ausdrücklich aufrufbaren GPT-Image-2.6-Codex-Adapter sowie den gemeinsamen Fachwerkzeugkatalog und den historischen SHA-Versionsvergleich. Der bestehende HTML-Sprite-Editor bleibt offline nutzbar; KI-Referenzpakete und generierte Bilddateien werden getrennt importiert. Schadensmodelle werden als freigegebenes Daten-/Tile-ZIP ausgegeben, nicht als unbelegte dynamische Spieländerung.
+
+Bedienung: [Gebäudeschaden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md). Arbeitszweige, Konfliktregeln, Tests und Übergaben: [Gemeinsame Integration](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).

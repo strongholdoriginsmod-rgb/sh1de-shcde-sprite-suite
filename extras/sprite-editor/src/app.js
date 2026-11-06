@@ -777,10 +777,34 @@
             message('Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Freigabe noch ausstehend.');
         });
     }
+    function damagePreview(img, label) {
+        const scale = Math.min(1, 235 / img.width, 200 / img.height);
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const small = width === img.width && height === img.height ? img : C.resize(img, width, height);
+        const canvas = el('canvas', { class: 'damage-review-canvas', width, height,
+            title: label, 'aria-label': label });
+        canvas.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(small.data), width, height), 0, 0);
+        return el('div', { class: 'damage-review-image' }, [
+            el('strong', { text: label }), canvas
+        ]);
+    }
     function damageApproveDialog(stageId) {
         const { stage } = DI.getStage(state(), stageId);
+        const review = DI.qualityReport(state(), store(), stageId);
+        const summary = [
+            line('Sichtbar veränderte Pixel', (review.stats.changedPixels || 0).toLocaleString('de-DE')),
+            line('Veränderung · % Original', (review.stats.visibleChangesPercent ?? 0) + '%'),
+            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel')
+        ];
         modal('Schadensmodell abnehmen', [
-            note('Nur freigegebene Stufen werden in das separate HP-Schadenspaket aufgenommen. Prüfung im Spiel bleibt zusätzlich erforderlich.'),
+            el('div', { class: 'damage-review-gallery' }, [
+                damagePreview(review.intact, 'Original'), damagePreview(review.damaged, 'Schadensmodell')
+            ]),
+            ...summary,
+            ...review.errors.map(msg => el('p', { class: 'error-text', text: msg })),
+            ...review.warnings.map(msg => el('p', { class: 'warning-text', text: msg })),
+            note('Bilder und Zerstörungsreihenfolge anhand echter SHCDE-Referenzen prüfen; formale Pixelwerte ersetzen keine visuelle Abnahme.'),
             checkbox('Perspektive, sichtbare Zerstörungsreihenfolge, Bodenanker, Transparenz, schwarze Punkte und Materialmasken geprüft', false, 'confirmed'),
             fields(field('Abnahmevermerk', stage.reviewNotes, { name: 'notes', type: 'textarea', wide: true }))
         ], 'Verbindlich freigeben', data => {
@@ -824,6 +848,14 @@
             fields(field('Gebäude', damageBuildingId, { wide: true,
                 options: buildings.map(g => [g.id, g.name]),
                 onchange: v => { damageBuildingId = v; renderInspector(); } })),
+            ...(profile ? [fields(field('Spiel-Gebäudetyp (optional)', profile.gameBuildingType ?? '', {
+                wide: true, placeholder: 'Z. B. 108 – aus Zielspiel-Metadaten prüfen',
+                onchange: v => edit(s => {
+                    const p = s.damageProfiles.find(x => x.buildingGroupId === base.id);
+                    p.gameBuildingType = String(v).trim() === '' ? null :
+                        C.integer(v, 'Gebäudetyp im Spiel', 0, 4095);
+                }, 'Spiel-Gebäudetyp zuordnen')
+            }))] : []),
             fields(field('Schadensursache', damageKind, {
                 options: [['mechanical', 'Mechanisch'], ['fire', 'Feuerschaden']],
                 onchange: v => { damageKind = v; renderInspector(); }
@@ -863,6 +895,8 @@
                 buttons(button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
                 buttons(button('Generiertes PNG importieren…', () => damageImportCandidate(stage.id)),
                     button('PNG als Tiles zerlegen', () => damageApplyCandidate(stage.id), { disabled: !stage.candidateId })),
+                ...(stage.candidateId ? [buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,
+                    s => { s.candidateId = null; s.status = 'draft'; })))] : []),
                 buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
                     button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
                 buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),

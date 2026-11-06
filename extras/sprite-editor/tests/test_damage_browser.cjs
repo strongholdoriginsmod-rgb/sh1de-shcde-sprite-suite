@@ -93,6 +93,9 @@ async function run() {
         assert.equal(st.frames.length,50);
         assert.equal(st.frames.filter(f => f.groupId === s.sceneId).every(f => !f.targetName),true);
         checks.push('Stufe inklusive Clone, Scene und HP-Schwelle erstellt');
+        await field(page, 'Spiel-Gebäudetyp (optional)', 108);
+        await wait(page, () => window.SpriteEditor.inspect().state.damageProfiles[0].gameBuildingType === 108);
+        checks.push('Expliziter Gebäudetyp wird mit dem Profil gespeichert');
 
         await field(page, 'Verbleibende HP · %', 80);
         assert((await page.$eval('.inspector-content', n=>n.innerText)).includes('Original / unbeschädigt'));
@@ -134,24 +137,27 @@ async function run() {
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId !== window.__damageImageBefore);
         await clickLabel(page, 'Qualität abnehmen…');
         await wait(page, () => document.querySelector('#modal').open);
+        assert.equal(await page.$$eval('.damage-review-canvas', nodes => nodes.length), 2);
         await page.evaluate(() => {
             document.querySelector('#modal [name="confirmed"]').checked = true;
             document.querySelector('#modal-submit').click();
         });
         await wait(page, () => !document.querySelector('#modal-error').hidden);
         const refusal = await page.$eval('#modal-error', n => n.textContent);
-        assert(/identisch|Original/.test(refusal), refusal);
+        assert(/identisch|Original|veränderten Pixeln|Modell weiter beschädigen/.test(refusal), refusal);
         await page.evaluate(() => document.querySelector('[data-action="close-modal"]').click());
         checks.push('Identisches KI-Bild wird trotz ausdrücklichem Klick nicht freigegeben');
 
         // Change a real opaque pixel and import it through the same user flow.
         const changed = await K.decodePNG(original);
-        let changedIndex = -1;
-        for (let i = 0; i < changed.data.length; i += 4) {
-            if (changed.data[i + 3] === 255) { changedIndex = i; break; }
-        }
-        assert(changedIndex >= 0, 'demo must contain opaque pixels');
-        changed.data[changedIndex] ^= 127;
+        let changedCount = 0;
+        for (let i = 0; i < changed.data.length && changedCount < 800; i += 4)
+            if (changed.data[i + 3] === 255) {
+                changed.data[i] = Math.round(changed.data[i] * 0.45);
+                changed.data[i + 1] = Math.round(changed.data[i + 1] * 0.45);
+                changedCount++;
+            }
+        assert(changedCount >= 200, 'synthetic building needs opaque structure for visible damage');
         const modifiedPath = path.join(tmp, 'candidate_modified.png');
         fs.writeFileSync(modifiedPath, await K.encodePNG(changed));
         const decodedChanged = await K.decodePNG(new Uint8Array(fs.readFileSync(modifiedPath)));
@@ -172,6 +178,7 @@ async function run() {
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId !== window.__damageImageBefore);
         await clickLabel(page, 'Qualität abnehmen…');
         await wait(page, () => document.querySelector('#modal').open);
+        assert.equal(await page.$$eval('.damage-review-canvas', nodes => nodes.length), 2);
         await page.evaluate(() => {
             document.querySelector('#modal [name="confirmed"]').checked = true;
             document.querySelector('#modal [name="notes"]').value = 'Technische und visuelle Prüfung bestätigt';
@@ -195,6 +202,8 @@ async function run() {
         assert.equal(manifest.buildings.length, 1);
         assert.equal(manifest.buildings[0].stages.length, 1);
         assert.equal(manifest.buildings[0].stages[0].hpAtOrBelow, 75);
+        assert.equal(manifest.buildings[0].gameBuildingType, 108);
+        assert.equal(manifest.buildings[0].gameBuildingTypeVerifiedInGame, false);
         checks.push('Freigegebenes HP-Schadenspaket enthält korrektes Manifest und Tiles');
 
         // Create a distinct fire state with its own threshold and independent tile scene.

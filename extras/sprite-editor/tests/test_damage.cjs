@@ -28,10 +28,14 @@ function damageCandidate(f, mutate = true) {
     const orig = DI.baseComposite(f.s, f.store, f.gid).image;
     const candidate = C.image(orig.width, orig.height, new Uint8Array(orig.data));
     if (mutate) {
-        const x = 40, y = 27;
-        const idx = (y * candidate.width + x) * 4;
-        candidate.data[idx] = 205;
-        candidate.data[idx + 1] = 40;
+        let changed = 0;
+        for (let i = 0; i < candidate.data.length && changed < 15; i += 4)
+            if (candidate.data[i + 3] === 255) {
+                candidate.data[i] = (candidate.data[i] + 59) % 256;
+                candidate.data[i + 1] = 40;
+                changed++;
+            }
+        A.ok(changed >= 10, 'fixture must have enough visible roof pixels');
     }
     return candidate;
 }
@@ -146,6 +150,37 @@ test('manual approval refuses untouched clones, stage edits automatically void a
     thresholdEdit.damageProfiles[0].stages[0].hpAtOrBelow = 50;
     D.invalidateApprovals(s, thresholdEdit);
     A.equal(thresholdEdit.damageProfiles[0].stages[0].status, 'draft');
+});
+
+test('quality review rejects a single changed pixel as a damage stage', () => {
+    const f = stageFixture();
+    const orig = DI.baseComposite(f.s, f.store, f.gid).image;
+    const candidate = C.image(orig.width, orig.height, new Uint8Array(orig.data));
+    const idx = candidate.data.findIndex((v, i) => i % 4 === 3 && v === 255) - 3;
+    A.ok(idx >= 0);
+    candidate.data[idx] ^= 71;
+    const loaded = DI.withCandidate(f.s, f.store, f.stageId, candidate);
+    const applied = DI.applyCandidate(loaded.state, loaded.store, f.stageId);
+    const review = DI.qualityReport(applied.state, applied.store, f.stageId);
+    A.ok(review.errors.some(e => /Pixeln|Pixel/.test(e)));
+    A.throws(() => DI.approveStage(applied.state, applied.store, f.stageId,
+        'bewusst geprüft', true), /Qualitätsprüfung/);
+});
+
+test('optional game-building type is validated and changing it voids approval', () => {
+    const f = stageFixture();
+    const selected = I.clone(f.s);
+    selected.damageProfiles[0].gameBuildingType = 108;
+    const clean = I.validate(selected, f.store);
+    A.equal(clean.damageProfiles[0].gameBuildingType, 108);
+    const invalid = I.clone(selected);
+    invalid.damageProfiles[0].gameBuildingType = 65535;
+    A.throws(() => I.validate(invalid, f.store), /4095/);
+    selected.damageProfiles[0].stages[0].status = 'approved';
+    const changed = I.clone(selected);
+    changed.damageProfiles[0].gameBuildingType = 109;
+    D.invalidateApprovals(selected, changed);
+    A.equal(changed.damageProfiles[0].stages[0].status, 'draft');
 });
 
 test('Codex bundle includes real source PNG, named model, unmodified reference and revision text', async () => {
