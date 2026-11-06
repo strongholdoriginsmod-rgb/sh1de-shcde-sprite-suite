@@ -1,9 +1,8 @@
-"""Version-neutral static SHCDE asset-mod packaging; no C# runtime or SE install.
+"""Version-neutral SHCDE mod packaging with unrestricted editing by default.
 
-Prepares an asset-only mod folder for an already installed Script Extender.
-Do not claim identical Asset/XAML API behavior in every historical release.
-The builder neither detects nor pins a Script Extender version and never
-installs or changes a game, plugin or Steam directory.
+Any existing source folder, asset path and file type can be packaged. The old
+static-only compatibility checks remain available via --strict-static, but are
+not imposed on normal mod creation. Building a ZIP is not a game installation.
 """
 from __future__ import annotations
 
@@ -63,10 +62,10 @@ def _inside_work(folder: Path | str, *, existing: bool) -> Path:
     return resolved
 
 
-def _relative_key(path: Path) -> str:
+def _relative_key(path: Path, *, strict_static: bool = False) -> str:
     parts = path.parts
-    if not parts or parts[0] not in _VALID_START:
-        raise AssetModError("Dateien müssen unter Override/ oder Patches/ liegen")
+    if strict_static and (not parts or parts[0] not in _VALID_START):
+        raise AssetModError("Statischer Mod benötigt Override/, Patches/ oder Locales/")
     if any(
         not part or part in (".", "..") or part.endswith((" ", "."))
         or ":" in part or "\\" in part or is_reserved_windows_component(part)
@@ -223,30 +222,31 @@ def _validate_asset(path: Path, relative: str) -> None:
             raise AssetModError(f"Asset-JSON unlesbar: {relative}") from exc
 
 
-def _discover(source: Path) -> list[tuple[str, Path, int, str]]:
+def _discover(source: Path, *, strict_static: bool = False) -> list[tuple[str, Path, int, str]]:
     if not source.is_dir():
         raise AssetModError("Asset-Mod-Quellordner fehlt")
     items = []
     folded = set()
     total = 0
     for file in sorted(source.rglob("*")):
-        if _linked(file):
+        if strict_static and _linked(file):
             raise AssetModError(f"Symbolische Asset-Datei: {file.name}")
         if file.is_dir():
             continue
         if not file.is_file():
             raise AssetModError(f"Kein reguläres Asset: {file.name}")
-        relative = _relative_key(file.relative_to(source))
+        relative = _relative_key(file.relative_to(source), strict_static=strict_static)
         if relative.casefold() in folded:
             raise AssetModError(f"Doppelte Assets auf Windows: {relative}")
         folded.add(relative.casefold())
         before = file.stat()
-        if before.st_size > _MAX_FILE:
+        if strict_static and before.st_size > _MAX_FILE:
             raise AssetModError(f"Asset über 512 MB: {relative}")
         total += before.st_size
-        if total > _MAX_BYTES:
+        if strict_static and total > _MAX_BYTES:
             raise AssetModError("Asset-Paket über 2 GB")
-        _validate_asset(file, relative)
+        if strict_static:
+            _validate_asset(file, relative)
         digest = hashlib.sha256()
         with file.open("rb") as stream:
             for chunk in iter(lambda: stream.read(4 * 1024**2), b""):
@@ -255,7 +255,7 @@ def _discover(source: Path) -> list[tuple[str, Path, int, str]]:
         if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
             raise AssetModError("Quelldatei während der Prüfung geändert")
         items.append((relative, file, before.st_size, digest.hexdigest()))
-        if len(items) > _MAX_FILES:
+        if strict_static and len(items) > _MAX_FILES:
             raise AssetModError("Mehr als 10.000 Assets")
     if not items:
         raise AssetModError("Keine Override-/Patch-Dateien vorhanden")
@@ -263,36 +263,53 @@ def _discover(source: Path) -> list[tuple[str, Path, int, str]]:
 
 
 def build(source: Path | str, guid: str, *, name: str, author: str,
-          target: Path | str | None = None, version: str = "1.0.0") -> dict:
-    if not _GUID.fullmatch(guid) or is_reserved_windows_component(guid):
-        raise AssetModError("Ungültige Mod-GUID")
-    if not _VERSION.fullmatch(version):
-        raise AssetModError("Ungültige Mod-Version")
-    if not name.strip() or len(name) > 120 or len(author) > 120:
-        raise AssetModError("Mod-Name bzw. Autor zu lang oder leer")
-    source_root = _inside_work(source, existing=True)
-    output = _inside_work(target or (OUT / guid), existing=False)
+          target: Path | str | None = None, version: str = "1.0.0",
+          strict_static: bool = False) -> dict:
+    if (not isinstance(guid, str) or not guid or guid in (".", "..") or
+            any(ch in guid for ch in '/\\:*?"<>|\x00') or
+            is_reserved_windows_component(guid) or
+            (strict_static and not _GUID.fullmatch(guid))):
+        raise AssetModError("Mod-Kennung ist kein verwendbarer Ordnername")
+    if not isinstance(version, str) or not version.strip() or (strict_static and not _VERSION.fullmatch(version)):
+        raise AssetModError("Mod-Version fehlt oder ist im optionalen statischen Modus nicht verwendbar")
+    if not name.strip() or (strict_static and (len(name) > 120 or len(author) > 120)):
+        raise AssetModError("Mod-Name fehlt oder überschreitet die optionale statische Mod-Grenze")
+    if strict_static:
+        source_root = _inside_work(source, existing=True)
+        output = _inside_work(target or (OUT / guid), existing=False)
+    else:
+        source_root = Path(source).expanduser().resolve(strict=True)
+        output = Path(target or (OUT / guid)).expanduser().resolve(strict=False)
     if (output == source_root or output.is_relative_to(source_root) or
             source_root.is_relative_to(output)):
         raise AssetModError("Quelle und Ausgabe dürfen sich nicht überschneiden")
     if output.exists() or output.with_suffix(".zip").exists():
         raise AssetModError("Asset-Mod-Paket existiert bereits – kein Überschreiben")
-    files = _discover(source_root)
+    files = _discover(source_root, strict_static=strict_static)
     info = {
         "GUID": guid, "Name": name.strip(), "Author": author.strip() or "Sprite Suite",
-        "Description": "Static sprite/HUD/GUI asset pack. No runtime plugin.",
+        "Description": ("Static asset pack" if strict_static else "Custom mod bundle"),
         "Version": version, "Manifest": 0, "AssetMode": "Global", "NetworkMode": 0,
     }
+    supplied_info = source_root / "info.json"
+    if not strict_static and supplied_info.is_file():
+        # Keep a user-authored manifest exactly as supplied rather than
+        # replacing it with the default asset-only metadata.
+        try:
+            info = json.loads(supplied_info.read_text(encoding="utf-8"))
+        except (ValueError, UnicodeError):
+            info = None
     output.parent.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix=".asset-mod-stage-", dir=output.parent))
     zip_stage = None
     try:
         folder = staging / guid
         folder.mkdir()
-        (folder / "info.json").write_text(
-            json.dumps(info, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        if info is not None and not (supplied_info.is_file() and not strict_static):
+            (folder / "info.json").write_text(
+                json.dumps(info, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
         for relative, src, size, digest in files:
             dest = folder.joinpath(*PurePosixPath(relative).parts)
             dest.parent.mkdir(parents=True, exist_ok=True)
@@ -326,9 +343,11 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
         os.rename(folder, output)
         os.rename(zip_stage, output.with_suffix(".zip"))
         return {
-            "schema": "sprite-suite.se-asset-only.v1",
+            "schema": ("sprite-suite.se-asset-only.v1" if strict_static
+                       else "sprite-suite.unrestricted-mod-bundle.v1"),
             "guid": guid, "se_version_required": None,
-            "runtime_dll": False, "source_files": len(files),
+            "runtime_dll": any(name.casefold().endswith(".dll") for name, *_ in files),
+            "source_files": len(files),
             "asset_mod_folder": str(output),
             "zip": str(output.with_suffix(".zip")),
             "manifest": info,
@@ -342,16 +361,18 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, required=True,
-                        help="Arbeitsordner unter work/ mit Override/ und Patches/")
+                        help="Beliebiger Quellordner mit gewünschten Mod-Dateien")
     parser.add_argument("--guid", required=True)
     parser.add_argument("--name", required=True)
     parser.add_argument("--author", default="")
     parser.add_argument("--out", type=Path,
-                        help="Ziel unter work/, Standard work/se-asset-mods/<GUID>")
+                        help="Frei wählbares Ziel, Standard work/se-asset-mods/<GUID>")
+    parser.add_argument("--strict-static", action="store_true",
+                        help="Optionale Prüfung nur für statische Asset-Mods")
     args = parser.parse_args(argv)
     try:
         result = build(args.source, args.guid, name=args.name,
-                       author=args.author, target=args.out)
+                       author=args.author, target=args.out, strict_static=args.strict_static)
     except (AssetModError, OSError, ValueError) as exc:
         print(f"ASSET_MOD_FEHLER: {exc}", file=sys.stderr)
         return 2

@@ -25,9 +25,16 @@ def test_risk_classification_for_known_important_paths():
     assert classify("Pipeline",["install"]).category=="game"
     assert classify("Pipeline",["doctor"]).category=="read"
     assert classify("unknown.py",["--help"]).category=="read"
+    assert classify("building_damage_runtime_preflight.py",["--dry-run"]).category=="read"
+    assert classify("building_damage_runtime_preflight.py",["--prepare"]).category=="workspace"
+    assert classify("suite_live_noesis_log_audit.py",["--qa-game","QA"]).category=="read"
+    assert classify("suite_live_noesis_log_audit.py",["--out","evidence.json"]).category=="workspace"
+    assert classify("qa_building_damage_runtime.py",[]).category=="workspace"
+    assert classify("qa_workstream_census.py",["--repo","repo"]).category=="read"
+    assert classify("qa_workstream_census.py",["--out","new.json"]).category=="workspace"
 
 
-def test_dynamic_gui_catalogue_requires_risk_confirmation(monkeypatch):
+def test_dynamic_gui_catalogue_runs_user_selected_action_without_confirmation(monkeypatch):
     from pathlib import Path
     root=Path(__file__).resolve().parents[2]
     loader=importlib.machinery.SourceFileLoader(
@@ -48,10 +55,5 @@ def test_dynamic_gui_catalogue_requires_risk_confirmation(monkeypatch):
         run_catalog=lambda args:launched.append(args)
     )
     module.Center.catalog_run(fake)
-    assert len(shown)==1
-    assert "Spiel" in shown[0]
-    assert not launched
-    monkeypatch.setattr(module.messagebox,"askyesno",
-                        lambda title,body,**kwargs:True)
-    module.Center.catalog_run(fake)
-    assert launched
+    assert not shown
+    assert launched == [["installieren"]]

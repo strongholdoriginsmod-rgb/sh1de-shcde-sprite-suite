@@ -1,5 +1,5 @@
 {
-  "htmlSHA256": "8350a9685071413ea4eecfd1070a85d1f64c8a1e357108f515e2a463d2808e30",
+  "htmlSHA256": "b11d501590aad69a81a43db438c383b86a80cc9b42e2c0f2a1d299613a05cf57",
   "browser": "156.0.4314.58",
   "load": "unmodified HTML via page.set_content; opaque origin",
   "nativeIndexedDBTested": false,
@@ -10,92 +10,92 @@
     {
       "name": "Unmodified standalone HTML initializes without network resources",
       "passed": true,
-      "seconds": 0.017
+      "seconds": 0.016
     },
     {
       "name": "Unavailable local recovery is handled without blocking editing",
       "passed": true,
-      "seconds": 0.051
+      "seconds": 0.044
     },
     {
       "name": "Built-in synthetic 5x5 example loads 25 sprites",
       "passed": true,
-      "seconds": 0.018
+      "seconds": 0.015
     },
     {
       "name": "Workspace scene changes without errors",
       "passed": true,
-      "seconds": 0.012
+      "seconds": 0.011
     },
     {
       "name": "Workspace sprite changes without errors",
       "passed": true,
-      "seconds": 0.011
+      "seconds": 0.01
     },
     {
       "name": "Workspace animation changes without errors",
       "passed": true,
-      "seconds": 0.01
+      "seconds": 0.019
     },
     {
       "name": "Workspace atlas changes without errors",
       "passed": true,
-      "seconds": 0.012
+      "seconds": 0.011
     },
     {
       "name": "Workspace split changes without errors",
       "passed": true,
-      "seconds": 0.009
+      "seconds": 0.01
     },
     {
       "name": "Merged PNG is emitted with alpha and nonzero artwork",
       "passed": true,
-      "seconds": 0.086
+      "seconds": 0.025
     },
     {
       "name": "Project stores every demo original byte-for-byte",
       "passed": true,
-      "seconds": 0.028
+      "seconds": 0.026
     },
     {
       "name": "OpenRaster validates independently and matches merged PNG",
       "passed": true,
-      "seconds": 0.025
+      "seconds": 0.024
     },
     {
       "name": "Compose-to-cut enables 1px overlap and rear sharing without changing geometry",
       "passed": true,
-      "seconds": 0.072
+      "seconds": 0.074
     },
     {
       "name": "Cut ZIP independently reassembles to the same RGBA image",
       "passed": true,
-      "seconds": 0.025
+      "seconds": 0.022
     },
     {
       "name": "Ownership brush commits one undoable stroke",
       "passed": true,
-      "seconds": 0.01
+      "seconds": 0.014
     },
     {
       "name": "Undo restores the exact ownership map",
       "passed": true,
-      "seconds": 0.012
+      "seconds": 0.01
     },
     {
       "name": "Cut tiles become an independently editable second group",
       "passed": true,
-      "seconds": 0.073
+      "seconds": 0.06
     },
     {
       "name": "Saved project reopens through the normal UI",
       "passed": true,
-      "seconds": 0.023
+      "seconds": 0.021
     },
     {
       "name": "Original export survives project reopen without changed bytes",
       "passed": true,
-      "seconds": 0.01
+      "seconds": 0.013
     },
     {
       "name": "Actual previous v0.1 demo opens through the file dialog",
@@ -110,62 +110,62 @@
     {
       "name": "Original reset removes trim compensation while preserving manual offsets",
       "passed": true,
-      "seconds": 0.003
+      "seconds": 0.004
     },
     {
       "name": "4096-frame project renders with a bounded virtual file list",
       "passed": true,
-      "seconds": 2.282
+      "seconds": 1.601
     },
     {
       "name": "Virtual file list reaches the last frame without expanding all rows",
       "passed": true,
-      "seconds": 0.009
+      "seconds": 0.008
     },
     {
       "name": "PNG series imports color-mask pairs and SHDE provenance",
       "passed": true,
-      "seconds": 0.02
+      "seconds": 0.011
     },
     {
       "name": "Source metadata is imported explicitly",
       "passed": true,
-      "seconds": 0.006
+      "seconds": 0.005
     },
     {
       "name": "Reference PNG import preserves metadata imported before the images",
       "passed": true,
-      "seconds": 0.005
+      "seconds": 0.009
     },
     {
       "name": "Target mapping and independent reference metadata match",
       "passed": true,
-      "seconds": 0.01
+      "seconds": 0.014
     },
     {
       "name": "Valid target references clear all formal export errors",
       "passed": true,
-      "seconds": 0.003
+      "seconds": 0.004
     },
     {
       "name": "Actual downloaded ZIP and SEMOD contain exact pixels, masks and target pivots",
       "passed": true,
-      "seconds": 0.006
+      "seconds": 0.03
     },
     {
       "name": "Single override exports source PNG bytes exactly and only after dimension validation",
       "passed": true,
-      "seconds": 0.011
+      "seconds": 0.008
     },
     {
       "name": "Batch nearest-neighbor resize applies to masks and PPU coherently",
       "passed": true,
-      "seconds": 0.007
+      "seconds": 0.01
     },
     {
       "name": "Single override now fails dimensions instead of silently installing resized assets",
       "passed": true,
-      "seconds": 0.002
+      "seconds": 0.004
     },
     {
       "name": "Undo restores all original image IDs after batch transformation",
@@ -180,12 +180,12 @@
     {
       "name": "Animation playback advances using the selected sequence",
       "passed": true,
-      "seconds": 0.008
+      "seconds": 0.011
     },
     {
       "name": "Animation pauses without moving the frame index",
       "passed": true,
-      "seconds": 0.022
+      "seconds": 0.012
     },
     {
       "name": "Corrupt multi-file import rolls back state, group selection and asset store",
@@ -200,7 +200,7 @@
     {
       "name": "Grid change is undoable including the original ownership map",
       "passed": true,
-      "seconds": 0.011
+      "seconds": 0.015
     },
     {
       "name": "No document overflow at 1920 x 1080",
@@ -215,12 +215,12 @@
     {
       "name": "No document overflow at 1024 x 768",
       "passed": true,
-      "seconds": 0.002
+      "seconds": 0.004
     },
     {
       "name": "No document overflow at 768 x 1024",
       "passed": true,
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "name": "No document overflow at 390 x 844",
@@ -230,17 +230,17 @@
     {
       "name": "Mobile inspector opens as a drawer",
       "passed": true,
-      "seconds": 0.007
+      "seconds": 0.005
     },
     {
       "name": "Mobile file list opens independently",
       "passed": true,
-      "seconds": 0.006
+      "seconds": 0.005
     },
     {
       "name": "Project save finishes and clears unsaved indicator",
       "passed": true,
-      "seconds": 0.005
+      "seconds": 0.006
     },
     {
       "name": "No unhandled JavaScript exceptions throughout workflows",

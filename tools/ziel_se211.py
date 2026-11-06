@@ -297,8 +297,9 @@ def cmd_aktivieren(args) -> int:
     except TargetSelectionError as exc:
         raise SystemExit(f"Zielaktivierung verweigert: {exc}") from exc
     data=targets()
-    if att.build_id!=data["ziele"][args.name].get("build_id"):
-        raise SystemExit("Zielbuild seit Registrierung verändert; bitte erneut registrieren")
+    # Keep the selected target usable after game updates or user modifications.
+    # The actual content fingerprint is refreshed rather than treated as a ban.
+    data["ziele"][args.name]["build_id"] = att.build_id
     old_config=CONFIG.read_bytes() if CONFIG.is_file() else None
     old_registry=ZIELE.read_bytes() if ZIELE.is_file() else None
     try:
@@ -347,7 +348,7 @@ def cmd_aktivieren(args) -> int:
         else:atomic_save_bytes(ZIELE,old_registry)
         raise
     say(f"Verbindliches Ziel aktiviert: {args.name}; {att.build_id}; "
-        f"5/5 Zielhashes und 5/5 SH1DE-Quellhashes; unknown builds content-fingerprinted; mapping verified.")
+        f"5/5 Zielhashes und 5/5 SH1DE-Quellhashes; Mapping-Build: {att.mapping_build_id} (frei kombinierbar).")
     say("Keine Installation und kein Build gestartet.")
     return 0
 

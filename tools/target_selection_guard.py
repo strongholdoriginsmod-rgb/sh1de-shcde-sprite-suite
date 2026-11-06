@@ -1,7 +1,7 @@
-"""Read-only exact-build attestations and explicit target gating.
+"""Read-only game fingerprint and mapping identification.
 
-These gates never select a 2.7 target for a 2.80 mapping. A verified game
-folder remains read-only until the user explicitly selects and confirms it.
+Different game or mapping versions are reported independently; no build is
+blocked solely because its mapping originated from another edition.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -112,16 +112,15 @@ def inspect_target(game_root: str | Path, builds_file: str | Path) -> TargetAtte
 
 def verify_target(
     game_root: str | Path, builds_file: str | Path,
-    mapping_file: str | Path,
+    mapping_file: str | Path, *, strict_mapping: bool = False,
 ) -> TargetAttestation:
-    """Accept every game build, but never apply a mismatched sprite mapping."""
+    """Identify game and mapping independently; optionally diagnose strict parity."""
     attestation = inspect_target(game_root, builds_file)
     mapping_build = mapping_target_build_id(Path(mapping_file))
-    if mapping_build != attestation.build_id:
+    if strict_mapping and mapping_build != attestation.build_id:
         raise TargetSelectionError(
             "Mapping belongs to a different game build: "
-            f"mapping={mapping_build}, game={attestation.build_id}. "
-            "Re-import the games; no game version is categorically blocked."
+            f"mapping={mapping_build}, game={attestation.build_id}."
         )
     return TargetAttestation(
         attestation.game_dir, attestation.data_dir, attestation.build_id,

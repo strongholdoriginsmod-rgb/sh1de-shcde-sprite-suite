@@ -223,3 +223,27 @@ test('draft and rejected stages are excluded from damage manifest and standard m
     const mod = await I.exportMod(f.s, f.store);
     A.equal(mod.report.mappings.length, 1);
 });
+
+
+test('damage export includes SHA-256 for material masks accepted by runtime preflight', async () => {
+    const f = stageFixture(), candidate = damageCandidate(f);
+    const loaded = DI.withCandidate(f.s, f.store, f.stageId, candidate);
+    const applied = DI.applyCandidate(loaded.state, loaded.store, f.stageId);
+    const updated = I.clone(applied.state);
+    const frame = updated.frames.find(x => x.groupId === f.sceneId);
+    A.ok(frame);
+    const sprite = applied.store.get(frame.imageId);
+    const mask = C.image(sprite.width, sprite.height);
+    mask.data.set([255, 20, 30, 255], 0);
+    frame.maskId = applied.store.add(mask);
+    const approved = DI.approveStage(I.validate(updated, applied.store), applied.store,
+        f.stageId, 'Materialmaske und Schadensbild manuell geprüft', true);
+    const pack = await DI.exportPackage(approved.state, approved.store);
+    const row = pack.manifest.buildings[0].stages[0].tiles[0];
+    A.match(row.mask, /_m\.png$/);
+    A.match(row.maskSha256, /^[a-f0-9]{64}$/);
+    const files = await K.unzip(pack.bytes);
+    const exported = files.find(x => x.name === row.mask);
+    A.ok(exported, 'actual material mask is present in the exported ZIP');
+    A.equal(row.maskSha256, await K.sha256(exported.data));
+});

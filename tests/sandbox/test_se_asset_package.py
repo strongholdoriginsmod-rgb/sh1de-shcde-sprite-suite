@@ -95,13 +95,13 @@ def test_png_sprite_override_no_custom_runtime(workspace):
     "Override/Secret/config.ini",
     "Patches/Assets/GUI/evil.exe",
 ])
-def test_rejects_executable_nonstatic_and_non_gui_payload(workspace, relative):
+def test_optional_static_checker_rejects_nonstatic_payload(workspace, relative):
     _,source=workspace
     bad=source/relative
     bad.parent.mkdir(parents=True, exist_ok=True)
     bad.write_bytes(b"unsafe")
     with pytest.raises(package.AssetModError):
-        package.build(source,"safeasset",name="Safe",author="QA")
+        package.build(source,"safeasset",name="Safe",author="QA",strict_static=True)
     assert not (package.WORK/"se-asset-mods/safeasset").exists()
 
 
@@ -117,7 +117,7 @@ def test_rejects_invalid_or_unsafe_patches(workspace,xaml):
     target=source/"Patches/Assets/GUI/XAMLResources/HUD_Main.xaml"
     patch(target,source=xaml)
     with pytest.raises(package.AssetModError):
-        package.build(source,"safeasset",name="Safe",author="QA")
+        package.build(source,"safeasset",name="Safe",author="QA",strict_static=True)
 
 
 def test_xaml_patch_accepts_unbound_noesis_prefixes(workspace):
@@ -132,11 +132,11 @@ def test_cannot_copy_outside_work_or_overwrite_existing(workspace,tmp_path):
     _, source=workspace
     png(source/"Override/Sprites/tree_birch-42.png")
     with pytest.raises(package.AssetModError,match="work"):
-        package.build(source,"safemod",name="Safe",author="QA",target=tmp_path/"outside")
+        package.build(source,"safemod",name="Safe",author="QA",target=tmp_path/"outside",strict_static=True)
     with pytest.raises(package.AssetModError,match="überschneiden"):
-        package.build(source,"safemod",name="Safe",author="QA",target=source/"out")
+        package.build(source,"safemod",name="Safe",author="QA",target=source/"out",strict_static=True)
     with pytest.raises(package.AssetModError,match="work"):
-        package.build(source,"safemod",name="Safe",author="QA",target=package.WORK)
+        package.build(source,"safemod",name="Safe",author="QA",target=package.WORK,strict_static=True)
 
 
 def test_rejects_symlink_payload(workspace,tmp_path):
@@ -150,7 +150,7 @@ def test_rejects_symlink_payload(workspace,tmp_path):
     except (NotImplementedError,OSError):
         pytest.skip("This test account cannot create symlinks")
     with pytest.raises(package.AssetModError,match="Symbolische"):
-        package.build(source,"myhud",name="No symlink",author="QA")
+        package.build(source,"myhud",name="No symlink",author="QA",strict_static=True)
 
 
 def test_version_is_never_a_build_constraint(workspace):
@@ -166,6 +166,57 @@ def test_rejects_bad_guids_and_empty_source(workspace):
     _,source=workspace
     for bad in ("..","CON", "a/b", "SE", ""):
         with pytest.raises(package.AssetModError):
-            package.build(source,bad,name="Bad",author="QA")
+            package.build(source,bad,name="Bad",author="QA",strict_static=True)
     with pytest.raises(package.AssetModError,match="Keine"):
         package.build(source,"emptyfixture",name="Empty",author="QA")
+
+
+def test_default_packages_any_payload_and_accepts_arbitrary_paths(tmp_path):
+    """Mod creators choose the files, not the Suite's static-asset whitelist."""
+    source = tmp_path / "custom-mod-sources"
+    source.mkdir()
+    payloads = {
+        "Scripts/init.lua": b"print('hello mod')\n",
+        "Override/Sprites/CustomFrame.bin": b"\x00\x01custom",
+        "Runtime/CustomPlugin.dll": b"MZcustom test payload",
+        "Patches/UnusualExtension.xyz": b"custom extension",
+    }
+    for relative, data in payloads.items():
+        file = source / relative
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_bytes(data)
+    user_manifest = {"GUID": "anything", "Manifest": 11, "ModOptions": {"custom": True}}
+    (source / "info.json").write_text(json.dumps(user_manifest), encoding="utf-8")
+    destination = tmp_path / "outputs" / "entire-mod"
+    result = package.build(source, "freecustom", name="Freie Mod", author="User", target=destination)
+    assert result["runtime_dll"] is True
+    assert result["schema"] == "sprite-suite.unrestricted-mod-bundle.v1"
+    assert result["manifest"] == user_manifest
+    with ZipFile(result["zip"]) as archive:
+        assert archive.testzip() is None
+        for relative, content in payloads.items():
+            assert archive.read(f"BepInEx/plugins/freecustom/{relative}") == content
+        assert json.loads(archive.read("BepInEx/plugins/freecustom/info.json")) == user_manifest
+    for relative, content in payloads.items():
+        assert (source / relative).read_bytes() == content
+
+
+def test_unrestricted_mode_preserves_custom_version_strings(tmp_path):
+    source = tmp_path / "draft"
+    (source / "Custom").mkdir(parents=True)
+    (source / "Custom" / "sounds.ogg").write_bytes(b"custom sound data")
+    version = "2.14.3-development+custom"
+    result = package.build(source, "flexversion", name="Freier Mod", author="", version=version,
+                           target=tmp_path / "free-export")
+    assert result["manifest"]["Version"] == version
+    with ZipFile(result["zip"]) as archive:
+        assert archive.read("BepInEx/plugins/flexversion/Custom/sounds.ogg") == b"custom sound data"
+
+
+def test_unrestricted_plugin_folder_allows_short_unicode_name(tmp_path):
+    source = tmp_path / "project"
+    source.mkdir()
+    (source / "sample.lua").write_text("return 1", encoding="utf8")
+    result = package.build(source, "ä", name="Custom", author="", target=tmp_path / "output")
+    with ZipFile(result["zip"]) as archive:
+        assert archive.read("BepInEx/plugins/ä/sample.lua") == b"return 1"
