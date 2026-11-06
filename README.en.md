@@ -258,3 +258,11 @@ Large and partly game-derived binary resources remain in the access-managed grap
 The isolated integration branch combines the reviewed one-pixel tile-overlap fix with the building damage stage workflow (mechanical and fire paths, HP thresholds, side-by-side review), an explicit GPT Image 2.6 Codex bridge, and the safe shared tool catalog plus historical SHA comparison. The HTML sprite editor remains offline. Approved stages are exported as a separate manifest-and-tile data package; this is not an unverified live-game sprite switching patch.
 
 See [building damage instructions](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md) and the [integration handoff / test matrix](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).
+
+## Building-damage runtime preflight
+
+The tool `tools/building_damage_runtime_preflight.py` validates approved SpriteSuite building-damage libraries. `python tools/qa_building_damage_runtime.py` builds a synthetic 5×5 export, checks every PNG/SHA-256 and the manifest, and tests a read-only C# building selector against a synthetic Script Extender API. The real game-API reader is disabled unless `SHCDE_BUILDING_DAMAGE_READONLY_API` is explicitly enabled. No in-game renderer switcher is installed. See [runtime assessment](docs/GEBAEUDESCHADEN_RUNTIME_AUDIT_PLAN_20261106.md).
+
+### Content-bound building-damage review
+
+Approved building damage models now carry a SHA-256 self-consistency digest of the intact art, altered tiles, masks, HP settings, geometry, and relevant generator inputs. Any subsequent change blocks silent export until manually reviewed. The HP preview can show all drafts or exportable, approved stages only. Legacy approved projects without this digest remain readable, but must be reviewed again before export. See [building damage guide](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md).

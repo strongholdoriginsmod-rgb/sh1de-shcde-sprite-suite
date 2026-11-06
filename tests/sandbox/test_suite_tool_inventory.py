@@ -185,3 +185,19 @@ def test_missing_unknown_or_external_catalog_entries_are_not_exposed(tmp_path):
     app.catalog_paths["sprites.py"] = correct
     assert [s.filename for s in available_specialists(app)] == ["sprites.py"]
     assert "tool:sprites.py" in {t.key for t in build_navigation_targets(app)}
+
+
+def test_building_damage_cli_has_precise_read_write_network_risk():
+    from suite_tool_policy import classify
+    from suite_tool_registry import SPECIALISTS
+    names = {tool.filename for tool in SPECIALISTS}
+    assert "building_damage_runtime_preflight.py" in names
+    assert "building_damage_codex.py" in names
+    assert classify("building_damage_runtime_preflight.py", ["--dry-run"]).category == "read"
+    assert classify("building_damage_runtime_preflight.py", []).category == "read"
+    assert classify("building_damage_runtime_preflight.py", ["--prepare"]).category == "workspace"
+    assert classify("building_damage_runtime_preflight.py", ["--help"]).category == "read"
+    assert classify("building_damage_codex.py", ["--dry-run"]).category == "read"
+    assert classify("building_damage_codex.py", []).category == "read"
+    assert classify("building_damage_codex.py", ["--execute"]).category == "external"
+    assert classify("building_damage_codex.py", ["--help"]).category == "read"

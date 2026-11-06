@@ -31,7 +31,7 @@ def verify() -> None:
 
     # The integrated damage workflow has an independent direct-file Edge run.
     damage_report = json.loads((root / 'tests/results/damage-browser-report.json').read_text(encoding='utf-8'))
-    if not damage_report.get('pass') or len(damage_report.get('checks', [])) != 13:
+    if not damage_report.get('pass') or len(damage_report.get('checks', [])) != 16:
         raise ValueError('Building-damage browser test count or result is unexpected.')
     if damage_report.get('htmlSHA256') != sha256(html):
         raise ValueError('Damage browser results do not describe the delivered HTML.')
@@ -64,7 +64,7 @@ def verify() -> None:
         if sha256(path) != digest:
             raise ValueError(f'Checksum mismatch: {relative}')
         checked += 1
-    print(f'PASS: deterministic DE/EN HTML builds, 49 legacy + 13 damage browser checks, {checked} file hashes.')
+    print(f'PASS: deterministic DE/EN HTML builds, 49 legacy + 16 damage browser checks, {checked} file hashes.')
     print('This verifies package integrity, not game compatibility or native local storage.')
 
 

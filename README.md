@@ -279,3 +279,11 @@ Die großen, teilweise spielabgeleiteten Binärdaten verbleiben im zugangsverwal
 Der isolierte Integrationszweig bündelt die geprüfte 1-Pixel-Kachelüberlappung, den Gebäude-Schadensstufen-Workflow (mechanisch/Feuer, HP-Schwellen, visuelle Abnahme), einen ausdrücklich aufrufbaren GPT-Image-2.6-Codex-Adapter sowie den gemeinsamen Fachwerkzeugkatalog und den historischen SHA-Versionsvergleich. Der bestehende HTML-Sprite-Editor bleibt offline nutzbar; KI-Referenzpakete und generierte Bilddateien werden getrennt importiert. Schadensmodelle werden als freigegebenes Daten-/Tile-ZIP ausgegeben, nicht als unbelegte dynamische Spieländerung.
 
 Bedienung: [Gebäudeschaden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md). Arbeitszweige, Konfliktregeln, Tests und Übergaben: [Gemeinsame Integration](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).
+
+## Gebäudeschadensmodelle: Runtime-Vorabprüfung
+
+Unter `tools/building_damage_runtime_preflight.py` lassen sich freigegebene SpriteSuite-Schadensbibliotheken sicher überprüfen. Die optional erzeugte C#-Zuordnungstabelle kann über `python tools/qa_building_damage_runtime.py` vollständig offline gegen einen reproduzierten 5×5-Testdatensatz und eine synthetische Gebäude-API getestet werden. Der externe Gebäudeleseadapter bleibt durch `SHCDE_BUILDING_DAMAGE_READONLY_API` deaktiviert, solange Spiel-API, Hauptthread und per-Gebäude-Renderer nicht gesondert nachgewiesen sind. Der eingebaute Editor und seine Spiel-Mod-Ausgabe bleiben unverändert. Technischer Plan: [Gebäudeschaden-Runtime](docs/GEBAEUDESCHADEN_RUNTIME_AUDIT_PLAN_20261106.md).
+
+### Abnahmeprüfung für Gebäude-Schadensmodelle
+
+Zusätzlich zur bisherigen visuellen Freigabe bindet eine SHA-256-Zustandsprüfsumme jetzt die tatsächlich exportierten Original-/Schadensbilder, Masken, Raster, HP-Werte und relevante Generatorangaben. Änderungen nach der Abnahme verhindern einen stillen Export. Im Reiter **Schaden** kann die Vorschau zwischen allen Entwürfen und nur freigegebenen Modellen wechseln. Ältere freigegebene Projekte ohne die neue Prüfsumme sind weiterhin lesbar, müssen vor erneutem Export aber neu abgenommen werden. Details: [Gebäudeschäden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md).

@@ -12,6 +12,8 @@ Die Suite ist eine Werkzeugbank zur möglichst vollständigen Bearbeitung von St
 - Die frühere statische Asset-Prüfung ist mit `--strict-static` als optionaler Kompatibilitätstest aufrufbar, nicht mehr als universelle Sperre.
 - `target_selection_guard.py`: Die tatsächliche Build-ID und die Mapping-Build-ID werden getrennt ermittelt. Eine abweichende Mapping-Herkunft blockiert die allgemeine Zielauswahl nicht mehr; `strict_mapping=True` steht nur als gezielter Diagnosevergleich zur Verfügung.
 - `ziel_se211.py`: Bei Aktivierung eines bewusst ausgewählten Ziels wird dessen aktueller Fingerabdruck aktualisiert statt eine geänderte Spielversion zurückzuweisen.
+- Sprite Editor: **Alle HP-Schadensmodelle exportieren…** schreibt auch Entwürfe, unveränderte Klone und verworfene Stufen mit sichtbaren Statusfeldern ins ZIP. Keine verpflichtende visuelle Abnahme oder Mindeständerung für diesen Export. Der frühere Export nur für freigegebene Zustände bleibt optional.
+- `building_damage_runtime_preflight.py`: Testkandidaten können auch ohne Freigabedigest vorbereitet werden; `--require-bound-approval` erlaubt eine ausdrücklich gewählte strengere Kontrolle.
 
 ## Technische Grenzen und Funktionen
 

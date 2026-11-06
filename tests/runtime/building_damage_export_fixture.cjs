@@ -26,6 +26,8 @@ async function produce() {
             kind === 'fire' ? 'Nach Brand und Einsturz' : 'Strukturbruch');
         state = result.state;
         store = result.store;
+        // Mapping must be part of the approved content-bound state, not added afterward.
+        state.damageProfiles.find(profile => profile.buildingGroupId === groupId).gameBuildingType = 108;
         const original = DI.baseComposite(state, store, groupId).image;
         const candidate = C.image(original.width, original.height,
             new Uint8Array(original.data));
@@ -45,13 +47,12 @@ async function produce() {
         if (review.errors.length)
             throw new Error('Fixture split not exact: ' + review.errors.join(' | '));
         const reviewed = I.clone(split.state);
-        // Exercise a genuine material-mask export in the full editor -> ZIP ->
-        // Python preflight bridge. The synthetic mask is not a game asset.
+        // Also cover material-mask export on the actual full tile-splitting path.
         if (kind === 'mechanical') {
             const frame = reviewed.frames.find(f => f.groupId === result.sceneId);
-            if (!frame) throw new Error('Missing editable damage-stage frame');
-            const sourceTile = split.store.get(frame.imageId);
-            const mask = C.image(sourceTile.width, sourceTile.height);
+            if (!frame) throw new Error('Stage tile not found');
+            const tile = split.store.get(frame.imageId);
+            const mask = C.image(tile.width, tile.height);
             mask.data.set([200, 150, 90, 255], 0);
             frame.maskId = split.store.add(mask);
         }
@@ -61,7 +62,8 @@ async function produce() {
         store = accepted.store;
     }
     const profile = state.damageProfiles.find(p => p.buildingGroupId === groupId);
-    profile.gameBuildingType = 108; // synthetic ID; not evidence of the real abbey's game type.
+    if (profile.gameBuildingType !== 108)
+        throw new Error('Synthetic game building ID was not included in the approval state.');
     const clean = I.validate(state, store);
     const archive = await DI.exportPackage(clean, store);
     if (archive.manifest.runtimeHookInstalled !== false)

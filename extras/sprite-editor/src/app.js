@@ -25,7 +25,7 @@
         return n;
     };
     let history = new I.History(I.blank(), new I.AssetStore()), groupId = '', selected = new Set(), lastSelected = null, view = 'scene', panel = 'properties', dirty = false, busy = false, modalHandler = null, pendingFiles = [], toastTimer = null, aborter = null;
-    let damageBuildingId = '', damageKind = 'mechanical', damageHp = 100;
+    let damageBuildingId = '', damageKind = 'mechanical', damageHp = 100, damageApprovedOnly = false;
     let playing = false, animIndex = 0, lastFrameTime = 0, pivotTool = false, brushTool = false, brushMap = null, drag = null, spaceDown = false, renderQueued = false, model = null, layoutError = '', fitNext = true, atlasGroup = '';
     let recoveryCandidate = null, recoveryTimer = null, recoveryRunning = false, recoveryAgain = false, recoveryEnabled = true, sessionId = I.uid('s'), autosaveGeneration = 0;
     try {
@@ -790,16 +790,30 @@
         ]);
     }
     function damageApproveDialog(stageId) {
-        const { stage } = DI.getStage(state(), stageId);
+        const { stage, profile } = DI.getStage(state(), stageId);
         const review = DI.qualityReport(state(), store(), stageId);
+        const closestApproved = profile.stages.filter(s => s.id !== stage.id &&
+            s.kind === stage.kind && s.status === 'approved')
+            .sort((a, b) => Math.abs(a.hpAtOrBelow - stage.hpAtOrBelow) -
+                Math.abs(b.hpAtOrBelow - stage.hpAtOrBelow))[0] || null;
         const summary = [
             line('Sichtbar veränderte Pixel', (review.stats.changedPixels || 0).toLocaleString('de-DE')),
             line('Veränderung · % Original', (review.stats.visibleChangesPercent ?? 0) + '%'),
-            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel')
+            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel'),
+            ...(review.stats.structuralLossPixels === undefined ? [] : [
+                line('Entfernte opake Originalpixel', review.stats.structuralLossPixels),
+                line('Neue opake Bildpixel', review.stats.newOpaquePixels)
+            ]),
+            ...(review.stats.maskedPixels === undefined ? [] : [
+                line('Maskenpixel ohne sichtbare Bilddeckung', review.stats.orphanMaskPixels)
+            ])
         ];
         modal('Schadensmodell abnehmen', [
             el('div', { class: 'damage-review-gallery' }, [
-                damagePreview(review.intact, 'Original'), damagePreview(review.damaged, 'Schadensmodell')
+                damagePreview(review.intact, 'Original'),
+                ...(closestApproved ? [damagePreview(DI.baseComposite(state(), store(), closestApproved.sceneId).image,
+                    'Bereits freigegeben · ' + closestApproved.hpAtOrBelow + '% HP')] : []),
+                damagePreview(review.damaged, 'Schadensmodell')
             ]),
             ...summary,
             ...review.errors.map(msg => el('p', { class: 'error-text', text: msg })),
@@ -824,11 +838,13 @@
             }, 'Schadensstufe entfernt');
         });
     }
-    async function damageExportPackage() {
+    async function damageExportPackage(includeDrafts = false) {
         await task('Schadensbibliothek exportieren', async opts => {
-            const result = await DI.exportPackage(state(), store(), opts);
-            download(result.bytes, C.safeName(state().project.name) + '_gebaeudeschaden.zip');
-            message('Freigegebene Stufen und HP-Manifest exportiert; keine automatische Spielinstallation.');
+            const result = await DI.exportPackage(state(), store(), { ...opts, includeDrafts });
+            const suffix = includeDrafts ? '_gebaeudeschaden_alle.zip' : '_gebaeudeschaden.zip';
+            download(result.bytes, C.safeName(state().project.name) + suffix);
+            message(includeDrafts ? 'Alle Schadensstufen frei exportiert, einschließlich Entwürfen.' :
+                'Freigegebene Stufen und HP-Manifest exportiert.');
         });
     }
     function damageSection() {
@@ -843,7 +859,9 @@
             damageBuildingId = buildings.some(g => g.id === groupId) ? groupId : buildings[0].id;
         const base = buildings.find(g => g.id === damageBuildingId);
         const profile = (state().damageProfiles || []).find(p => p.buildingGroupId === base.id);
-        const selectedStage = D.choose(profile, damageKind, damageHp);
+        const previewProfile = profile && damageApprovedOnly ?
+            { stages: profile.stages.filter(s => s.status === 'approved') } : profile;
+        const selectedStage = D.choose(previewProfile, damageKind, damageHp);
         const info = [
             fields(field('Gebäude', damageBuildingId, { wide: true,
                 options: buildings.map(g => [g.id, g.name]),
@@ -863,6 +881,13 @@
                 damageHp = C.number(v, 'HP', 0, 100);
                 renderInspector();
             }, { min: 0, max: 100 })),
+            fields(field('Vorschau-Modus', damageApprovedOnly ? 'approved' : 'all', {
+                wide: true, options: [['all', 'Alle Modelle einschließlich Entwürfen'],
+                    ['approved', 'Nur freigegebene Modelle (Export)']],
+                onchange: v => { damageApprovedOnly = v === 'approved'; renderInspector(); }
+            })),
+            line('Freigabestatus', selectedStage ?
+                ({draft:'Entwurf', approved:'Freigegeben', rejected:'Verworfen'}[selectedStage.status] || 'Entwurf') : 'Original'),
             line('Modell bei ' + damageHp + '% HP', selectedStage ? (selectedStage.label ||
                 selectedStage.kind + ' ≤' + selectedStage.hpAtOrBelow + '%') : 'Original / unbeschädigt'),
             buttons(button('Vorschau anzeigen', () => damageOpenScene(selectedStage ? selectedStage.sceneId : base.id))),
@@ -900,12 +925,13 @@
                 buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
                     button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
                 buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),
-                note('Freigaben werden nach jeder Tile- oder Rasteränderung automatisch zurückgesetzt. Modell- und HP-Werte sind gesondert zu prüfen.')
+                note('Freigaben sind an den Pixel-, Masken-, HP- und Generatorstand gebunden. Änderungen und ältere Freigaben ohne Zustandsprüfsumme müssen erneut abgenommen werden.')
             ]));
         }
         sections.push(section('Ausgabe', [
-            buttons(button('HP-Schadensmodelle exportieren…', damageExportPackage)),
-            note('Das ZIP enthält nur freigegebene Tile-Sätze samt HP-Manifest. Keine unbewiesene Umschaltung im laufenden Spiel, keine Änderungen an Spieldateien.')
+            buttons(button('Alle HP-Schadensmodelle exportieren…', () => damageExportPackage(true)),
+                button('HP-Schadensmodelle exportieren…', () => damageExportPackage(false))),
+            note('Freier Export: alle Stufen einschließlich Entwürfen und verworfenen Varianten. Der zweite Export enthält nur nach Inhaltsabgleich freigegebene Stufen. Beide ZIPs sind eigenständige Grafikpakete.')
         ]));
         return sections;
     }

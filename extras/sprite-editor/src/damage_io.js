@@ -167,6 +167,35 @@
         const actual = result.stats.changedPixels || 0;
         result.stats.minimumVisibleChanges = minimum;
         result.stats.visibleChangesPercent = pixels ? Math.round(actual * 10000 / pixels) / 100 : 0;
+        if (intact.width === damaged.width && intact.height === damaged.height) {
+            let lostOpaque = 0, newOpaque = 0;
+            for (let i = 0; i < intact.data.length; i += 4) {
+                const a = intact.data[i + 3], b = damaged.data[i + 3];
+                if (a >= 200 && b <= 20) lostOpaque++;
+                else if (a <= 20 && b >= 200) newOpaque++;
+            }
+            result.stats.structuralLossPixels = lostOpaque;
+            result.stats.newOpaquePixels = newOpaque;
+            if (stage.kind === 'mechanical' && stage.hpAtOrBelow <= 15 &&
+                lostOpaque < Math.max(8, Math.ceil(pixels * .01)))
+                result.warnings.push('Nahezu vollständig zerstörtes mechanisches Modell: kaum Silhouette abgetragen. Einsturz und Bruchkanten besonders prüfen.');
+            const stageFrames = state.frames.filter(f => f.groupId === scene.id);
+            if (stageFrames.some(f => f.maskId)) {
+                const stageLayout = C.layout(stageFrames, scene.settings, key => store.get(key));
+                const mask = C.compose(stageLayout, key => store.get(key), true);
+                let masked = 0, orphan = 0;
+                for (let i = 0; i < mask.data.length; i += 4)
+                    if (mask.data[i] || mask.data[i + 1] || mask.data[i + 2] || mask.data[i + 3]) {
+                        masked++;
+                        if (damaged.data[i + 3] === 0) orphan++;
+                    }
+                result.stats.maskedPixels = masked;
+                result.stats.orphanMaskPixels = orphan;
+                if (orphan > Math.max(8, Math.ceil(masked * .01)))
+                    result.warnings.push('Materialmaske: ' + orphan +
+                        ' Pixel liegen über vollständig transparentem Schadensbild. Masken-/Teamfarben im Zielspiel prüfen.');
+            }
+        }
         if (actual < minimum)
             result.errors.push('Für den gewählten Zerstörungsgrad sind nur ' + actual +
                 ' von mindestens ' + minimum + ' sichtbar veränderten Pixeln vorhanden. Modell weiter beschädigen.');
@@ -176,8 +205,25 @@
                 continue;
             const otherScene = state.scenes.find(g => g.id === other.sceneId);
             if (!otherScene) continue;
-            const prev = D.checkCandidate(intact, baseComposite(state, store, otherScene.id).image);
+            const comparison = baseComposite(state, store, otherScene.id).image;
+            const prev = D.checkCandidate(intact, comparison);
             const count = prev.stats.changedPixels || 0;
+            if (intact.width === comparison.width && intact.height === comparison.height &&
+                intact.width === damaged.width && intact.height === damaged.height) {
+                const weaker = other.hpAtOrBelow > percent ? comparison : damaged;
+                const stronger = other.hpAtOrBelow > percent ? damaged : comparison;
+                let removedInWeaker = 0, restoredInStronger = 0;
+                for (let i = 0; i < intact.data.length; i += 4)
+                    if (intact.data[i + 3] >= 200 && weaker.data[i + 3] <= 20) {
+                        removedInWeaker++;
+                        if (stronger.data[i + 3] >= 200) restoredInStronger++;
+                    }
+                if (removedInWeaker >= 8 &&
+                    restoredInStronger > Math.max(4, Math.ceil(removedInWeaker * .06)))
+                    result.warnings.push('Zerstörungsfolge ' + other.hpAtOrBelow + '% / ' +
+                        percent + '% HP: ' + restoredInStronger +
+                        ' zuvor entfernte opake Bildpixel erscheinen bei stärkerer Zerstörung erneut. Wiederhergestellte Gebäudeteile prüfen.');
+            }
             if (other.hpAtOrBelow > percent && actual < count)
                 result.warnings.push('Diese stärker zerstörte Stufe unterscheidet sich in weniger Pixeln vom Original als die bereits freigegebene mildere Stufe bei ' +
                     other.hpAtOrBelow + '% HP. Zerstörungsreihenfolge bildlich prüfen.');
@@ -188,6 +234,47 @@
         return { ...result, intact, damaged };
     }
 
+    function approvalSignature(state, store, stageId) {
+        // Self-consistency fingerprint, NOT a signature or proof of who reviewed.
+        // Bind every rendered pixel and all layout/target metadata that may
+        // silently shift the approved art, including original and masks.
+        // Avoid PNG re-encoding: raw RGBA is canonical and exact.
+        const { profile, stage, base, scene } = getStage(state, stageId);
+        const processed = new Map();
+        const asset = key => {
+            if (!key) return null;
+            if (processed.has(key)) return processed.get(key);
+            const img = store.get(key);
+            const bytes = new Uint8Array(img.data.buffer,
+                img.data.byteOffset, img.data.byteLength);
+            const info = [img.width, img.height, K.sha256Fallback(bytes)];
+            processed.set(key, info);
+            return info;
+        };
+        const group = g => ({
+            settings: g.settings,
+            frames: state.frames.filter(f => f.groupId === g.id)
+                .map(f => ({
+                    slot: f.slot, visible: f.visible, locked: f.locked,
+                    name: f.name, index: f.index, dx: f.dx, dy: f.dy,
+                    pivot: f.pivot, ppu: f.ppu,
+                    trimOffsetX: f.trimOffsetX, trimOffsetY: f.trimOffsetY,
+                    image: asset(f.imageId), original: asset(f.originalId),
+                    mask: asset(f.maskId), originalMask: asset(f.originalMaskId)
+                }))
+                .sort((x, y) => x.slot - y.slot)
+        });
+        const payload = {
+            version: 1, stageId: stage.id, sceneId: stage.sceneId,
+            buildingGroupId: profile.buildingGroupId,
+            gameBuildingType: profile.gameBuildingType ?? null,
+            kind: stage.kind, hpAtOrBelow: stage.hpAtOrBelow,
+            model: stage.model, changeRequest: stage.changeRequest,
+            candidate: asset(stage.candidateId),
+            original: group(base), damage: group(scene)
+        };
+        return K.sha256Fallback(K.encodeText(JSON.stringify(payload)));
+    }
     function approveStage(state, store, stageId, notes, visualConfirmed) {
         if (visualConfirmed !== true)
             fail('Visuelle Prüfung von Schäden, Perspektive, Bodenanker und Reihenfolge ausdrücklich bestätigen.');
@@ -218,6 +305,7 @@
         if (review.warnings.length && !String(notes || '').trim())
             fail('Qualitätswarnungen müssen geprüft und im Abnahmevermerk dokumentiert werden.');
         stage.reviewNotes = String(notes || '').slice(0, 2000);
+        stage.approvalDigest = approvalSignature(out, store, stageId);
         stage.status = 'approved';
         return { state: I.validate(out, store), store };
     }
@@ -315,11 +403,17 @@
         return { bytes: K.zip(entries), request };
     }
     async function exportPackage(state, store, options = {}) {
+        // Free creative export is independent of the optional approval workflow.
+        const includeDrafts = options.includeDrafts === true;
         const entries = [], buildings = [];
         for (const profile of state.damageProfiles || []) {
             const base = state.scenes.find(g => g.id === profile.buildingGroupId);
             const stages = [];
-            for (const stage of profile.stages.filter(x => x.status === 'approved')) {
+            for (const stage of profile.stages.filter(x => includeDrafts || x.status === 'approved')) {
+                const contentApproved = stage.status === 'approved' && !!stage.approvalDigest &&
+                    approvalSignature(state, store, stage.id) === stage.approvalDigest;
+                if (!includeDrafts && !contentApproved)
+                    fail('Freigabe ist nach Änderung der Sprite-/Projektdaten nicht mehr gültig: ' + stage.id + '. Qualität erneut abnehmen.');
                 const scene = state.scenes.find(g => g.id === stage.sceneId);
                 const frames = state.frames.filter(f => f.groupId === stage.sceneId)
                     .sort((a, b) => a.slot - b.slot);
@@ -344,28 +438,35 @@
                 stages.push({
                     id: stage.id, damageKind: stage.kind, hpAtOrBelow: stage.hpAtOrBelow,
                     scene: stage.sceneId, label: stage.label, model: stage.model,
-                    reviewNotes: stage.reviewNotes, settings: scene.settings, tiles
+                    reviewNotes: stage.reviewNotes,
+                    reviewStatus: stage.status, contentApproved,
+                    approvalDigest: contentApproved ? stage.approvalDigest : null,
+                    settings: scene.settings, tiles
                 });
             }
             if (stages.length)
                 buildings.push({ id: base.id, name: base.name, intactScene: base.id,
                     gameBuildingType: profile.gameBuildingType ?? null, gameBuildingTypeVerifiedInGame: false, stages });
         }
-        if (!buildings.length) fail('Noch keine freigegebenen Schadensmodelle.');
+        if (!buildings.length) fail(includeDrafts ? 'Noch keine Schadensmodelle vorhanden.' :
+            'Noch keine freigegebenen Schadensmodelle.');
         const manifest = {
             format: 'stronghold-building-damage-library', version: 1,
             target: 'Stronghold Crusader: Definitive Edition',
             runtimeHookInstalled: false, hpUnit: 'percent_of_maximum_hp',
+            exportMode: includeDrafts ? 'all-stages' : 'approved-only',
             rule: 'Use lowest threshold T where current HP percent <= T; otherwise show intact. Fire uses mechanical fallback only if no fire stages exist.',
             buildings
         };
         entries.unshift({ name: 'damage-manifest.json', data: JSON.stringify(manifest, null, 2) });
         entries.push({ name: 'README.txt', data:
-            'Freigegebene Schadenssprites und HP-Auswahlmanifest. KEINE aktive SHCDE-Runtime-Umschaltung.\n' +
+            (includeDrafts ? 'Frei exportierte Schadenssprites (auch Entwürfe und verworfene Stufen).\n' :
+                'Freigegebene Schadenssprites.\n') +
+            'HP-Auswahlmanifest. KEINE aktive SHCDE-Runtime-Umschaltung.\n' +
             'Zur Darstellung im Spiel ist eine separat geprüfte Gebäude-/Schadensereignis-Renderer-Integration nötig.\n' +
             'Tiles max. 64 px, beim Zerlegen mit 1px Overlap und allen hinteren Reihen.\n' });
         return { bytes: K.zip(entries), manifest };
     }
     return { getStage, baseComposite, createStage, withCandidate, applyCandidate,
-        qualityReport, approveStage, makeRequestBundle, exportPackage };
+        qualityReport, approvalSignature, approveStage, makeRequestBundle, exportPackage };
 });

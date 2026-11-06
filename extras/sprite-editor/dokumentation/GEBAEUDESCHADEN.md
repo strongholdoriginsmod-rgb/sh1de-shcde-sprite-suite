@@ -32,7 +32,9 @@ Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek*
 - **Qualität abnehmen…** erfordert eine bewusste Bestätigung. Änderungen an Stufen-Tiles, Raster, HP-Zuordnung oder dem Original setzen zuvor erteilte Freigaben zurück.
 
 ## Export
-**HP-Schadensmodelle exportieren…** erzeugt ein separates ZIP mit `damage-manifest.json` und ausschließlich freigegebenen Tile-Bildern. Das Manifest enthält Ursache, HP-Schwelle, Tile-Zuordnungen und Geometrie. Es implementiert bewusst noch **keinen** C#-Runtime-Hook. Der bestehende Export von Mod-Overrides schließt diese zusätzlichen Schadensstufen aus, um nicht versehentlich das intakte Standardgebäude zu überschreiben.
+**Alle HP-Schadensmodelle exportieren…** erzeugt ohne Pflichtfreigabe ein ZIP mit allen Stufen, auch Entwürfen und verworfenen Varianten. Im `damage-manifest.json` stehen die HP-Schwelle, Ursache, Pixeldateien, Geometrie, `reviewStatus` und `contentApproved`. Für nicht oder nicht mehr inhaltsgebundene Stufen ist `approvalDigest` null. Die Erstellung dieses Pakets setzt keine bestimmte Bildveränderung oder Qualitätsabnahme voraus.
+
+**HP-Schadensmodelle exportieren…** bleibt als freiwillige geprüfte Ausgabe erhalten und enthält nur Stufen mit weiterhin gültiger Inhaltsfreigabe. Beide Ausgaben enthalten eigenständige Bilddaten und HP-Zuordnungen; ein aktiver C#-Runtime-Hook wird nicht vorgetäuscht. Der normale globale Sprite-Override-Export bleibt hiervon getrennt.
 
 ## Grenzen
 - Die Engine-Integration erfordert einen nachweislich funktionierenden Zugriff auf konkrete Gebäudeinstanz, deren aktuelle/maximale HP, Brandursache und den zugeordneten Renderer sowie eine sichere Asset-Lebensdauer. Die vorhandenen Schadens-Events allein beweisen diese Schnittstelle nicht.
@@ -43,3 +45,19 @@ Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek*
 - `node --test tests/test_core.cjs tests/test_seam_overlap.cjs tests/test_split_integration.cjs tests/test_damage.cjs` im Verzeichnis `extras/sprite-editor`.
 - `python -m unittest discover -s tests -p test_building_damage_codex.py -q` im SpriteSuite-Projektverzeichnis.
 - `node tests/test_damage_browser.cjs` im Verzeichnis `extras/sprite-editor`; benötigt lokal verfügbare Puppeteer-/Edge-Bibliotheken.
+
+## Runtime-Übergabe zur späteren HP-Anbindung
+
+Das freigegebene Schadens-ZIP kann jetzt mit `python tools/building_damage_runtime_preflight.py --package <gebaeudeschaden.zip> --dry-run` vollständig offline geprüft werden. `--prepare --output <neuer-ordner>` erzeugt eine SHA-gebundene, rein lesende Kandidatentabelle, sofern Gebäudetyp und Geometrie gültig sind. Eine nicht im Zielspiel bestätigte Gebäudetyp-ID wird nicht automatisch als verifiziert markiert. Im nächsten Schritt kann die C#-Auswahllogik die HP-/Feuerschwellen anhand dieser Tabelle prüfen. Die Sprite-Renderer-Umsetzung erfordert eine eigene In-Game-Abnahme; das ZIP wird nicht als unmittelbar installierbarer Runtime-Patch behandelt.
+
+Die vollständige Offline-Prüfung kann über `python tools/qa_building_damage_runtime.py` aus dem SpriteSuite-Projektverzeichnis gestartet werden.
+
+## Freiwillige Freigabeprüfung nach Änderungen
+
+Abgenommene Stufen erhalten jetzt eine SHA-256-Zustandsprüfsumme (`approvalDigest`). Sie bindet die tatsächlichen RGBA-Pixel des intakten Gebäudes und aller Schadens-Tiles, die vorhandenen Materialmasken, Rasterkoordinaten, Pivots, PPU, HP-Schwelle, Gebäudetyp und gewählte Generierungseinstellungen. Die Zustimmung bleibt eine **manuelle visuelle Qualitätsabnahme**, die Prüfsumme ist ein Konsistenznachweis und keine digitale Unterschrift. Beim freiwilligen Export ausschließlich freigegebener Stufen wird sie erneut berechnet. Sind Bilddaten, HP oder relevante Einstellungen verändert worden, bleibt dieser geprüfte Export bis zur erneuten Abnahme zurückgestellt. **Der freie Export ist weiterhin möglich.**
+
+Alte `.shsprite`-Projekte mit angeblich freigegebenen Schadensstufen, die noch keine Zustandsprüfsumme besitzen, werden weiterhin geöffnet. Ihre früheren Freigaben gehen aber aus Sicherheitsgründen in **Entwurf** über und müssen nach Sichtvergleich erneut bestätigt werden. Ein veränderter Prompt oder die Auswahl eines anderen GPT-Image-Modells setzt die Freigabe ebenfalls zurück; eine reine Änderung der Bezeichnung nicht.
+
+Der **Vorschau-Modus** kann zwischen allen Entwürfen und ausschließlich freigegebenen, exportierbaren Modellen wechseln. Bei der Abnahme werden neben Original und aktuellem Modell auch andere bereits freigegebene Stufen derselben Schadensursache zum Vergleich angezeigt. Eine Prüfung markiert auffällig wiedererscheinende Gebäudeteile bei stärkerer Zerstörung sowie relevante Maskenpixel auf inzwischen transparenten Flächen. Solche Befunde erfordern einen bewussten Abnahmevermerk, da ein Pixelvergleich nicht entscheidet, ob z. B. ein Trümmerteil an derselben Stelle sinnvoll ist.
+
+Der Offline-Runtime-Preflight gibt auch Entwürfe und Stufen ohne Zustandsprüfsumme als HP-Testkandidaten aus. `--prepare --output <neuer-ordner>` ist standardmäßig frei nutzbar. Wer ausdrücklich nur inhaltsgebundene Freigaben prüfen möchte, ergänzt `--require-bound-approval`. Die Tabelle stellt weder eine Spieldateiinstallation noch eine tatsächliche Zuordnung zu Game-Renderern dar.

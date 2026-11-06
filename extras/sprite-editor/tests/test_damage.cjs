@@ -225,25 +225,68 @@ test('draft and rejected stages are excluded from damage manifest and standard m
 });
 
 
-test('damage export includes SHA-256 for material masks accepted by runtime preflight', async () => {
-    const f = stageFixture(), candidate = damageCandidate(f);
-    const loaded = DI.withCandidate(f.s, f.store, f.stageId, candidate);
-    const applied = DI.applyCandidate(loaded.state, loaded.store, f.stageId);
-    const updated = I.clone(applied.state);
-    const frame = updated.frames.find(x => x.groupId === f.sceneId);
-    A.ok(frame);
-    const sprite = applied.store.get(frame.imageId);
-    const mask = C.image(sprite.width, sprite.height);
-    mask.data.set([255, 20, 30, 255], 0);
-    frame.maskId = applied.store.add(mask);
-    const approved = DI.approveStage(I.validate(updated, applied.store), applied.store,
-        f.stageId, 'Materialmaske und Schadensbild manuell geprüft', true);
-    const pack = await DI.exportPackage(approved.state, approved.store);
-    const row = pack.manifest.buildings[0].stages[0].tiles[0];
-    A.match(row.mask, /_m\.png$/);
-    A.match(row.maskSha256, /^[a-f0-9]{64}$/);
-    const files = await K.unzip(pack.bytes);
-    const exported = files.find(x => x.name === row.mask);
-    A.ok(exported, 'actual material mask is present in the exported ZIP');
-    A.equal(row.maskSha256, await K.sha256(exported.data));
+test('approved damage tiles export exact material-mask SHA-256 for runtime verification', async () => {
+    const f = stageFixture();
+    const mask = C.image(64, 32);
+    const src = f.store.get(f.imageId);
+    for (let i = 0; i < src.data.length; i += 4)
+        if (src.data[i + 3]) mask.data.set([35, 110, 20, 255], i);
+    const maskId = f.store.add(mask);
+    for (const frame of f.s.frames) {
+        frame.maskId = maskId;
+        frame.originalMaskId = maskId;
+    }
+    const stageFrame = f.s.frames.find(x => x.groupId === f.sceneId);
+    const damaged = C.image(src.width, src.height, new Uint8Array(src.data));
+    let altered = 0;
+    for (let i = 0; i < damaged.data.length && altered < 12; i += 4)
+        if (damaged.data[i + 3]) {
+            damaged.data[i] = (damaged.data[i] + 75) % 256;
+            altered++;
+        }
+    A.ok(altered >= 10);
+    const imageId = f.store.add(damaged);
+    stageFrame.imageId = stageFrame.originalId = imageId;
+    const approved = DI.approveStage(f.s, f.store, f.stageId,
+        'Masken und Farbänderungen einzeln geprüft', true);
+    const exported = await DI.exportPackage(approved.state, approved.store);
+    const t = exported.manifest.buildings[0].stages[0].tiles[0];
+    A.ok(t.mask && t.mask.endsWith('_m.png'));
+    A.match(t.maskSha256, /^[a-f0-9]{64}$/);
+    const files = await K.unzip(exported.bytes);
+    const maskFile = files.find(row => row.name === t.mask);
+    A.ok(maskFile);
+    A.equal(t.maskSha256, await K.sha256(maskFile.data));
+});
+
+
+test('free damage export includes drafts, rejected variants and edited approved art without a review gate', async () => {
+    const f = stageFixture(), draft = await DI.exportPackage(f.s, f.store, { includeDrafts: true });
+    A.equal(draft.manifest.exportMode, 'all-stages');
+    A.equal(draft.manifest.buildings.length, 1);
+    A.equal(draft.manifest.buildings[0].stages[0].reviewStatus, 'draft');
+    A.equal(draft.manifest.buildings[0].stages[0].contentApproved, false);
+    A.equal(draft.manifest.buildings[0].stages[0].approvalDigest, null);
+    A.ok((await K.unzip(draft.bytes)).some(x => x.name.endsWith('/0000.png')));
+    const discarded = I.clone(f.s);
+    discarded.damageProfiles[0].stages[0].status = 'rejected';
+    const rejectedPack = await DI.exportPackage(discarded, f.store, { includeDrafts: true });
+    A.equal(rejectedPack.manifest.buildings[0].stages[0].reviewStatus, 'rejected');
+
+    const imported = DI.withCandidate(f.s, f.store, f.stageId, damageCandidate(f));
+    const applied = DI.applyCandidate(imported.state, imported.store, f.stageId);
+    const accepted = DI.approveStage(applied.state, applied.store, f.stageId,
+        'Für die optionale Prüfung bestätigt', true);
+    const approved = await DI.exportPackage(accepted.state, accepted.store);
+    A.equal(approved.manifest.exportMode, 'approved-only');
+    A.equal(approved.manifest.buildings[0].stages[0].contentApproved, true);
+    const altered = I.clone(accepted.state);
+    altered.damageProfiles[0].stages[0].hpAtOrBelow = 60;
+    await A.rejects(DI.exportPackage(altered, accepted.store), /Freigabe.*gültig/);
+    const free = await DI.exportPackage(altered, accepted.store, { includeDrafts: true });
+    const entry = free.manifest.buildings[0].stages[0];
+    A.equal(entry.hpAtOrBelow, 60);
+    A.equal(entry.reviewStatus, 'approved');
+    A.equal(entry.contentApproved, false);
+    A.equal(entry.approvalDigest, null);
 });

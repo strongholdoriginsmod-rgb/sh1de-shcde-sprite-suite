@@ -46,6 +46,7 @@ def fixture(mask=False, mapped=True):
             row.update(mask=mask_name, maskSha256=hashlib.sha256(png).hexdigest())
         stages.append({
             "id": "d_" + kind + str(hp), "damageKind": kind, "hpAtOrBelow": hp,
+            "approvalDigest": "a" * 64,  # synthetic self-consistency marker, never a signature
             "scene": "g_" + kind + str(hp),
             "settings": {"a": 1, "b": 1, "width": 64, "height": 32,
                          "anchor": "bottom", "order": "ascending"},
@@ -106,6 +107,33 @@ class DamageRuntimePreflightTests(unittest.TestCase):
         self.assertEqual(report["mappedTypes"], [])
         self.assertEqual(report["unmappedBuildingGroups"], ["g_abbey"])
         self.assertEqual(len(P.table_lines(report)), 4)
+
+
+    def test_unbound_stage_is_available_for_creative_work_with_optional_strict_audit(self):
+        manifest = deepcopy(self.manifest)
+        del manifest["buildings"][0]["stages"][0]["approvalDigest"]
+        save(self.package, manifest, self.entries)
+        report = P.read_library(self.package)
+        self.assertEqual(report["unboundApprovedStages"], ["g_abbey:d_mechanical75"])
+        self.assertEqual(len(P.table_lines(report)), 7, "unreviewed art is usable by choice")
+        output = self.base / "unbound-output"
+        self.assertEqual(P.main(["--package", str(self.package), "--dry-run"]), 0)
+        self.assertEqual(P.main(["--package", str(self.package), "--prepare",
+                                 "--output", str(output)]), 0)
+        self.assertTrue((output / "building-damage-candidate.tsv").is_file())
+        self.assertEqual(len((output / "building-damage-candidate.tsv").read_text().splitlines()), 7)
+        strict_output = self.base / "strict-output"
+        self.assertEqual(P.main(["--package", str(self.package), "--prepare",
+                                 "--require-bound-approval",
+                                 "--output", str(strict_output)]), 2)
+        self.assertFalse(strict_output.exists(), "strict audit stays optional")
+
+    def test_forged_malformed_state_digest_rejected(self):
+        manifest = deepcopy(self.manifest)
+        manifest["buildings"][0]["stages"][1]["approvalDigest"] = "1234notsha"
+        save(self.package, manifest, self.entries)
+        with self.assertRaisesRegex(P.PreflightError, "Freigabe-Zustandsprüfsumme"):
+            P.read_library(self.package)
 
     def test_masks_require_sha_and_match_image_dimensions(self):
         manifest, entries = fixture(mask=True)
