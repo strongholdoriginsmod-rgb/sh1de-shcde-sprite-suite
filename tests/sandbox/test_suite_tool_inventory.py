@@ -211,3 +211,15 @@ def test_building_damage_footprint_compiler_is_discoverable_and_read_only():
     assert classify("qa_building_damage_runtime.py", []).category == "workspace"
     assert classify("qa_building_damage_runtime.py",
                     ["--verify-shcdese", "E:\\test\\SHCDESE.dll"]).category == "workspace"
+
+def test_building_damage_live_qa_has_strict_risk_and_registry():
+    from suite_tool_registry import SPECIALISTS
+    from suite_tool_policy import classify
+    names = [item.filename for item in SPECIALISTS]
+    assert "qa_building_damage_live.py" in names
+    assert len(names) == len(set(names))
+    assert classify("qa_building_damage_live.py", []).category == "workspace"
+    assert classify("qa_building_damage_live.py", ["--build-only"]).category == "workspace"
+    assert classify("qa_building_damage_live.py", ["--verify-log", "qa.log"]).category == "read"
+    assert classify("qa_building_damage_live.py", ["--install-qa"]).category == "game"
+    assert classify("qa_building_damage_live.py", ["--remove-qa"]).category == "game"
