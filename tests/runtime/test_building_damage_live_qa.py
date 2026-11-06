@@ -138,6 +138,8 @@ class ReadOnlyLivePluginTests(unittest.TestCase):
         self.assertIn("|tilemap_sprite=", source)
         self.assertIn("renderer_modified=false", source)
         self.assertIn("sample_count=", source)
+        self.assertIn('app.ReportFailure("tilemap_sprite", readError)', source)
+        self.assertIn('ReportFailure("render_tilemap_sprite", readError)', source)
         self.assertIn("UnityEngine.TilemapModule.dll", " ".join(Q.REFS))
         self.assertIn("UnityEngine.GridModule.dll", " ".join(Q.REFS))
         self.assertIsNone(re.search(r"\btile\.tileImage\s*=(?!=)", source))

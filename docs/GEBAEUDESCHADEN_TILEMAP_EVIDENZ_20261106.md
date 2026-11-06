@@ -12,7 +12,7 @@ Der separate Quellcode `runtime/StrongholdEuropeDE.BuildingDamage.LiveAudit/Buil
 
 - Im bereits existierenden `tile_graphic`-Ereignis wird die zusätzliche Eigenschaft `tilemap_sprite` samt Name, Pixelabmessungen und PPU ausgegeben.
 - Für erstmals beobachtete Gebäudeinstanzen mit gültigem Footprint folgt `building_render_tiles`. Enthalten sind `building_id`, `global_id`, Typ, Tilezahl, Zahl abgetasteter Tiles und `samples` in der Form `Tile-ID:X,Y:tileImage~Breite×Höhe~PPU:tilemapSprite~Breite×Höhe~PPU`. Die Diagnose lässt alle Gebäudetypen und Rasterformen grundsätzlich zu; aus Gründen des übersichtlichen Logs werden bis zu 64 Tiles pro Gebäude und 40 verschiedene beobachtete Instanzen protokolliert.
-- Es werden nur Referenzen gelesen. Es gibt keine `SetSprite`, `SetTile`, `RefreshTile` oder Sprite-Zuweisungen und keine automatische Kartenladung.
+- Es werden nur Referenzen gelesen. Es gibt keine `SetSprite`, `SetTile`, `RefreshTile` oder Sprite-Zuweisungen und keine automatische Kartenladung. Kann eine einzelne Tilemap ihre Sprite-Referenz nicht liefern, wird dieser Lesefehler protokolliert; die unabhängig erfasste Original-`tileImage`-/SpriteMapping-Information bleibt trotzdem erhalten.
 - Der vorhandene `qa_building_damage_live.py --build-only` bindet für die reine Kompilation die Unity-Module `TilemapModule` und `GridModule`. Ein Testbau gegen den markierten separaten QA-Spielklon mit den bereits geprüften Script-Extender-/Game-DLLs ist erfolgreich. Diese Prüfung installiert nichts und ist ausdrücklich kein Runtime-Pixelergebnis.
 
 ## Auswertung ohne Spielzugriff

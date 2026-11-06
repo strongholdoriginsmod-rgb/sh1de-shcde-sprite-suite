@@ -216,9 +216,18 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                 string tilemapSprite = "none";
                 if (tile.tilemapRef != null)
                 {
-                    var active = tile.tilemapRef.GetSprite(
-                        new UnityEngine.Vector3Int(x, y, 0));
-                    tilemapSprite = DescribeSprite(active);
+                    try
+                    {
+                        var active = tile.tilemapRef.GetSprite(
+                            new UnityEngine.Vector3Int(x, y, 0));
+                        tilemapSprite = DescribeSprite(active);
+                    }
+                    catch (Exception readError)
+                    {
+                        // A missing Tilemap reference must not discard the
+                        // independently measured SpriteMapping observation.
+                        app.ReportFailure("tilemap_sprite", readError);
+                    }
                 }
                 string key = globalBefore.ToString(CultureInfo.InvariantCulture) +
                     ":" + tileId.ToString(CultureInfo.InvariantCulture) +
@@ -378,10 +387,19 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                     string target = "none";
                     if (tile.tilemapRef != null)
                     {
-                        var activeSprite = tile.tilemapRef.GetSprite(
-                            new UnityEngine.Vector3Int(xy.X, xy.Y, 0));
-                        target = DescribeSprite(activeSprite);
-                        if (activeSprite != null) tilemapSprites++;
+                        try
+                        {
+                            var activeSprite = tile.tilemapRef.GetSprite(
+                                new UnityEngine.Vector3Int(xy.X, xy.Y, 0));
+                            target = DescribeSprite(activeSprite);
+                            if (activeSprite != null) tilemapSprites++;
+                        }
+                        catch (Exception readError)
+                        {
+                            // Preserve tileImage evidence even if this
+                            // particular Tilemap cannot return a sprite.
+                            ReportFailure("render_tilemap_sprite", readError);
+                        }
                     }
                     if (samples.Length > 0) samples.Append(';');
                     samples.Append(tileId).Append(':').Append(xy.X).Append(',')
