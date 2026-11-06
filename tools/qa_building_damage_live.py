@@ -18,6 +18,8 @@ import subprocess
 import sys
 import tempfile
 
+from building_damage_render_evidence import correlate_events
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "runtime" / "StrongholdEuropeDE.BuildingDamage.LiveAudit" / "BuildingDamageLiveAudit.cs"
 EXPECTED_MARKER = "SpriteSuite isolated Steam build 24816905 QA clone; originals are read-only."
@@ -36,6 +38,8 @@ REFS = (
     "Stronghold Crusader Definitive Edition_Data/Managed/Assembly-CSharp.dll",
     "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.dll",
     "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.CoreModule.dll",
+    "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.TilemapModule.dll",
+    "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.GridModule.dll",
 )
 
 
@@ -221,7 +225,7 @@ def evaluate_log(path: Path) -> dict:
                 and entry.get("renderer_modified") == "false"
                 and entry.get("sprite") not in ("", "null", "none", None)):
             correlated.add((*key, tile_id))
-    return {
+    report = {
         "readOnlyProbeStarted": running,
         "probeDisabled": disabled,
         "shutdownEvents": shutdown,
@@ -238,6 +242,11 @@ def evaluate_log(path: Path) -> dict:
         "rendererReplacementProved": False,
         "inGameFullDamageSwitchingProved": False
     }
+    report.update(correlate_events(events))
+    report["readOnlyTilemapCandidateObserved"] = (
+        running and not disabled and report["readOnlyTilemapCandidateObserved"]
+    )
+    return report
 
 
 def main(argv: list[str] | None = None) -> int:

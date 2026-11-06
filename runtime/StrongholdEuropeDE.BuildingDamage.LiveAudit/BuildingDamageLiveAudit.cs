@@ -64,7 +64,10 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
         private int _tileReports;
         private int _footprintReports;
         private int _errorReports;
+        private int _renderTileReports;
         private bool _enabled;
+        private readonly HashSet<string> _seenRenderInstances =
+            new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> _seenTiles = new HashSet<string>(StringComparer.Ordinal);
         private readonly HashSet<string> _seenFootprints = new HashSet<string>(StringComparer.Ordinal);
         private static BuildingDamageRuntimeObserver _active;
@@ -210,6 +213,13 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
 
                 string sprite = tile.tileImage == null ? "null" :
                     Sanitize(tile.tileImage.name, 64);
+                string tilemapSprite = "none";
+                if (tile.tilemapRef != null)
+                {
+                    var active = tile.tilemapRef.GetSprite(
+                        new UnityEngine.Vector3Int(x, y, 0));
+                    tilemapSprite = DescribeSprite(active);
+                }
                 string key = globalBefore.ToString(CultureInfo.InvariantCulture) +
                     ":" + tileId.ToString(CultureInfo.InvariantCulture) +
                     ":" + file.ToString(CultureInfo.InvariantCulture) +
@@ -222,6 +232,7 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                     "|hp=" + current + "|max_hp=" + maximum + "|fire_ticks=" + fire +
                     "|tile_id=" + tileId + "|x=" + x + "|y=" + y +
                     "|gm=" + file + "|image=" + image + "|sprite=" + sprite +
+                    "|tilemap_sprite=" + tilemapSprite +
                     "|renderer_modified=false");
             }
             catch (Exception e)
@@ -318,12 +329,80 @@ namespace StrongholdEuropeDE.BuildingDamage.LiveAudit
                         "|grid=" + width + "|tile_count=" + occupied.Length +
                         "|tiles=" + footprint.ToString() +
                         "|renderer_mapping_verified=false|renderer_modified=false");
+                    ObserveTilemapArt(id, global, type, occupied, tiles);
                     if (_footprintReports >= MaximumFootprintReports) break;
                 }
             }
             catch (Exception e)
             {
                 ReportFailure("footprint", e);
+            }
+        }
+
+        // Read only the actual Unity Tilemap and GameMapTile sprite references.
+        // This is diagnostics, never a replacement renderer or map mutation.
+        private static string DescribeSprite(UnityEngine.Sprite sprite)
+        {
+            if (sprite == null) return "none";
+            UnityEngine.Rect rect = sprite.rect;
+            string name = Sanitize(sprite.name, 46)
+                .Replace(':', '_').Replace(';', '_').Replace(',', '_');
+            return name + "~" +
+                ((int)rect.width).ToString(CultureInfo.InvariantCulture) + "x" +
+                ((int)rect.height).ToString(CultureInfo.InvariantCulture) + "~" +
+                sprite.pixelsPerUnit.ToString("0.##", CultureInfo.InvariantCulture);
+        }
+
+        private void ObserveTilemapArt(int buildingId, int globalId, int type,
+            int[] tileIds, GameTileManagerAPI tiles)
+        {
+            if (tileIds == null || tileIds.Length == 0 ||
+                _renderTileReports >= 40 || GameMap.instance == null)
+                return;
+            string key = globalId.ToString(CultureInfo.InvariantCulture) + ":" +
+                type.ToString(CultureInfo.InvariantCulture);
+            if (_seenRenderInstances.Contains(key)) return;
+            try
+            {
+                var samples = new StringBuilder();
+                int selected = Math.Min(tileIds.Length, 64);
+                int observed = 0, assignedSprites = 0, tilemapSprites = 0;
+                for (int i = 0; i < selected; i++)
+                {
+                    int tileId = tileIds[i];
+                    var xy = tiles.GetTileVectorFromId(tileId);
+                    GameMapTile tile = GameMap.instance.getMapTile(xy.X, xy.Y);
+                    if (tile == null) continue;
+                    string source = DescribeSprite(tile.tileImage);
+                    if (tile.tileImage != null) assignedSprites++;
+                    string target = "none";
+                    if (tile.tilemapRef != null)
+                    {
+                        var activeSprite = tile.tilemapRef.GetSprite(
+                            new UnityEngine.Vector3Int(xy.X, xy.Y, 0));
+                        target = DescribeSprite(activeSprite);
+                        if (activeSprite != null) tilemapSprites++;
+                    }
+                    if (samples.Length > 0) samples.Append(';');
+                    samples.Append(tileId).Append(':').Append(xy.X).Append(',')
+                        .Append(xy.Y).Append(':').Append(source).Append(':')
+                        .Append(target);
+                    observed++;
+                }
+                if (observed == 0) return;
+                _seenRenderInstances.Add(key);
+                _renderTileReports++;
+                Logger.LogInfo("SHCDE_DAMAGE_QA|event=building_render_tiles|building_id=" +
+                    buildingId + "|global_id=" + globalId + "|type=" + type +
+                    "|tile_count=" + tileIds.Length +
+                    "|sample_count=" + observed + "|assigned_sprites=" + assignedSprites +
+                    "|tilemap_sprites=" + tilemapSprites +
+                    "|samples=" + samples.ToString() +
+                    "|renderer_modified=false");
+            }
+            catch (Exception error)
+            {
+                ReportFailure("render_tile_read", error);
             }
         }
 

@@ -130,5 +130,21 @@ class ReadOnlyLivePluginTests(unittest.TestCase):
         self.assertIn("GetTileBuildingId", source)
 
 
+    def test_tilemap_evidence_reads_real_sprite_references_without_writes(self):
+        source = Q.SRC.read_text(encoding="utf-8")
+        self.assertIn("tile.tilemapRef.GetSprite(", source)
+        self.assertIn("GameMap.instance.getMapTile(", source)
+        self.assertIn("event=building_render_tiles", source)
+        self.assertIn("|tilemap_sprite=", source)
+        self.assertIn("renderer_modified=false", source)
+        self.assertIn("sample_count=", source)
+        self.assertIn("UnityEngine.TilemapModule.dll", " ".join(Q.REFS))
+        self.assertIn("UnityEngine.GridModule.dll", " ".join(Q.REFS))
+        self.assertIsNone(re.search(r"\btile\.tileImage\s*=(?!=)", source))
+        self.assertNotIn("SetSprite(", source)
+        self.assertNotIn("SetTile(", source)
+        self.assertNotIn("RefreshTile(", source)
+
+
 if __name__ == "__main__":
     unittest.main()
