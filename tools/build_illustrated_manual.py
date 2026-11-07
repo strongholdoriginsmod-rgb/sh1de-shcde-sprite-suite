@@ -9,32 +9,22 @@ from pathlib import Path
 import math
 import re
 from PIL import Image as PILImage
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4,landscape
-from reportlab.lib.colors import HexColor
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.utils import ImageReader
 
 ROOT=Path(__file__).resolve().parents[1]
 FIG=ROOT/"docs"/"handbuch_bilder"
 OUT=ROOT/"docs"/"SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf"
 FONT=Path("C:/Windows/Fonts/segoeui.ttf")
 BOLD=Path("C:/Windows/Fonts/segoeuib.ttf")
-if not FONT.is_file() or not BOLD.is_file():
-    raise SystemExit("Windows Segoe UI TTF fonts are required for PDF authoring.")
-pdfmetrics.registerFont(TTFont("Manual-Regular",str(FONT)))
-pdfmetrics.registerFont(TTFont("Manual-Bold",str(BOLD)))
-W,H=landscape(A4)
-INK=HexColor("#223348")
-DARK=HexColor("#162535")
-BLUE=HexColor("#1b6480")
-GOLD=HexColor("#d39c40")
-SUB=HexColor("#536577")
-LIGHT=HexColor("#edf3f7")
-BORDER=HexColor("#d4e0e8")
-WHITE=HexColor("#ffffff")
-PAPER=HexColor("#f9fbfd")
+W,H=(297 * (72 / 25.4), 210 * (72 / 25.4))  # Landscape A4 in PDF points
+INK="#223348"
+DARK="#162535"
+BLUE="#1b6480"
+GOLD="#d39c40"
+SUB="#536577"
+LIGHT="#edf3f7"
+BORDER="#d4e0e8"
+WHITE="#ffffff"
+PAPER="#f9fbfd"
 
 def text(c,t,x,y,size=11,bold=False,color=INK):
     c.setFillColor(color)
@@ -43,6 +33,8 @@ def text(c,t,x,y,size=11,bold=False,color=INK):
 
 
 def _wrap(t,width,size,bold=False):
+    from reportlab.pdfbase import pdfmetrics
+
     font="Manual-Bold" if bold else "Manual-Regular"
     lines=[]
     for paragraph in str(t).split("\n"):
@@ -95,6 +87,8 @@ def card(c,x,top,w,h,title,body,accent=BLUE):
 
 
 def figure(c,filename,x,top,maxwidth,maxheight,label=""):
+    from reportlab.lib.utils import ImageReader
+
     source=FIG/filename
     if not source.is_file():raise FileNotFoundError(source)
     with PILImage.open(source) as im:
@@ -116,9 +110,9 @@ def header(c,page,section,title,subtitle):
     c.rect(0,0,W,H,fill=1,stroke=0)
     c.setFillColor(DARK)
     c.rect(0,H-92,W,92,fill=1,stroke=0)
-    text(c,"SPRITESUITE  /  HANDBUCH  /  2.0.0",35,H-23,10,True,HexColor("#b6d4e4"))
+    text(c,"SPRITESUITE  /  HANDBUCH  /  2.0.0",35,H-23,10,True,"#b6d4e4")
     text(c,title,35,H-52,22,True,WHITE)
-    text(c,subtitle,35,H-77,10,color=HexColor("#d6e5ef"))
+    text(c,subtitle,35,H-77,10,color="#d6e5ef")
     c.setStrokeColor(BORDER)
     c.line(35,38,W-35,38)
     text(c,"Lokaler Windows-x64-Kandidat  |  Stand 04.11.2026",35,20,8.5,color=SUB)
@@ -151,6 +145,18 @@ def section_title(c,s,x,y):
 
 
 def make():
+    try:
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        from reportlab.pdfgen import canvas
+    except ModuleNotFoundError as exc:
+        if exc.name != "reportlab":
+            raise
+        raise SystemExit("Install the optional ReportLab dependency to build the PDF manual.") from exc
+    if not FONT.is_file() or not BOLD.is_file():
+        raise SystemExit("Windows Segoe UI TTF fonts are required for PDF authoring.")
+    pdfmetrics.registerFont(TTFont("Manual-Regular",str(FONT)))
+    pdfmetrics.registerFont(TTFont("Manual-Bold",str(BOLD)))
     c=canvas.Canvas(str(OUT),pagesize=(W,H),pageCompression=1)
     c.setTitle("SpriteSuite 2.0.0 - Illustriertes Handbuch und geführte Anleitung")
     c.setAuthor("SpriteSuite")
@@ -161,11 +167,11 @@ def make():
     c.setFillColor(DARK);c.rect(0,0,W,H,stroke=0,fill=1)
     c.setFillColor(GOLD);c.roundRect(35,H-75,6,44,3,stroke=0,fill=1)
     text(c,"SpriteSuite 2.0.0",55,H-48,29,True,WHITE)
-    text(c,"Bebildertes Handbuch & geführte Anleitung",55,H-74,16,color=HexColor("#e3edf5"))
-    text(c,"Importieren - Bearbeiten - Prüfen - Sicher exportieren",55,H-100,11,color=HexColor("#b6d4e4"))
+    text(c,"Bebildertes Handbuch & geführte Anleitung",55,H-74,16,color="#e3edf5")
+    text(c,"Importieren - Bearbeiten - Prüfen - Sicher exportieren",55,H-100,11,color="#b6d4e4")
     figure(c,"01-projektwerkbank.png",55,H-121,730,386)
-    text(c,"Reale Windows-Aufnahme aus einer isolierten SpriteSuite-Testumgebung.",55,65,9,color=HexColor("#c9d8e5"))
-    text(c,"Stand: 04. November 2026  |  Ausgabe für Windows x64  |  keine native Ingame-Freigabe",55,40,9,color=HexColor("#d0dce7"))
+    text(c,"Reale Windows-Aufnahme aus einer isolierten SpriteSuite-Testumgebung.",55,65,9,color="#c9d8e5")
+    text(c,"Stand: 04. November 2026  |  Ausgabe für Windows x64  |  keine native Ingame-Freigabe",55,40,9,color="#d0dce7")
     next_page(c)
 
     # Page 02
