@@ -2694,7 +2694,7 @@ label {
             'This is a Stronghold Crusader Definitive Edition mod sprite. Preserve the original asset\'s exact isometric camera angle, geometry, footprint, material palette, lighting direction, pixel-art texture, architectural identity, perspective and roof/wall orientation.',
             'Damage type: ' + kind,
             'At or below ' + stage.hpAtOrBelow + '% remaining HP the state must read as ' + severity + '.',
-            previous ? 'An additional previous approved damage-state reference is attached. The new state must show monotonically more damage, NEVER a repaired or structurally restored part. Preserve all unchanged elements exactly.' :
+            previous ? 'An additional previous damage-state reference is attached. The new state must show monotonically more damage, NEVER a repaired or structurally restored part. Preserve all unchanged elements exactly.' :
                 'Start from the intact original and change only what the indicated damage state requires.',
             'KEEP the FIRST reference image canvas size, object position, bottom-ground anchor, transparent alpha background and alignment exactly. Do not crop, resize, rotate, zoom, shift, add a background, ground plane, camera effects, text, labels, UI, watermark, figures or unrelated decorations.',
             'All transparent exterior pixels must remain transparent (straight alpha PNG). No black opaque seams, halos or stray isolated black pixels. Preserve crisp silhouette and non-damaged source pixels as faithfully as possible.',
@@ -3635,7 +3635,21 @@ label {
     function applyCandidate(state, store, stageId) {
         const out = I.clone(state), { stage, base, scene } = getStage(out, stageId);
         if (!stage.candidateId) fail('Zuerst ein erzeugtes PNG als Kandidat importieren.');
-        const ref = baseComposite(state, store, base.id), candidate = store.get(stage.candidateId);
+        const result = applyImageToScene(out, store, base, scene, store.get(stage.candidateId));
+        stage.status = 'draft';
+        result.state = I.validate(out, result.store);
+        return result;
+    }
+    function withBuildingVersion(state, store, buildingGroupId, label, image) {
+        const out = I.clone(state), base = out.scenes.find(g => g.id === buildingGroupId);
+        if (!base || base.settings.category !== 'building') fail('Gebäudegruppe fehlt.');
+        const scene = { ...base, id: I.uid('g'), name: C.safeName(label.trim() || base.name + ' v2') };
+        out.scenes.push(scene);
+        const result = applyImageToScene(out, store, base, scene, image);
+        return { ...result, state: I.validate(out, result.store), sceneId: scene.id };
+    }
+    function applyImageToScene(out, store, base, scene, candidate) {
+        const ref = baseComposite(out, store, base.id);
         const report = D.checkCandidate(ref.image, candidate);
         if (report.errors.length) fail('Qualitätsprüfung: ' + report.errors.join(' '));
         const layout = ref.layout, settings = scene.settings;
@@ -3653,9 +3667,9 @@ label {
                     candidate.data[i + 2] !== rebuilt.data[i + 2])))
                 fail('Split-Rekonstruktion stimmt nicht pixelgenau; Kandidat unverändert lassen.');
         const next = store.fork();
-        const oldFrames = out.frames.filter(f => f.groupId === stage.sceneId);
+        const oldFrames = out.frames.filter(f => f.groupId === scene.id);
         const ppu = ref.frames[0].ppu;
-        out.frames = out.frames.filter(f => f.groupId !== stage.sceneId);
+        out.frames = out.frames.filter(f => f.groupId !== scene.id);
         const positions = C.positions(settings);
         for (const t of cut.tiles) {
             const imageId = next.add(t.image), groupName = scene.name;
@@ -3677,7 +3691,7 @@ label {
         // original. Preserve the exact original canvas by padding ONE upper
         // tile with transparent rows, without changing its visible pixels,
         // 64px width, bottom anchor, or any neighbouring tile coordinates.
-        const stageFrames = out.frames.filter(f => f.groupId === stage.sceneId);
+        const stageFrames = out.frames.filter(f => f.groupId === scene.id);
         let stageLayout = C.layout(stageFrames, settings, key => next.get(key));
         const missingHeadroom = stageLayout.top - ref.layout.top;
         if (stageLayout.left !== ref.layout.left ||
@@ -3710,10 +3724,9 @@ label {
                 fail('Die bearbeitbare Gebäudegruppe ist nicht pixelgleich zum importierten Gesamtbild.');
         }
         // Never carry a colour/team material mask over a changed silhouette.
-        stage.status = 'draft';
-        const hadMasks = oldFrames.some(f => f.maskId);
+        const hadMasks = (oldFrames.length ? oldFrames : ref.frames).some(f => f.maskId);
         if (hadMasks) report.warnings.push('Original hatte Masken. Neue Tiles erhalten keine erfundenen Materialmasken; vor Abnahme manuell nachbearbeiten.');
-        return { state: I.validate(out, next), store: next, report, seamStats: cut.seamStats };
+        return { store: next, report, seamStats: cut.seamStats };
     }
     function qualityReport(state, store, stageId) {
         const { profile, stage, base, scene } = getStage(state, stageId);
@@ -3902,6 +3915,21 @@ label {
             s.hpAtOrBelow > stage.hpAtOrBelow && s.status === 'approved')
             .sort((a, b) => a.hpAtOrBelow - b.hpAtOrBelow);
         const previous = sameKind[0] || null;
+        const draftReference = profile.stages.filter(s => s.kind === stage.kind &&
+            s.hpAtOrBelow > stage.hpAtOrBelow && s.candidateId)
+            .sort((a, b) => a.hpAtOrBelow - b.hpAtOrBelow)[0];
+        const useDraft = draftReference && (!previous || draftReference.hpAtOrBelow < previous.hpAtOrBelow);
+        const priorImage = useDraft ? store.get(draftReference.candidateId) :
+            previous ? baseComposite(state, store, previous.sceneId).image : null;
+        const previousStage = useDraft ? draftReference : previous;
+        return makeImageBundle(original, base, stage, options, priorImage, previousStage,
+            stage.candidateId ? store.get(stage.candidateId) : null);
+    }
+    async function makeVersionBundle(state, store, groupId, changeRequest, options = {}) {
+        const original = baseComposite(state, store, groupId);
+        return makeImageBundle(original, original.group, null, options, null, null, null, changeRequest);
+    }
+    async function makeImageBundle(original, base, stage, options, priorImage, previous, candidate, changeRequest) {
         const entries = [{ name: 'reference.png', data: await K.encodePNG(original.image, options) }];
         const plan = modelCanvasPlan(original.image), referenceFiles = [];
         if (plan) {
@@ -3911,24 +3939,23 @@ label {
         }
         else
             referenceFiles.push('reference.png');
-        if (previous) {
-            const p = baseComposite(state, store, previous.sceneId);
-            if (p.image.width === original.image.width && p.image.height === original.image.height) {
-                const name = plan ? 'model_previous.png' : 'previous.png';
-                const img = plan ? modelCanvas(p.image, plan) : p.image;
-                entries.push({ name, data: await K.encodePNG(img, options) });
-                referenceFiles.push(name);
-            }
+        const hasPrevious = priorImage && priorImage.width === original.image.width &&
+            priorImage.height === original.image.height;
+        if (hasPrevious) {
+            const name = plan ? 'model_previous.png' : 'previous.png';
+            const img = plan ? modelCanvas(priorImage, plan) : priorImage;
+            entries.push({ name, data: await K.encodePNG(img, options) });
+            referenceFiles.push(name);
         }
-        if (stage.candidateId) {
-            const image = store.get(stage.candidateId);
+        if (candidate) {
+            const image = candidate;
             if (image.width === original.image.width && image.height === original.image.height) {
                 const name = plan ? 'model_candidate.png' : 'candidate.png';
                 entries.push({ name, data: await K.encodePNG(plan ? modelCanvas(image, plan) : image, options) });
                 referenceFiles.push(name);
             }
             else if (plan && image.width === plan.width && image.height === plan.height) {
-                entries.push({ name: 'model_candidate.png', data: await store.bytes(stage.candidateId, options.signal) });
+                entries.push({ name: 'model_candidate.png', data: await K.encodePNG(image, options) });
                 referenceFiles.push('model_candidate.png');
             }
         }
@@ -3940,28 +3967,33 @@ label {
             ' on this same canvas; preserve its ground baseline and transparent exterior. ' +
             'The editor will inverse-scale this rectangle by factor ' + plan.scale +
             ' to the exact original pixel grid; preserve crisp pixel texture. ' +
-            'Do not move, zoom, crop, shift, re-center or add shadows outside the registered sprite.\\n' : '';
+            'Do not move, zoom, crop, shift, re-center or add shadows outside the registered sprite.\n' : '';
         const request = {
             format: 'stronghold-building-damage-request', version: 1,
-            model: stage.model, quality: 'high', background: 'transparent', output_format: 'png',
+            provider: 'codex-chatgpt', ...(stage ? { model: stage.model } : {}),
+            quality: 'high', background: 'transparent', output_format: 'png',
             size: plan ? plan.width + 'x' + plan.height : 'auto', complexity: 'high',
             registration: plan,
-            buildingGroup: base.name, buildingGroupId: base.id, stageId: stage.id, damageKind: stage.kind,
-            hpAtOrBelow: stage.hpAtOrBelow,
+            buildingGroup: base.name, buildingGroupId: base.id,
+            stageId: stage ? stage.id : I.uid('v'),
+            purpose: stage ? 'damage' : 'version',
+            ...(stage ? { damageKind: stage.kind, hpAtOrBelow: stage.hpAtOrBelow } : {}),
             referenceWidth: original.image.width, referenceHeight: original.image.height,
             referenceSHA256: await K.sha256(entries[0].data),
-            prompt: registeredPrompt + D.buildPrompt(original.image, stage, base, previous, plan),
+            prompt: registeredPrompt + (stage ? D.buildPrompt(original.image, stage, base, hasPrevious ? previous : null, plan) :
+                'Make an alternate intact version of the same isometric game building. Building: ' + base.name +
+                '. Preserve the building type and use, sprite style, perspective, materials, scale, lighting, ' +
+                'ground anchor, footprint and transparent background. Change architectural details visibly. ' +
+                'Return one building only, with no text, people, background or decorative border. ' +
+                (changeRequest ? '\nRequested changes: ' + changeRequest : '')),
             referenceFiles
         };
         entries.push({ name: 'request.json', data: JSON.stringify(request, null, 2) });
         entries.push({ name: 'CODEX.md', data:
-            'Codex kann dieses Bundle mit dem Projektadapter verarbeiten:\n' +
+            'Mit dem offiziellen Codex-Client und dem ChatGPT-Konto anmelden (codex login).\n' +
             'python tools/building_damage_codex.py --bundle <bundle.zip> --output <neuer-ordner> --dry-run\n' +
-            'Zum kostenpflichtigen echten Image-2.6-Edit nur auf ausdrückliche Anweisung:\n' +
             'python tools/building_damage_codex.py --bundle <bundle.zip> --output <neuer-ordner> --execute\n' +
-            'OPENAI_API_KEY muss außerhalb der Projektdatei in der Umgebung liegen.\n' +
-            'candidate.png im Editor importieren, Form/Alpha/Tiles prüfen und explizit abnehmen.\n' +
-            'Der Editor sendet niemals selbst Netzwerkanfragen.\n'
+            'candidate.png im Editor importieren oder das Rohbild manuell ausrichten.\n'
         });
         return { bytes: K.zip(entries), request };
     }
@@ -4031,7 +4063,7 @@ label {
         return { bytes: K.zip(entries), manifest };
     }
     return { getStage, baseComposite, createStage, withCandidate, applyCandidate,
-        qualityReport, approvalSignature, approveStage, makeRequestBundle, exportPackage };
+        qualityReport, approvalSignature, approveStage, makeRequestBundle, makeVersionBundle, withBuildingVersion, exportPackage };
 });
 </script><script>/* Stronghold Sprite Editor. DOM and canvas view; all exports use the independent RGBA codec. */
 (function () {
@@ -4781,12 +4813,155 @@ label {
             message('Schadensmodell angelegt; Tiles jetzt bearbeiten oder KI-Referenz exportieren.');
         });
     }
+    const localCodex = document.querySelector('meta[name="spritesuite-local"]')?.content;
+    let codexStatus = '';
+    async function codexCall(action, body) {
+        if (!localCodex) throw new Error('Öffne den Sprite-Editor über SpriteSuite, um Codex zu verbinden.');
+        const headers = { 'X-SpriteSuite-Session': localCodex };
+        if (body) headers['Content-Type'] = 'application/zip';
+        const response = await fetch('/codex/' + action, { method: 'POST', headers, body });
+        if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.error || 'Der lokale Codex-Auftrag ist fehlgeschlagen.');
+        }
+        return response;
+    }
+    async function codexAccount(action) {
+        await task(action === 'login' ? 'Bei ChatGPT anmelden' : 'ChatGPT-Anmeldung prüfen', async () => {
+            const result = await (await codexCall(action)).json();
+            codexStatus = result.chatgptConnected ? 'Mit ChatGPT verbunden' : 'ChatGPT-Anmeldung erforderlich';
+            message(codexStatus);
+        });
+    }
+    async function generatedImage(bundle, name) {
+        const response = await codexCall('generate', bundle.bytes);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        const entries = await K.unzip(bytes);
+        const candidate = entries.find(entry => entry.name === 'candidate.png');
+        if (!candidate) {
+            download(bytes, C.safeName(name) + '_codex_rohbild.zip', 'application/zip');
+            message('Codex-Bild als ZIP gespeichert. Rohbild vor der Übernahme ausrichten.', true);
+            return null;
+        }
+        return { image: await K.decodePNG(candidate.data), bytes };
+    }
+    async function generateDamage(stageId, opts) {
+        const { stage, base } = DI.getStage(state(), stageId);
+        const bundle = await DI.makeRequestBundle(state(), store(), stageId, opts);
+        const result = await generatedImage(bundle, base.name + '_' + stage.kind + '_' + stage.hpAtOrBelow);
+        if (!result) return false;
+        const draft = DI.withCandidate(state(), store(), stageId, result.image);
+        let model;
+        try {
+            model = DI.applyCandidate(draft.state, draft.store, stageId);
+        }
+        catch (error) {
+            commit(draft.state, 'Codex-Kandidat gespeichert', draft.store);
+            message('Codex-Kandidat gespeichert. Tiles lassen sich nach Ausrichtung übernehmen. ' + error.message, true);
+            return false;
+        }
+        commit(model.state, 'Codex-Schadensmodell erstellt', model.store);
+        message('Codex-Schadensmodell als bearbeitbare Tiles gespeichert.');
+        return true;
+    }
+    function damageBatchDialog() {
+        modal('Schadensmodelle mit Codex erstellen', [
+            note('Wähle die HP-Schwellen je Schadensart. Codex erhält das Original und, soweit vorhanden, das nächstmildere Modell. Pro Stufe wird ein Bild erzeugt.'),
+            fields(field('Mechanische HP-Schwellen', damageKind === 'mechanical' ? '75, 40, 0' : '', {
+                name: 'mechanical', wide: true, placeholder: '75, 40, 0'
+            })),
+            fields(field('Feuer-HP-Schwellen', damageKind === 'fire' ? '75, 40, 0' : '', {
+                name: 'fire', wide: true, placeholder: '75, 40, 0'
+            })),
+            fields(field('Gewünschte Schadensdetails', '', { name: 'details', type: 'textarea', wide: true }))
+        ], 'Mit Codex generieren', async data => {
+            const baseId = damageBuildingId;
+            const stages = [];
+            for (const kind of ['mechanical', 'fire']) {
+                const values = String(data.get(kind)).trim().split(/[\s,]+/).filter(Boolean);
+                const thresholds = values.map(value => C.integer(value, 'HP-Schwelle', 0, 99));
+                if (new Set(thresholds).size !== thresholds.length) throw new Error('HP-Schwellen dürfen je Schadensart nur einmal vorkommen.');
+                for (const hp of thresholds.sort((a, b) => b - a)) stages.push({ kind, hp });
+            }
+            if (!stages.length) throw new Error('Mindestens eine HP-Schwelle eingeben.');
+            await task('Schadensmodelle mit Codex erstellen', async opts => {
+                let next = state();
+                const ids = [], detail = String(data.get('details')).trim();
+                const existing = next.damageProfiles.find(p => p.buildingGroupId === baseId)?.stages || [];
+                if (stages.some(({ kind, hp }) => existing.some(s => s.kind === kind && s.hpAtOrBelow === hp)))
+                    throw new Error('Eine gewählte HP-Stufe ist bereits vorhanden. Dort kannst du ein neues Bild erzeugen.');
+                for (const { kind, hp } of stages) {
+                    const created = DI.createStage(next, store(), baseId, kind, hp);
+                    next = created.state;
+                    ids.push(created.stageId);
+                    DI.getStage(next, created.stageId).stage.changeRequest = detail;
+                }
+                commit(next, 'Codex-Schadensstufen angelegt');
+                let done = 0, processed = 0;
+                for (const id of ids) {
+                    opts.signal.throwIfAborted();
+                    const { stage } = DI.getStage(state(), id);
+                    opts.progress(processed++, ids.length, stage.kind + ' · ' + stage.hpAtOrBelow + '% HP');
+                    if (await generateDamage(id, opts)) done++;
+                }
+                opts.progress(ids.length, ids.length);
+                message(done + ' / ' + ids.length + ' Codex-Schadensmodelle als Tiles gespeichert.', done < ids.length);
+            });
+        });
+    }
+    function buildingVersionDialog(mode) {
+        const baseId = damageBuildingId;
+        const base = state().scenes.find(scene => scene.id === baseId);
+        modal('Neue Gebäudeversion', [
+            fields(field('Name der Version', base.name + ' v2', { name: 'label', wide: true })),
+            ...(mode === 'import' ? [] : [
+                note('Das ausgewählte Gebäude dient als Vorlage für Stil, Typ, Raster und Perspektive.'),
+                fields(field('Gewünschte Änderungen', '', { name: 'details', wide: true, type: 'textarea' }))
+            ])
+        ], mode === 'import' ? 'PNG wählen…' : mode === 'export' ? 'Codex-Anfrage exportieren' : 'Mit Codex generieren',
+        async data => {
+            const label = String(data.get('label')).trim();
+            if (mode === 'import') {
+                const files = await askFiles('.png', false);
+                if (!files.length) return;
+                await task('Gebäudeversion übernehmen', async opts => {
+                    const image = await K.decodePNG(new Uint8Array(await files[0].arrayBuffer()), opts);
+                    applyVersion(baseId, label, image);
+                });
+                return;
+            }
+            await task('Codex-Gebäudeversion vorbereiten', async opts => {
+                const bundle = await DI.makeVersionBundle(state(), store(), baseId, String(data.get('details')), opts);
+                if (mode === 'export') {
+                    download(bundle.bytes, C.safeName(label || base.name) + '_codex.zip', 'application/zip');
+                    return;
+                }
+                const result = await generatedImage(bundle, label || base.name);
+                if (!result) return;
+                try {
+                    applyVersion(baseId, label, result.image);
+                }
+                catch (error) {
+                    download(result.bytes, C.safeName(label || base.name) + '_codex.zip', 'application/zip');
+                    throw error;
+                }
+            });
+        });
+    }
+    function applyVersion(baseId, label, image) {
+        const result = DI.withBuildingVersion(state(), store(), baseId, label, image);
+        commit(result.state, 'Neue Gebäudeversion erstellt', result.store);
+        damageBuildingId = result.sceneId;
+        damageOpenScene(result.sceneId);
+        const warnings = result.report.warnings;
+        message(warnings.length ? warnings.join(' ') : 'Neue Gebäudeversion als bearbeitbare Tiles gespeichert.');
+    }
     async function damageRequestBundle(stageId) {
         await task('Codex-Referenz vorbereiten', async opts => {
             const { stage, base } = DI.getStage(state(), stageId);
             const result = await DI.makeRequestBundle(state(), store(), stageId, opts);
             download(result.bytes, C.safeName(base.name + '_' + stage.kind + '_' + stage.hpAtOrBelow) + '_codex.zip');
-            message('Referenz, GPT-Image-2.6-Prompt und Codex-Anweisung exportiert.');
+            message('Referenz, Prompt und Codex-Anweisung exportiert.');
         });
     }
     async function damageImportCandidate(stageId) {
@@ -4929,7 +5104,19 @@ label {
             buttons(button('Neue Schadensstufe…', damageCreateDialog)),
             note('Schwellen gelten inklusive Grenzwert. Beispiel 75/40/0: 100–76 % intakt, 75–41 % leicht, 40–1 % schwer, 0 % zerstört. Feuer nutzt nur dann mechanische Stufen als Fallback, wenn keine Feuerstufe existiert.')
         ];
-        const sections = [section('Gebäude und HP-Test', info)];
+        const codexActions = [
+            ...(localCodex ? [
+                line('ChatGPT-Konto', codexStatus || 'Lokaler Codex-Client'),
+                buttons(button('Bei ChatGPT anmelden…', () => codexAccount('login')),
+                    button('Anmeldung prüfen', () => codexAccount('status'))),
+                buttons(button('Schadensmodelle mit Codex erstellen…', damageBatchDialog),
+                    button('Gebäudeversion mit Codex erstellen…', () => buildingVersionDialog('generate'))),
+                note('Bildaufträge nutzen deinen ChatGPT-Tarif und gegebenenfalls Codex-Guthaben. Abbrechen stoppt weitere Aufträge nach dem laufenden Bild.')
+            ] : [note('Für direkte Codex-Generierung den Sprite-Editor über SpriteSuite öffnen.')]),
+            buttons(button('Gebäudeversion für Codex exportieren…', () => buildingVersionDialog('export')),
+                button('PNG als Gebäudeversion importieren…', () => buildingVersionDialog('import')))
+        ];
+        const sections = [section('Gebäude und HP-Test', info), section('KI-Sprites mit Codex', codexActions)];
         const stages = profile ? profile.stages.filter(s => s.kind === damageKind) : [];
         if (!stages.length)
             sections.push(section('Schadensmodelle', [note('Für diesen Schadenstyp sind noch keine eigenen Stufen vorhanden.')]));
@@ -4942,9 +5129,6 @@ label {
                 }), { min: 0, max: 99 })),
                 fields(field('Bezeichnung', stage.label, { wide: true, onchange: v =>
                     damageStageEdit(stage.id, s => s.label = v) })),
-                fields(field('GPT Image 2.6', stage.model, { wide: true,
-                    options: [['gpt-image-2.6-sunburst', 'Sunburst · detailgetreu'], ['gpt-image-2.6-flare', 'Flare · schnelle Entwürfe']],
-                    onchange: v => damageStageEdit(stage.id, s => s.model = v) })),
                 fields(field('Nachbesserung / Änderungswunsch', stage.changeRequest, {
                     type: 'textarea', wide: true, onchange: v =>
                         damageStageEdit(stage.id, s => s.changeRequest = v)
@@ -4952,7 +5136,9 @@ label {
                 line('Kandidaten-PNG', stage.candidateId ? 'Im Projekt gesichert' : 'Noch nicht vorhanden'),
                 buttons(button('Tiles bearbeiten', () => damageOpenScene(stage.sceneId, true)),
                     button('Vorschau', () => damageOpenScene(stage.sceneId))),
-                buttons(button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
+                buttons(...(localCodex ? [button('Mit Codex generieren', () =>
+                    task('Schadensmodell mit Codex erstellen', opts => generateDamage(stage.id, opts)))] : []),
+                    button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
                 buttons(button('Generiertes PNG importieren…', () => damageImportCandidate(stage.id)),
                     button('PNG als Tiles zerlegen', () => damageApplyCandidate(stage.id), { disabled: !stage.candidateId })),
                 ...(stage.candidateId ? [buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,

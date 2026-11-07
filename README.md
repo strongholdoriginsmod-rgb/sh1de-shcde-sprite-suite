@@ -276,7 +276,7 @@ Die großen, teilweise spielabgeleiteten Binärdaten verbleiben im zugangsverwal
 
 ## Gemeinsamer Entwicklungsstand: Gebäudeschäden und Werkzeugkonsolidierung (06.11.2026)
 
-Der isolierte Integrationszweig bündelt die geprüfte 1-Pixel-Kachelüberlappung, den Gebäude-Schadensstufen-Workflow (mechanisch/Feuer, HP-Schwellen, visuelle Abnahme), einen ausdrücklich aufrufbaren GPT-Image-2.6-Codex-Adapter sowie den gemeinsamen Fachwerkzeugkatalog und den historischen SHA-Versionsvergleich. Der bestehende HTML-Sprite-Editor bleibt offline nutzbar; KI-Referenzpakete und generierte Bilddateien werden getrennt importiert. Schadensmodelle werden als freigegebenes Daten-/Tile-ZIP ausgegeben, nicht als unbelegte dynamische Spieländerung.
+Im über SpriteSuite gestarteten Sprite-Editor bietet **Schaden → KI-Sprites mit Codex** die Anmeldung im ChatGPT-Konto, eigene HP-/Feuer-Serien und Gebäudeversionen aus dem gewählten Original. Der lokale Codex-Client erhält Prompt und Referenzbilder und nutzt die Bildgenerierung des ChatGPT-Tarifs. Ergebnisse können als bearbeitbare Tiles und freie Schadenspakete exportiert werden.
 
 Bedienung: [Gebäudeschaden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md). Arbeitszweige, Konfliktregeln, Tests und Übergaben: [Gemeinsame Integration](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).
 

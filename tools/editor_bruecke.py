@@ -266,7 +266,11 @@ def cmd_oeffnen(args) -> int:
     if not target.is_file():
         say(f"Editor fehlt: {target}")
         return 1
-    webbrowser.open(target.as_uri())
+    if args.offline:
+        webbrowser.open(target.as_uri())
+    else:
+        from sprite_editor_local import launch
+        launch("en" if target == english else "de")
     say(f"Editor geoeffnet: {target}")
     return 0
 
@@ -286,6 +290,7 @@ def main(argv=None) -> int:
     p.set_defaults(func=cmd_import)
     p = sub.add_parser("oeffnen", help="HTML-Editor im Browser oeffnen")
     p.add_argument("--sprache", choices=("de", "en"))
+    p.add_argument("--offline", action="store_true", help="Eigenständige Datei ohne lokale Codex-Anbindung öffnen")
     p.set_defaults(func=cmd_oeffnen)
     args = parser.parse_args(argv)
     return int(args.func(args) or 0)

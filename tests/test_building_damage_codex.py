@@ -1,25 +1,24 @@
-"""Offline tests for the Codex-callable Image-2.6 damage editor adapter."""
+"""Offline protocol and image-registration tests for the local Codex adapter."""
 from __future__ import annotations
 
-import base64
 from contextlib import redirect_stdout
 import hashlib
 import io
 import json
-import os
 from pathlib import Path
 import struct
 import sys
 import tempfile
 import unittest
 from unittest import mock
-import warnings
 import zipfile
+from contextlib import contextmanager
 import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import building_damage_codex as B  # noqa: E402
+from sprite_codex_session import CodexError, CodexSession  # noqa: E402
 
 
 def png(w=64, h=32):
@@ -55,16 +54,11 @@ def bundle(path, source, request=None, extra=None):
             archive.writestr(name, content)
 
 
-class FakeResponse:
-    headers = {"x-request-id": "request_fake"}
-    def __init__(self, output):
-        self.output = output
-    def __enter__(self):
-        return self
-    def __exit__(self, *_):
-        return False
-    def read(self, _max_bytes):
-        return self.output
+@contextmanager
+def fake_session(cwd):
+    client = mock.Mock()
+    client.generate.side_effect = lambda folder, request, images: (images[0][1], "gen-fixture")
+    yield client
 
 
 class DamageCodexTests(unittest.TestCase):
@@ -78,8 +72,7 @@ class DamageCodexTests(unittest.TestCase):
 
     def test_offline_default_dry_run_no_api_and_no_output(self):
         output = self.root / "output"
-        with mock.patch.object(B.urllib.request, "urlopen",
-                               side_effect=AssertionError("Network not allowed")):
+        with mock.patch.object(B, "session", side_effect=AssertionError("No Codex session")):
             stream = io.StringIO()
             with redirect_stdout(stream):
                 code = B.main(["--bundle", str(self.bundle_path),
@@ -100,7 +93,7 @@ class DamageCodexTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "größe"):
             B.load_request(self.bundle_path)
 
-    def test_unknown_model_and_unsupported_fidelity_rejected(self):
+    def test_legacy_unknown_model_and_unsupported_fidelity_rejected(self):
         bad = request_for(self.source, "another-model")
         bundle(self.bundle_path, self.source, bad)
         with self.assertRaisesRegex(ValueError, "GPT-Image-2.6"):
@@ -111,46 +104,46 @@ class DamageCodexTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "input_fidelity"):
             B.load_request(self.bundle_path)
 
-    def test_explicit_execute_requires_out_of_band_api_key(self):
-        req, images = B.load_request(self.bundle_path)
-        output = self.root / "output"
-        with mock.patch.dict(os.environ, {}, clear=True):
-            with self.assertRaisesRegex(ValueError, "OPENAI_API_KEY"):
-                B.execute(req, images, output)
-        self.assertFalse(output.exists())
+    def test_api_key_account_cannot_generate(self):
+        codex = object.__new__(CodexSession)
+        codex.request = mock.Mock(return_value={"account": {"type": "apiKey"}})
+        with self.assertRaisesRegex(CodexError, "ChatGPT-Sitzung"):
+            codex.generate(self.root, request_for(self.source), [("reference.png", self.source)])
+        self.assertFalse((self.root / "reference.png").exists())
+        codex.request.assert_called_once_with("account/read", {"refreshToken": False})
 
-    def test_multipart_contains_image_refs_and_valid_26_fields(self):
+    def test_codex_candidate_provenance_and_no_overwrite(self):
         req, images = B.load_request(self.bundle_path)
-        body, mime = B.multipart(req, images)
-        self.assertIn("multipart/form-data; boundary=", mime)
-        self.assertIn(b'name="model"', body)
-        self.assertIn(b'gpt-image-2.6-sunburst', body)
-        self.assertIn(b'name="complexity"', body)
-        self.assertIn(b'name="image[]"', body)
-        self.assertNotIn(b'input_fidelity', body)
-        self.assertIn(self.source, body)
-
-    def test_mock_api_generates_candidate_and_provenance_without_overwrites(self):
-        req, images = B.load_request(self.bundle_path)
-        response = json.dumps({"data": [
-            {"b64_json": base64.b64encode(self.source).decode()}
-        ]}).encode()
         output = self.root / "candidate"
-        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-unit"}, clear=True):
-            with mock.patch.object(B.urllib.request, "urlopen", return_value=FakeResponse(response)) as invoke:
-                result = B.execute(req, images, output)
+        with mock.patch.object(B, "session", fake_session):
+            result = B.execute(req, images, output)
+            with self.assertRaisesRegex(ValueError, "existiert"):
+                B.execute(req, images, output)
         self.assertEqual(result["candidateDimensions"], [64, 32])
-        self.assertEqual(result["apiRequestId"], "request_fake")
+        self.assertEqual(result["provider"], "codex-chatgpt")
+        self.assertEqual(result["generationId"], "gen-fixture")
         self.assertTrue(result["needsManualReview"])
         self.assertEqual((output / "candidate.png").read_bytes(), self.source)
+        self.assertEqual((output / "model_candidate_raw.png").read_bytes(), self.source)
         self.assertEqual(json.loads((output / "candidate-meta.json").read_text(encoding="utf-8"))["candidateSHA256"],
                          hashlib.sha256(self.source).hexdigest())
-        http_request = invoke.call_args.args[0]
-        self.assertEqual(http_request.full_url, "https://api.openai.com/v1/images/edits")
-        self.assertNotIn("sk-test-unit", (output / "candidate-meta.json").read_text(encoding="utf-8"))
-        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-unit"}, clear=True):
-            with self.assertRaisesRegex(ValueError, "nicht leer"):
-                B.execute(req, images, output)
+
+    def test_generation_requires_provenance_for_the_selected_reference(self):
+        codex = object.__new__(CodexSession)
+        codex.request = mock.Mock(side_effect=[
+            {"account": {"type": "chatgpt"}},
+            {"thread": {"id": "thread"}},
+            {"turn": {"id": "turn"}},
+        ])
+        codex.events = mock.Mock(return_value=iter([
+            {"method": "item/completed", "params": {"threadId": "thread", "turnId": "turn",
+              "item": {"type": "imageGeneration", "inputImages": [{"sha256": "bad"}]}}},
+            {"method": "turn/completed", "params": {"threadId": "thread", "turn": {"id": "turn"}}},
+        ]))
+        with self.assertRaisesRegex(CodexError, "Referenzdateien"):
+            codex.generate(self.root, request_for(self.source), [("reference.png", self.source)])
+        turn = codex.request.call_args.args[1]
+        self.assertEqual(turn["input"][1], {"type": "localImage", "path": str(self.root / "reference.png")})
 
     def test_registered_pixel_canvas_roundtrip_and_stray_pixel_guard(self):
         from PIL import Image
@@ -192,7 +185,7 @@ class DamageCodexTests(unittest.TestCase):
         self.assertFalse(report["candidateWritten"])
         self.assertGreater(report["strayPixels"], report["tolerance"])
 
-    def test_registered_api_keeps_raw_and_only_writes_aligned_candidate(self):
+    def test_registered_codex_keeps_raw_and_only_writes_aligned_candidate(self):
         from PIL import Image
         registration = {
             "width": 1024, "height": 1024, "scale": 14,
@@ -210,10 +203,8 @@ class DamageCodexTests(unittest.TestCase):
         bundle(self.bundle_path, self.source, req, extra={"model_reference.png": model_bytes})
         loaded, images = B.load_request(self.bundle_path)
         output = self.root / "registered"
-        response = json.dumps({"data": [{"b64_json": base64.b64encode(model_bytes).decode()}]}).encode()
-        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-unit"}, clear=True):
-            with mock.patch.object(B.urllib.request, "urlopen", return_value=FakeResponse(response)):
-                result = B.execute(loaded, images, output)
+        with mock.patch.object(B, "session", fake_session):
+            result = B.execute(loaded, images, output)
         self.assertTrue(result["alignment"]["registered"])
         self.assertTrue(result["dimensionsMatch"])
         self.assertEqual(result["candidateDimensions"], [64, 32])

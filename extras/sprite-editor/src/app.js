@@ -746,12 +746,155 @@
             message('Schadensmodell angelegt; Tiles jetzt bearbeiten oder KI-Referenz exportieren.');
         });
     }
+    const localCodex = document.querySelector('meta[name="spritesuite-local"]')?.content;
+    let codexStatus = '';
+    async function codexCall(action, body) {
+        if (!localCodex) throw new Error('Öffne den Sprite-Editor über SpriteSuite, um Codex zu verbinden.');
+        const headers = { 'X-SpriteSuite-Session': localCodex };
+        if (body) headers['Content-Type'] = 'application/zip';
+        const response = await fetch('/codex/' + action, { method: 'POST', headers, body });
+        if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.error || 'Der lokale Codex-Auftrag ist fehlgeschlagen.');
+        }
+        return response;
+    }
+    async function codexAccount(action) {
+        await task(action === 'login' ? 'Bei ChatGPT anmelden' : 'ChatGPT-Anmeldung prüfen', async () => {
+            const result = await (await codexCall(action)).json();
+            codexStatus = result.chatgptConnected ? 'Mit ChatGPT verbunden' : 'ChatGPT-Anmeldung erforderlich';
+            message(codexStatus);
+        });
+    }
+    async function generatedImage(bundle, name) {
+        const response = await codexCall('generate', bundle.bytes);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        const entries = await K.unzip(bytes);
+        const candidate = entries.find(entry => entry.name === 'candidate.png');
+        if (!candidate) {
+            download(bytes, C.safeName(name) + '_codex_rohbild.zip', 'application/zip');
+            message('Codex-Bild als ZIP gespeichert. Rohbild vor der Übernahme ausrichten.', true);
+            return null;
+        }
+        return { image: await K.decodePNG(candidate.data), bytes };
+    }
+    async function generateDamage(stageId, opts) {
+        const { stage, base } = DI.getStage(state(), stageId);
+        const bundle = await DI.makeRequestBundle(state(), store(), stageId, opts);
+        const result = await generatedImage(bundle, base.name + '_' + stage.kind + '_' + stage.hpAtOrBelow);
+        if (!result) return false;
+        const draft = DI.withCandidate(state(), store(), stageId, result.image);
+        let model;
+        try {
+            model = DI.applyCandidate(draft.state, draft.store, stageId);
+        }
+        catch (error) {
+            commit(draft.state, 'Codex-Kandidat gespeichert', draft.store);
+            message('Codex-Kandidat gespeichert. Tiles lassen sich nach Ausrichtung übernehmen. ' + error.message, true);
+            return false;
+        }
+        commit(model.state, 'Codex-Schadensmodell erstellt', model.store);
+        message('Codex-Schadensmodell als bearbeitbare Tiles gespeichert.');
+        return true;
+    }
+    function damageBatchDialog() {
+        modal('Schadensmodelle mit Codex erstellen', [
+            note('Wähle die HP-Schwellen je Schadensart. Codex erhält das Original und, soweit vorhanden, das nächstmildere Modell. Pro Stufe wird ein Bild erzeugt.'),
+            fields(field('Mechanische HP-Schwellen', damageKind === 'mechanical' ? '75, 40, 0' : '', {
+                name: 'mechanical', wide: true, placeholder: '75, 40, 0'
+            })),
+            fields(field('Feuer-HP-Schwellen', damageKind === 'fire' ? '75, 40, 0' : '', {
+                name: 'fire', wide: true, placeholder: '75, 40, 0'
+            })),
+            fields(field('Gewünschte Schadensdetails', '', { name: 'details', type: 'textarea', wide: true }))
+        ], 'Mit Codex generieren', async data => {
+            const baseId = damageBuildingId;
+            const stages = [];
+            for (const kind of ['mechanical', 'fire']) {
+                const values = String(data.get(kind)).trim().split(/[\s,]+/).filter(Boolean);
+                const thresholds = values.map(value => C.integer(value, 'HP-Schwelle', 0, 99));
+                if (new Set(thresholds).size !== thresholds.length) throw new Error('HP-Schwellen dürfen je Schadensart nur einmal vorkommen.');
+                for (const hp of thresholds.sort((a, b) => b - a)) stages.push({ kind, hp });
+            }
+            if (!stages.length) throw new Error('Mindestens eine HP-Schwelle eingeben.');
+            await task('Schadensmodelle mit Codex erstellen', async opts => {
+                let next = state();
+                const ids = [], detail = String(data.get('details')).trim();
+                const existing = next.damageProfiles.find(p => p.buildingGroupId === baseId)?.stages || [];
+                if (stages.some(({ kind, hp }) => existing.some(s => s.kind === kind && s.hpAtOrBelow === hp)))
+                    throw new Error('Eine gewählte HP-Stufe ist bereits vorhanden. Dort kannst du ein neues Bild erzeugen.');
+                for (const { kind, hp } of stages) {
+                    const created = DI.createStage(next, store(), baseId, kind, hp);
+                    next = created.state;
+                    ids.push(created.stageId);
+                    DI.getStage(next, created.stageId).stage.changeRequest = detail;
+                }
+                commit(next, 'Codex-Schadensstufen angelegt');
+                let done = 0, processed = 0;
+                for (const id of ids) {
+                    opts.signal.throwIfAborted();
+                    const { stage } = DI.getStage(state(), id);
+                    opts.progress(processed++, ids.length, stage.kind + ' · ' + stage.hpAtOrBelow + '% HP');
+                    if (await generateDamage(id, opts)) done++;
+                }
+                opts.progress(ids.length, ids.length);
+                message(done + ' / ' + ids.length + ' Codex-Schadensmodelle als Tiles gespeichert.', done < ids.length);
+            });
+        });
+    }
+    function buildingVersionDialog(mode) {
+        const baseId = damageBuildingId;
+        const base = state().scenes.find(scene => scene.id === baseId);
+        modal('Neue Gebäudeversion', [
+            fields(field('Name der Version', base.name + ' v2', { name: 'label', wide: true })),
+            ...(mode === 'import' ? [] : [
+                note('Das ausgewählte Gebäude dient als Vorlage für Stil, Typ, Raster und Perspektive.'),
+                fields(field('Gewünschte Änderungen', '', { name: 'details', wide: true, type: 'textarea' }))
+            ])
+        ], mode === 'import' ? 'PNG wählen…' : mode === 'export' ? 'Codex-Anfrage exportieren' : 'Mit Codex generieren',
+        async data => {
+            const label = String(data.get('label')).trim();
+            if (mode === 'import') {
+                const files = await askFiles('.png', false);
+                if (!files.length) return;
+                await task('Gebäudeversion übernehmen', async opts => {
+                    const image = await K.decodePNG(new Uint8Array(await files[0].arrayBuffer()), opts);
+                    applyVersion(baseId, label, image);
+                });
+                return;
+            }
+            await task('Codex-Gebäudeversion vorbereiten', async opts => {
+                const bundle = await DI.makeVersionBundle(state(), store(), baseId, String(data.get('details')), opts);
+                if (mode === 'export') {
+                    download(bundle.bytes, C.safeName(label || base.name) + '_codex.zip', 'application/zip');
+                    return;
+                }
+                const result = await generatedImage(bundle, label || base.name);
+                if (!result) return;
+                try {
+                    applyVersion(baseId, label, result.image);
+                }
+                catch (error) {
+                    download(result.bytes, C.safeName(label || base.name) + '_codex.zip', 'application/zip');
+                    throw error;
+                }
+            });
+        });
+    }
+    function applyVersion(baseId, label, image) {
+        const result = DI.withBuildingVersion(state(), store(), baseId, label, image);
+        commit(result.state, 'Neue Gebäudeversion erstellt', result.store);
+        damageBuildingId = result.sceneId;
+        damageOpenScene(result.sceneId);
+        const warnings = result.report.warnings;
+        message(warnings.length ? warnings.join(' ') : 'Neue Gebäudeversion als bearbeitbare Tiles gespeichert.');
+    }
     async function damageRequestBundle(stageId) {
         await task('Codex-Referenz vorbereiten', async opts => {
             const { stage, base } = DI.getStage(state(), stageId);
             const result = await DI.makeRequestBundle(state(), store(), stageId, opts);
             download(result.bytes, C.safeName(base.name + '_' + stage.kind + '_' + stage.hpAtOrBelow) + '_codex.zip');
-            message('Referenz, GPT-Image-2.6-Prompt und Codex-Anweisung exportiert.');
+            message('Referenz, Prompt und Codex-Anweisung exportiert.');
         });
     }
     async function damageImportCandidate(stageId) {
@@ -894,7 +1037,19 @@
             buttons(button('Neue Schadensstufe…', damageCreateDialog)),
             note('Schwellen gelten inklusive Grenzwert. Beispiel 75/40/0: 100–76 % intakt, 75–41 % leicht, 40–1 % schwer, 0 % zerstört. Feuer nutzt nur dann mechanische Stufen als Fallback, wenn keine Feuerstufe existiert.')
         ];
-        const sections = [section('Gebäude und HP-Test', info)];
+        const codexActions = [
+            ...(localCodex ? [
+                line('ChatGPT-Konto', codexStatus || 'Lokaler Codex-Client'),
+                buttons(button('Bei ChatGPT anmelden…', () => codexAccount('login')),
+                    button('Anmeldung prüfen', () => codexAccount('status'))),
+                buttons(button('Schadensmodelle mit Codex erstellen…', damageBatchDialog),
+                    button('Gebäudeversion mit Codex erstellen…', () => buildingVersionDialog('generate'))),
+                note('Bildaufträge nutzen deinen ChatGPT-Tarif und gegebenenfalls Codex-Guthaben. Abbrechen stoppt weitere Aufträge nach dem laufenden Bild.')
+            ] : [note('Für direkte Codex-Generierung den Sprite-Editor über SpriteSuite öffnen.')]),
+            buttons(button('Gebäudeversion für Codex exportieren…', () => buildingVersionDialog('export')),
+                button('PNG als Gebäudeversion importieren…', () => buildingVersionDialog('import')))
+        ];
+        const sections = [section('Gebäude und HP-Test', info), section('KI-Sprites mit Codex', codexActions)];
         const stages = profile ? profile.stages.filter(s => s.kind === damageKind) : [];
         if (!stages.length)
             sections.push(section('Schadensmodelle', [note('Für diesen Schadenstyp sind noch keine eigenen Stufen vorhanden.')]));
@@ -907,9 +1062,6 @@
                 }), { min: 0, max: 99 })),
                 fields(field('Bezeichnung', stage.label, { wide: true, onchange: v =>
                     damageStageEdit(stage.id, s => s.label = v) })),
-                fields(field('GPT Image 2.6', stage.model, { wide: true,
-                    options: [['gpt-image-2.6-sunburst', 'Sunburst · detailgetreu'], ['gpt-image-2.6-flare', 'Flare · schnelle Entwürfe']],
-                    onchange: v => damageStageEdit(stage.id, s => s.model = v) })),
                 fields(field('Nachbesserung / Änderungswunsch', stage.changeRequest, {
                     type: 'textarea', wide: true, onchange: v =>
                         damageStageEdit(stage.id, s => s.changeRequest = v)
@@ -917,7 +1069,9 @@
                 line('Kandidaten-PNG', stage.candidateId ? 'Im Projekt gesichert' : 'Noch nicht vorhanden'),
                 buttons(button('Tiles bearbeiten', () => damageOpenScene(stage.sceneId, true)),
                     button('Vorschau', () => damageOpenScene(stage.sceneId))),
-                buttons(button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
+                buttons(...(localCodex ? [button('Mit Codex generieren', () =>
+                    task('Schadensmodell mit Codex erstellen', opts => generateDamage(stage.id, opts)))] : []),
+                    button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
                 buttons(button('Generiertes PNG importieren…', () => damageImportCandidate(stage.id)),
                     button('PNG als Tiles zerlegen', () => damageApplyCandidate(stage.id), { disabled: !stage.candidateId })),
                 ...(stage.candidateId ? [buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,

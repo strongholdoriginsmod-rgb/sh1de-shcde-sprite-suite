@@ -1,6 +1,6 @@
 # Gebäudeschäden im Stronghold Sprite Editor
 
-Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek**. Die dynamische Umschaltung des Spielrenderers bei HP-Verlust ist noch **nicht** integriert.
+Stand 07.11.2026. Der Editor erstellt bearbeitbare HP-/Feuer-Schadensbibliotheken für das getrennte Runtime-Modul.
 
 ## Gebäude und Schadensstufen
 1. Im Sprite Editor eine Gebäude-PNG-Serie öffnen oder ein vorhandenes `.shsprite` laden.
@@ -10,20 +10,24 @@ Stand: 06.11.2026. Enthält eine editierbare **Asset- und HP-Schadensbibliothek*
 5. **Tiles bearbeiten** öffnet die eigenständige Szene dieser Stufe. Die Originalszene wird nicht verändert. Jede Ausgangskachel bleibt kopiert oder später als eigenes Asset gespeichert. Über den normalen Sprite-Editor sind Bild- und Maskenimporte, Pivots und Layoutbearbeitung möglich.
 6. Über die HP-Testvorschau können mechanische und Feuerzustände getrennt durchgespielt werden. Feuer fällt nur dann auf mechanische Modelle zurück, wenn für das Gebäude **keine** Feuerstufe definiert ist.
 
-## GPT Image 2.6 in Codex
-1. In der gewünschten Stufe **Sunburst** für den Feinschliff oder **Flare** für schnelle Vorlagen wählen. Im Feld **Nachbesserung** präzise Korrekturwünsche ergänzen.
-2. **Codex-Prompt + Original exportieren…** erzeugt ein ZIP mit `request.json`, `reference.png`, der pixelgenau registrierten `model_reference.png`, ggf. früheren freigegebenen Stufen, Kandidaten und `CODEX.md`.
-3. Das ZIP im Codex-Arbeitsbereich bereitstellen. Codex kann den vom Projekt mitgelieferten Adapter `tools/building_damage_codex.py` ausführen. Er benötigt Python 3.11+ und für registrierte Bildgrößen Pillow, speichert keine API-Schlüssel und verändert keine Installationsdateien. Beispiel (aus dem SpriteSuite-Projektverzeichnis):
+## KI-Sprites mit Codex und ChatGPT
 
-   `python tools/building_damage_codex.py --bundle "C:\Downloads\steinhof_mechanical_75_codex.zip" --output "C:\Temp\steinhof_stufe_75" --dry-run`
+1. Den Editor über SpriteSuite oder `Sprite-Editor.cmd` mit der mitgelieferten Python-Laufzeit starten. Die optionale Codex CLI muss im `PATH` liegen. Im Reiter **Schaden** ein Gebäude wählen.
+2. Unter **KI-Sprites mit Codex** auf **Bei ChatGPT anmelden…** klicken. Codex öffnet seinen offiziellen Anmeldebrowser. Wenn dein ChatGPT-Konto mit Google verknüpft ist, kannst du dort Google auswählen. Eine vorhandene ChatGPT-Sitzung wird wiederverwendet.
+3. **Schadensmodelle mit Codex erstellen…** nimmt die gewünschten HP-Schwellen pro Schadensart sowie eigene Details entgegen. Jede Stufe erhält den Originalsprite, einen eigenen Prompt und, wenn vorhanden, das nächstmildere Modell. Vorhandene Stufen haben einen eigenen Generierungsbutton und können mit einem präziseren Änderungswunsch überarbeitet werden.
+4. **Gebäudeversion mit Codex erstellen…** legt eine eigenständige bearbeitbare Szene an. Der Prompt erhält Gebäudetyp, Stil, Perspektive und Bodenanker. Die Version erhält eigene Tiles und eine separat zuweisbare Zuordnung zum Zielspiel.
+5. Ein passend registriertes Bild wird auf die ursprüngliche Geometrie zurückgerechnet und in Tiles zerlegt. Bei abweichender Registrierung wird die Rohdatei als ZIP angeboten. PNGs lassen sich nach manueller Ausrichtung importieren. Generierte Tiles und freie Schadenspakete lassen sich direkt weiterbearbeiten oder exportieren. Die optionale Qualitätsabnahme kennzeichnet überprüfte Varianten.
+6. Das Bild wird mit der eingebauten Bildgenerierung des Codex-Clients erstellt. Der ChatGPT-Tarif bestimmt das enthaltene Kontingent, die verfügbaren Bilder und den möglichen Einsatz von Codex-Guthaben. [OpenAI Docs zur Codex-Anmeldung](https://learn.chatgpt.com/docs/auth) und [OpenAI Docs zur Bildnutzung](https://learn.chatgpt.com/docs/pricing#how-does-image-generation-count-toward-usage-limits).
 
-   Bei korrektem Bundle und bewusst freigegebenen API-Kosten folgt gesondert:
+Der eigenständige HTML-Editor bietet Dateiimport und Anfrageexport. **Codex-Prompt + Original exportieren…** speichert Prompt, Original und registrierte Referenz gemeinsam. Einen Auftrag aus einer ZIP-Datei kann man auch über die Kommandozeile starten.
 
-   `python tools/building_damage_codex.py --bundle "C:\Downloads\steinhof_mechanical_75_codex.zip" --output "C:\Temp\steinhof_stufe_75" --execute`
+```powershell
+python tools/building_damage_codex.py --status
+python tools/building_damage_codex.py --login
+python tools/building_damage_codex.py --bundle "C:\Downloads\steinhof_codex.zip" --output "C:\Temp\steinhof_75" --execute
+```
 
-4. Den API-Schlüssel ausschließlich als `OPENAI_API_KEY` außerhalb des Quellcodes bereitstellen. Der Editor führt **keine** HTTP-Anfragen aus, damit sein offlinefähiges Sicherheitsmodell unangetastet bleibt.
-5. Das Modelloriginal bleibt als `model_candidate_raw.png` erhalten. Der Adapter registriert die Ausgabe auf das ursprüngliche Pixelraster zurück. Nach Größen- und Fremdpixelprüfung entsteht `candidate.png` für den Editor. `candidate-meta.json` enthält die Prüfdaten und SHA-256-Prüfsummen. Falls die Ausgabe die Registrierungsfläche verletzt, wird kein bearbeitbarer Kandidat erzeugt.
-6. Das generierte `candidate.png` über **Generiertes PNG importieren…** in die Stufe laden, gegebenenfalls erneut nachbessern. Ohne explizites **PNG als Tiles zerlegen** verändert es die Stage-Tiles nicht.
+Die Ausgabe enthält das unveränderte Modellbild und Prüfsummen. Bei geometrisch passender Ausgabe entsteht zusätzlich `candidate.png`.
 
 ## Qualitätsabnahme
 - Die Pixelgröße, Bodenanker und transparente Registrierung müssen exakt passen. Aus dem Gesamtbild wird ausschließlich unter der bestehenden 1-px-Overlap-/Hinterreihenlogik zerlegt. Die gesamte sichtbare Rekonstruktion muss pixelgleich sein. Tiles werden nie breiter als 64 px.

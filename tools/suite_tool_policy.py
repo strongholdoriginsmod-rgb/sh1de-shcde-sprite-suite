@@ -31,6 +31,7 @@ RISK_TOOLS: dict[str,ToolPolicy]={
     "building_damage_bindings.py":WORK,
     "building_damage_package_check.py":READ,
     "building_damage_codex.py":NETWORK,
+    "building_damage_original_reference.py":WORK,
     "building_damage_runtime_preflight.py":READ,
     "suite_live_noesis_log_audit.py":READ,
     "qa_workstream_census.py":READ,
@@ -82,7 +83,7 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
     if name=="qa_workstream_census.py":
         return WORK if "--out" in command else READ
     if name=="building_damage_codex.py":
-        return NETWORK if "--execute" in command else READ
+        return NETWORK if {"--execute", "--login"} & command else READ
     if name=="ziel_se211.py":
         if {"installieren","deinstallieren","zurueckspielen"} & command:
             return GAME

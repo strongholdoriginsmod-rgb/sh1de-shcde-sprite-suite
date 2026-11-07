@@ -124,7 +124,7 @@
             'This is a Stronghold Crusader Definitive Edition mod sprite. Preserve the original asset\'s exact isometric camera angle, geometry, footprint, material palette, lighting direction, pixel-art texture, architectural identity, perspective and roof/wall orientation.',
             'Damage type: ' + kind,
             'At or below ' + stage.hpAtOrBelow + '% remaining HP the state must read as ' + severity + '.',
-            previous ? 'An additional previous approved damage-state reference is attached. The new state must show monotonically more damage, NEVER a repaired or structurally restored part. Preserve all unchanged elements exactly.' :
+            previous ? 'An additional previous damage-state reference is attached. The new state must show monotonically more damage, NEVER a repaired or structurally restored part. Preserve all unchanged elements exactly.' :
                 'Start from the intact original and change only what the indicated damage state requires.',
             'KEEP the FIRST reference image canvas size, object position, bottom-ground anchor, transparent alpha background and alignment exactly. Do not crop, resize, rotate, zoom, shift, add a background, ground plane, camera effects, text, labels, UI, watermark, figures or unrelated decorations.',
             'All transparent exterior pixels must remain transparent (straight alpha PNG). No black opaque seams, halos or stray isolated black pixels. Preserve crisp silhouette and non-damaged source pixels as faithfully as possible.',

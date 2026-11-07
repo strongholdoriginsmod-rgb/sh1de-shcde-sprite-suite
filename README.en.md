@@ -255,7 +255,7 @@ Large and partly game-derived binary resources remain in the access-managed grap
 
 ## Shared integration: building damage and tool consolidation (2026-11-06)
 
-The isolated integration branch combines the reviewed one-pixel tile-overlap fix with the building damage stage workflow (mechanical and fire paths, HP thresholds, side-by-side review), an explicit GPT Image 2.6 Codex bridge, and the safe shared tool catalog plus historical SHA comparison. The HTML sprite editor remains offline. Approved stages are exported as a separate manifest-and-tile data package; this is not an unverified live-game sprite switching patch.
+In the SpriteSuite-launched sprite editor, **Damage → AI sprites with Codex** uses ChatGPT sign-in to generate custom HP/fire progressions and alternate versions of the selected building. The local Codex client receives prompts and references and uses your ChatGPT plan for image generation. Results can be exported as editable tiles and damage packages.
 
 See [building damage instructions](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md) and the [integration handoff / test matrix](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).
 

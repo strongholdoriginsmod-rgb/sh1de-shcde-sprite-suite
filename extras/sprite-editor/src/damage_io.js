@@ -72,7 +72,21 @@
     function applyCandidate(state, store, stageId) {
         const out = I.clone(state), { stage, base, scene } = getStage(out, stageId);
         if (!stage.candidateId) fail('Zuerst ein erzeugtes PNG als Kandidat importieren.');
-        const ref = baseComposite(state, store, base.id), candidate = store.get(stage.candidateId);
+        const result = applyImageToScene(out, store, base, scene, store.get(stage.candidateId));
+        stage.status = 'draft';
+        result.state = I.validate(out, result.store);
+        return result;
+    }
+    function withBuildingVersion(state, store, buildingGroupId, label, image) {
+        const out = I.clone(state), base = out.scenes.find(g => g.id === buildingGroupId);
+        if (!base || base.settings.category !== 'building') fail('Gebäudegruppe fehlt.');
+        const scene = { ...base, id: I.uid('g'), name: C.safeName(label.trim() || base.name + ' v2') };
+        out.scenes.push(scene);
+        const result = applyImageToScene(out, store, base, scene, image);
+        return { ...result, state: I.validate(out, result.store), sceneId: scene.id };
+    }
+    function applyImageToScene(out, store, base, scene, candidate) {
+        const ref = baseComposite(out, store, base.id);
         const report = D.checkCandidate(ref.image, candidate);
         if (report.errors.length) fail('Qualitätsprüfung: ' + report.errors.join(' '));
         const layout = ref.layout, settings = scene.settings;
@@ -90,9 +104,9 @@
                     candidate.data[i + 2] !== rebuilt.data[i + 2])))
                 fail('Split-Rekonstruktion stimmt nicht pixelgenau; Kandidat unverändert lassen.');
         const next = store.fork();
-        const oldFrames = out.frames.filter(f => f.groupId === stage.sceneId);
+        const oldFrames = out.frames.filter(f => f.groupId === scene.id);
         const ppu = ref.frames[0].ppu;
-        out.frames = out.frames.filter(f => f.groupId !== stage.sceneId);
+        out.frames = out.frames.filter(f => f.groupId !== scene.id);
         const positions = C.positions(settings);
         for (const t of cut.tiles) {
             const imageId = next.add(t.image), groupName = scene.name;
@@ -114,7 +128,7 @@
         // original. Preserve the exact original canvas by padding ONE upper
         // tile with transparent rows, without changing its visible pixels,
         // 64px width, bottom anchor, or any neighbouring tile coordinates.
-        const stageFrames = out.frames.filter(f => f.groupId === stage.sceneId);
+        const stageFrames = out.frames.filter(f => f.groupId === scene.id);
         let stageLayout = C.layout(stageFrames, settings, key => next.get(key));
         const missingHeadroom = stageLayout.top - ref.layout.top;
         if (stageLayout.left !== ref.layout.left ||
@@ -147,10 +161,9 @@
                 fail('Die bearbeitbare Gebäudegruppe ist nicht pixelgleich zum importierten Gesamtbild.');
         }
         // Never carry a colour/team material mask over a changed silhouette.
-        stage.status = 'draft';
-        const hadMasks = oldFrames.some(f => f.maskId);
+        const hadMasks = (oldFrames.length ? oldFrames : ref.frames).some(f => f.maskId);
         if (hadMasks) report.warnings.push('Original hatte Masken. Neue Tiles erhalten keine erfundenen Materialmasken; vor Abnahme manuell nachbearbeiten.');
-        return { state: I.validate(out, next), store: next, report, seamStats: cut.seamStats };
+        return { store: next, report, seamStats: cut.seamStats };
     }
     function qualityReport(state, store, stageId) {
         const { profile, stage, base, scene } = getStage(state, stageId);
@@ -339,6 +352,21 @@
             s.hpAtOrBelow > stage.hpAtOrBelow && s.status === 'approved')
             .sort((a, b) => a.hpAtOrBelow - b.hpAtOrBelow);
         const previous = sameKind[0] || null;
+        const draftReference = profile.stages.filter(s => s.kind === stage.kind &&
+            s.hpAtOrBelow > stage.hpAtOrBelow && s.candidateId)
+            .sort((a, b) => a.hpAtOrBelow - b.hpAtOrBelow)[0];
+        const useDraft = draftReference && (!previous || draftReference.hpAtOrBelow < previous.hpAtOrBelow);
+        const priorImage = useDraft ? store.get(draftReference.candidateId) :
+            previous ? baseComposite(state, store, previous.sceneId).image : null;
+        const previousStage = useDraft ? draftReference : previous;
+        return makeImageBundle(original, base, stage, options, priorImage, previousStage,
+            stage.candidateId ? store.get(stage.candidateId) : null);
+    }
+    async function makeVersionBundle(state, store, groupId, changeRequest, options = {}) {
+        const original = baseComposite(state, store, groupId);
+        return makeImageBundle(original, original.group, null, options, null, null, null, changeRequest);
+    }
+    async function makeImageBundle(original, base, stage, options, priorImage, previous, candidate, changeRequest) {
         const entries = [{ name: 'reference.png', data: await K.encodePNG(original.image, options) }];
         const plan = modelCanvasPlan(original.image), referenceFiles = [];
         if (plan) {
@@ -348,24 +376,23 @@
         }
         else
             referenceFiles.push('reference.png');
-        if (previous) {
-            const p = baseComposite(state, store, previous.sceneId);
-            if (p.image.width === original.image.width && p.image.height === original.image.height) {
-                const name = plan ? 'model_previous.png' : 'previous.png';
-                const img = plan ? modelCanvas(p.image, plan) : p.image;
-                entries.push({ name, data: await K.encodePNG(img, options) });
-                referenceFiles.push(name);
-            }
+        const hasPrevious = priorImage && priorImage.width === original.image.width &&
+            priorImage.height === original.image.height;
+        if (hasPrevious) {
+            const name = plan ? 'model_previous.png' : 'previous.png';
+            const img = plan ? modelCanvas(priorImage, plan) : priorImage;
+            entries.push({ name, data: await K.encodePNG(img, options) });
+            referenceFiles.push(name);
         }
-        if (stage.candidateId) {
-            const image = store.get(stage.candidateId);
+        if (candidate) {
+            const image = candidate;
             if (image.width === original.image.width && image.height === original.image.height) {
                 const name = plan ? 'model_candidate.png' : 'candidate.png';
                 entries.push({ name, data: await K.encodePNG(plan ? modelCanvas(image, plan) : image, options) });
                 referenceFiles.push(name);
             }
             else if (plan && image.width === plan.width && image.height === plan.height) {
-                entries.push({ name: 'model_candidate.png', data: await store.bytes(stage.candidateId, options.signal) });
+                entries.push({ name: 'model_candidate.png', data: await K.encodePNG(image, options) });
                 referenceFiles.push('model_candidate.png');
             }
         }
@@ -377,28 +404,33 @@
             ' on this same canvas; preserve its ground baseline and transparent exterior. ' +
             'The editor will inverse-scale this rectangle by factor ' + plan.scale +
             ' to the exact original pixel grid; preserve crisp pixel texture. ' +
-            'Do not move, zoom, crop, shift, re-center or add shadows outside the registered sprite.\\n' : '';
+            'Do not move, zoom, crop, shift, re-center or add shadows outside the registered sprite.\n' : '';
         const request = {
             format: 'stronghold-building-damage-request', version: 1,
-            model: stage.model, quality: 'high', background: 'transparent', output_format: 'png',
+            provider: 'codex-chatgpt', ...(stage ? { model: stage.model } : {}),
+            quality: 'high', background: 'transparent', output_format: 'png',
             size: plan ? plan.width + 'x' + plan.height : 'auto', complexity: 'high',
             registration: plan,
-            buildingGroup: base.name, buildingGroupId: base.id, stageId: stage.id, damageKind: stage.kind,
-            hpAtOrBelow: stage.hpAtOrBelow,
+            buildingGroup: base.name, buildingGroupId: base.id,
+            stageId: stage ? stage.id : I.uid('v'),
+            purpose: stage ? 'damage' : 'version',
+            ...(stage ? { damageKind: stage.kind, hpAtOrBelow: stage.hpAtOrBelow } : {}),
             referenceWidth: original.image.width, referenceHeight: original.image.height,
             referenceSHA256: await K.sha256(entries[0].data),
-            prompt: registeredPrompt + D.buildPrompt(original.image, stage, base, previous, plan),
+            prompt: registeredPrompt + (stage ? D.buildPrompt(original.image, stage, base, hasPrevious ? previous : null, plan) :
+                'Make an alternate intact version of the same isometric game building. Building: ' + base.name +
+                '. Preserve the building type and use, sprite style, perspective, materials, scale, lighting, ' +
+                'ground anchor, footprint and transparent background. Change architectural details visibly. ' +
+                'Return one building only, with no text, people, background or decorative border. ' +
+                (changeRequest ? '\nRequested changes: ' + changeRequest : '')),
             referenceFiles
         };
         entries.push({ name: 'request.json', data: JSON.stringify(request, null, 2) });
         entries.push({ name: 'CODEX.md', data:
-            'Codex kann dieses Bundle mit dem Projektadapter verarbeiten:\n' +
+            'Mit dem offiziellen Codex-Client und dem ChatGPT-Konto anmelden (codex login).\n' +
             'python tools/building_damage_codex.py --bundle <bundle.zip> --output <neuer-ordner> --dry-run\n' +
-            'Zum kostenpflichtigen echten Image-2.6-Edit nur auf ausdrückliche Anweisung:\n' +
             'python tools/building_damage_codex.py --bundle <bundle.zip> --output <neuer-ordner> --execute\n' +
-            'OPENAI_API_KEY muss außerhalb der Projektdatei in der Umgebung liegen.\n' +
-            'candidate.png im Editor importieren, Form/Alpha/Tiles prüfen und explizit abnehmen.\n' +
-            'Der Editor sendet niemals selbst Netzwerkanfragen.\n'
+            'candidate.png im Editor importieren oder das Rohbild manuell ausrichten.\n'
         });
         return { bytes: K.zip(entries), request };
     }
@@ -468,5 +500,5 @@
         return { bytes: K.zip(entries), manifest };
     }
     return { getStage, baseComposite, createStage, withCandidate, applyCandidate,
-        qualityReport, approvalSignature, approveStage, makeRequestBundle, exportPackage };
+        qualityReport, approvalSignature, approveStage, makeRequestBundle, makeVersionBundle, withBuildingVersion, exportPackage };
 });

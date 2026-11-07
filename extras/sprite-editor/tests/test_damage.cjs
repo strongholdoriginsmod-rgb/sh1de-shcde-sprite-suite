@@ -290,3 +290,29 @@ test('free damage export includes drafts, rejected variants and edited approved 
     A.equal(entry.contentApproved, false);
     A.equal(entry.approvalDigest, null);
 });
+
+test('Codex version creates separate pixel-exact editable tiles and retains the original', async () => {
+    const f = stageFixture();
+    f.s.damageProfiles[0].gameBuildingType = 19;
+    const candidate = damageCandidate(f);
+    const version = DI.withBuildingVersion(f.s, f.store, f.gid, 'Version / zwei', candidate);
+    A.equal(version.state.scenes.length, f.s.scenes.length + 1);
+    A.equal(version.state.damageProfiles.length, 1);
+    A.equal(version.state.damageProfiles[0].gameBuildingType, 19);
+    A.equal(version.state.frames.find(frame => frame.groupId === f.gid).imageId, f.imageId);
+    A.deepEqual(DI.baseComposite(version.state, version.store, version.sceneId).image.data, candidate.data);
+    const req = (await DI.makeVersionBundle(f.s, f.store, f.gid, 'Change the door.')).request;
+    A.equal(req.provider, 'codex-chatgpt');
+    A.equal(req.purpose, 'version');
+    A.match(req.prompt, /building type and use/);
+    A.match(req.prompt, /Change the door/);
+});
+
+test('a draft candidate can reference the next stronger damage job', async () => {
+    const f = stageFixture();
+    const draft = DI.withCandidate(f.s, f.store, f.stageId, damageCandidate(f));
+    const next = DI.createStage(draft.state, draft.store, f.gid, 'mechanical', 30);
+    const req = (await DI.makeRequestBundle(next.state, next.store, next.stageId)).request;
+    A.deepEqual(req.referenceFiles, ['model_reference.png', 'model_previous.png']);
+    A.match(req.prompt, /previous damage-state reference/);
+});

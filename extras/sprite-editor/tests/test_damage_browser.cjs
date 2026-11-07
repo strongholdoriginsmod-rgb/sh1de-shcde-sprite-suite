@@ -55,8 +55,9 @@ async function run() {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'shcde-damage-browser-'));
     const errors = [], requests = [], checks = [];
     const browser = await puppeteer.launch({
-        executablePath: EDGE, headless: true,
-        args: ['--no-sandbox', '--disable-extensions', '--disable-background-networking']
+        executablePath: EDGE, headless: true, pipe: true,
+        args: ['--no-sandbox', '--disable-extensions', '--disable-background-networking',
+            '--edge-skip-compat-layer-relaunch', '--do-not-de-elevate', '--disable-edgeupdater']
     });
     try {
         const page = await browser.newPage();
