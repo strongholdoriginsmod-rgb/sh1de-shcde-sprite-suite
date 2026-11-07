@@ -1,0 +1,34 @@
+{
+  "damageArchive": "gebaeudeschaden_alle.zip",
+  "damageDirectory": "DamageAssets",
+  "enabled": true,
+  "firePersistsUntilRepaired": true,
+  "pollFrames": 12,
+  "previewEnabled": false,
+  "previewHpPercent": 50,
+  "previewFire": false,
+  "bindings": [
+    {
+      "buildingType": 104,
+      "buildingGroupId": "REPLACE_WITH_SHSPRITE_BUILDING_GROUP_ID",
+      "sourceSprite": "tile_buildings1 506",
+      "matchGmImage": true,
+      "gm": 6,
+      "image": 506,
+      "slot": 0,
+      "ownerOffsetX": 0,
+      "ownerOffsetY": 0
+    },
+    {
+      "buildingType": 104,
+      "buildingGroupId": "REPLACE_WITH_SHSPRITE_BUILDING_GROUP_ID",
+      "sourceSprite": "tile_buildings1 505",
+      "matchGmImage": true,
+      "gm": 6,
+      "image": 505,
+      "slot": 1,
+      "ownerOffsetX": 0,
+      "ownerOffsetY": 0
+    }
+  ]
+}

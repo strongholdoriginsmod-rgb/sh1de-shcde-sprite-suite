@@ -27,6 +27,9 @@ RISK_TOOLS: dict[str,ToolPolicy]={
     "building_damage_layer_audit.py":READ,
     "qa_building_damage_runtime.py":WORK,
     "qa_building_damage_live.py":GAME,
+    "suite_building_damage_live_mod.py":WORK,
+    "building_damage_bindings.py":WORK,
+    "building_damage_package_check.py":READ,
     "building_damage_codex.py":NETWORK,
     "building_damage_runtime_preflight.py":READ,
     "suite_live_noesis_log_audit.py":READ,
@@ -62,6 +65,8 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         if "check" in command or "doctor" in command or "verify" in command:
             return READ
         return WORK
+    if name=="suite_building_damage_live_mod.py":
+        return GAME if "--install" in command else WORK
     if name=="qa_building_damage_live.py":
         if "--install-qa" in command or "--remove-qa" in command:
             return GAME
