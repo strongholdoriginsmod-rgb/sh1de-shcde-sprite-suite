@@ -3,10 +3,10 @@
 One JSON manifest is the only unit-specific input.  The same commands are used
 for the European slinger and the planned follow-up units:
 
-    python tools/unit_pipeline.py spec-check --spec config/unit-production/european-slinger.json
-    python tools/unit_pipeline.py prototype --spec ... --from work/export --out work/prototype
-    python tools/unit_pipeline.py build --spec ... --from work/export --out work/complete
-    python tools/unit_pipeline.py sheet --spec ... --from work/export --rendered work/prototype --out review.png
+    python tools/unit_pipeline.py spec-check --spec work/unit-manifest.json
+    python tools/unit_pipeline.py prototype --spec work/unit-manifest.json --from work/export --out work/prototype
+    python tools/unit_pipeline.py build --spec work/unit-manifest.json --from work/export --out work/complete
+    python tools/unit_pipeline.py sheet --spec work/unit-manifest.json --from work/export --rendered work/prototype --out review.png
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def _parser() -> argparse.ArgumentParser:
         if name != "spec-check":
             command.add_argument("--from", dest="source", type=Path, required=True)
         if name in {"prototype", "build"}:
-            command.add_argument("--out", type=Path, required=True)
+            command.add_argument("--out", type=Path, required=True, help="New output directory")
         if name in {"prototype", "sheet"}:
             command.add_argument("--slots", default=DEFAULT_PROTOTYPE_SLOTS)
         if name == "sheet":
@@ -101,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         if args.command == "prototype":
             stats = render_prototype(
-                args.source.resolve(), args.out.resolve(), spec, frame_names
+                args.source.resolve(), args.out, spec, frame_names
             )
             print(json.dumps([asdict(item) for item in stats], indent=2))
             return 0
@@ -109,16 +109,16 @@ def main(argv: list[str] | None = None) -> int:
             build_comparison_sheet(
                 args.source.resolve(),
                 args.rendered.resolve(),
-                args.out.resolve(),
+                args.out,
                 spec,
                 frame_names,
             )
             print(f"Vergleichstafel: {args.out.resolve()}")
             return 0
-        report = build_unit_series(args.source.resolve(), args.out.resolve(), spec)
+        report = build_unit_series(args.source.resolve(), args.out, spec)
         print(json.dumps(asdict(report), ensure_ascii=False, indent=2))
         return 0
-    except UnitProductionError as exc:
+    except (UnitProductionError, OSError, ValueError) as exc:
         print(f"Einheitenproduktion abgelehnt: {exc}", file=sys.stderr)
         return 1
 

@@ -14,11 +14,13 @@ degrading into a recolour.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from collections import deque
 import hashlib
 import json
 import math
+import ntpath
 from pathlib import Path
 import re
 import shutil
@@ -26,6 +28,8 @@ import tempfile
 from typing import Any, Iterable, Mapping, Sequence
 
 from PIL import Image, ImageChops, ImageDraw
+
+from .asset_stream_contract import AssetStreamContractError, require_safe_relative_path
 
 
 SPEC_SCHEMA = 1
@@ -1827,8 +1831,37 @@ def _payload_digest(paths: Iterable[Path], root: Path) -> str:
     return digest.hexdigest()
 
 
+def _frame_path(root: Path, value: object, label: str) -> Path:
+    try:
+        relative = require_safe_relative_path(value, label)
+    except AssetStreamContractError as exc:
+        raise UnitProductionError(str(exc)) from exc
+    path = root / relative
+    if ntpath.isreserved(relative) or not path.resolve().is_relative_to(root):
+        raise UnitProductionError(f"Unsafe {label}: {relative!r}")
+    return path
+
+
+@contextmanager
+def _staged_unit_output(source: Path, destination: Path):
+    """Publish the completed render in a new sibling of its staging area."""
+    if destination.exists() or destination.is_symlink():
+        raise UnitProductionError(f"Choose a new output directory: {destination}")
+    destination = destination.resolve()
+    if destination.is_relative_to(source):
+        raise UnitProductionError("Unit output cannot be inside the source export")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".unit-output-", dir=destination.parent) as scratch:
+        staging = Path(scratch) / "payload"
+        staging.mkdir()
+        yield staging
+        if destination.exists() or destination.is_symlink():
+            raise UnitProductionError(f"Output appeared during rendering: {destination}")
+        staging.rename(destination)
+
+
 def _load_export_contract(source_dir: Path, spec: UnitSpec) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    index_path = source_dir / "index.json"
+    index_path = _frame_path(source_dir, "index.json", "sprite index")
     try:
         index = json.loads(index_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -1847,6 +1880,7 @@ def _load_export_contract(source_dir: Path, spec: UnitSpec) -> tuple[dict[str, A
         )
     typed_frames: list[dict[str, Any]] = []
     names: list[str] = []
+    paths = {"index.json", "unit-production-report.json", "prototype-report.json"}
     for position, raw_frame in enumerate(frames):
         if not isinstance(raw_frame, dict):
             raise UnitProductionError(f"Frame {position} is not an object")
@@ -1856,6 +1890,12 @@ def _load_export_contract(source_dir: Path, spec: UnitSpec) -> tuple[dict[str, A
         name = raw_frame["name"]
         if not isinstance(name, str):
             raise UnitProductionError(f"Frame {position}.name is invalid")
+        for key in ("file", "mask_file"):
+            filename = _frame_path(source_dir, raw_frame[key], f"{name}.{key}")
+            relative = filename.relative_to(source_dir).as_posix().casefold()
+            if relative in paths:
+                raise UnitProductionError(f"Duplicate frame file: {filename.name}")
+            paths.add(relative)
         names.append(name)
         typed_frames.append(raw_frame)
     if len(names) != len(set(names)):
@@ -1873,13 +1913,11 @@ def build_unit_series(source_dir: Path, output_dir: Path, spec: UnitSpec) -> Uni
     """Render a complete frame family atomically and pin all quality evidence."""
 
     source_dir = source_dir.resolve()
-    output_dir = output_dir.resolve()
-    index, frames = _load_export_contract(source_dir, spec)
-    output_dir.parent.mkdir(parents=True, exist_ok=True)
-    temp_root = Path(tempfile.mkdtemp(prefix=output_dir.name + ".tmp-", dir=output_dir.parent))
+    _, frames = _load_export_contract(source_dir, spec)
     stats: list[FrameRenderStats] = []
-    try:
+    with _staged_unit_output(source_dir, output_dir) as temp_root:
         shutil.copy2(source_dir / "index.json", temp_root / "index.json")
+        payload_paths = []
         for frame in frames:
             name = str(frame["name"])
             filename = str(frame["file"])
@@ -1900,15 +1938,15 @@ def build_unit_series(source_dir: Path, output_dir: Path, spec: UnitSpec) -> Uni
             rendered, rendered_mask, frame_stats = render_unit_frame(
                 colour, mask, spec, name=name
             )
-            rendered.save(temp_root / filename, format="PNG", optimize=False, compress_level=9)
-            rendered_mask.save(
-                temp_root / mask_filename, format="PNG", optimize=False, compress_level=9
-            )
+            for image, relative in ((rendered, filename), (rendered_mask, mask_filename)):
+                target = temp_root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                image.save(target, format="PNG", optimize=False, compress_level=9)
+                payload_paths.append(target)
             stats.append(frame_stats)
 
         names = [str(frame["name"]) for frame in frames]
         main, alternate = _slot_counts(names, spec.group)
-        payload_paths = list(temp_root.glob("*.png"))
         report = UnitBuildReport(
             schema_version=REPORT_SCHEMA,
             unit_id=spec.unit_id,
@@ -1940,13 +1978,7 @@ def build_unit_series(source_dir: Path, output_dir: Path, spec: UnitSpec) -> Uni
             + "\n",
             encoding="utf-8",
         )
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
-        temp_root.replace(output_dir)
-        return report
-    except Exception:
-        shutil.rmtree(temp_root, ignore_errors=True)
-        raise
+    return report
 
 
 def render_prototype(
@@ -1958,28 +1990,29 @@ def render_prototype(
     """Render a selected cross-section without pretending it is production-ready."""
 
     source_dir = source_dir.resolve()
-    output_dir = output_dir.resolve()
     _, frames = _load_export_contract(source_dir, spec)
     by_name = {str(frame["name"]): frame for frame in frames}
     missing = sorted(set(frame_names) - set(by_name))
     if missing:
         raise UnitProductionError(f"Unknown prototype frames: {missing}")
-    output_dir.mkdir(parents=True, exist_ok=True)
     stats: list[FrameRenderStats] = []
-    for name in frame_names:
-        frame = by_name[name]
-        with Image.open(source_dir / str(frame["file"])) as opened:
-            colour = opened.convert("RGBA")
-        with Image.open(source_dir / str(frame["mask_file"])) as opened:
-            mask = opened.convert("RGBA")
-        rendered, rendered_mask, frame_stats = render_unit_frame(colour, mask, spec, name=name)
-        rendered.save(output_dir / str(frame["file"]), format="PNG", compress_level=9)
-        rendered_mask.save(output_dir / str(frame["mask_file"]), format="PNG", compress_level=9)
-        stats.append(frame_stats)
-    (output_dir / "prototype-report.json").write_text(
-        json.dumps([asdict(item) for item in stats], ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    with _staged_unit_output(source_dir, output_dir) as temp_root:
+        for name in frame_names:
+            frame = by_name[name]
+            with Image.open(source_dir / str(frame["file"])) as opened:
+                colour = opened.convert("RGBA")
+            with Image.open(source_dir / str(frame["mask_file"])) as opened:
+                mask = opened.convert("RGBA")
+            rendered, rendered_mask, frame_stats = render_unit_frame(colour, mask, spec, name=name)
+            for image, key in ((rendered, "file"), (rendered_mask, "mask_file")):
+                target = temp_root / frame[key]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                image.save(target, format="PNG", compress_level=9)
+            stats.append(frame_stats)
+        (temp_root / "prototype-report.json").write_text(
+            json.dumps([asdict(item) for item in stats], ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
     return stats
 
 
@@ -1992,7 +2025,9 @@ def build_comparison_sheet(
 ) -> None:
     """Build a labelled donor/new/mask board for human adversarial review."""
 
-    _, frames = _load_export_contract(source_dir.resolve(), spec)
+    source_dir = source_dir.resolve()
+    rendered_dir = rendered_dir.resolve()
+    _, frames = _load_export_contract(source_dir, spec)
     by_name = {str(frame["name"]): frame for frame in frames}
     scale = 4
     cell_w = 180
@@ -2006,8 +2041,8 @@ def build_comparison_sheet(
             raise UnitProductionError(f"Unknown sheet frame {name}")
         paths = (
             source_dir / str(frame["file"]),
-            rendered_dir / str(frame["file"]),
-            rendered_dir / str(frame["mask_file"]),
+            _frame_path(rendered_dir, frame["file"], f"{name}.file"),
+            _frame_path(rendered_dir, frame["mask_file"], f"{name}.mask_file"),
         )
         for row, path in enumerate(paths):
             if not path.is_file():
@@ -2020,4 +2055,10 @@ def build_comparison_sheet(
             sheet.alpha_composite(image, (x, y))
             draw.text((column * cell_w + 5, row * cell_h + 5), f"{labels[row]} | {name}", fill=(238, 238, 238, 255))
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    sheet.convert("RGB").save(output_path, format="PNG", compress_level=9)
+    destination = output_path.open("xb")
+    try:
+        with destination:
+            sheet.convert("RGB").save(destination, format="PNG", compress_level=9)
+    except Exception:
+        output_path.unlink(missing_ok=True)
+        raise
