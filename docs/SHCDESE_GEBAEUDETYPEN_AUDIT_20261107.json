@@ -1,0 +1,962 @@
+{
+    "format":  "spritesuite-shcdese-building-type-index",
+    "version":  1,
+    "sourceDLLSHA256":  "5cb1c33be5463086505a17f5c48aaa357d733cfff7240e101c821f0e3c668498",
+    "assemblyVersion":  "2.14.3.0",
+    "enumType":  "SHCDESE.Interop.eStructs",
+    "values":  [
+                   {
+                       "value":  0,
+                       "name":  "STRUCT_NULL"
+                   },
+                   {
+                       "value":  1,
+                       "name":  "STRUCT_HOVEL"
+                   },
+                   {
+                       "value":  2,
+                       "name":  "STRUCT_OUTPOST_BEDOUIN"
+                   },
+                   {
+                       "value":  3,
+                       "name":  "STRUCT_WOODCUTTERS_HUT"
+                   },
+                   {
+                       "value":  4,
+                       "name":  "STRUCT_OXEN_BASE"
+                   },
+                   {
+                       "value":  5,
+                       "name":  "STRUCT_IRON_MINE"
+                   },
+                   {
+                       "value":  6,
+                       "name":  "STRUCT_PITCH_DIGGER"
+                   },
+                   {
+                       "value":  7,
+                       "name":  "STRUCT_HUNTERS_HUT"
+                   },
+                   {
+                       "value":  8,
+                       "name":  "STRUCT_BARRACKS_WOOD"
+                   },
+                   {
+                       "value":  9,
+                       "name":  "STRUCT_BARRACKS_STONE"
+                   },
+                   {
+                       "value":  10,
+                       "name":  "STRUCT_GOODS_YARD"
+                   },
+                   {
+                       "value":  11,
+                       "name":  "STRUCT_ARMOURY"
+                   },
+                   {
+                       "value":  12,
+                       "name":  "STRUCT_FLETCHERS_WORKSHOP"
+                   },
+                   {
+                       "value":  13,
+                       "name":  "STRUCT_BLACKSMITHS_WORKSHOP"
+                   },
+                   {
+                       "value":  14,
+                       "name":  "STRUCT_POLETURNERS_WORKSHOP"
+                   },
+                   {
+                       "value":  15,
+                       "name":  "STRUCT_ARMOURERS_WORKSHOP"
+                   },
+                   {
+                       "value":  16,
+                       "name":  "STRUCT_TANNERS_WORKSHOP"
+                   },
+                   {
+                       "value":  17,
+                       "name":  "STRUCT_BAKERS_WORKSHOP"
+                   },
+                   {
+                       "value":  18,
+                       "name":  "STRUCT_BREWERS_WORKSHOP"
+                   },
+                   {
+                       "value":  19,
+                       "name":  "STRUCT_GRANARY"
+                   },
+                   {
+                       "value":  20,
+                       "name":  "STRUCT_QUARRY"
+                   },
+                   {
+                       "value":  21,
+                       "name":  "STRUCT_QUARRYPILE"
+                   },
+                   {
+                       "value":  22,
+                       "name":  "STRUCT_INN"
+                   },
+                   {
+                       "value":  23,
+                       "name":  "STRUCT_HEALER"
+                   },
+                   {
+                       "value":  24,
+                       "name":  "STRUCT_ENGINEERS_GUILD"
+                   },
+                   {
+                       "value":  25,
+                       "name":  "STRUCT_TUNNELLERS_GUILD"
+                   },
+                   {
+                       "value":  26,
+                       "name":  "STRUCT_TRADEPOST"
+                   },
+                   {
+                       "value":  27,
+                       "name":  "STRUCT_WELL"
+                   },
+                   {
+                       "value":  28,
+                       "name":  "STRUCT_OIL_SMELTER"
+                   },
+                   {
+                       "value":  29,
+                       "name":  "STRUCT_SIEGE_TENT"
+                   },
+                   {
+                       "value":  30,
+                       "name":  "STRUCT_WHEATFARM"
+                   },
+                   {
+                       "value":  31,
+                       "name":  "STRUCT_HOPSFARM"
+                   },
+                   {
+                       "value":  32,
+                       "name":  "STRUCT_APPLEFARM"
+                   },
+                   {
+                       "value":  33,
+                       "name":  "STRUCT_CATTLEFARM"
+                   },
+                   {
+                       "value":  34,
+                       "name":  "STRUCT_MILL"
+                   },
+                   {
+                       "value":  35,
+                       "name":  "STRUCT_STABLES"
+                   },
+                   {
+                       "value":  36,
+                       "name":  "STRUCT_CHURCH1"
+                   },
+                   {
+                       "value":  37,
+                       "name":  "STRUCT_CHURCH2"
+                   },
+                   {
+                       "value":  38,
+                       "name":  "STRUCT_CHURCH3"
+                   },
+                   {
+                       "value":  39,
+                       "name":  "STRUCT_RUINS"
+                   },
+                   {
+                       "value":  40,
+                       "name":  "STRUCT_KEEP_ONE"
+                   },
+                   {
+                       "value":  41,
+                       "name":  "STRUCT_KEEP_TWO"
+                   },
+                   {
+                       "value":  42,
+                       "name":  "STRUCT_KEEP_THREE"
+                   },
+                   {
+                       "value":  43,
+                       "name":  "STRUCT_KEEP_FOUR"
+                   },
+                   {
+                       "value":  44,
+                       "name":  "STRUCT_KEEP_FIVE"
+                   },
+                   {
+                       "value":  45,
+                       "name":  "STRUCT_GATE_MAIN"
+                   },
+                   {
+                       "value":  46,
+                       "name":  "STRUCT_GATE_INNER"
+                   },
+                   {
+                       "value":  47,
+                       "name":  "STRUCT_GATE_WOOD"
+                   },
+                   {
+                       "value":  48,
+                       "name":  "STRUCT_GATE_POSTERN"
+                   },
+                   {
+                       "value":  49,
+                       "name":  "STRUCT_DRAWBRIDGE"
+                   },
+                   {
+                       "value":  50,
+                       "name":  "STRUCT_TUNNEL_ENTERANCE"
+                   },
+                   {
+                       "value":  51,
+                       "name":  "STRUCT_PARADEGROUND_OIL"
+                   },
+                   {
+                       "value":  52,
+                       "name":  "STRUCT_SIGNPOST"
+                   },
+                   {
+                       "value":  53,
+                       "name":  "STRUCT_PARADEGROUND_ENG"
+                   },
+                   {
+                       "value":  54,
+                       "name":  "STRUCT_SIEGE_TENT_ARAB_BALLISTA"
+                   },
+                   {
+                       "value":  55,
+                       "name":  "STRUCT_CAMPGROUND"
+                   },
+                   {
+                       "value":  56,
+                       "name":  "STRUCT_PARADEGROUND_MISS"
+                   },
+                   {
+                       "value":  57,
+                       "name":  "STRUCT_PARADEGROUND_LGT"
+                   },
+                   {
+                       "value":  58,
+                       "name":  "STRUCT_PARADEGROUND_HVY"
+                   },
+                   {
+                       "value":  59,
+                       "name":  "STRUCT_PARADEGROUND_TUN"
+                   },
+                   {
+                       "value":  60,
+                       "name":  "STRUCT_GATEHOUSE"
+                   },
+                   {
+                       "value":  61,
+                       "name":  "STRUCT_TOWER"
+                   },
+                   {
+                       "value":  62,
+                       "name":  "STRUCT_GALLOWS"
+                   },
+                   {
+                       "value":  63,
+                       "name":  "STRUCT_STOCKS"
+                   },
+                   {
+                       "value":  64,
+                       "name":  "STRUCT_WITCH_HOIST"
+                   },
+                   {
+                       "value":  65,
+                       "name":  "STRUCT_MAYPOLE"
+                   },
+                   {
+                       "value":  66,
+                       "name":  "STRUCT_GARDEN"
+                   },
+                   {
+                       "value":  67,
+                       "name":  "STRUCT_KILLING_PIT"
+                   },
+                   {
+                       "value":  68,
+                       "name":  "STRUCT_PITCH_DITCH"
+                   },
+                   {
+                       "value":  69,
+                       "name":  "STRUCT_SIEGE_TOWER"
+                   },
+                   {
+                       "value":  70,
+                       "name":  "STRUCT_WATERPOT"
+                   },
+                   {
+                       "value":  71,
+                       "name":  "STRUCT_KEEPDOOR_LEFT"
+                   },
+                   {
+                       "value":  72,
+                       "name":  "STRUCT_KEEPDOOR_RIGHT"
+                   },
+                   {
+                       "value":  73,
+                       "name":  "STRUCT_KEEPDOOR"
+                   },
+                   {
+                       "value":  74,
+                       "name":  "STRUCT_TOWER1"
+                   },
+                   {
+                       "value":  75,
+                       "name":  "STRUCT_TOWER2"
+                   },
+                   {
+                       "value":  76,
+                       "name":  "STRUCT_TOWER3"
+                   },
+                   {
+                       "value":  77,
+                       "name":  "STRUCT_TOWER4"
+                   },
+                   {
+                       "value":  78,
+                       "name":  "STRUCT_TOWER5"
+                   },
+                   {
+                       "value":  79,
+                       "name":  "STRUCT_TOWER5_DESTROYED"
+                   },
+                   {
+                       "value":  80,
+                       "name":  "STRUCT_SIEGE_TENT_CATAPULT"
+                   },
+                   {
+                       "value":  81,
+                       "name":  "STRUCT_SIEGE_TENT_TREBUCHET"
+                   },
+                   {
+                       "value":  82,
+                       "name":  "STRUCT_SIEGE_TENT_SIEGE_TOWER"
+                   },
+                   {
+                       "value":  83,
+                       "name":  "STRUCT_SIEGE_TENT_BATTERING_RAM"
+                   },
+                   {
+                       "value":  84,
+                       "name":  "STRUCT_SIEGE_TENT_PORTABLE_SHIELD"
+                   },
+                   {
+                       "value":  85,
+                       "name":  "STRUCT_TUNNEL_CONSTRUCTION"
+                   },
+                   {
+                       "value":  86,
+                       "name":  "STRUCT_TOWER1_DESTROYED"
+                   },
+                   {
+                       "value":  87,
+                       "name":  "STRUCT_TOWER2_DESTROYED"
+                   },
+                   {
+                       "value":  88,
+                       "name":  "STRUCT_TOWER3_DESTROYED"
+                   },
+                   {
+                       "value":  89,
+                       "name":  "STRUCT_TOWER4_DESTROYED"
+                   },
+                   {
+                       "value":  90,
+                       "name":  "STRUCT_WAS_WALL"
+                   },
+                   {
+                       "value":  91,
+                       "name":  "STRUCT_CESS_PIT"
+                   },
+                   {
+                       "value":  92,
+                       "name":  "STRUCT_BURNING_STAKE"
+                   },
+                   {
+                       "value":  93,
+                       "name":  "STRUCT_GIBBET"
+                   },
+                   {
+                       "value":  94,
+                       "name":  "STRUCT_DUNGEON"
+                   },
+                   {
+                       "value":  95,
+                       "name":  "STRUCT_RACK_STRETCHING"
+                   },
+                   {
+                       "value":  96,
+                       "name":  "STRUCT_RACK_FLOGGING"
+                   },
+                   {
+                       "value":  97,
+                       "name":  "STRUCT_CHOPPING_BLOCK"
+                   },
+                   {
+                       "value":  98,
+                       "name":  "STRUCT_DUNKING_STOOL"
+                   },
+                   {
+                       "value":  99,
+                       "name":  "STRUCT_DOG_CAGE"
+                   },
+                   {
+                       "value":  100,
+                       "name":  "STRUCT_STATUE"
+                   },
+                   {
+                       "value":  101,
+                       "name":  "STRUCT_SHRINE"
+                   },
+                   {
+                       "value":  102,
+                       "name":  "STRUCT_BEE_HIVE"
+                   },
+                   {
+                       "value":  103,
+                       "name":  "STRUCT_DANCING_BEAR"
+                   },
+                   {
+                       "value":  104,
+                       "name":  "STRUCT_POND"
+                   },
+                   {
+                       "value":  105,
+                       "name":  "STRUCT_BEAR_CAVE"
+                   },
+                   {
+                       "value":  106,
+                       "name":  "STRUCT_OUTPOST"
+                   },
+                   {
+                       "value":  107,
+                       "name":  "STRUCT_OUTPOST_ARAB"
+                   },
+                   {
+                       "value":  108,
+                       "name":  "STRUCT_BEDOUIN_STOCKADE"
+                   },
+                   {
+                       "value":  109,
+                       "name":  "STRUCT_DOCK"
+                   },
+                   {
+                       "value":  110,
+                       "name":  "STRUCT_MAX"
+                   },
+                   {
+                       "value":  110,
+                       "name":  "STRUCT_WOOD_WALL"
+                   },
+                   {
+                       "value":  111,
+                       "name":  "STRUCT_STONE_WALL"
+                   },
+                   {
+                       "value":  112,
+                       "name":  "STRUCT_CRENAL_WALL"
+                   },
+                   {
+                       "value":  113,
+                       "name":  "STRUCT_STAIRS"
+                   },
+                   {
+                       "value":  114,
+                       "name":  "STRUCT_BRAZIER"
+                   },
+                   {
+                       "value":  115,
+                       "name":  "STRUCT_MANGONEL"
+                   },
+                   {
+                       "value":  116,
+                       "name":  "STRUCT_BALLISTA"
+                   },
+                   {
+                       "value":  117,
+                       "name":  "STRUCT_HEAD_ON_SPIKE"
+                   },
+                   {
+                       "value":  118,
+                       "name":  "STRUCT_GARDEN_SMALL"
+                   },
+                   {
+                       "value":  119,
+                       "name":  "STRUCT_GARDEN_MED"
+                   },
+                   {
+                       "value":  120,
+                       "name":  "STRUCT_GARDEN_LARGE"
+                   },
+                   {
+                       "value":  121,
+                       "name":  "STRUCT_POND_SMALL"
+                   },
+                   {
+                       "value":  122,
+                       "name":  "STRUCT_POND_LARGE"
+                   },
+                   {
+                       "value":  123,
+                       "name":  "STRUCT_FLAG1"
+                   },
+                   {
+                       "value":  124,
+                       "name":  "STRUCT_FLAG2"
+                   },
+                   {
+                       "value":  125,
+                       "name":  "STRUCT_FLAG3"
+                   },
+                   {
+                       "value":  126,
+                       "name":  "STRUCT_FLAG4"
+                   },
+                   {
+                       "value":  127,
+                       "name":  "STRUCT_GATE_WOOD1A"
+                   },
+                   {
+                       "value":  128,
+                       "name":  "STRUCT_GATE_WOOD1B"
+                   },
+                   {
+                       "value":  129,
+                       "name":  "STRUCT_GATE_WOOD1C"
+                   },
+                   {
+                       "value":  130,
+                       "name":  "STRUCT_GATE_WOOD1D"
+                   },
+                   {
+                       "value":  131,
+                       "name":  "STRUCT_GATE_STONE1A"
+                   },
+                   {
+                       "value":  132,
+                       "name":  "STRUCT_GATE_STONE1B"
+                   },
+                   {
+                       "value":  133,
+                       "name":  "STRUCT_GATE_STONE2A"
+                   },
+                   {
+                       "value":  134,
+                       "name":  "STRUCT_GATE_STONE2B"
+                   },
+                   {
+                       "value":  135,
+                       "name":  "STRUCT_RUINS01"
+                   },
+                   {
+                       "value":  136,
+                       "name":  "STRUCT_RUINS02"
+                   },
+                   {
+                       "value":  137,
+                       "name":  "STRUCT_RUINS03"
+                   },
+                   {
+                       "value":  138,
+                       "name":  "STRUCT_RUINS04"
+                   },
+                   {
+                       "value":  139,
+                       "name":  "STRUCT_RUINS05"
+                   },
+                   {
+                       "value":  140,
+                       "name":  "STRUCT_RUINS06"
+                   },
+                   {
+                       "value":  141,
+                       "name":  "STRUCT_RUINS07"
+                   },
+                   {
+                       "value":  142,
+                       "name":  "STRUCT_RUINS08"
+                   },
+                   {
+                       "value":  143,
+                       "name":  "STRUCT_RUINS09"
+                   },
+                   {
+                       "value":  144,
+                       "name":  "STRUCT_RUINS10"
+                   },
+                   {
+                       "value":  145,
+                       "name":  "STRUCT_RUINS11"
+                   },
+                   {
+                       "value":  146,
+                       "name":  "STRUCT_RUINS12"
+                   },
+                   {
+                       "value":  147,
+                       "name":  "STRUCT_RUINS13"
+                   },
+                   {
+                       "value":  148,
+                       "name":  "STRUCT_PEOPLE_ARCHERS"
+                   },
+                   {
+                       "value":  149,
+                       "name":  "STRUCT_PEOPLE_SPEARMEN"
+                   },
+                   {
+                       "value":  150,
+                       "name":  "STRUCT_PEOPLE_PIKEMEN"
+                   },
+                   {
+                       "value":  151,
+                       "name":  "STRUCT_PEOPLE_MACEMEN"
+                   },
+                   {
+                       "value":  152,
+                       "name":  "STRUCT_PEOPLE_XBOWMEN"
+                   },
+                   {
+                       "value":  153,
+                       "name":  "STRUCT_PEOPLE_SWORDSMEN"
+                   },
+                   {
+                       "value":  154,
+                       "name":  "STRUCT_PEOPLE_KNIGHTS"
+                   },
+                   {
+                       "value":  155,
+                       "name":  "STRUCT_PEOPLE_LADDERMEN"
+                   },
+                   {
+                       "value":  156,
+                       "name":  "STRUCT_PEOPLE_ENGINEERS"
+                   },
+                   {
+                       "value":  157,
+                       "name":  "STRUCT_PEOPLE_ENGINEERS_POTS"
+                   },
+                   {
+                       "value":  158,
+                       "name":  "STRUCT_PEOPLE_MONKS"
+                   },
+                   {
+                       "value":  159,
+                       "name":  "STRUCT_PEOPLE_CATAPULTS"
+                   },
+                   {
+                       "value":  160,
+                       "name":  "STRUCT_PEOPLE_TREBUCHETS"
+                   },
+                   {
+                       "value":  161,
+                       "name":  "STRUCT_PEOPLE_BATTERING_RAMS"
+                   },
+                   {
+                       "value":  162,
+                       "name":  "STRUCT_PEOPLE_SIEGE_TOWERS"
+                   },
+                   {
+                       "value":  163,
+                       "name":  "STRUCT_PEOPLE_PORTABLE_SHIELDS"
+                   },
+                   {
+                       "value":  164,
+                       "name":  "STRUCT_PEOPLE_TUNNELERS"
+                   },
+                   {
+                       "value":  168,
+                       "name":  "STRUCT_NEW_DIG_MOAT"
+                   },
+                   {
+                       "value":  169,
+                       "name":  "STRUCT_NEW_FILL_MOAT"
+                   },
+                   {
+                       "value":  170,
+                       "name":  "STRUCT_MARKER_POINT1"
+                   },
+                   {
+                       "value":  171,
+                       "name":  "STRUCT_MARKER_POINT2"
+                   },
+                   {
+                       "value":  172,
+                       "name":  "STRUCT_MARKER_POINT3"
+                   },
+                   {
+                       "value":  173,
+                       "name":  "STRUCT_MARKER_POINT4"
+                   },
+                   {
+                       "value":  174,
+                       "name":  "STRUCT_MARKER_POINT5"
+                   },
+                   {
+                       "value":  175,
+                       "name":  "STRUCT_MARKER_POINT6"
+                   },
+                   {
+                       "value":  176,
+                       "name":  "STRUCT_MARKER_POINT7"
+                   },
+                   {
+                       "value":  177,
+                       "name":  "STRUCT_MARKER_POINT8"
+                   },
+                   {
+                       "value":  178,
+                       "name":  "STRUCT_MARKER_POINT9"
+                   },
+                   {
+                       "value":  179,
+                       "name":  "STRUCT_MARKER_POINT10"
+                   },
+                   {
+                       "value":  180,
+                       "name":  "STRUCT_RUINS14"
+                   },
+                   {
+                       "value":  181,
+                       "name":  "STRUCT_RUINS15"
+                   },
+                   {
+                       "value":  182,
+                       "name":  "STRUCT_RUINS16"
+                   },
+                   {
+                       "value":  183,
+                       "name":  "STRUCT_RUINS17"
+                   },
+                   {
+                       "value":  184,
+                       "name":  "STRUCT_POND5"
+                   },
+                   {
+                       "value":  185,
+                       "name":  "STRUCT_POND6"
+                   },
+                   {
+                       "value":  186,
+                       "name":  "STRUCT_POND7"
+                   },
+                   {
+                       "value":  187,
+                       "name":  "STRUCT_POND8"
+                   },
+                   {
+                       "value":  190,
+                       "name":  "STRUCT_IN_REPORTS"
+                   },
+                   {
+                       "value":  200,
+                       "name":  "STRUCT_SUB_MENU_TOWERS"
+                   },
+                   {
+                       "value":  201,
+                       "name":  "STRUCT_SUB_MENU_MILITARY"
+                   },
+                   {
+                       "value":  202,
+                       "name":  "STRUCT_SUB_MENU_GATEHOUSES"
+                   },
+                   {
+                       "value":  203,
+                       "name":  "STRUCT_SUB_MENU_KEEPS"
+                   },
+                   {
+                       "value":  204,
+                       "name":  "STRUCT_SUB_MENU_GATEHOUSES_WOOD"
+                   },
+                   {
+                       "value":  205,
+                       "name":  "STRUCT_SUB_MENU_GATEHOUSES_STONESMALL"
+                   },
+                   {
+                       "value":  206,
+                       "name":  "STRUCT_SUB_MENU_GATEHOUSES_STONELARGE"
+                   },
+                   {
+                       "value":  207,
+                       "name":  "STRUCT_SUB_MENU_GOOD"
+                   },
+                   {
+                       "value":  208,
+                       "name":  "STRUCT_SUB_MENU_BAD"
+                   },
+                   {
+                       "value":  209,
+                       "name":  "STRUCT_NEW_EDITOR_DELETE"
+                   },
+                   {
+                       "value":  210,
+                       "name":  "STRUCT_MENU_RETURN_TOWERS"
+                   },
+                   {
+                       "value":  211,
+                       "name":  "STRUCT_MENU_RETURN_GATEHOUSES"
+                   },
+                   {
+                       "value":  212,
+                       "name":  "STRUCT_MENU_RETURN_MILITARY"
+                   },
+                   {
+                       "value":  213,
+                       "name":  "STRUCT_MENU_RETURN_KEEPS"
+                   },
+                   {
+                       "value":  214,
+                       "name":  "STRUCT_MENU_RETURN_GOOD"
+                   },
+                   {
+                       "value":  215,
+                       "name":  "STRUCT_MENU_RETURN_BAD"
+                   },
+                   {
+                       "value":  216,
+                       "name":  "STRUCT_NEW_DELETE"
+                   },
+                   {
+                       "value":  220,
+                       "name":  "STRUCT_PEOPLE_ARAB_BOW"
+                   },
+                   {
+                       "value":  221,
+                       "name":  "STRUCT_PEOPLE_ARAB_SLAVE"
+                   },
+                   {
+                       "value":  222,
+                       "name":  "STRUCT_PEOPLE_ARAB_SLINGER"
+                   },
+                   {
+                       "value":  223,
+                       "name":  "STRUCT_PEOPLE_ARAB_ASSASIN"
+                   },
+                   {
+                       "value":  224,
+                       "name":  "STRUCT_PEOPLE_ARAB_HORSEMAN"
+                   },
+                   {
+                       "value":  225,
+                       "name":  "STRUCT_PEOPLE_ARAB_SWORDSMAN"
+                   },
+                   {
+                       "value":  226,
+                       "name":  "STRUCT_PEOPLE_ARAB_GRENADIER"
+                   },
+                   {
+                       "value":  227,
+                       "name":  "STRUCT_PEOPLE_ARAB_BALLISTA"
+                   },
+                   {
+                       "value":  230,
+                       "name":  "STRUCT_RUINS18"
+                   },
+                   {
+                       "value":  231,
+                       "name":  "STRUCT_RUINS19"
+                   },
+                   {
+                       "value":  232,
+                       "name":  "STRUCT_RUINS20"
+                   },
+                   {
+                       "value":  233,
+                       "name":  "STRUCT_RUINS21"
+                   },
+                   {
+                       "value":  234,
+                       "name":  "STRUCT_RUINS22"
+                   },
+                   {
+                       "value":  235,
+                       "name":  "STRUCT_RUINS23"
+                   },
+                   {
+                       "value":  236,
+                       "name":  "STRUCT_RUINS24"
+                   },
+                   {
+                       "value":  237,
+                       "name":  "STRUCT_RUINS25"
+                   },
+                   {
+                       "value":  238,
+                       "name":  "STRUCT_RUINS26"
+                   },
+                   {
+                       "value":  239,
+                       "name":  "STRUCT_RUINS27"
+                   },
+                   {
+                       "value":  240,
+                       "name":  "STRUCT_RUINS28"
+                   },
+                   {
+                       "value":  241,
+                       "name":  "STRUCT_RUINS29"
+                   },
+                   {
+                       "value":  242,
+                       "name":  "STRUCT_RUINS30"
+                   },
+                   {
+                       "value":  243,
+                       "name":  "STRUCT_RUINS31"
+                   },
+                   {
+                       "value":  244,
+                       "name":  "STRUCT_RUINS32"
+                   },
+                   {
+                       "value":  245,
+                       "name":  "STRUCT_RUINS33"
+                   },
+                   {
+                       "value":  246,
+                       "name":  "STRUCT_RUINS34"
+                   },
+                   {
+                       "value":  247,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_CAMEL_LANCER"
+                   },
+                   {
+                       "value":  248,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_HEALER"
+                   },
+                   {
+                       "value":  249,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_EUNUCH"
+                   },
+                   {
+                       "value":  250,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_AMBUSHER"
+                   },
+                   {
+                       "value":  251,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_SKIRMISHER"
+                   },
+                   {
+                       "value":  252,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_HEAVY_CAMEL"
+                   },
+                   {
+                       "value":  253,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_SAPPER"
+                   },
+                   {
+                       "value":  254,
+                       "name":  "STRUCT_PEOPLE_BEDOUIN_DEMOLISHER"
+                   }
+               ],
+    "inGameTypeVerification":  [
+                                   "19:STRUCT_GRANARY",
+                                   "55:STRUCT_CAMPGROUND",
+                                   "104:STRUCT_POND"
+                               ]
+}
