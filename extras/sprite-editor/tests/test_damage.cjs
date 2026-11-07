@@ -316,3 +316,20 @@ test('a draft candidate can reference the next stronger damage job', async () =>
     A.deepEqual(req.referenceFiles, ['model_reference.png', 'model_previous.png']);
     A.match(req.prompt, /previous damage-state reference/);
 });
+
+test('explicit raster fitting removes unmappable visible pixels from tiles and retains the PNG', () => {
+    const f = stageFixture();
+    const candidate = damageCandidate(f);
+    const original = DI.baseComposite(f.s, f.store, f.gid);
+    const map = C.partition(candidate, original.group.settings, original.layout.originX, original.layout.originY);
+    const i = map.findIndex((slot, i) => slot < 0 && Math.floor(i / candidate.width) < 20);
+    A.ok(i >= 0);
+    candidate.data.set([55, 66, 77, 255], i * 4);
+    const draft = DI.withCandidate(f.s, f.store, f.stageId, candidate);
+    A.throws(() => DI.applyCandidate(draft.state, draft.store, f.stageId), /keinem Tile/);
+    const fit = DI.applyCandidate(draft.state, draft.store, f.stageId, true);
+    A.equal(fit.clippedPixels, 1);
+    const stage = DI.getStage(fit.state, f.stageId).stage;
+    A.equal(fit.store.get(stage.candidateId).data[i * 4 + 3], 255);
+    A.equal(DI.baseComposite(fit.state, fit.store, fit.sceneId || stage.sceneId).image.data[i * 4 + 3], 0);
+});

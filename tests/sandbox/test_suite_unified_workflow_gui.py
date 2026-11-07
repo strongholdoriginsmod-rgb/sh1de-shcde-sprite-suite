@@ -427,7 +427,7 @@ def test_failed_second_build_does_not_open_old_zip_as_new_result(
     assert good and Path(good["zip"]).is_file()
     monkeypatch.setattr(flow_ui.os,"startfile",lambda *_:pytest.fail(
         "Old export opened after failed new build"))
-    tab.guid.set("not a valid guid!")
+    tab.guid.set("invalid/guid")
     assert tab.build_package() is None
     assert tab._last_export is None
     assert tab.open_result() is None

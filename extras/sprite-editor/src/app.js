@@ -850,7 +850,8 @@
             ...(mode === 'import' ? [] : [
                 note('Das ausgewählte Gebäude dient als Vorlage für Stil, Typ, Raster und Perspektive.'),
                 fields(field('Gewünschte Änderungen', '', { name: 'details', wide: true, type: 'textarea' }))
-            ])
+            ]),
+            ...(mode === 'export' ? [] : [checkbox('Pixel außerhalb des Tile-Rasters ausblenden', false, 'fit')])
         ], mode === 'import' ? 'PNG wählen…' : mode === 'export' ? 'Codex-Anfrage exportieren' : 'Mit Codex generieren',
         async data => {
             const label = String(data.get('label')).trim();
@@ -859,7 +860,7 @@
                 if (!files.length) return;
                 await task('Gebäudeversion übernehmen', async opts => {
                     const image = await K.decodePNG(new Uint8Array(await files[0].arrayBuffer()), opts);
-                    applyVersion(baseId, label, image);
+                    applyVersion(baseId, label, image, data.has('fit'));
                 });
                 return;
             }
@@ -872,7 +873,9 @@
                 const result = await generatedImage(bundle, label || base.name);
                 if (!result) return;
                 try {
-                    applyVersion(baseId, label, result.image);
+                    applyVersion(baseId, label, result.image, data.has('fit'));
+                    if (data.has('fit'))
+                        download(result.bytes, C.safeName(label || base.name) + '_codex_original.zip', 'application/zip');
                 }
                 catch (error) {
                     download(result.bytes, C.safeName(label || base.name) + '_codex.zip', 'application/zip');
@@ -881,8 +884,8 @@
             });
         });
     }
-    function applyVersion(baseId, label, image) {
-        const result = DI.withBuildingVersion(state(), store(), baseId, label, image);
+    function applyVersion(baseId, label, image, fit) {
+        const result = DI.withBuildingVersion(state(), store(), baseId, label, image, fit);
         commit(result.state, 'Neue Gebäudeversion erstellt', result.store);
         damageBuildingId = result.sceneId;
         damageOpenScene(result.sceneId);
@@ -911,13 +914,15 @@
                 'Kandidat gespeichert. Original und Modell vergleichen, dann als Tiles übernehmen.', !!result.report.errors.length);
         });
     }
-    async function damageApplyCandidate(stageId) {
+    async function damageApplyCandidate(stageId, fit = false) {
         await task('Schadensmodell als 64px-Tiles zerlegen', async () => {
-            const result = DI.applyCandidate(state(), store(), stageId);
+            const result = DI.applyCandidate(state(), store(), stageId, fit);
             commit(result.state, 'Kandidat als Schadens-Tiles übernommen', result.store, { fit: true });
             const { scene } = DI.getStage(result.state, stageId);
             damageOpenScene(scene.id);
-            message('Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Freigabe noch ausstehend.');
+            message(result.clippedPixels ?
+                'Tiles gespeichert. Ausgeblendete Pixel: ' + result.clippedPixels + '. Kandidaten-PNG bleibt im Projekt.' :
+                'Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Freigabe noch ausstehend.');
         });
     }
     function damagePreview(img, label) {
@@ -1074,8 +1079,12 @@
                     button('Codex-Prompt + Original exportieren…', () => damageRequestBundle(stage.id))),
                 buttons(button('Generiertes PNG importieren…', () => damageImportCandidate(stage.id)),
                     button('PNG als Tiles zerlegen', () => damageApplyCandidate(stage.id), { disabled: !stage.candidateId })),
-                ...(stage.candidateId ? [buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,
-                    s => { s.candidateId = null; s.status = 'draft'; })))] : []),
+                ...(stage.candidateId ? [
+                    buttons(button('Kopie ans Tile-Raster anpassen', () => damageApplyCandidate(stage.id, true))),
+                    note('Die Rasteranpassung blendet Pixel ohne Tile-Zuordnung aus. Das Kandidaten-PNG bleibt erhalten.'),
+                    buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,
+                        s => { s.candidateId = null; s.status = 'draft'; })))
+                ] : []),
                 buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
                     button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
                 buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),

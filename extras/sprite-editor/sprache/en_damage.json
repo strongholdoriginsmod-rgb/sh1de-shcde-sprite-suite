@@ -105,5 +105,8 @@
   "Für direkte Codex-Generierung den Sprite-Editor über SpriteSuite öffnen.": "Open the sprite editor from SpriteSuite to generate directly with Codex.",
   "Das ausgewählte Gebäude dient als Vorlage für Stil, Typ, Raster und Perspektive.": "The selected building defines the style, type, grid and perspective.",
   "Wähle die HP-Schwellen je Schadensart. Codex erhält das Original und, soweit vorhanden, das nächstmildere Modell. Pro Stufe wird ein Bild erzeugt.": "Choose HP thresholds for each damage type. Codex receives the original and, when available, the nearest milder model. It generates one image per stage.",
-  "Bildaufträge nutzen deinen ChatGPT-Tarif und gegebenenfalls Codex-Guthaben. Abbrechen stoppt weitere Aufträge nach dem laufenden Bild.": "Image jobs use your ChatGPT plan and available Codex credits. Cancelling stops further jobs after the current image."
+  "Bildaufträge nutzen deinen ChatGPT-Tarif und gegebenenfalls Codex-Guthaben. Abbrechen stoppt weitere Aufträge nach dem laufenden Bild.": "Image jobs use your ChatGPT plan and available Codex credits. Cancelling stops further jobs after the current image.",
+  "Pixel außerhalb des Tile-Rasters ausblenden": "Hide pixels outside the tile grid",
+  "Kopie ans Tile-Raster anpassen": "Fit a copy to the tile grid",
+  "Die Rasteranpassung blendet Pixel ohne Tile-Zuordnung aus. Das Kandidaten-PNG bleibt erhalten.": "Fitting hides pixels with no tile assignment and retains the original candidate PNG."
 }

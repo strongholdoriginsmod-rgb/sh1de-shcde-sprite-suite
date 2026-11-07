@@ -69,29 +69,41 @@
         const report = D.checkCandidate(base.image, image);
         return { state: I.validate(out, next), store: next, report };
     }
-    function applyCandidate(state, store, stageId) {
+    function applyCandidate(state, store, stageId, fit = false) {
         const out = I.clone(state), { stage, base, scene } = getStage(out, stageId);
         if (!stage.candidateId) fail('Zuerst ein erzeugtes PNG als Kandidat importieren.');
-        const result = applyImageToScene(out, store, base, scene, store.get(stage.candidateId));
+        const result = applyImageToScene(out, store, base, scene, store.get(stage.candidateId), fit);
         stage.status = 'draft';
         result.state = I.validate(out, result.store);
         return result;
     }
-    function withBuildingVersion(state, store, buildingGroupId, label, image) {
+    function withBuildingVersion(state, store, buildingGroupId, label, image, fit = false) {
         const out = I.clone(state), base = out.scenes.find(g => g.id === buildingGroupId);
         if (!base || base.settings.category !== 'building') fail('Gebäudegruppe fehlt.');
         const scene = { ...base, id: I.uid('g'), name: C.safeName(label.trim() || base.name + ' v2') };
         out.scenes.push(scene);
-        const result = applyImageToScene(out, store, base, scene, image);
+        const result = applyImageToScene(out, store, base, scene, image, fit);
         return { ...result, state: I.validate(out, result.store), sceneId: scene.id };
     }
-    function applyImageToScene(out, store, base, scene, candidate) {
+    function applyImageToScene(out, store, base, scene, candidate, fit) {
         const ref = baseComposite(out, store, base.id);
-        const report = D.checkCandidate(ref.image, candidate);
-        if (report.errors.length) fail('Qualitätsprüfung: ' + report.errors.join(' '));
+        if (candidate.width !== ref.image.width || candidate.height !== ref.image.height)
+            fail(D.checkCandidate(ref.image, candidate).errors.join(' '));
         const layout = ref.layout, settings = scene.settings;
         if (settings.width > 64) fail('Tilebreite überschreitet 64 px.');
         const map = C.partition(candidate, settings, layout.originX, layout.originY, true);
+        let clippedPixels = 0;
+        if (fit) {
+            candidate = C.image(candidate.width, candidate.height, new Uint8Array(candidate.data));
+            for (let i = 0; i < map.length; i++) {
+                if (map[i] < 0 && candidate.data[i * 4 + 3]) {
+                    candidate.data[i * 4 + 3] = 0;
+                    clippedPixels++;
+                }
+            }
+        }
+        const report = D.checkCandidate(ref.image, candidate);
+        if (report.errors.length) fail('Qualitätsprüfung: ' + report.errors.join(' '));
         const cut = C.split(candidate, map, settings, layout.originX, layout.originY, null,
             { overlap: 1, rearShare: true });
         const rebuilt = C.image(candidate.width, candidate.height);
@@ -163,7 +175,7 @@
         // Never carry a colour/team material mask over a changed silhouette.
         const hadMasks = (oldFrames.length ? oldFrames : ref.frames).some(f => f.maskId);
         if (hadMasks) report.warnings.push('Original hatte Masken. Neue Tiles erhalten keine erfundenen Materialmasken; vor Abnahme manuell nachbearbeiten.');
-        return { store: next, report, seamStats: cut.seamStats };
+        return { store: next, report, clippedPixels, seamStats: cut.seamStats };
     }
     function qualityReport(state, store, stageId) {
         const { profile, stage, base, scene } = getStage(state, stageId);
