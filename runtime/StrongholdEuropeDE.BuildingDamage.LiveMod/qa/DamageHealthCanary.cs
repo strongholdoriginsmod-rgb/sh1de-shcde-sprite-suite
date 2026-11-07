@@ -2,6 +2,7 @@
 // This plugin is deliberately separate from the production sprite renderer.
 // It is never included by build_windows.ps1, only compiled with the QA command.
 using System;
+using System.IO;
 using System.Threading;
 using BepInEx;
 using BepInEx.Logging;
@@ -15,6 +16,18 @@ namespace SpriteSuite.BuildingDamage.QA
     {
         private void Awake()
         {
+            const string marker = "SpriteSuite HP/fire QA with isolated player profile.";
+            string expectedRoot = Environment.GetEnvironmentVariable("SPRITESUITE_HEALTH_QA_ROOT");
+            string gameRoot = Path.GetFullPath(Paths.GameRootPath).TrimEnd(Path.DirectorySeparatorChar);
+            string optIn = Path.Combine(gameRoot, ".spritesuite-health-qa");
+            if (string.IsNullOrWhiteSpace(expectedRoot) ||
+                !string.Equals(Path.GetFullPath(expectedRoot).TrimEnd(Path.DirectorySeparatorChar),
+                    gameRoot, StringComparison.OrdinalIgnoreCase) ||
+                !File.Exists(optIn) || File.ReadAllText(optIn).Trim() != marker)
+            {
+                Logger.LogWarning("SPRITESUITE_HEALTH_QA|event=disabled|reason=qa_root_not_marked");
+                return;
+            }
             Logger.LogInfo("SPRITESUITE_HEALTH_QA|event=host_awake");
             ActualHealthCanary.Start(Logger);
         }

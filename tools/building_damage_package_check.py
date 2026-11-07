@@ -18,10 +18,11 @@ def select_stage(stages: list[dict], hp: int, maximum: int, fire_history: bool):
     if maximum <= 0 or hp < 0:
         return None
     percent = 100 * min(hp, maximum) // maximum
-    kind = "fire" if fire_history and any(s.get("damageKind") == "fire" for s in stages) else "mechanical"
-    candidates = [s for s in stages if s.get("damageKind") == kind and
-                  isinstance(s.get("hpAtOrBelow"), int) and 0 <= s["hpAtOrBelow"] <= 99]
-    if fire_history and percent >= 100 and candidates:
+    valid = [s for s in stages if type(s.get("hpAtOrBelow")) is int and
+             0 <= s["hpAtOrBelow"] <= 99]
+    kind = "fire" if fire_history and any(s.get("damageKind") == "fire" for s in valid) else "mechanical"
+    candidates = [s for s in valid if s.get("damageKind") == kind]
+    if kind == "fire" and percent >= 100:
         percent = max(s["hpAtOrBelow"] for s in candidates)
     options = [s for s in candidates if percent <= s["hpAtOrBelow"]]
     return min(options, key=lambda s: s["hpAtOrBelow"]) if options else None

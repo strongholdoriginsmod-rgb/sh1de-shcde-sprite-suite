@@ -20,27 +20,19 @@ namespace SpriteSuite.BuildingDamage
                 return null;
             int hp = Math.Min(currentHp, maximumHp);
             int percent = (int)((100L * hp) / maximumHp);
-            bool fireAvailable = false;
             int highestFireThreshold = -1;
             for (int i = 0; i < stages.Count; ++i)
             {
                 StageDefinition s = stages[i];
                 if (s == null || s.Kind != "fire" || s.Threshold < 0 ||
                     s.Threshold > 99) continue;
-                fireAvailable = true;
                 highestFireThreshold = Math.Max(highestFireThreshold, s.Threshold);
             }
-            string kind = fireHistory && fireAvailable ? "fire" : "mechanical";
+            bool useFire = fireHistory && highestFireThreshold >= 0;
+            string kind = useFire ? "fire" : "mechanical";
             // A burning but still fully healthy building may already show the
             // mildest fire artwork, rather than displaying the intact sprite.
-            if (fireHistory && percent >= 100)
-            {
-                int max = -1;
-                for (int i = 0; i < stages.Count; ++i)
-                    if (stages[i] != null && stages[i].Kind == kind)
-                        max = Math.Max(max, stages[i].Threshold);
-                if (max >= 0) percent = max;
-            }
+            if (useFire && percent >= 100) percent = highestFireThreshold;
             string selected = null;
             int selectedThreshold = 101;
             for (int i = 0; i < stages.Count; ++i)

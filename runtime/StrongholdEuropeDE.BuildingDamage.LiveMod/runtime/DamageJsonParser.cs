@@ -29,6 +29,7 @@ namespace SpriteSuite.BuildingDamage
                 var o = Object(item);
                 all.Add(new SpriteBinding {
                     buildingType = Integer(o, "buildingType"),
+                    buildingGlobalId = Integer(o, "buildingGlobalId"),
                     buildingGroupId = String(o, "buildingGroupId"),
                     sourceSprite = String(o, "sourceSprite"),
                     matchGmImage = Boolean(o, "matchGmImage"),

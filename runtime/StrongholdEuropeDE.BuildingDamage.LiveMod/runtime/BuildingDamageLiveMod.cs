@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using BepInEx;
 using BepInEx.Logging;
@@ -65,6 +66,7 @@ namespace SpriteSuite.BuildingDamage
     public sealed class SpriteBinding
     {
         public int buildingType;         // 0 matches any type in this group
+        public int buildingGlobalId;     // 0 matches every instance
         public string buildingGroupId;  // original Sprite Editor building group
         public string sourceSprite;     // exact vanilla sprite.name; empty/* = any
         public bool matchGmImage;       // alternatively match source GM + image index
@@ -122,7 +124,6 @@ namespace SpriteSuite.BuildingDamage
             internal GameMapTile Tile;
             internal Sprite Original;
             internal Sprite Applied;
-            internal string LastStageId;
             internal SpriteBinding Binding;
             internal int BuildingId;
             internal int GlobalId;
@@ -131,10 +132,16 @@ namespace SpriteSuite.BuildingDamage
             internal int Y;
         }
 
+        private sealed class TileIdentity : IEqualityComparer<GameMapTile>
+        {
+            public bool Equals(GameMapTile a, GameMapTile b) { return ReferenceEquals(a, b); }
+            public int GetHashCode(GameMapTile tile) { return RuntimeHelpers.GetHashCode(tile); }
+        }
+
         private static BuildingDamageRuntime _active;
         private readonly ManualLogSource _log;
-        private readonly Dictionary<string, ObservedTile> _observed =
-            new Dictionary<string, ObservedTile>(StringComparer.Ordinal);
+        private readonly Dictionary<GameMapTile, ObservedTile> _observed =
+            new Dictionary<GameMapTile, ObservedTile>(new TileIdentity());
         private readonly Dictionary<string, Sprite> _createdSprites =
             new Dictionary<string, Sprite>(StringComparer.Ordinal);
         private readonly List<Texture2D> _createdTextures = new List<Texture2D>();
@@ -241,11 +248,14 @@ namespace SpriteSuite.BuildingDamage
 
         private void TrackAndApply(GameMapTile tile, int file, int image)
         {
-            if (GameMap.instance != _currentMap)
+            ResetForMapChange();
+            ObservedTile previous;
+            if (_observed.TryGetValue(tile, out previous))
             {
-                _observed.Clear();
-                _fire.Clear();
-                _currentMap = GameMap.instance;
+                _observed.Remove(tile);
+                // A redraw may keep our replacement or supply a new original.
+                // Remove ownership before matching the new mapping either way.
+                Restore(previous);
             }
             if (tile.tileImage == null) return;
             GameBuildingManagerAPI buildings = GameBuildingManagerAPI.Instance;
@@ -267,32 +277,21 @@ namespace SpriteSuite.BuildingDamage
                 int id = tiles.GetTileBuildingId(tileId);
                 if (id <= 0 || !buildings.IsValid(id)) continue;
                 int global = buildings.GetGlobalId(id);
-                if (global <= 0) continue;
+                if (global <= 0 || (b.buildingGlobalId != 0 &&
+                    b.buildingGlobalId != global)) continue;
                 int type = (int)buildings.GetType(id);
                 if (b.buildingType != 0 && b.buildingType != type) continue;
                 if (!HasBuilding(b.buildingGroupId, type)) continue;
                 if (!buildings.IsValid(id) || buildings.GetGlobalId(id) != global) continue;
-                // A render tile has one owner; different sprite variants of
-                // the same tile must update its existing original reference.
-                string key = global.ToString(CultureInfo.InvariantCulture) + ":" +
-                    x.ToString(CultureInfo.InvariantCulture) + ":" +
-                    y.ToString(CultureInfo.InvariantCulture);
-                ObservedTile tracked;
-                if (!_observed.TryGetValue(key, out tracked))
-                {
-                    tracked = new ObservedTile();
-                    _observed[key] = tracked;
-                }
-                tracked.Tile = tile;
-                tracked.Original = tile.tileImage; // fresh vanilla post-SpriteMapping sprite
-                tracked.Applied = null;
-                tracked.Binding = b;
-                tracked.BuildingId = id;
-                tracked.GlobalId = global;
-                tracked.BuildingType = type;
-                tracked.X = x;
-                tracked.Y = y;
-                UpdateTile(tracked, buildings);
+                // Distinct rendering layers can have the same coordinates.
+                // Track the tile object that owns the actual sprite reference.
+                var tracked = new ObservedTile {
+                    Tile = tile, Original = tile.tileImage, Binding = b,
+                    BuildingId = id, GlobalId = global, BuildingType = type,
+                    X = x, Y = y
+                };
+                _observed[tile] = tracked;
+                if (!UpdateTile(tracked, buildings)) _observed.Remove(tile);
                 break;
             }
         }
@@ -386,32 +385,29 @@ namespace SpriteSuite.BuildingDamage
             return sprite;
         }
 
-        private void UpdateTile(ObservedTile t, GameBuildingManagerAPI buildings)
+        private bool UpdateTile(ObservedTile t, GameBuildingManagerAPI buildings)
         {
-            if (t.Tile == null) return;
-            if (buildings == null || !buildings.IsValid(t.BuildingId) ||
-                buildings.GetGlobalId(t.BuildingId) != t.GlobalId)
+            if (t.Tile == null) return false;
+            if (!buildings.IsValid(t.BuildingId) ||
+                buildings.GetGlobalId(t.BuildingId) != t.GlobalId ||
+                (int)buildings.GetType(t.BuildingId) != t.BuildingType)
             {
                 Restore(t);
                 _fire.Remove(t.GlobalId);
-                return;
+                return false;
             }
-            // Do not stomp engine-controlled image changes that happened without
-            // the SpriteMapping hook. Only retain our own original/replacement.
-            if (t.Applied != null && t.Tile.tileImage != t.Applied &&
-                t.Tile.tileImage != t.Original)
-            {
-                t.Original = t.Tile.tileImage;
-                t.Applied = null;
-                if (t.Binding.sourceSprite != "*" &&
-                    !string.IsNullOrEmpty(t.Binding.sourceSprite) &&
-                    t.Original != null && t.Original.name != t.Binding.sourceSprite)
-                    return;
-            }
+            // A write outside SpriteMapping invalidates the source match.
+            // Wait for a new mapping before applying artwork to this tile.
+            if (t.Tile.tileImage != t.Original &&
+                (t.Applied == null || t.Tile.tileImage != t.Applied)) return false;
             int health = buildings.GetCurrentHealth(t.BuildingId);
             int maximum = buildings.GetMaxHealth(t.BuildingId);
             int fireTicks = buildings.GetOnFireTicks(t.BuildingId);
-            if (maximum <= 0 || health < 0) return;
+            if (maximum <= 0 || health < 0)
+            {
+                Restore(t);
+                return true;
+            }
             bool fire = _settings.firePersistsUntilRepaired ?
                 _fire.Update(t.GlobalId, health, maximum, fireTicks) : fireTicks > 0;
             // A voluntary preview does not modify the real game's HP or fire.
@@ -425,13 +421,12 @@ namespace SpriteSuite.BuildingDamage
                 FindReplacement(stage, t.Binding.slot, t.Original, t.Binding) : null;
             if (replacement == null)
             {
-                bool previouslyChanged = t.Applied != null;
-                Restore(t);
-                if (previouslyChanged && t.Applied == null && ++_changeReports <= 400)
+                if (Restore(t) && ++_changeReports <= 400)
                     _log.LogInfo("SPRITESUITE_DAMAGE|event=restored|global_id=" +
                         t.GlobalId + "|building_id=" + t.BuildingId +
-                        "|x=" + t.X + "|y=" + t.Y);
-                t.LastStageId = null;
+                        "|x=" + t.X + "|y=" + t.Y + "|live_hp=" + health +
+                        "|live_max=" + maximum + "|live_fire_ticks=" + fireTicks +
+                        "|preview=" + _settings.previewEnabled);
             }
             else if (t.Tile.tileImage != replacement)
             {
@@ -441,7 +436,6 @@ namespace SpriteSuite.BuildingDamage
                     t.Tile.tileImage = replacement;
                     t.Applied = replacement;
                     Refresh(t);
-                    t.LastStageId = stage.id;
                     if (++_changeReports <= 400)
                         _log.LogInfo("SPRITESUITE_DAMAGE|event=stage_applied|global_id=" +
                             t.GlobalId + "|building_id=" + t.BuildingId +
@@ -454,6 +448,7 @@ namespace SpriteSuite.BuildingDamage
                 }
                 finally { _mutating = false; }
             }
+            return true;
         }
 
         private static void Refresh(ObservedTile t)
@@ -462,20 +457,32 @@ namespace SpriteSuite.BuildingDamage
                 t.Tile.tilemapRef.RefreshTile(new Vector3Int(t.X, t.Y, 0));
         }
 
-        private void Restore(ObservedTile t)
+        private bool Restore(ObservedTile t)
         {
-            if (t.Tile == null || t.Original == null || t.Applied == null) return;
+            if (t.Tile == null || t.Original == null || t.Applied == null) return false;
             // If the game has replaced the tile since our mod did, do not
             // overwrite the game's new sprite with a stale backup.
-            if (t.Tile.tileImage != t.Applied) { t.Applied = null; return; }
+            if (t.Tile.tileImage != t.Applied) { t.Applied = null; return false; }
             _mutating = true;
             try
             {
                 t.Tile.tileImage = t.Original;
                 t.Applied = null;
                 Refresh(t);
+                return t.Tile.tileImage == t.Original;
             }
             finally { _mutating = false; }
+        }
+
+        private void ResetForMapChange()
+        {
+            if (GameMap.instance == _currentMap) return;
+            foreach (ObservedTile tile in _observed.Values)
+                try { Restore(tile); }
+                catch (Exception ex) { Report("restore_previous_map", ex); }
+            _observed.Clear();
+            _fire.Clear();
+            _currentMap = GameMap.instance;
         }
 
         private void ReloadCreativeControls()
@@ -517,14 +524,7 @@ namespace SpriteSuite.BuildingDamage
                     }
                 }
                 catch (Exception) { /* Legacy Input may be unavailable; rendering still runs. */ }
-                if (GameMap.instance != _currentMap)
-                {
-                    // Scene/Map storage was recreated. Do not dereference old
-                    // Unity objects after destruction; clear instance history.
-                    _observed.Clear();
-                    _fire.Clear();
-                    _currentMap = GameMap.instance;
-                }
+                ResetForMapChange();
                 ++_frames;
                 if (_frames % 60 == 0)
                     try { ReloadCreativeControls(); }
@@ -532,22 +532,16 @@ namespace SpriteSuite.BuildingDamage
                 if (_frames % Math.Max(1, _settings.pollFrames) != 0) return;
                 GameBuildingManagerAPI buildings = GameBuildingManagerAPI.Instance;
                 if (buildings == null) return;
-                List<string> remove = new List<string>();
-                foreach (KeyValuePair<string, ObservedTile> pair in _observed)
+                List<GameMapTile> remove = new List<GameMapTile>();
+                foreach (KeyValuePair<GameMapTile, ObservedTile> pair in _observed)
                 {
-                    ObservedTile t = pair.Value;
-                    if (t.Tile == null || !buildings.IsValid(t.BuildingId) ||
-                        buildings.GetGlobalId(t.BuildingId) != t.GlobalId)
+                    try
                     {
-                        Restore(t);
-                        _fire.Remove(t.GlobalId);
-                        remove.Add(pair.Key);
-                        continue;
+                        if (!UpdateTile(pair.Value, buildings)) remove.Add(pair.Key);
                     }
-                    try { UpdateTile(t, buildings); }
                     catch (Exception ex) { Report("update_tile", ex); }
                 }
-                foreach (string key in remove) _observed.Remove(key);
+                foreach (GameMapTile key in remove) _observed.Remove(key);
             }
             catch (Exception ex) { Report("render_poll", ex); }
         }
@@ -575,11 +569,7 @@ namespace SpriteSuite.BuildingDamage
                 try
                 {
                     if (t.Applied != null) previous++;
-                    bool owned = t.Tile != null && t.Applied != null &&
-                        t.Tile.tileImage == t.Applied;
-                    Restore(t);
-                    if (owned && t.Applied == null && t.Tile != null &&
-                        t.Tile.tileImage == t.Original) restored++;
+                    if (Restore(t)) restored++;
                 }
                 catch (Exception ex) { Report("restore", ex); }
             }

@@ -21,6 +21,7 @@ namespace SpriteSuite.BuildingDamage
     public sealed class SpriteBinding
     {
         public int buildingType;
+        public int buildingGlobalId;
         public string buildingGroupId;
         public string sourceSprite;
         public bool matchGmImage;
@@ -84,6 +85,9 @@ namespace SpriteSuite.BuildingDamage
             Assert(!config.previewFire, "preview fire");
             Assert(config.damageDirectory == "DamageAssets", "asset folder");
             Assert(config.bindings.Length == 64, "64 bindings");
+            Assert(config.bindings[0].buildingGlobalId == 0, "legacy mapping applies to any instance");
+            var instance = DamageJsonParser.Settings("{\"bindings\": [{\"buildingGlobalId\": 661027}]}");
+            Assert(instance.bindings[0].buildingGlobalId == 661027, "instance-specific mapping");
             Assert(config.bindings[0].sourceSprite == "tile_buildings1 506", "first original sprite");
             int mapped = 0;
             foreach (var binding in config.bindings)

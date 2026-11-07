@@ -48,6 +48,13 @@ internal static class HpFireStageHarness
         var onlyMechanical = Stages.GetRange(0, 3);
         Check(BuildingDamageStageLogic.Choose(onlyMechanical, 30, 100, true) == "m40",
             "fire fallback to mechanical");
+        Check(BuildingDamageStageLogic.Choose(onlyMechanical, 100, 100, true) == null,
+            "fire at full HP does not manufacture mechanical damage");
+        var extra = new List<StageDefinition>(Stages) {
+            new StageDefinition { Id = "invalid", Kind = "fire", Threshold = 100 }
+        };
+        Check(BuildingDamageStageLogic.Choose(extra, 100, 100, true) == "f75",
+            "an invalid threshold cannot suppress a valid fire stage");
         var history = new BuildingFireHistory();
         Check(!history.Update(1001, 100, 100, 0), "initially unburned");
         Check(history.Update(1001, 100, 100, 10), "fire starts at 100 HP");
