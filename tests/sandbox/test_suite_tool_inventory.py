@@ -223,3 +223,19 @@ def test_building_damage_live_qa_has_strict_risk_and_registry():
     assert classify("qa_building_damage_live.py", ["--verify-log", "qa.log"]).category == "read"
     assert classify("qa_building_damage_live.py", ["--install-qa"]).category == "game"
     assert classify("qa_building_damage_live.py", ["--remove-qa"]).category == "game"
+
+
+
+def test_building_damage_layer_census_has_distinct_read_and_workspace_risk():
+    from suite_tool_registry import SPECIALISTS
+    from suite_tool_policy import classify
+
+    names = [specialist.filename for specialist in SPECIALISTS]
+    assert names.count("building_damage_layer_audit.py") == 1
+    assert classify("building_damage_layer_audit.py", []).category == "read"
+    assert classify("building_damage_layer_audit.py",
+                    ["--log", "qa.log", "--expected-sha256", "a" * 64]).category == "read"
+    assert classify("building_damage_layer_audit.py",
+                    ["--log", "qa.log", "--output", "audit.json"]).category == "workspace"
+    assert classify("building_damage_layer_audit.py",
+                    ["--help"]).category == "read"

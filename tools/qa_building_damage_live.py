@@ -29,6 +29,7 @@ PLUGIN_NAME = "SpriteSuiteBuildingDamageLiveAudit"
 ASSEMBLY_NAME = "SpriteSuite.BuildingDamage.LiveAudit.dll"
 RECEIPT_NAME = "sprite-suite-qa-receipt.json"
 INFO_NAME = "info.json"
+QA_SAVE_RELATIVE = Path("SpriteSuite_QA_Saves") / "SpriteSuite_Damage_Test.sav"
 COMPILER = Path(r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe")
 
 REFS = (
@@ -38,6 +39,7 @@ REFS = (
     "Stronghold Crusader Definitive Edition_Data/Managed/Assembly-CSharp.dll",
     "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.dll",
     "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.CoreModule.dll",
+    "Stronghold Crusader Definitive Edition_Data/Managed/Noesis.NoesisGUI.dll",
     "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.TilemapModule.dll",
     "Stronghold Crusader Definitive Edition_Data/Managed/UnityEngine.GridModule.dll",
 )
@@ -78,7 +80,20 @@ def verify_root(path: Path) -> tuple[Path, dict]:
     return path, {"hashes": hashes, "files": files}
 
 
-def compile_probe(qa: Path, details: dict, output: Path) -> dict:
+def validate_qa_save(qa: Path, save: Path) -> str:
+    expected = qa / QA_SAVE_RELATIVE
+    must(expected.is_file() and not expected.is_symlink(),
+         "Die eindeutige QA-Spielstandkopie fehlt.")
+    must(save.resolve(strict=True) == expected.resolve(strict=True),
+         "Nur die ausdrücklich kopierte Datei im QA-Klon darf geladen werden.")
+    must(50000 <= expected.stat().st_size <= 9_000_000,
+         "QA-Spielstanddatei hat eine unerwartete Größe.")
+    return sha_file(expected)
+
+
+def compile_probe(qa: Path, details: dict, output: Path,
+                  qa_save_sha: str | None = None,
+                  qa_canary: bool = False) -> dict:
     must(COMPILER.is_file(), "C#-Framework-Compiler fehlt.")
     must(SRC.is_file(), "QA-Plugin-Quelle fehlt.")
     text = SRC.read_text(encoding="utf-8")
@@ -87,11 +102,20 @@ def compile_probe(qa: Path, details: dict, output: Path) -> dict:
          "Unbekannte QA-Codevorlage.")
     text = text.replace("__SE_SHA256__", details["hashes"]["se"]).replace(
         "__GAME_SHA256__", details["hashes"]["game"])
+    if qa_save_sha is not None:
+        must(text.count("__QA_SAVE_SHA256__") == 1,
+             "Unbekannte QA-Kartenlade-Vorlage.")
+        text = text.replace("__QA_SAVE_SHA256__", qa_save_sha)
     source = output / "BuildingDamageLiveAudit.generated.cs"
     source.write_text(text, encoding="utf-8", newline="\n")
     dll = output / ASSEMBLY_NAME
     args = [str(COMPILER), "/nologo", "/target:library",
             "/out:" + str(dll)]
+    if qa_save_sha is not None:
+        args.append("/define:SHCDE_QA_AUTOMAP")
+    if qa_canary:
+        must(qa_save_sha is not None, "QA-Sprite-Kanarientest erfordert eine geprüfte Spielstandkopie.")
+        args.append("/define:SHCDE_QA_SPRITE_CANARY")
     args += ["/r:" + str(details["files"][name]) for name in REFS]
     args.append(str(source))
     completed = subprocess.run(args, capture_output=True, text=True,
@@ -104,7 +128,8 @@ def compile_probe(qa: Path, details: dict, output: Path) -> dict:
          "Compiler hat keine gültige DLL geschrieben.")
     return {"dll": dll, "sha256": sha_file(dll), "size": dll.stat().st_size,
             "gameRoot": str(qa), "gameSha256": details["hashes"]["game"],
-            "scriptExtenderSha256": details["hashes"]["se"]}
+            "scriptExtenderSha256": details["hashes"]["se"],
+            "qaCanary": bool(qa_canary)}
 
 
 def install_qa(qa: Path, output: Path, result: dict) -> dict:
@@ -115,10 +140,11 @@ def install_qa(qa: Path, output: Path, result: dict) -> dict:
         dll_path = destination / ASSEMBLY_NAME
         with dll_path.open("xb") as handle:
             handle.write(result["dll"].read_bytes())
+        canary = bool(result.get("qaCanary"))
         info = {
             "GUID": PLUGIN_NAME, "Author": "SpriteSuite QA",
-            "Name": "Building Damage Read-only Live QA",
-            "Description": "Read-only evidence collection; no sprite, game, or renderer edits",
+            "Name": "Building Damage Single-Sprite QA Canary" if canary else "Building Damage Read-only Live QA",
+            "Description": "ONE temporarily changed sprite in isolated QA clone with restoration" if canary else "Read-only evidence collection; no sprite, game, or renderer edits",
             "Version": "0.1.0", "SupportedGameVersions": ["2.8.0.2"],
             "Manifest": 1, "NetworkMode": 1
         }
@@ -126,7 +152,8 @@ def install_qa(qa: Path, output: Path, result: dict) -> dict:
             json.dump(info, handle, ensure_ascii=False, indent=2)
         receipt = {
             "format": "spritesuite-building-damage-qa-receipt",
-            "version": 1, "readOnly": True, "rendererWrites": False,
+            "version": 1, "readOnly": not canary,
+            "rendererWrites": canary, "qaCanary": canary,
             "inGameTested": False, "dllSHA256": sha_file(dll_path),
             "infoSHA256": sha_file(destination / INFO_NAME),
             "gameSHA256": result["gameSha256"],
@@ -160,8 +187,13 @@ def remove_qa(qa: Path) -> dict:
         expected.add(INFO_NAME)
     must({p.name for p in destination.iterdir()} == expected,
          "Unbekannte Dateien im QA-Pluginverzeichnis – keine Löschung.")
+    trusted_mode = (receipt.get("readOnly") is True and
+                    receipt.get("rendererWrites") is False) or (
+                    receipt.get("qaCanary") is True and
+                    receipt.get("readOnly") is False and
+                    receipt.get("rendererWrites") is True)
     must(receipt.get("format") == "spritesuite-building-damage-qa-receipt" and
-         receipt.get("readOnly") is True and
+         trusted_mode and
          receipt.get("dllSHA256") == sha_file(dll) and
          (not with_info or receipt.get("infoSHA256") == sha_file(info)),
          "QA-Installation wurde seit der Abnahme verändert.")
@@ -179,8 +211,10 @@ def remove_qa(qa: Path) -> dict:
 def evaluate_log(path: Path) -> dict:
     must(path.is_file() and path.stat().st_size < 64 * 1024 * 1024,
          "QA-Log fehlt oder ist zu groß.")
+    raw = path.read_bytes()
+    log_digest = hashlib.sha256(raw).hexdigest()
     events: list[dict[str, str]] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in raw.decode("utf-8", errors="replace").splitlines():
         if "SHCDE_DAMAGE_QA|" not in line:
             continue
         payload = line.split("SHCDE_DAMAGE_QA|", 1)[1]
@@ -195,15 +229,44 @@ def evaluate_log(path: Path) -> dict:
             events.append(fields)
     start = [e for e in events if e.get("event") == "start"]
     running = bool(start) and all(e.get("status") == "read_only" for e in start)
+    canary_mode = bool(start) and all(e.get("status") == "qa_sprite_canary" for e in start)
     disabled = any(e.get("status") == "disabled" for e in start)
     shutdown = sum(e.get("event") == "shutdown" for e in events)
     heartbeats = [i for i, e in enumerate(events) if e.get("event") == "runner_heartbeat"]
     host_destroyed = [i for i, e in enumerate(events) if e.get("event") == "host_destroyed"]
+    canary_applied = [e for e in events if e.get("event") == "qa_canary" and e.get("status") == "applied"]
+    canary_restored = [e for e in events if e.get("event") == "qa_canary" and e.get("status") == "restored"]
+    same_canary_tile = (len(canary_applied) == 1 and len(canary_restored) == 1 and
+        all(canary_applied[0].get(key) and
+            canary_applied[0].get(key) == canary_restored[0].get(key)
+            for key in ("building_id", "global_id", "tile_id")))
+    clean_canary_shutdown = any(
+        e.get("event") == "shutdown" and e.get("status") == "unpatched"
+        and e.get("sprite_writes") == "2" for e in events)
+    tile_restored = (canary_mode and same_canary_tile and not disabled and
+        not any(e.get("event") == "read_error" for e in events) and
+        canary_restored[0].get("original_restored", "").lower() == "true" and
+        canary_restored[0].get("writes") == "2")
+    canary_verified = tile_restored and clean_canary_shutdown
     runner_survived_host = bool(host_destroyed and
         any(i > host_destroyed[0] for i in heartbeats))
     tiles = [e for e in events if e.get("event") == "tile_graphic"]
     footprints = [e for e in events if e.get("event") == "building_footprint"]
     failures = [e for e in events if e.get("event") == "read_error"]
+    render_samples = [e for e in events if e.get("event") == "building_render_tiles"]
+    render_with_pixels = [
+        e for e in render_samples
+        if e.get("building_id", "").isdigit()
+        and e.get("global_id", "").isdigit()
+        and e.get("assigned_sprites", "").isdigit()
+        and int(e["assigned_sprites"]) > 0
+        and e.get("renderer_modified") == "false"
+    ]
+    render_tilemap = [
+        e for e in render_with_pixels
+        if e.get("tilemap_sprites", "").isdigit()
+        and int(e["tilemap_sprites"]) > 0
+    ]
     # Correlate the SAME building global identity and a tile actually
     # listed in its footprint; counts alone never establish ownership.
     footprint_owners: dict[tuple[str, str], set[str]] = {}
@@ -226,7 +289,14 @@ def evaluate_log(path: Path) -> dict:
                 and entry.get("sprite") not in ("", "null", "none", None)):
             correlated.add((*key, tile_id))
     report = {
+        "sourceLogSHA256": log_digest,
         "readOnlyProbeStarted": running,
+        "qaSpriteCanaryStarted": canary_mode,
+        "qaCanaryApplications": len(canary_applied),
+        "qaCanaryRestorations": len(canary_restored),
+        "qaCanaryTileRestoredVerified": tile_restored,
+        "qaCanaryCleanShutdownVerified": clean_canary_shutdown,
+        "qaCanaryRebindAndRestoreVerified": canary_verified,
         "probeDisabled": disabled,
         "shutdownEvents": shutdown,
         "runnerHeartbeatCount": len(heartbeats),
@@ -234,11 +304,17 @@ def evaluate_log(path: Path) -> dict:
         "runnerSurvivedHost": runner_survived_host,
         "tileGraphicObservations": len(tiles),
         "buildingFootprintObservations": len(footprints),
+        "buildingRendererTileSamples": len(render_samples),
+        "buildingSamplesWithAssignedSprite": len(render_with_pixels),
+        "buildingSamplesWithTilemapSprite": len(render_tilemap),
+        "directlySampledBuildingTypes": sorted({
+            entry["type"] for entry in render_with_pixels if entry.get("type", "").isdigit()
+        }, key=int),
         "readErrors": len(failures),
         "correlatedTiles": len(correlated),
         "correlatedBuildingIdentities": len({(b, g) for b, g, _ in correlated}),
         "liveTileFootprintCorrelationObserved": running and not disabled and bool(correlated),
-        "liveGraphicMappingProved": False, # Correlation != tested sprite renderer target.
+        "liveGraphicMappingProved": False, # Only read-only evidence; game rendering not modified.
         "rendererReplacementProved": False,
         "inGameFullDamageSwitchingProved": False
     }
@@ -252,6 +328,13 @@ def evaluate_log(path: Path) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--qa-root", required=True, type=Path)
+    parser.add_argument("--expected-log-sha256",
+                        help="Bei --verify-log: SHA-256 des unveränderten Spielprotokolls")
+    parser.add_argument("--qa-canary", action="store_true",
+                        help="Nur mit --qa-save: eine Grafik-Kachel kurz ändern und durch die Engine wiederherstellen")
+    parser.add_argument("--qa-save", type=Path,
+                        help="Nur explizite Testkopie SpriteSuite_QA_Saves/SpriteSuite_Damage_Test.sav; "
+                             "lädt eine Spielkarte im isolierten QA-Klon, ohne Original-Save zu überschreiben")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--build-only", action="store_true")
     mode.add_argument("--install-qa", action="store_true")
@@ -260,13 +343,28 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         qa, details = verify_root(args.qa_root)
+        if args.qa_save is not None and not (args.build_only or args.install_qa):
+            raise QAFailure("--qa-save ist nur für --build-only oder --install-qa zulässig.")
+        save_sha = validate_qa_save(qa, args.qa_save) if args.qa_save else None
+        if args.qa_canary:
+            must(bool(save_sha) and (args.build_only or args.install_qa),
+                 "--qa-canary benötigt --qa-save sowie --build-only/--install-qa.")
         if args.remove_qa:
             output = remove_qa(qa)
         elif args.verify_log:
             output = evaluate_log(args.verify_log)
+            if args.expected_log_sha256:
+                must(len(args.expected_log_sha256) == 64 and
+                     all(ch in "0123456789abcdefABCDEF" for ch in args.expected_log_sha256) and
+                     args.expected_log_sha256.lower() == output["sourceLogSHA256"],
+                     "QA-Log SHA-256 entspricht nicht der angegebenen Beweissicherung.")
         else:
+            must(args.expected_log_sha256 is None,
+                 "--expected-log-sha256 ist nur mit --verify-log zulässig.")
             with tempfile.TemporaryDirectory(prefix="spritesuite_shcde_damage_qa_") as dirname:
-                build = compile_probe(qa, details, Path(dirname))
+                build = compile_probe(qa, details, Path(dirname), save_sha, args.qa_canary)
+                if save_sha:
+                    build["qaSaveSHA256"] = save_sha
                 output = {k: v for k, v in build.items() if k != "dll"}
                 output["compiled"] = True
                 output["gameModified"] = False
