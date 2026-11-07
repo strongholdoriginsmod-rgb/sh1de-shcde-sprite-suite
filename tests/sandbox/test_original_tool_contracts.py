@@ -53,6 +53,27 @@ def test_original_tool_is_byte_preserved(name):
             original = original.replace(before, after)
         assert b.read_text("utf8") == original
         return
+    if name == "editor_bruecke.py":
+        # Preserve the complete historical exchange implementation and allow
+        # only the explicitly integrated local launch and offline switch.
+        original = a.read_text("utf8")
+        replacements = {
+            "    webbrowser.open(target.as_uri())":
+                '    if args.offline:\n'
+                '        webbrowser.open(target.as_uri())\n'
+                '    else:\n'
+                '        from sprite_editor_local import launch\n'
+                '        launch("en" if target == english else "de")',
+            "    p.set_defaults(func=cmd_oeffnen)":
+                '    p.add_argument("--offline", action="store_true", '
+                'help="Eigenständige Datei ohne lokale Codex-Anbindung öffnen")\n'
+                '    p.set_defaults(func=cmd_oeffnen)',
+        }
+        for before, after in replacements.items():
+            assert original.count(before) == 1
+            original = original.replace(before, after)
+        assert b.read_text("utf8") == original
+        return
     assert hashlib.sha256(a.read_bytes()).digest()==hashlib.sha256(
         b.read_bytes()
     ).digest()
