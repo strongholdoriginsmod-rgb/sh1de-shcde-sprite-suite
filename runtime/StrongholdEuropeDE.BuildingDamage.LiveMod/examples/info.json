@@ -1,0 +1,9 @@
+{
+  "GUID": "org.spritesuite.buildingdamage.live",
+  "Name": "SpriteSuite HP and Fire Building Damage Runtime",
+  "Author": "SpriteSuite",
+  "Description": "Per-building, HP- and fire-aware runtime sprite replacement",
+  "Version": "0.1.0",
+  "Manifest": 1,
+  "NetworkMode": 1
+}
