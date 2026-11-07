@@ -16,6 +16,15 @@ sys.path.insert(0,str(ROOT/"tools"))
 @pytest.fixture
 def ui(tmp_path,monkeypatch):
     import stronghold_europe_de.workspace_lock as lock_module
+    import hud_menu_layout as layout
+    import hud_menu_workspace as hud
+
+    work = tmp_path / "work"
+    work.mkdir()
+    monkeypatch.setattr(hud, "ROOT", tmp_path)
+    monkeypatch.setattr(hud, "WORK", work)
+    monkeypatch.setattr(hud, "DEFAULT", work / "hud-menu-werkstatt")
+    monkeypatch.setattr(layout, "WORK", work)
     monkeypatch.setattr(
         lock_module,"lock_path",
         lambda _root,_name: tmp_path/"modern-ui-instance.lock",
@@ -130,7 +139,7 @@ def test_open_layout_guide_changes_language_without_restart(ui):
     editor=app.hud_menu_tab.open_layout()
     assert editor is not None
     app.update()
-    # An empty worktree has no imported game assets; never create them here.
+    # This fixture starts with a private, empty project.
     assert editor.guide_heading.get().startswith("1 / 4")
     assert editor._next_action=="import"
     app.set_language("en")

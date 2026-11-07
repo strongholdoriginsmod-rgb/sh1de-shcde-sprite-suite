@@ -132,15 +132,19 @@ def test_zipfs9_rejects_missing_corrupt_or_unsafe_scripts(tmp_path,damage):
 @pytest.mark.skipif(sys.platform!="win32",reason="native Windows zipfs probe")
 def test_native_tcl9_installed_zipfs_ignores_poisoned_library_paths(monkeypatch):
     import tkinter as tk
-    from suite_tcl_runtime import install_tcl_env
+    from suite_tcl_runtime import install_tcl_env, locate_bundled_tcl
     if tk.TclVersion<9 or tk.TkVersion<9:
         pytest.skip("Python uses the existing Tcl/Tk 8.6 script cache")
     monkeypatch.setenv("TCL_LIBRARY","C:/invalid/tcl9")
     monkeypatch.setenv("TK_LIBRARY","C:/invalid/tk9")
     env=install_tcl_env(ROOT)
-    assert env["SPRITESUITE_TCL_RUNTIME_SOURCE"]=="native-verified-zipfs9"
     assert os.environ.get("TCL_LIBRARY") is None
     assert os.environ.get("TK_LIBRARY") is None
+    selected = locate_bundled_tcl(ROOT)
+    assert Path(env["SPRITESUITE_TCL_RUNTIME_ROOT"]) == selected
+    expected_mode = ("native-verified-embedded-zipfs9" if selected.name.casefold() == "dlls"
+                     else "native-verified-zipfs9")
+    assert env["SPRITESUITE_TCL_RUNTIME_SOURCE"] == expected_mode
     root=tk.Tk();root.withdraw();root.update_idletasks();root.destroy()
 
 
