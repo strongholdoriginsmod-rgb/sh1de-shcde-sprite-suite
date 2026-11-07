@@ -1,9 +1,8 @@
 """Build, attest, install and safely roll back SpriteSuite's native BepInEx plugin.
 
-Only the EXACT pinned SHCDE installation is supported. Installation creates a
-new folder in BepInEx/plugins/ and NEVER overwrites existing game files,
-XAML, other mods or the Script Extender. A private backup and SHA-256 receipt
-are recorded before activation. Live runtime proof is a separate game launch.
+Compile against the selected SHCDE installation and bind the result to its
+verified game, Noesis, Extender and XAML inputs. Installation uses a new plugin
+folder with SHA-256 receipts and a reversible rollback.
 """
 from __future__ import annotations
 import argparse
@@ -23,6 +22,7 @@ from origins_runtime_authoring import (
 )
 from origins_native_abi_probe import CSC
 from suite_windows_csharp_scratch import short_csharp_scratch
+from suite_windows_paths import is_link_or_reparse
 
 ROOT=Path(__file__).resolve().parents[1]
 PLUGIN_FOLDER="SpriteSuite_Origins_Live_20261101"
@@ -32,13 +32,6 @@ GAME_REL={
     "noesis_native":"Stronghold Crusader Definitive Edition_Data/Plugins/x86_64/Noesis.dll",
     "script_extender":"BepInEx/plugins/000shcdese/SHCDESE.dll",
     "frontend":"BepInEx/plugins/000shcdese/Override/Assets/GUI/XAML/FrontendMenus.xaml",
-}
-APPROVED_SHA={
-    "game":"01da4c57f8a0e04a77804e78f79bacb1ae63d934d6d391f0dcaf3742bcca5de3",
-    "noesis_managed":"98476d3ca84ae0f2dcfbaddcc64b01a1f65474bd44402673fd6856d1b5347648",
-    "noesis_native":"0e33dcca88c19ea744be3aaf45904f4ac525fc646fc7549b02c1a730d50a9233",
-    "script_extender":"20543f2eb7cba4a25298493ec51efc3a5a12af55252bef23566e047f6c0827a4",
-    "frontend":"a803f69596bc4f8d2f8d04263e7d27acf2d64b5ed5b40fbacea95154e39d4e62",
 }
 CS_FILES=[
     "runtime/SpriteSuite.Origins.Authoring/OriginsRuntimeCore.cs",
@@ -72,31 +65,43 @@ def _digest(file:Path)->str:
 
 def _inside(root:Path,rel:str)->Path:
     file=root.joinpath(*rel.split("/"))
-    if not file.is_file() or file.is_symlink() or not file.resolve().is_relative_to(root.resolve()):
+    if not file.is_file() or is_link_or_reparse(file) or not file.resolve().is_relative_to(root.resolve()):
         raise LiveInstallError("Missing or linked game reference: "+rel)
     return file
 
 
 def preflight_game(game:Path)->dict:
-    base=Path(game).resolve(strict=True)
-    if not base.is_dir() or base.is_symlink():
+    selected=Path(game)
+    if not selected.is_dir() or is_link_or_reparse(selected):
         raise LiveInstallError("Game directory is missing or linked")
+    base=selected.resolve(strict=True)
     refs={key:_inside(base,rel) for key,rel in GAME_REL.items()}
     actual={key:_digest(path) for key,path in refs.items()}
-    if actual!=APPROVED_SHA:
-        raise LiveInstallError("Installed game/Noesis/Extender hashes differ; refusing unsafe plugin: "+
-                               repr({k:(APPROVED_SHA[k],v) for k,v in actual.items()
-                                     if v!=APPROVED_SHA[k]}))
-    if not (base/"Stronghold Crusader Definitive Edition_Data"/
-            "StreamingAssets"/"Maps"/"Antioch.map").is_file():
-        raise LiveInstallError("Native map source missing from approved install")
     info=json.loads(_inside(base,"BepInEx/plugins/000shcdese/info.json").read_text("utf8"))
-    if info.get("Version")!="2.10.4" or info.get("SupportedGameVersions")!=["2.8.0.2"]:
-        raise LiveInstallError("Unsupported Script Extender version")
+    version=info.get("Version") if isinstance(info,dict) else None
+    if not isinstance(version,str) or not version.strip():
+        raise LiveInstallError("Script Extender installation has no version metadata")
     names=verify_original_xpaths(refs["frontend"])
     return {"game_root":str(base),"original_sha256":actual,
-            "original_gui":names,"script_extender_version":info["Version"],
+            "original_gui":names,"script_extender_version":version,
             "originals_modified":False}
+
+
+def _verified_game_inputs(hashes:dict[str,str])->bytes:
+    """Generate the input identity checked by the plugin before it registers hooks."""
+    rows="".join(f"            {{ {json.dumps(GAME_REL[key])}, {json.dumps(hashes[key])} }},\n"
+                 for key in GAME_REL)
+    return (
+        "namespace SpriteSuite.Origins.Live\n"
+        "{\n"
+        "    internal static class VerifiedGameInputs\n"
+        "    {\n"
+        "        internal static readonly string[,] PathsAndHashes = {\n"
+        + rows +
+        "        };\n"
+        "    }\n"
+        "}\n"
+    ).encode("utf8")
 
 
 def _safe_project_output(value:Path)->Path:
@@ -109,24 +114,27 @@ def _safe_project_output(value:Path)->Path:
     return output
 
 
-def build_bundle(game:Path,output:Path)->dict:
+def build_bundle(game:Path,output:Path,campaign:Path|None=None)->dict:
     if os.name!="nt" or not CSC.is_file():
         raise LiveInstallError("Native Windows C# compiler unavailable")
     check=preflight_game(game)
     base=Path(check["game_root"])
     destination=_safe_project_output(output)
-    approved_map="Antioch.map"
-    plan=validate_campaign({"name":"spritesuite-live",
-             "title":"SpriteSuite Origins",
-             "missions":[{"number":1,"title":"Antioch",
-                          "map":approved_map,"act":"Einführung"}]})
+    default_campaign={"name":"spritesuite-live","title":"SpriteSuite Origins",
+                      "missions":[{"number":1,"title":"Antioch",
+                                   "map":"Antioch.map","act":"Einführung"}]}
+    plan=validate_campaign(json.loads(campaign.read_text("utf-8-sig"))
+                           if campaign is not None else default_campaign)
+    maps=list(dict.fromkeys(mission["map"] for mission in plan["missions"]))
+    for map_file in maps:
+        _inside(base,"Stronghold Crusader Definitive Edition_Data/StreamingAssets/Maps/"+map_file)
     sources=[ROOT/x for x in CS_FILES]
     if any(not p.is_file() or p.is_symlink() for p in sources+[PROBE]):
         raise LiveInstallError("Audited native C# sources absent")
     source_hash={str(p.relative_to(ROOT)):_digest(p) for p in sources+[PROBE]}
     patch=build_native_menu_patch(plan,base/GAME_REL["frontend"])
     generated_campaign=campaign_csharp_source(plan)
-    generated_season=season_csharp_source("spritesuite-winter",[approved_map])
+    generated_season=season_csharp_source("spritesuite-winter",maps)
     destination.parent.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix=".spritesuite-live-stage-",dir=destination.parent))
     try:
@@ -140,7 +148,7 @@ def build_bundle(game:Path,output:Path)->dict:
              "Name":"SpriteSuite Origins Native Bridge",
              "Description":"Native menu, source-verified mission entry and Noesis frame bridge",
              "Version":"0.2.0",
-             "Dependencies":[{"GUID":"000shcdese","MinimumVersion":"2.10.4"}],
+             "Dependencies":[{"GUID":"000shcdese","MinimumVersion":check["script_extender_version"]}],
              "Manifest":1,"NetworkMode":1,
         },indent=2)+"\n",encoding="utf8")
         # Do not bundle SHCDESE or Unity DLLs, or redistribute game assets.
@@ -149,12 +157,14 @@ def build_bundle(game:Path,output:Path)->dict:
             generated.write_bytes(generated_campaign)
             season=scratch/"AuthoredSeasons.g.cs"
             season.write_bytes(generated_season)
+            verified=scratch/"VerifiedGameInputs.g.cs"
+            verified.write_bytes(_verified_game_inputs(check["original_sha256"]))
             binary=scratch/"SpriteSuite.Origins.Live.dll"
             cmd=[str(CSC),"/nologo","/target:library","/optimize+",
                  "/out:"+str(binary)]
             cmd.extend("/reference:"+str(_inside(base,x)) for x in REFS)
             cmd.extend(str(x) for x in sources)
-            cmd.extend([str(generated),str(season)])
+            cmd.extend([str(generated),str(season),str(verified)])
             run=subprocess.run(cmd,cwd=scratch,capture_output=True,
                     text=True,errors="replace",timeout=65,
                     creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
@@ -192,7 +202,7 @@ def build_bundle(game:Path,output:Path)->dict:
         backup.mkdir()
         for name in ("game","frontend"):
             shutil.copyfile(base/GAME_REL[name],backup/Path(GAME_REL[name]).name)
-            if _digest(backup/Path(GAME_REL[name]).name)!=APPROVED_SHA[name]:
+            if _digest(backup/Path(GAME_REL[name]).name)!=check["original_sha256"][name]:
                 raise LiveInstallError("Game source backup failed integrity")
         manifest={
             "schema":"sprite-suite.origins-native-live-install-candidate.v1",
@@ -206,6 +216,8 @@ def build_bundle(game:Path,output:Path)->dict:
                 for f in package.rglob("*") if f.is_file()},
             "patch_anchors":check["original_gui"],
             "source_files_sha256":source_hash,
+            "campaign_name":plan["name"],
+            "campaign_mission_maps":maps,
             "generated_campaign_sha256":sha256(generated_campaign).hexdigest(),
             "generated_season_sha256":sha256(generated_season).hexdigest(),
             "native_plugin_compiles":True,
@@ -226,36 +238,34 @@ def build_bundle(game:Path,output:Path)->dict:
             "receipt":str(destination/"build-receipt.json"),**manifest}
 
 
+def _plugin_file_hashes(folder:Path)->dict[str,str]:
+    if not folder.is_dir() or is_link_or_reparse(folder):
+        raise LiveInstallError("Unexpected or linked SpriteSuite plugin folder")
+    hashes={}
+    for path in folder.rglob("*"):
+        if is_link_or_reparse(path):
+            raise LiveInstallError("Linked file under SpriteSuite plugin")
+        if path.is_file():
+            hashes[path.relative_to(folder).as_posix()]=_digest(path)
+    return hashes
+
+
 def activate_bundle(bundle:Path,game:Path)->dict:
     check=preflight_game(game)
     base=Path(check["game_root"])
     data=Path(bundle)
-    if data.name!=PLUGIN_FOLDER or not data.is_dir() or data.is_symlink():
-        raise LiveInstallError("Unexpected or linked SpriteSuite plugin bundle")
-    receipt=data.parent/"build-receipt.json"
-    proof=json.loads(receipt.read_text("utf8"))
+    if data.name!=PLUGIN_FOLDER:
+        raise LiveInstallError("Unexpected SpriteSuite plugin bundle")
+    proof=json.loads(_inside(data.parent,"build-receipt.json").read_text("utf8"))
     if proof.get("game_originals_sha256")!=check["original_sha256"]:
         raise LiveInstallError("Built against a different game revision")
-    for rel,digest in proof["plugin_contents_sha256"].items():
-        file=data/rel
-        if not file.is_file() or file.is_symlink() or _digest(file)!=digest:
-            raise LiveInstallError("Pre-activation plugin file missing/changed: "+rel)
+    expected=proof.get("plugin_contents_sha256")
+    if not isinstance(expected,dict) or "SpriteSuite.Origins.Live.dll" not in expected or _plugin_file_hashes(data)!=expected:
+        raise LiveInstallError("Pre-activation plugin files differ from the build receipt")
     root=base/"BepInEx"/"plugins"
     final=root/PLUGIN_FOLDER
-    if final.exists() or final.is_symlink():
+    if final.exists() or is_link_or_reparse(final):
         raise LiveInstallError("Game plugin already exists; refuse overwrite")
-    stage=root/(".spritesuite-installing-"+uuid4().hex[:12])
-    try:
-        shutil.copytree(data,stage)
-        for rel,digest in proof["plugin_contents_sha256"].items():
-            if _digest(stage/rel)!=digest:
-                raise LiveInstallError("Installed staging bytes differ: "+rel)
-        os.rename(stage,final)
-    finally:
-        if stage.exists() and not stage.is_symlink():shutil.rmtree(stage)
-    after=preflight_game(base)
-    if after["original_sha256"]!=check["original_sha256"]:
-        raise LiveInstallError("Game originals unexpectedly changed")
     status={
         "schema":"sprite-suite.native-plugin-activation.v1",
         "installed":True,"installed_game_directory":str(base),
@@ -270,8 +280,31 @@ def activate_bundle(bundle:Path,game:Path)->dict:
         "actual_noesis_native_render_verified":False,
         "rollback_command":"python tools/origins_native_live_install.py --rollback --game "+str(base),
     }
-    (data.parent/"install-receipt.json").write_text(
-        json.dumps(status,ensure_ascii=False,indent=2)+"\n",encoding="utf8")
+    receipt=data.parent/"install-receipt.json"
+    if is_link_or_reparse(receipt):
+        raise LiveInstallError("Linked install receipt")
+    suffix=uuid4().hex[:12]
+    stage=root/(".spritesuite-installing-"+suffix)
+    pending=receipt.with_name(".spritesuite-receipt-"+suffix+".json")
+    try:
+        shutil.copytree(data,stage)
+        if _plugin_file_hashes(stage)!=expected:
+            raise LiveInstallError("Installed staging bytes differ from the build receipt")
+        if preflight_game(base)["original_sha256"]!=check["original_sha256"]:
+            raise LiveInstallError("Game originals changed during installation")
+        with pending.open("x",encoding="utf8") as f:
+            json.dump(status,f,ensure_ascii=False,indent=2)
+            f.write("\n")
+        os.rename(stage,final)
+        try:
+            os.replace(pending,receipt)
+        except OSError:
+            os.rename(final,stage)
+            raise
+    finally:
+        if stage.exists() and not is_link_or_reparse(stage):
+            shutil.rmtree(stage)
+        pending.unlink(missing_ok=True)
     return status
 
 
@@ -279,7 +312,7 @@ def rollback(game:Path)->dict:
     check=preflight_game(game)
     base=Path(check["game_root"])
     target=base/"BepInEx"/"plugins"/PLUGIN_FOLDER
-    if not target.is_dir() or target.is_symlink():
+    if not target.is_dir() or is_link_or_reparse(target):
         raise LiveInstallError("No regular SpriteSuite live plugin installation to rollback")
     manifests=sorted((ROOT/"work").glob("**/install-receipt.json"))
     matching=[]
@@ -295,10 +328,7 @@ def rollback(game:Path)->dict:
         raise LiveInstallError("Rollback receipt is ambiguous or missing")
     receipt,item=matching[0]
     expected=item["installed_plugin_sha256"]
-    if any(p.is_symlink() for p in target.rglob("*")):
-        raise LiveInstallError("Linked file under installed plugin; rollback refused")
-    actual={p.relative_to(target).as_posix():_digest(p)
-            for p in target.rglob("*") if p.is_file()}
+    actual=_plugin_file_hashes(target)
     if actual!=expected:
         raise LiveInstallError("User changed installed plugin; refusing destructive rollback")
     hidden=target.parent/(".spritesuite-removing-"+uuid4().hex[:12])
@@ -319,10 +349,13 @@ def main()->int:
     actions.add_argument("--rollback",action="store_true")
     p.add_argument("--game",type=Path,required=True)
     p.add_argument("--out",type=Path)
+    p.add_argument("--campaign",type=Path,help="campaign-plan.json from the Origins authoring workspace")
     a=p.parse_args()
+    if a.campaign is not None and not a.build:
+        p.error("--campaign requires --build")
     try:
         if a.build:
-            result=build_bundle(a.game,a.out or ROOT/"work"/("native-live-"+uuid4().hex[:12]))
+            result=build_bundle(a.game,a.out or ROOT/"work"/("native-live-"+uuid4().hex[:12]),a.campaign)
         elif a.install:
             result=activate_bundle(a.install,a.game)
         else:

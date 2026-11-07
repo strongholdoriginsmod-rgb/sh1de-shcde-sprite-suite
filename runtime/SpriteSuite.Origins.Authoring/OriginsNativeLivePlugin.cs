@@ -1,4 +1,4 @@
-// SpriteSuite native runtime integration for the EXACT approved SHCDE binary.
+// SpriteSuite native runtime compiled and bound to the selected SHCDE installation.
 // This source is not installed by compiling. A separate installer verifies
 // references, original XAML and rollback before activating a BepInEx plugin.
 //
@@ -26,8 +26,6 @@ namespace SpriteSuite.Origins.Live
     [BepInDependency("000shcdese", BepInDependency.DependencyFlags.HardDependency)]
     public sealed class OriginsNativeLivePlugin : BaseUnityPlugin
     {
-        private const string ApprovedAssemblyHash =
-            "01da4c57f8a0e04a77804e78f79bacb1ae63d934d6d391f0dcaf3742bcca5de3";
         private const int MaxFrames = 4;
         private static OriginsNativeLivePlugin Active;
         private static readonly CampaignSession Campaign=AuthoredCampaign.NewSession();
@@ -35,7 +33,7 @@ namespace SpriteSuite.Origins.Live
         private Harmony _harmony;
         private IDisposable _onMapLoad, _onMapUnload, _onPostLoad;
         private bool _verified, _captureEnabled;
-        private string _output;
+        private string _output, _observedAssemblyHash;
         private int _frameNumber, _viewsLastSeen, _mapLoadCount, _mapUnloadCount;
         private int _nativeMenuActions;
         private bool _nativeMissionLaunchVerified, _mapLoadMatched;
@@ -59,13 +57,19 @@ namespace SpriteSuite.Origins.Live
             Log("Plugin Awake executed against installed game process");
             try
             {
-                string gameAssembly=Path.Combine(Application.dataPath,"Managed","Assembly-CSharp.dll");
-                string hash=HashFile(gameAssembly);
-                if (!String.Equals(hash,ApprovedAssemblyHash,StringComparison.OrdinalIgnoreCase))
+                string gameRoot=Directory.GetParent(Application.dataPath).FullName;
+                for(int i=0;i<VerifiedGameInputs.PathsAndHashes.GetLength(0);i++)
                 {
-                    Fail("Game ABI hash mismatch: "+hash+"; game hooks disabled");
-                    WriteStatus();
-                    return;
+                    string relative=VerifiedGameInputs.PathsAndHashes[i,0];
+                    string expected=VerifiedGameInputs.PathsAndHashes[i,1];
+                    string actual=HashFile(Path.Combine(gameRoot,relative));
+                    if(i==0)_observedAssemblyHash=actual;
+                    if(!String.Equals(actual,expected,StringComparison.OrdinalIgnoreCase))
+                    {
+                        Fail("Game input changed since build: "+relative+"; game hooks disabled");
+                        WriteStatus();
+                        return;
+                    }
                 }
                 Type menu=AccessTools.TypeByName("CrusaderDE.FrontendMenus");
                 MethodInfo clicked=menu==null?null:
@@ -152,7 +156,7 @@ namespace SpriteSuite.Origins.Live
                 string json="{\n"+
                     "  \"schema\":\"sprite-suite.origins-native-live.v1\",\n"+
                     "  \"timestamp_utc\":"+Json(DateTime.UtcNow.ToString("o"))+",\n"+
-                    "  \"game_assembly_sha256\":"+Json(ApprovedAssemblyHash)+",\n"+
+                    "  \"game_assembly_sha256\":"+Json(_observedAssemblyHash)+",\n"+
                     "  \"native_plugin_awake\":true,\n"+
                     "  \"game_process_pid\":"+System.Diagnostics.Process.GetCurrentProcess().Id+",\n"+
                     "  \"game_installation_root\":"+Json(

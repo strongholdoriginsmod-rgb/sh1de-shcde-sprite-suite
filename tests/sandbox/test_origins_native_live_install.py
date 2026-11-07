@@ -47,12 +47,13 @@ def _fake_game(tmp_path,monkeypatch):
     return root,package,bundle_dir
 
 
-def test_approved_real_game_original_hashes_and_noesis_patch_are_read_only():
+def test_selected_real_game_original_hashes_and_noesis_patch_are_read_only():
     game=Path(r"D:\Games\Stronghold Crusader Definitive Edition")
     if os.name!="nt" or not game.is_dir():
         pytest.skip("Original user-installed Windows game needed")
     prior=live.preflight_game(game)
-    assert prior["original_sha256"]==live.APPROVED_SHA
+    assert prior["original_sha256"]=={key:sha256((game/rel).read_bytes()).hexdigest()
+                                     for key,rel in live.GAME_REL.items()}
     original=game/live.GAME_REL["frontend"]
     before=original.read_bytes()
     plan={"name":"qa-original","title":"Live QA",
@@ -63,6 +64,7 @@ def test_approved_real_game_original_hashes_and_noesis_patch_are_read_only():
     assert b"OriginsLegacyCampaign" in result
     assert b"LegacyStart" in result
     assert b"SpriteSuiteOriginsCampaignScreen" in result
+    assert b"ScrollViewer" in result
     assert original.read_bytes()==before
     assert verify_original_xpaths(original)["entry_grid_matches"]==1
 
@@ -139,3 +141,28 @@ def test_experimental_season_memory_swap_not_shipped_without_cleanup_proof():
     assert "SeasonSession.OnMapLoaded" not in project
     assert "Seasons.OnMapLoaded" in project
     assert "season_atlas_visual_override_verified" in project
+
+def test_selected_game_hashes_are_embedded_for_each_runtime_input():
+    hashes={key:sha256(key.encode("utf8")).hexdigest() for key in live.GAME_REL}
+    source=live._verified_game_inputs(hashes).decode("utf8")
+    assert "VerifiedGameInputs" in source
+    for key,relative in live.GAME_REL.items():
+        assert json.dumps(relative) in source
+        assert json.dumps(hashes[key]) in source
+
+def test_install_rejects_unattested_files_and_rolls_back_on_receipt_error(tmp_path,monkeypatch):
+    game,package,bundle_dir=_fake_game(tmp_path,monkeypatch)
+    extra=package/"extra.dll"
+    extra.write_bytes(b"unattested")
+    with pytest.raises(live.LiveInstallError,match="files differ"):
+        live.activate_bundle(package,game)
+    extra.unlink()
+    installed=game/"BepInEx"/"plugins"/live.PLUGIN_FOLDER
+    def fail_receipt(*_args):
+        raise PermissionError("Cannot publish install receipt")
+    monkeypatch.setattr(live.os,"replace",fail_receipt)
+    with pytest.raises(PermissionError,match="publish install receipt"):
+        live.activate_bundle(package,game)
+    assert not installed.exists()
+    assert not list(installed.parent.glob(".spritesuite-installing-*"))
+    assert not list(bundle_dir.glob(".spritesuite-receipt-*.json"))

@@ -87,7 +87,10 @@ def build_native_menu_patch(campaign:dict,original:Path)->bytes:
        '<TextBlock Name="SpriteSuiteSelectedMission" '
        'Text="Mission 1" FontSize="26" Foreground="#FFF2E7CB" '
        'HorizontalAlignment="Center" Margin="0,0,0,20"/>'
+       '<ScrollViewer MaxHeight="640" VerticalScrollBarVisibility="Auto">'
+       '<StackPanel>'
        + "".join(rows)+
+       '</StackPanel></ScrollViewer>'
        '<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">'
        '<Button Name="SpriteSuiteOriginsStart" Content="Mission starten" '
        'FontSize="24" Width="270" Height="62" Margin="5,20,5,0" '

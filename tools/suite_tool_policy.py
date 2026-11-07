@@ -82,6 +82,8 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         return WORK if "--out" in command else READ
     if name=="qa_workstream_census.py":
         return WORK if "--out" in command else READ
+    if name=="origins_native_live_install.py":
+        return GAME if {"--install", "--rollback"} & command else WORK
     if name=="building_damage_codex.py":
         return NETWORK if {"--execute", "--login"} & command else READ
     if name=="ziel_se211.py":
