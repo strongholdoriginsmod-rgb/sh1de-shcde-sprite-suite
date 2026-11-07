@@ -60,14 +60,15 @@ def test_full_suite_root_does_not_retry_unrelated_tcl_errors(tmp_path,monkeypatc
 
 
 
-def test_standalone_tk_root_factory_retries_transient_script_reads(monkeypatch):
+@pytest.mark.parametrize("script", ["tcl8.6/init.tcl", "tcl8.6/auto.tcl", "tk8.6/tk.tcl"])
+def test_standalone_tk_root_factory_retries_transient_script_reads(monkeypatch, script):
     from suite_tcl_runtime import create_tk_root
     original=tk.Tk.__init__
     seen={"count":0}
     def interrupted(self,*args,**kwargs):
         seen["count"]+=1
         if seen["count"]<=2:
-            raise tk.TclError("couldn't read file C:/private/tcl8.6/init.tcl")
+            raise tk.TclError(f'couldn\'t read file "C:/private/{script}": no such file or directory')
         return original(self,*args,**kwargs)
     monkeypatch.setattr(tk.Tk,"__init__",interrupted)
     result=create_tk_root()

@@ -285,7 +285,7 @@ def call_with_tcl_bootstrap_retries(operation, *, attempts:int=5):
     """Retry only native Tcl library bootstrap reads, not ordinary GUI errors.
 
     Windows/Tcl can sporadically report native I/O failures while sourcing
-    intact init.tcl/tk.tcl. No widgets or application state are published
+    intact bootstrap scripts. No widgets or application state are published
     before this constructor returns successfully. The upper bound prevents
     concealing a permanently broken runtime installation.
     """
@@ -301,7 +301,8 @@ def call_with_tcl_bootstrap_retries(operation, *, attempts:int=5):
             detail=str(exc).casefold()
             missing_tcl=("usable init.tcl" in detail or
                          "usable tk.tcl" in detail or
-                         ("init.tcl" in detail and "couldn't read" in detail) or
+                         ("couldn't read" in detail and
+                          any(name in detail for name in ("init.tcl", "auto.tcl", "tk.tcl"))) or
                          ("invalid command name" in detail and
                           "tcl_findlibrary" in detail))
             if not missing_tcl or trial+1==attempts:
