@@ -2213,14 +2213,13 @@ class ExchangeTab(ttk.Frame):
         self.only_changed = tk.BooleanVar(value=True)
         ttk.Checkbutton(atlas_options, text="nur geaenderte Frames", variable=self.only_changed).pack(side="left", padx=4)
         asset_row = section(
-            "Statisches HUD-/GUI-Assetpaket (ohne SE-Versionsbindung)",
-            "Erstellt ein Asset-Mod mit Manifest 0, ohne eigene Runtime-DLL, "
-            "ohne SE-Installation und ohne feste Script-Extender-Version. "
-            "Die Dateien müssen zuvor unter work/<Ordner>/Override oder "
-            "work/<Ordner>/Patches bearbeitet worden sein."
+            "Freies Mod-Paket aus Ordner",
+            "Verpackt den gewählten Ordner mit seiner Dateistruktur und einer "
+            "vorhandenen info.json als ZIP. Das ZIP kann eigene Grafiken, "
+            "Noesis-Dateien, DLLs, Skripte und Audio enthalten."
         )
         ttk.Button(
-            asset_row, text="DLL-freies Asset-Modpaket bauen ...",
+            asset_row, text="Ordner als Mod-Paket exportieren …",
             command=self.asset_mod_build,
         ).pack(side="left", padx=5)
         p = section(
@@ -2294,10 +2293,10 @@ class ExchangeTab(ttk.Frame):
             self.app.run([tool("editor_bruecke.py"), "import", path], "Editor-Ergebnis zurueckholen")
 
     def asset_mod_build(self):
-        """Build a static GUI/sprite mod, never install a Script Extender."""
+        """Export an existing mod folder through the common package builder."""
         source = filedialog.askdirectory(
             parent=self, initialdir=str(ROOT / "work"),
-            title="Asset-Mod-Ordner mit Override/ und Patches/ unter work/ wählen",
+            title="Quellordner für das Mod-Paket wählen",
         )
         if not source:
             return
@@ -2313,20 +2312,10 @@ class ExchangeTab(ttk.Frame):
         )
         if not name:
             return
-        if not messagebox.askyesno(
-            "Asset-Modpaket ohne Runtime-DLL",
-            "Nur PNG/JPG/DDS/JSON und statische XAML-Patches werden "
-            "in einen getrennten Ordner und ein ZIP unter work/ verpackt. "
-            "Der Script Extender und das Spiel werden nicht geändert. "
-            "Paket erzeugen?",
-            parent=self,
-            default="no",
-        ):
-            return
         self.app.run(
             [tool("se_asset_package.py"), "--source", source,
              "--guid", guid, "--name", name],
-            "DLL-freies HUD-/GUI-Assetpaket für vorhandenen Script Extender",
+            "Freies Mod-Paket aus Ordner",
         )
 
     def atlas_project(self):
