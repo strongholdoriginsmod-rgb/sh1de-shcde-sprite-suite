@@ -169,6 +169,13 @@ def build_workflow(view):
                                   command=view.open_native_preview)
     view.actions_menu.add_command(label="Steam-Version lesen",
                                   command=view.check_steam_compatibility)
+    view.actions_menu.add_separator()
+    view.actions_menu.add_command(label="Mod-Dateien unverändert hinzufügen…",
+                                  command=view.add_mod_files)
+    view.mod_files_menu_index=view.actions_menu.index("end")
+    view.actions_menu.add_command(label="Mod-ZIP speichern unter…",
+                                  command=view.save_package_as)
+    view.custom_export_menu_index=view.actions_menu.index("end")
     more.configure(menu=view.actions_menu)
 
     bottom = ttk.Frame(root, style="WorkspaceBottom.TFrame", padding=(14, 10, 14, 8))
@@ -220,6 +227,14 @@ def build_workflow(view):
               style="WorkspaceBottomMuted.TLabel").pack(side="left")
     ttk.Entry(view.export_details, textvariable=view.mod_name, width=35).pack(
         side="left", padx=(5, 0), fill="x", expand=True)
+    ttk.Label(view.export_details, textvariable=view._display_var("Autor"),
+              style="WorkspaceBottomMuted.TLabel").pack(side="left", padx=(12, 0))
+    ttk.Entry(view.export_details, textvariable=view.mod_author, width=16).pack(
+        side="left", padx=(5, 0))
+    ttk.Label(view.export_details, textvariable=view._display_var("Version"),
+              style="WorkspaceBottomMuted.TLabel").pack(side="left", padx=(12, 0))
+    ttk.Entry(view.export_details, textvariable=view.mod_version, width=12).pack(
+        side="left", padx=(5, 0))
 
     def toggle_details():
         if view.export_details.winfo_manager():

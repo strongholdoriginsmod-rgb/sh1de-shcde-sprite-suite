@@ -138,6 +138,48 @@ def test_rejects_empty_project_and_does_not_claim_package(isolated):
     assert not (work/"se-asset-mods"/"should-not-exist.zip").exists()
 
 
+def test_custom_files_survive_editable_backup_and_package_export(isolated, tmp_path):
+    import hud_menu_project_transfer as transfer
+
+    project=flow.new_project("mixed-assets")
+    pipeline=flow.ProjectPipeline(project)
+    files={
+        "Plugins/Custom.dll":b"MZ\x00\xff",
+        "Scripts/custom.lua":b"return 42\n",
+        "Override/Audio/Wind.ogg":b"OggS\x00\x01",
+        "Override/Sprites/custom.dds.extra":b"\xff\x00",
+        "info.json":b'{"GUID":"chosen.by.author","Manifest":4}\n',
+    }
+    for i, (relative, data) in enumerate(files.items()):
+        original=tmp_path/f"source-{i}"
+        original.write_bytes(data)
+        copied=pipeline.import_mod_file(original, relative=relative)
+        assert copied==project/relative and copied.read_bytes()==data
+        assert original.read_bytes()==data
+    with pytest.raises(hud.WorkshopError,match="Unsicherer"):
+        pipeline.import_mod_file(original,relative="../outside.lua")
+    with pytest.raises(hud.WorkshopError,match="Existing files"):
+        pipeline.import_mod_file(original,relative="Scripts/custom.lua")
+    assert {item.relative_path for item in pipeline.assets()}==set(files)
+    assert hud.list_assets(project)==[]
+
+    backup=tmp_path/"mixed-editable.zip"
+    transfer.create_archive(project,backup)
+    assert transfer.archive_info(backup)["manifest"]["schema"]==transfer.MOD_FILES_SCHEMA
+    restored=flow.ProjectPipeline(Path(transfer.restore_archive(
+        backup, project_name="mixed-restored")["project"]))
+    assert restored.audit()["bytes_sha256"]==pipeline.audit()["bytes_sha256"]
+
+    for i in range(2):
+        outcome=restored.build(guid="custom.bundle",name="Mixed assets")
+        assert Path(outcome["zip"]).name.startswith("custom.bundle-export-")
+        assert outcome["asset_count"]==len(files)
+        with zipfile.ZipFile(outcome["zip"]) as archive:
+            assert archive.testzip() is None
+            assert {name:archive.read("BepInEx/plugins/custom.bundle/"+name)
+                    for name in files}==files
+
+
 def test_full_xaml_not_misclassified_as_an_installable_patch(isolated,tmp_path):
     _,_=isolated
     project=flow.new_project("xaml-source")

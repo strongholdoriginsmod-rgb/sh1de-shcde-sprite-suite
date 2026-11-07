@@ -6,7 +6,7 @@ Only work/ projects are writable. Installed game originals remain read-only.
 """
 from __future__ import annotations
 
-from hashlib import sha256
+from hashlib import file_digest, sha256
 import json
 import os
 from pathlib import Path
@@ -17,7 +17,7 @@ from zipfile import ZipFile
 import hud_menu_workspace as hud
 from suite_windows_paths import is_link_or_reparse
 from suite_hud_menu_session import read_session, save_session
-from se_asset_package import build as build_static_mod, AssetModError
+from se_asset_package import build as build_static_mod, AssetModError, package_zip_path
 
 
 class UnifiedFlowError(ValueError):
@@ -29,11 +29,12 @@ RECEIPT_SCHEMA = "sprite-suite.unified-project-export.v1"
 
 
 def _sha_file(path: Path) -> str:
-    digest=sha256()
     with Path(path).open("rb") as file:
-        for block in iter(lambda:file.read(4*1024*1024),b""):
-            digest.update(block)
-    return digest.hexdigest()
+        return _sha_stream(file)
+
+
+def _sha_stream(stream) -> str:
+    return file_digest(stream, "sha256").hexdigest()
 
 
 def project_id(project: Path) -> str:
@@ -73,6 +74,9 @@ class ProjectPipeline:
 
     def import_image(self, path: Path, *, category: str = "Menüs / UI-Bilder") -> Path:
         return hud.import_image(path, folder=category, project=self.project)
+
+    def import_mod_file(self, path: Path, *, relative: str) -> Path:
+        return hud.import_mod_file(path, relative, project=self.project)
 
     def create_image(self, name: str, width: int, height: int,
                      *, category: str = "Menüs / UI-Bilder") -> Path:
@@ -246,11 +250,11 @@ class ProjectPipeline:
         return {**proof,"receipt":str(source),"project_current":current}
 
     def assets(self) -> list[hud.WorkshopAsset]:
-        return hud.list_assets(self.project)
+        return hud.list_assets(self.project, include_mod_files=True)
 
     def audit(self) -> dict:
-        evidence=hud.audit_assets(self.project)
         assets=self.assets()
+        evidence=hud.audit_assets(self.project)
         warnings=[]
         image_names=[a.name for a in assets if
                     a.relative_path.startswith("Override/Assets/GUI/Images/")]
@@ -273,15 +277,15 @@ class ProjectPipeline:
                 "native_game_runtime_verified":False,
                 "original_game_files_modified":False}
 
-    def build(self, *, guid: str, name: str, author: str = "SpriteSuite",
+    def build(self, *, guid: str, name: str, author: str = "SpriteSuite", version: str = "1.0.0",
               output: Path | None = None) -> dict:
         """Real guarded exporter; never silently call native game installation."""
         preflight=self.audit()
         target=Path(output) if output is not None else (
             hud.WORK/"se-asset-mods"/(guid+"-export-"+token_hex(6)))
-        if target.exists() or target.with_suffix(".zip").exists():
+        if target.exists() or package_zip_path(target).exists():
             raise UnifiedFlowError("Zielpaket existiert bereits; kein Überschreiben")
-        result=build_static_mod(self.project,guid,name=name,author=author,
+        result=build_static_mod(self.project,guid,name=name,author=author,version=version,
                                 target=target)
         package=Path(result["zip"])
         if not package.is_file():
@@ -289,7 +293,10 @@ class ProjectPipeline:
         from se_asset_package import _discover
         expected=_discover(self.project)
         members={f"BepInEx/plugins/{guid}/{row[0]}" for row in expected}
-        members.add(f"BepInEx/plugins/{guid}/info.json")
+        manifest_path=f"BepInEx/plugins/{guid}/info.json"
+        has_custom_manifest=any(member.casefold()==manifest_path.casefold() for member in members)
+        if not has_custom_manifest:
+            members.add(manifest_path)
         with ZipFile(package) as archive:
             if archive.testzip() is not None:
                 raise UnifiedFlowError("ZIP CRC ungültig")
@@ -297,12 +304,14 @@ class ProjectPipeline:
             if found!=members or len(found)!=len(archive.infolist()):
                 raise UnifiedFlowError("ZIP-Inhalt entspricht nicht dem bearbeiteten Projekt")
             for rel,_,_,digest in expected:
-                actual=sha256(archive.read(f"BepInEx/plugins/{guid}/{rel}")).hexdigest()
+                with archive.open(f"BepInEx/plugins/{guid}/{rel}") as member:
+                    actual=_sha_stream(member)
                 if actual!=digest:
                     raise UnifiedFlowError("ZIP enthält geändertes Asset: "+rel)
-            manifest=json.loads(archive.read(f"BepInEx/plugins/{guid}/info.json"))
-            if manifest.get("GUID")!=guid or manifest.get("Manifest")!=0:
-                raise UnifiedFlowError("Paketmanifest widerspricht Projekt")
+            if not has_custom_manifest:
+                manifest=json.loads(archive.read(manifest_path))
+                if manifest.get("GUID")!=guid or manifest.get("Manifest")!=0:
+                    raise UnifiedFlowError("Paketmanifest widerspricht Projekt")
         post=self.audit()
         if preflight["bytes_sha256"]!=post["bytes_sha256"]:
             raise UnifiedFlowError("Assets während des Exports verändert; nicht freigegeben")
@@ -319,7 +328,7 @@ class ProjectPipeline:
             "native_game_runtime_verified":False,
             "warnings":post["warnings"],
         }
-        receipt=target.with_suffix(".receipt.json")
+        receipt=target.with_name(target.name+".receipt.json")
         with receipt.open("x",encoding="utf8") as stream:
             json.dump(proof,stream,ensure_ascii=False,indent=2)
             stream.write("\n")

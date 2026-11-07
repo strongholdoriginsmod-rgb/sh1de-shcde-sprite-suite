@@ -52,6 +52,8 @@ class UnifiedWorkflowTab(ttk.Frame):
         slug=re.sub(r"[^a-z0-9-]","-",self.pipeline.project.name.lower()).strip("-")
         self.guid=tk.StringVar(self,value="spritesuite-"+(slug or "projekt"))
         self.mod_name=tk.StringVar(self,value="SpriteSuite "+self.pipeline.project.name)
+        self.mod_author=tk.StringVar(self,value="SpriteSuite")
+        self.mod_version=tk.StringVar(self,value="1.0.0")
         self._build()
         self.refresh()
         self.refresh_language()
@@ -74,6 +76,10 @@ class UnifiedWorkflowTab(ttk.Frame):
         """Translate UI statuses without changing project data or a saved receipt."""
         for variable in self._localized_vars:
             variable.refresh_language()
+        self.actions_menu.entryconfigure(self.mod_files_menu_index,
+            label=self._localize("Mod-Dateien unverändert hinzufügen…"))
+        self.actions_menu.entryconfigure(self.custom_export_menu_index,
+            label=self._localize("Mod-ZIP speichern unter…"))
         english=self.app.language.get().upper()=="EN"
         translated={key:(CATEGORY_EN.get(key,key) if english else key)
                     for key in hud.CATEGORIES}
@@ -198,6 +204,8 @@ class UnifiedWorkflowTab(ttk.Frame):
         slug=re.sub(r"[^a-z0-9-]","-",chosen.name.lower()).strip("-")
         self.guid.set("spritesuite-"+(slug or "projekt"))
         self.mod_name.set("SpriteSuite "+chosen.name)
+        self.mod_author.set("SpriteSuite")
+        self.mod_version.set("1.0.0")
         self._sync_hud()
         self.refresh()
         return True
@@ -276,7 +284,7 @@ class UnifiedWorkflowTab(ttk.Frame):
 
     def add_sources(self):
         paths=filedialog.askopenfilenames(parent=self,
-                title="Grafik oder Noesis-XAML-Original wählen (Quelle bleibt unverändert)",
+                title=self._localize("Grafik, Noesis-XAML oder Mod-Dateien wählen"),
                 filetypes=[("Grafik, Noesis & Video","*.png *.jpg *.jpeg *.webp *.xaml *.webm"),
                            ("Alle Dateien","*.*")])
         if not paths:return
@@ -311,7 +319,7 @@ class UnifiedWorkflowTab(ttk.Frame):
                         resource="Override/Assets/GUI/Video/"+source.name,
                         project=self.pipeline.project))
                 else:
-                    raise UnifiedFlowError("Nicht unterstützte Eingabe")
+                    imported.append(self.pipeline.import_mod_file(source,relative=source.name))
             except (OSError,ValueError,ElementTree.ParseError) as exc:
                 failed.append(source.name+": "+str(exc))
         self.refresh()
@@ -327,6 +335,36 @@ class UnifiedWorkflowTab(ttk.Frame):
         if failed:
             messagebox.showwarning("Einige Quellen nicht übernommen",
                 "\n".join(failed[:8]),parent=self)
+
+    def add_mod_files(self):
+        title=self._localize("Mod-Dateien unverändert hinzufügen…")
+        paths=filedialog.askopenfilenames(parent=self,title=title,
+            filetypes=[(self._localize("Alle Dateien"),"*.*")])
+        if not paths:
+            return
+        folder=simpledialog.askstring(title,self._localize(
+            "Zielordner relativ zum Mod, z. B. Override/Audio. Leer für das Hauptverzeichnis."),parent=self)
+        if folder is None:
+            return
+        folder=folder.replace("\\","/")
+        if folder and not folder.endswith("/"):
+            folder+="/"
+        imported=[]
+        failed=[]
+        for raw in paths:
+            source=Path(raw)
+            relative=folder+source.name
+            try:
+                imported.append(self.pipeline.import_mod_file(source,relative=relative))
+            except (OSError,ValueError) as exc:
+                failed.append(f"{source.name}: {exc}")
+        self.refresh()
+        if imported:
+            self.select_asset(imported[-1])
+            self._set_message(f"{len(imported)} Mod-Datei(en) unverändert übernommen.")
+        if failed:
+            messagebox.showwarning(self._localize("Einige Quellen nicht übernommen"),
+                "\n".join(failed),parent=self)
 
     def make_blank(self):
         answer=simpledialog.askstring("Leeres Bild erstellen",
@@ -360,7 +398,7 @@ class UnifiedWorkflowTab(ttk.Frame):
             for i,asset in enumerate(self._assets):
                 iid=str(i)
                 self.tree.insert("","end",iid=iid,
-                    text=asset.name,values=(asset.kind,asset.status))
+                    text=asset.name,values=(self._localize(asset.kind),asset.status))
                 if asset.relative_path==previous:keep=iid
             if keep is None and self._assets:keep="0"
             if keep is not None:
@@ -371,7 +409,7 @@ class UnifiedWorkflowTab(ttk.Frame):
                 self._selected=None;self._photo=None
                 self.preview.configure(text=self._localize("Bild wählen oder hinzufügen"),image="")
                 self.empty_import_button.place(relx=.5,rely=.62,anchor="center")
-                self.selection_text.set("Noch keine Datei. Links Bild oder XAML hinzufügen.")
+                self.selection_text.set("Noch keine Datei. Links Dateien hinzufügen.")
                 self.edit_button.configure(state="disabled")
             self.check_text.set(
                 str(len(self._assets))+" Arbeitsdatei(en) · "+
@@ -439,9 +477,7 @@ class UnifiedWorkflowTab(ttk.Frame):
         self.empty_import_button.place_forget()
         self.selection_text.set(
             item.relative_path+"\n"+item.status+" · "+str(item.size)+" Bytes")
-        self.edit_button.configure(
-            state="normal" if item.path.suffix.lower() in
-            (".png",".xaml",".json",".txt") else "disabled")
+        self.edit_button.configure(state="normal" if self._asset_editable(item) else "disabled")
         try:
             save_session(self.pipeline.project,asset=item.relative_path)
         except (OSError,ValueError):
@@ -467,7 +503,8 @@ class UnifiedWorkflowTab(ttk.Frame):
             return
         if item.path.suffix.lower() not in (".png",".jpeg",".jpg",".webp"):
             self._photo=None
-            self.preview.configure(image="",text=self._localize("Text-/XAML-Datei – Bearbeiten öffnen"))
+            self.preview.configure(image="",text=self._localize(
+                "Text-/XAML-Datei – Bearbeiten öffnen" if self._asset_editable(item) else "Datei für das Mod-Paket"))
             return
         try:
             with Image.open(item.path) as image:
@@ -483,12 +520,16 @@ class UnifiedWorkflowTab(ttk.Frame):
             self._photo=None
             self.preview.configure(image="",text=self._localize("Vorschau ungültig: "+str(exc)))
 
+    @staticmethod
+    def _asset_editable(item):
+        return item.kind!="Mod-Datei" and item.path.suffix.lower() in (".png",".xaml",".json",".txt")
+
     def edit_selected(self):
         item=self.selected_asset()
         if item is None:
             self._set_message("Zuerst eine Datei in der Projektliste auswählen.")
             return None
-        if item.path.suffix.lower() not in (".png",".xaml",".json",".txt"):
+        if not self._asset_editable(item):
             self._set_message("Für diese Datei gibt es keinen integrierten Editor.")
             return None
         existing=self._active_editors.get(item.relative_path)
@@ -612,15 +653,22 @@ class UnifiedWorkflowTab(ttk.Frame):
                     f"{result['assets']} Dateien geprüft · SHA-256 "+
                     result["bytes_sha256"][:16]+"…")
                 self._set_message(
-                    "Statische Assets und XAML syntaktisch geprüft. "+
-                    "Native Spielbefehle benötigen weiterhin einen Ingame-Test.")
+                    "Paketpfade und Dateiinhalte per SHA-256 geprüft.")
             return result
-        except (OSError,ValueError) as exc:
+        except (OSError,ValueError,RuntimeError) as exc:
             self.check_text.set("Prüfung fehlgeschlagen: "+str(exc))
             self._set_message("Keine Paketfreigabe: "+str(exc))
             return None
 
-    def build_package(self):
+    def save_package_as(self):
+        selected=filedialog.asksaveasfilename(parent=self,
+            title=self._localize("Mod-ZIP speichern unter…"),defaultextension=".zip",
+            filetypes=[("ZIP","*.zip")])
+        if selected:
+            path=Path(selected)
+            self.build_package(output=path.with_suffix("") if path.suffix.lower()==".zip" else path)
+
+    def build_package(self, *, output=None):
         if not self._save_pending("dem Mod-Paketbau"):
             return None
         # Never leave a previous export as the active result of a failed
@@ -631,7 +679,8 @@ class UnifiedWorkflowTab(ttk.Frame):
         try:
             outcome=self.pipeline.build(
                 guid=self.guid.get().strip(),
-                name=self.mod_name.get().strip())
+                name=self.mod_name.get().strip(),author=self.mod_author.get().strip(),
+                version=self.mod_version.get().strip(),output=output)
             self._last_export=outcome
             self.result_text.set(
                 f"FERTIG: {outcome['asset_count']} geprüfte Dateien · "+
@@ -640,9 +689,7 @@ class UnifiedWorkflowTab(ttk.Frame):
             self.check_text.set(
                 "Unabhängiger ZIP-/Assetvergleich bestanden · "+
                 str(len(outcome["warnings"]))+" Hinweise")
-            self._set_message(
-                "Ein tatsächlich geprüftes, DLL-freies Mod-ZIP wurde erstellt. "+
-                "Keine Spielinstallation vorgenommen; Ingame-Funktion bleibt separat zu prüfen.")
+            self._set_message("Mod-ZIP erstellt und mit den Projektdateien abgeglichen.")
             return outcome
         except (OSError,ValueError,RuntimeError) as exc:
             self.result_text.set("Kein gültiges Paket erstellt: "+str(exc))

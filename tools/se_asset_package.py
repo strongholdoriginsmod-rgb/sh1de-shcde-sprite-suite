@@ -10,7 +10,7 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path, PurePosixPath
 import re
 import shutil
 import sys
@@ -66,17 +66,19 @@ def _relative_key(path: Path, *, strict_static: bool = False) -> str:
     parts = path.parts
     if strict_static and (not parts or parts[0] not in _VALID_START):
         raise AssetModError("Statischer Mod benötigt Override/, Patches/ oder Locales/")
-    if any(
+    return mod_relative_path(path.as_posix()).as_posix()
+
+
+def mod_relative_path(relative: str) -> PurePosixPath:
+    """A Windows-compatible package path, independent of its resource type."""
+    if not isinstance(relative, str) or any(
         not part or part in (".", "..") or part.endswith((" ", "."))
-        or ":" in part or "\\" in part or is_reserved_windows_component(part)
-        for part in parts
+        or is_reserved_windows_component(part)
+        or any(char in '\\:*?"<>|' or ord(char) < 32 for char in part)
+        for part in relative.split("/")
     ):
         raise AssetModError("Unsicherer Asset-Pfad")
-    posix = PurePosixPath(*parts).as_posix()
-    win = PureWindowsPath(posix)
-    if win.is_absolute() or win.drive:
-        raise AssetModError("Ungültiger Windows-Assetpfad")
-    return posix
+    return PurePosixPath(relative)
 
 
 def _check_xml(file: Path, *, patch: bool) -> None:
@@ -262,6 +264,10 @@ def _discover(source: Path, *, strict_static: bool = False) -> list[tuple[str, P
     return items
 
 
+def package_zip_path(output: Path) -> Path:
+    return output.with_name(output.name + ".zip")
+
+
 def build(source: Path | str, guid: str, *, name: str, author: str,
           target: Path | str | None = None, version: str = "1.0.0",
           strict_static: bool = False) -> dict:
@@ -283,7 +289,8 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
     if (output == source_root or output.is_relative_to(source_root) or
             source_root.is_relative_to(output)):
         raise AssetModError("Quelle und Ausgabe dürfen sich nicht überschneiden")
-    if output.exists() or output.with_suffix(".zip").exists():
+    archive_path = package_zip_path(output)
+    if output.exists() or archive_path.exists():
         raise AssetModError("Asset-Mod-Paket existiert bereits – kein Überschreiben")
     files = _discover(source_root, strict_static=strict_static)
     info = {
@@ -291,8 +298,9 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
         "Description": ("Static asset pack" if strict_static else "Custom mod bundle"),
         "Version": version, "Manifest": 0, "AssetMode": "Global", "NetworkMode": 0,
     }
-    supplied_info = source_root / "info.json"
-    if not strict_static and supplied_info.is_file():
+    supplied_info = next((src for relative, src, _, _ in files
+                          if relative.casefold() == "info.json"), None)
+    if supplied_info is not None:
         # Keep a user-authored manifest exactly as supplied rather than
         # replacing it with the default asset-only metadata.
         try:
@@ -305,7 +313,7 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
     try:
         folder = staging / guid
         folder.mkdir()
-        if info is not None and not (supplied_info.is_file() and not strict_static):
+        if supplied_info is None:
             (folder / "info.json").write_text(
                 json.dumps(info, ensure_ascii=False, indent=2) + "\n",
                 encoding="utf-8",
@@ -341,7 +349,14 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
             if verified_zip.testzip() is not None:
                 raise AssetModError("ZIP-Paket CRC-Prüfung fehlgeschlagen")
         os.rename(folder, output)
-        os.rename(zip_stage, output.with_suffix(".zip"))
+        try:
+            if os.name == "nt":
+                os.rename(zip_stage, archive_path)
+            else:
+                os.link(zip_stage, archive_path)
+        except OSError:
+            os.rename(output, folder)
+            raise
         return {
             "schema": ("sprite-suite.se-asset-only.v1" if strict_static
                        else "sprite-suite.unrestricted-mod-bundle.v1"),
@@ -349,7 +364,7 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
             "runtime_dll": any(name.casefold().endswith(".dll") for name, *_ in files),
             "source_files": len(files),
             "asset_mod_folder": str(output),
-            "zip": str(output.with_suffix(".zip")),
+            "zip": str(archive_path),
             "manifest": info,
         }
     finally:

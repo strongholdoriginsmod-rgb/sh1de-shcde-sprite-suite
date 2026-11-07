@@ -13,6 +13,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import shutil
 import tempfile
 from typing import Literal
 
@@ -166,7 +167,7 @@ def _image_png(source: Path) -> bytes:
     return data
 
 
-def _write_new(path: Path, data: bytes) -> None:
+def _write_new(path: Path, data: bytes | Path) -> None:
     # Never follow a user-created symlink in the destination parent chain.
     node = path.parent
     work = WORK.resolve()
@@ -182,12 +183,24 @@ def _write_new(path: Path, data: bytes) -> None:
     fd, temp_name = tempfile.mkstemp(dir=path.parent, prefix=".sprite-suite-", suffix=".tmp")
     try:
         with os.fdopen(fd, "wb") as stream:
-            stream.write(data)
+            if isinstance(data, Path):
+                before = data.stat()
+                with data.open("rb") as source:
+                    shutil.copyfileobj(source, stream, length=1024 * 1024)
+                after = data.stat()
+                if ((before.st_size, before.st_mtime_ns) !=
+                    (after.st_size, after.st_mtime_ns) or stream.tell() != before.st_size):
+                    raise WorkshopError("Quelldatei wurde beim Kopieren geändert")
+            else:
+                stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
-        # Hard-link creation refuses an existing destination even if another
-        # process created it after the existence check.
-        os.link(temp_name, path)
+        # Publish without replacement even if another process created the
+        # destination after the existence check. Windows rename also works on exFAT.
+        if os.name == "nt":
+            os.rename(temp_name, path)
+        else:
+            os.link(temp_name, path)
     finally:
         Path(temp_name).unlink(missing_ok=True)
 
@@ -340,22 +353,54 @@ def import_media(
     return dest
 
 
-def list_assets(project: Path | str = DEFAULT) -> list[WorkshopAsset]:
+def import_mod_file(source: Path, relative: str, *, project: Path | str = DEFAULT) -> Path:
+    """Copy arbitrary bytes to the selected project-relative package path."""
+    root = workspace(project, create=True)
+    target = root.joinpath(*mod_file_path(relative).parts)
+    source = Path(source).resolve(strict=True)
+    if not source.is_file():
+        raise WorkshopError("Quelle ist keine reguläre Datei")
+    _write_new(target, source)
+    return target
+
+
+def mod_file_path(relative: str) -> PurePosixPath:
+    from se_asset_package import AssetModError, mod_relative_path
+
+    try:
+        return mod_relative_path(relative)
+    except AssetModError as exc:
+        raise WorkshopError(str(exc)) from exc
+
+
+def list_assets(project: Path | str = DEFAULT, *, include_mod_files: bool = False) -> list[WorkshopAsset]:
     root = workspace(project, create=True)
     results = []
-    for base in [*CATEGORIES.values(), PATCH_FOLDER, *MEDIA_FOLDERS]:
-        parent = root / base
+    folders = (root,) if include_mod_files else (
+        root / base for base in [*CATEGORIES.values(), PATCH_FOLDER, *MEDIA_FOLDERS]
+    )
+    for parent in folders:
         if not parent.exists():
             continue
         if _linked(parent):
-            raise WorkshopError(f"Asset directory is symlinked: {base}")
+            raise WorkshopError(f"Asset directory is symlinked: {parent}")
         for entry in sorted(parent.rglob("*")):
             if _linked(entry):
                 raise WorkshopError(f"Linked asset not allowed: {entry}")
             if not entry.is_file():
                 continue
             rel = entry.relative_to(root).as_posix()
-            _relative(rel, patch=rel.startswith("Patches/"))
+            try:
+                _relative(rel, patch=rel.startswith("Patches/"))
+            except WorkshopError:
+                mod_file_path(rel)
+                if include_mod_files:
+                    results.append(WorkshopAsset(
+                        relative_path=rel, name=entry.name, kind="Mod-Datei",
+                        status="Ohne Importbasis", size=entry.stat().st_size,
+                        baseline_path=None, path=entry,
+                    ))
+                continue
             original, meta = _baseline(root, rel)
             if original.is_file() and meta.is_file():
                 record = json.loads(meta.read_text("utf8"))

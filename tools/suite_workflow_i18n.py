@@ -17,8 +17,8 @@ CATEGORY_EN = {
 
 STATIC_EN = {
     "Noch keine Datei ausgewählt.": "No file selected.",
-    "Noch keine Datei. Links Bild oder XAML hinzufügen.":
-        "No file yet. Add an image or XAML on the left.",
+    "Noch keine Datei. Links Dateien hinzufügen.":
+        "No file yet. Add files on the left.",
     "Noch keine originale Noesis-Menüseite zugeordnet. Bilder lassen sich auch allein bearbeiten.":
         "No original Noesis menu page is assigned. Images can still be edited independently.",
     "Noch kein geprüfter Export für dieses Projekt.":
@@ -33,10 +33,10 @@ STATIC_EN = {
         "Choose an image or a Noesis XAML page.",
     "Prüfung der Arbeitsdateien fehlgeschlagen.":
         "Workspace file validation failed.",
-    "Statische Assets und XAML syntaktisch geprüft. Native Spielbefehle benötigen weiterhin einen Ingame-Test.":
-        "Static assets and XAML passed syntax checks. Native game actions still require an in-game test.",
-    "Ein tatsächlich geprüftes, DLL-freies Mod-ZIP wurde erstellt. Keine Spielinstallation vorgenommen; Ingame-Funktion bleibt separat zu prüfen.":
-        "Verified DLL-free mod ZIP created. No game installation occurred; in-game behavior requires separate testing.",
+    "Paketpfade und Dateiinhalte per SHA-256 geprüft.":
+        "Package paths validated and file contents checked with SHA-256.",
+    "Mod-ZIP erstellt und mit den Projektdateien abgeglichen.":
+        "Mod ZIP created and verified against the project files.",
     "Prüfe das Projekt und erstelle das Paket …":
         "Checking project and building package…",
     "Zuerst ein gültiges Mod-ZIP erstellen.":
@@ -48,6 +48,16 @@ STATIC_EN = {
     "Keine Datei im Projekt": "No files in this project",
     "Bild wählen oder hinzufügen": "Choose or add an image",
     "Text-/XAML-Datei – Bearbeiten öffnen": "Text/XAML file – open editor",
+    "Datei für das Mod-Paket": "File for the mod package",
+    "Mod-Datei": "Mod file",
+    "Mod-Dateien unverändert hinzufügen…": "Add unmodified mod files…",
+    "Mod-ZIP speichern unter…": "Save mod ZIP as…",
+    "Grafik, Noesis-XAML oder Mod-Dateien wählen": "Choose an image, Noesis XAML or mod files",
+    "Alle Dateien": "All files",
+    "Zielordner relativ zum Mod, z. B. Override/Audio. Leer für das Hauptverzeichnis.":
+        "Folder relative to the mod, e.g. Override/Audio. Leave empty for the root.",
+    "Einige Quellen nicht übernommen": "Some files could not be imported",
+    "Autor": "Author",
     "Kein Pixelbild – passenden Editor öffnen": "Not an image – open the appropriate editor",
     "Zuerst eine Datei in der Projektliste auswählen.":
         "Select a project file first.",
@@ -82,6 +92,9 @@ def display_text(value: str, english: bool) -> str:
         return value
     if value in STATIC_EN:
         return STATIC_EN[value]
+    m = re.fullmatch(r"(\d+) Mod-Datei\(en\) unverändert übernommen\.", value)
+    if m:
+        return f"{m[1]} mod file(s) imported without changes."
     m = re.fullmatch(r"(\d+) Arbeitsdatei\(en\) · Paketprüfung vor dem Export erforderlich", value)
     if m:
         return f"{m[1]} workspace file(s) · Validation required before export"

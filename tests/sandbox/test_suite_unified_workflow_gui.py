@@ -166,6 +166,30 @@ def test_build_wont_lose_unsaved_visual_edit(app_and_tree,tmp_path):
     assert editor.close_editor() is True
 
 
+def test_project_menu_imports_binary_and_exports_to_chosen_zip(app_and_tree, tmp_path):
+    app, _, monkeypatch = app_and_tree
+    tab = app.workflow_tab
+    binary = tmp_path / "Modular.dll"
+    binary.write_bytes(b"MZ\x00\xff")
+    monkeypatch.setattr(flow_ui.filedialog, "askopenfilenames", lambda **_: (str(binary),))
+    monkeypatch.setattr(flow_ui.simpledialog, "askstring", lambda *_, **__: "Plugins/")
+    tab.actions_menu.invoke(tab.mod_files_menu_index)
+    assert tab.selected_asset().relative_path == "Plugins/Modular.dll"
+    assert tab.edit_button.instate(["disabled"])
+
+    output = tmp_path / "Meine.Mod.zip"
+    tab.mod_author.set("Mod author")
+    tab.mod_version.set("preview 2")
+    monkeypatch.setattr(flow_ui.filedialog, "asksaveasfilename", lambda **_: str(output))
+    tab.actions_menu.invoke(tab.custom_export_menu_index)
+    assert Path(tab._last_export["zip"]) == output
+    prefix = f"BepInEx/plugins/{tab.guid.get()}/"
+    with zipfile.ZipFile(output) as archive:
+        assert archive.read(prefix + "Plugins/Modular.dll") == binary.read_bytes()
+        manifest = json.loads(archive.read(prefix + "info.json"))
+    assert manifest["Author"] == "Mod author" and manifest["Version"] == "preview 2"
+
+
 def test_empty_project_does_not_show_fake_success(app_and_tree):
     app,work,_=app_and_tree
     tab=app.workflow_tab

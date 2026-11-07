@@ -29,6 +29,14 @@ Eine exportierte DLL ist zunächst nur Bestandteil eines ZIPs; zur Aktivierung i
 - Direkt ausgeführte Werkzeugkommandos aus dem vorhandenen Suite-Katalog.
 - Zielauswahl mit abweichender Build-/Mapping-ID und optionaler Paritätsdiagnose.
 
+## Freie Mod-Dateien im gemeinsamen Projekt
+
+**Dateien hinzufügen** übernimmt neben Grafik, Noesis-XAML und Menüvideo auch freie Dateitypen. Unter **Mehr → Mod-Dateien unverändert hinzufügen…** lässt sich für jede Auswahl der Paketordner angeben, etwa `Override/Audio`, `Scripts` oder `Plugins`. Die Dateien werden bytegenau in das aktive Projekt kopiert. Für eine Datei im Hauptverzeichnis bleibt das Ordnerfeld leer.
+
+**Paketdetails** enthält Mod-ID, Paketname, Autor und Version. Eine eigene `info.json` im Projekthauptverzeichnis wird bytegenau übernommen. **Mehr → Mod-ZIP speichern unter…** legt das Ziel des geprüften Pakets fest. Der Export vergleicht die Paketdateien mit dem SHA-256 der Projektdateien.
+
+**Projekt sichern (ZIP)** und **Projekt-ZIP öffnen** schließen diese Dateien zusammen mit den Grafik- und Noesis-Bearbeitungsdaten ein. Archive mit freien Paketpfaden verwenden die Schema-Version 2. Bestehende Projektarchive der Version 1 sind weiterhin lesbar.
+
 ## Weitere Integrationsarbeit
 
 Historische Build-/Versionslimits in spezialisierten Installern, einzelne Werkzeug-Whitelists, vom Spiel selbst erzwungene Strukturformate und fehlende Laufzeit-Hooks sind separate Bearbeitungspunkte. Sie dürfen nicht allein wegen ihrer bisher restriktiven Implementierung als final erklärt werden. Zu prüfen sind alle offenen Funktionen aus HUD, Audio, Atlas, Gelände, Einheiten, Gebäuden, Diplomatie, Lua, Script Extender und Unity-/Noesis-Runtime auf sachliche Eignung und reale Funktion.

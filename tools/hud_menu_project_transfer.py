@@ -21,6 +21,7 @@ import hud_menu_workspace as assets
 from suite_hud_menu_session import read_session, save_session
 
 SCHEMA = "sprite-suite.hud-menu-project-archive.v1"
+MOD_FILES_SCHEMA = "sprite-suite.hud-menu-project-archive.v2"
 MANIFEST = "project-manifest.json"
 MAX_FILES = 20000
 MAX_BYTES = 2 * 1024 ** 3
@@ -81,9 +82,12 @@ def _valid_metadata_member(relative: str) -> bool:
     return False
 
 
-def _safe_member(value: str) -> str:
+def _safe_member(value: str, *, mod_files: bool = False) -> str:
     if not isinstance(value, str) or not value or "\\" in value or "\x00" in value:
         raise assets.WorkshopError("Unsicherer Pfad im Projektarchiv.")
+    if mod_files and value.startswith("project/"):
+        assets.mod_file_path(value[len("project/"):])
+        return value
     if len(value) > 240 or any(
         part in ("", ".", "..") or ":" in part or
         part.endswith((" ", ".")) or assets._windows_reserved_name(part) or
@@ -146,7 +150,7 @@ def _walk(source: Path, prefix: str):
             # Deployment receipts belong to a particular game installation,
             # never to an editable project being moved to another computer.
             continue
-        yield _safe_member(prefix+relative), entry
+        yield _safe_member(prefix+relative, mod_files=True), entry
 
 
 def _project_sources(project: Path):
@@ -183,7 +187,7 @@ def archive_info(path: Path | str) -> dict:
                     raise assets.WorkshopError("Doppelte oder ungültige Archivreferenzen.")
                 seen.add(canonical)
                 if name!=MANIFEST:
-                    _safe_member(name)
+                    _safe_member(name, mod_files=True)
                     if (info.file_size>MAX_ONE_FILE or info.file_size<0 or
                             (info.external_attr >> 16) & 0o170000 == stat.S_IFLNK or
                             (info.file_size>1024*1024 and
@@ -200,15 +204,16 @@ def archive_info(path: Path | str) -> dict:
             if index.file_size>MAX_MANIFEST:
                 raise assets.WorkshopError("Projektmanifest ist zu groß.")
             manifest=json.loads(handle.read(MANIFEST).decode("utf8"))
-            if not isinstance(manifest,dict) or manifest.get("schema")!=SCHEMA:
+            if not isinstance(manifest,dict) or manifest.get("schema") not in (SCHEMA, MOD_FILES_SCHEMA):
                 raise assets.WorkshopError("Unbekanntes Projektarchivformat.")
+            mod_files = manifest["schema"] == MOD_FILES_SCHEMA
             _name(manifest.get("project_name"))
             active_asset=manifest.get("selected_asset","")
             active_scene=manifest.get("selected_scene","")
             if not isinstance(active_asset,str) or len(active_asset)>1024:
                 raise assets.WorkshopError("Ungültige Bildauswahl im Projektarchiv.")
             if active_asset:
-                assets._relative(active_asset,patch=active_asset.startswith("Patches/"))
+                _safe_member("project/"+active_asset, mod_files=mod_files)
                 if "project/"+active_asset not in contents:
                     raise assets.WorkshopError("Zuletzt ausgewähltes Bild fehlt im Archiv.")
             if not isinstance(active_scene,str) or (
@@ -225,7 +230,7 @@ def archive_info(path: Path | str) -> dict:
                 if (not isinstance(row,dict) or
                         set(row)!={"path","bytes","sha256"}):
                     raise assets.WorkshopError("Ungültiger Archiv-Dateieintrag.")
-                key=_safe_member(row["path"])
+                key=_safe_member(row["path"], mod_files=mod_files)
                 digest=row["sha256"]
                 if (key in declared or key not in contents or
                         type(row["bytes"]) is not int or
@@ -251,6 +256,13 @@ def archive_info(path: Path | str) -> dict:
 def create_archive(project: Path | str, destination: Path | str) -> dict:
     """Write checked archive without ever overwriting an existing file."""
     root,metadata,entries=_project_sources(Path(project))
+    schema = SCHEMA
+    for name, _ in entries:
+        try:
+            _safe_member(name)
+        except assets.WorkshopError:
+            schema = MOD_FILES_SCHEMA
+            break
     _name(root.name)
     output=Path(destination)
     if output.suffix.lower()!=".zip" or _is_link(output):
@@ -307,7 +319,7 @@ def create_archive(project: Path | str, destination: Path | str) -> dict:
                 records.append({"path":name,"bytes":count,
                                 "sha256":digest.hexdigest()})
             payload=json.dumps({
-                "schema":SCHEMA,"project_name":root.name,"files":records,
+                "schema":schema,"project_name":root.name,"files":records,
                 "selected_asset":active_asset,"selected_scene":active_scene,
             },ensure_ascii=False,sort_keys=True,indent=2).encode("utf8")+b"\n"
             if len(payload)>MAX_MANIFEST:

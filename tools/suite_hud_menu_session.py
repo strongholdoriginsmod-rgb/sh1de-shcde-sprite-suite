@@ -60,7 +60,7 @@ def read_session() -> dict:
             asset = ""
         if asset:
             try:
-                source._relative(asset, patch=asset.startswith("Patches/"))
+                source.mod_file_path(asset)
             except (ValueError, OSError):
                 asset = ""
         scene = record.get("scene", "")
@@ -90,7 +90,7 @@ def save_session(project: Path | str, asset: str | None = None,
     if not isinstance(asset, str) or len(asset) > 1024:
         raise source.WorkshopError("Invalid selected asset")
     if asset:
-        source._relative(asset, patch=asset.startswith("Patches/"))
+        source.mod_file_path(asset)
     if not isinstance(scene,str) or not (
         scene == "" or re.fullmatch(r"[A-Za-z0-9_-]{1,48}",scene)
     ):
