@@ -190,7 +190,7 @@ def test_full_runtime_source_avoids_missing_framework_assemblies():
 
 @pytest.mark.skipif(sys.platform != "win32" or not shutil.which("powershell.exe"),
                     reason="Windows PowerShell installer")
-def test_installer_preserves_previous_files_on_conflict_or_partial_update(tmp_path):
+def test_installer_preserves_previous_files_on_conflict_or_partial_update(tmp_path, monkeypatch):
     game = tmp_path / "Spiel äöü"
     out = tmp_path / "compile"
     plugin = game / "BepInEx" / "plugins" / "SpriteSuiteBuildingDamageRuntime"
@@ -220,7 +220,11 @@ def test_installer_preserves_previous_files_on_conflict_or_partial_update(tmp_pa
         encoding="utf-8",
     )
     compiler = tmp_path / "compiler.cmd"
-    compiler.write_text(f'@"{sys.executable}" "{script}" %*\n', encoding="mbcs")
+    # cmd.exe reads batch text in the OEM code page. Keep the script ASCII
+    # so portable installations and workspaces with Unicode paths still work.
+    monkeypatch.setenv("SPRITESUITE_TEST_COMPILER_PYTHON", sys.executable)
+    compiler.write_text('@"%SPRITESUITE_TEST_COMPILER_PYTHON%" "%~dp0compiler.py" %*\n',
+                        encoding="ascii")
     input_binary = script.with_suffix(".data")
     input_binary.write_bytes(b"first build")
     config = tmp_path / "runtime.json"
