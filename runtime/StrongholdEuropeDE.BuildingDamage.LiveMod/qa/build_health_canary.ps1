@@ -12,18 +12,23 @@ $dll=Join-Path $out 'SpriteSuite.BuildingDamage.HealthQA.dll'
 $refs=@(
  'BepInEx\core\BepInEx.dll',
  'BepInEx\plugins\000shcdese\SHCDESE.dll',
+ 'BepInEx\plugins\000shcdese\R3.dll',
+ 'BepInEx\plugins\000shcdese\netstandard.dll',
  'Stronghold Crusader Definitive Edition_Data\Managed\Assembly-CSharp.dll',
  'Stronghold Crusader Definitive Edition_Data\Managed\UnityEngine.dll',
- 'Stronghold Crusader Definitive Edition_Data\Managed\UnityEngine.CoreModule.dll'
+ 'Stronghold Crusader Definitive Edition_Data\Managed\UnityEngine.CoreModule.dll',
+ 'Stronghold Crusader Definitive Edition_Data\Managed\UnityEngine.ScreenCaptureModule.dll',
+ 'Stronghold Crusader Definitive Edition_Data\Managed\UnityEngine.TilemapModule.dll',
+ 'Stronghold Crusader Definitive Edition_Data\Managed\UnityEngine.GridModule.dll',
+ 'Stronghold Crusader Definitive Edition_Data\Managed\Noesis.NoesisGUI.dll'
 )
-$argv=@('/nologo','/target:library','/optimize+',('/out:'+$dll))
+$argv=@('/nologo','/target:library','/optimize+','/unsafe',('/out:'+$dll))
 foreach($p in $refs){
  $ref=Join-Path $g $p
  if(!(Test-Path -LiteralPath $ref)){throw ('Missing reference '+$ref)}
  $argv+=('/reference:'+$ref)
 }
-foreach($p in @('BepInEx\plugins\000shcdese\RedBird.Core.dll',
-               'Stronghold Crusader Definitive Edition_Data\Managed\netstandard.dll')){
+foreach($p in @('BepInEx\plugins\000shcdese\RedBird.Core.dll')){
  $ref=Join-Path $g $p
  if(Test-Path -LiteralPath $ref){$argv+=('/reference:'+$ref)}
 }

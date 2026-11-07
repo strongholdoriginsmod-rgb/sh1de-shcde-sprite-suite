@@ -198,6 +198,17 @@ namespace SpriteSuite.BuildingDamage
                 throw new InvalidOperationException("SpriteMapping signature unavailable");
             _patch = new Harmony("org.spritesuite.buildingdamage.live");
             _patch.Patch(gameMethod, postfix: new HarmonyMethod(after));
+            // The engine can replace map layers while retaining the GameMap
+            // component. Observe that explicit boundary when the ABI exposes it.
+            MethodInfo mapLoaded = typeof(GameMap).GetMethod("newMapLoaded",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                null, new Type[] { typeof(int) }, null);
+            if (mapLoaded != null && mapLoaded.ReturnType == typeof(void))
+            {
+                MethodInfo before = typeof(BuildingDamageRuntime).GetMethod("OnMapLoaded",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                _patch.Patch(mapLoaded, prefix: new HarmonyMethod(before));
+            }
             Application.onBeforeRender += OnBeforeRender;
             Application.quitting += OnQuit;
             _running = true;
@@ -474,15 +485,32 @@ namespace SpriteSuite.BuildingDamage
             finally { _mutating = false; }
         }
 
+        private static void OnMapLoaded(GameMap __instance)
+        {
+            BuildingDamageRuntime run = _active;
+            if (run == null || !run._running || Thread.CurrentThread.ManagedThreadId != run._mainThread)
+                return;
+            run.ResetMap(__instance, "new_map_loaded");
+        }
+
         private void ResetForMapChange()
         {
-            if (GameMap.instance == _currentMap) return;
+            if (GameMap.instance != _currentMap) ResetMap(GameMap.instance, "map_instance_changed");
+        }
+
+        private void ResetMap(GameMap current, string reason)
+        {
+            int restored = 0;
             foreach (ObservedTile tile in _observed.Values)
-                try { Restore(tile); }
+                try { if (Restore(tile)) restored++; }
                 catch (Exception ex) { Report("restore_previous_map", ex); }
+            int tracked = _observed.Count;
             _observed.Clear();
             _fire.Clear();
-            _currentMap = GameMap.instance;
+            _currentMap = current;
+            if (tracked > 0)
+                _log.LogInfo("SPRITESUITE_DAMAGE|event=map_reset|reason=" + reason +
+                    "|tracked=" + tracked + "|restored=" + restored);
         }
 
         private void ReloadCreativeControls()

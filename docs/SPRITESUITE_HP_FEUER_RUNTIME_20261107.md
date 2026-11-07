@@ -48,20 +48,41 @@ Engine-Zuordnung übernimmt das Spiel wieder die Kontrolle über die Grafik.
 ## Getrennte QA für echte Spielwerte
 
 `runtime/StrongholdEuropeDE.BuildingDamage.LiveMod/qa/build_health_canary.ps1`
-kompiliert einen separaten Testtreiber gegen die Spielbibliotheken. Er gehört
-ausschließlich in eine Spielkopie mit eigenem Windows-/Steam-Spielerprofil und
-einem kopierten QA-Spielstand. Der Treiber aktiviert sich nur, wenn
-`SPRITESUITE_HEALTH_QA_ROOT` auf genau die gestartete Kopie zeigt und in deren
-Stammverzeichnis eine Datei `.spritesuite-health-qa` mit dem Text
-`SpriteSuite HP/fire QA with isolated player profile.` liegt. Für echte
-HP-Beobachtung in `runtime.json` `previewEnabled` auf `false` setzen.
+kompiliert einen separaten Testtreiber. Er gehört ausschließlich in eine frische
+Spielkopie mit isoliertem Windows-/Steam-Spielerprofil. Der Treiber nutzt das
+festgelegte QA-Beispiel mit Typ 104 (Teich) und Gebäudeinstanz 661027. Die beiden
+Stufen des synthetischen Beispiels heißen `qa_mechanical75` und `qa_fire40`.
 
-Der Testtreiber sucht im QA-Spielstand Instanz 661027 des Gebäudetyps 104 und
-setzt nacheinander 60 Prozent HP, 30 Prozent HP mit Brand, 35 Prozent HP nach
-dem Löschen und schließlich die Anfangswerte. Er protokolliert die
-zurückgelesenen Spielwerte unter `SPRITESUITE_HEALTH_QA`. Die
-`SPRITESUITE_DAMAGE`-Zeilen der Produktions-Runtime protokollieren unabhängig
-davon den beobachteten Gesundheitszustand und den Austausch der Spritefelder.
+1. Den QA-Spielstand als `SpriteSuite_QA_Saves/SpriteSuite_Damage_Test.sav` in
+   die Spielkopie legen. Die Datei bleibt lesend geöffnet. Der Test schreibt
+   während des Spielbetriebs kontrolliert in die echten HP- und Brandfelder.
+2. Das Produktionsplugin mit der 8×8-QA-Bibliothek und ihren 64 Bindungen
+   installieren. In `runtime.json` `previewEnabled` auf `false`,
+   `firePersistsUntilRepaired` auf `true` und `pollFrames` auf `6` setzen.
+3. Den separaten Treiber in einen eigenen BepInEx-Pluginordner legen. Im
+   Stammverzeichnis der Kopie `.spritesuite-health-qa` mit dem Text
+   `SpriteSuite HP/fire QA with isolated player profile.` anlegen.
+4. Für den Spielprozess `SPRITESUITE_HEALTH_QA_ROOT` auf den Pfad der Kopie
+   und `SPRITESUITE_HEALTH_QA_SAVE_SHA256` auf die Prüfsumme des kopierten
+   Spielstands setzen. Optional beendet `SPRITESUITE_HEALTH_QA_QUIT=1` das Spiel
+   nach dem Ergebnis mit Rückgabecode 0 oder 1. Eine zweite automatische
+   Ladehilfe würde mit dem QA-Treiber konkurrieren.
+5. Nach dem Spielstart `SPRITESUITE_HEALTH_QA` und `SPRITESUITE_DAMAGE` in
+   `BepInEx/LogOutput.log` beobachten. Der Treiber lädt den geprüften Spielstand,
+   durchläuft 60 Prozent HP, 30 Prozent HP mit Brand, 35 Prozent nach dem
+   Löschen und vollständige Reparatur. Danach prüft er erneutes Kartenladen
+   mit aktiver Branddarstellung, entfernt und erstellt den Testteich in der
+   laufenden Sitzung erneut und lädt abschließend die unveränderte Save-Kopie.
+6. Mit `tools/qa_hp_fire_game_evidence.py --log <LOG> --evidence-root <SPIELKOPIE/SpriteSuite_QA_Evidence> --save-sha256 <SHA256> --output <JSON>`
+   die Beobachtungen, nativen Ladeereignisse und PNG-Dateien prüfen. Die
+   Auswertung unterscheidet nachprüfbare Unity-Tilemap-Zustände und
+   vorhandene Screenshots von einer manuellen visuellen Abnahme.
+
+Für jede beobachtete Phase werden Spielwerte, Gebäude-ID, Zahl der verglichenen
+Spritefelder und passende Ausgaben von `Tilemap.GetSprite` aufgezeichnet.
+Beim Kartenwechsel verwirft die Produktions-Runtime die alten Zuordnungen
+und die Brandhistorie auch dann, wenn das Spiel dieselbe `GameMap`-Instanz
+weiterverwendet. Der QA-Treiber speichert keine Veränderungen am Spielstand.
 
 ## Prüfstand vom 7. November 2026
 
@@ -77,7 +98,8 @@ davon den beobachteten Gesundheitszustand und den Austausch der Spritefelder.
   den früheren Vorschaulauf je 128 mechanische und Feueranwendungen sowie
   Wiederherstellungen nach. Spielwerte in diesen Zeilen sind 100/100 HP und
   0 Brandticks. `tools/qa_hp_fire_live_log.py` reproduziert die Zählung.
-- Der aktuelle Testtreiber wurde kompiliert. Die Profilisolation der
-  vorhandenen Spielkopie ließ sich auf dem Rechner nicht bestätigen. Der
-  Spieltest mit geänderten HP und Brandticks, die visuelle Prüfung sowie
-  Kartenwechsel und Gebäude-Neubau im Spiel sind offen.
+- Der erweiterte Testtreiber mit echtem Spielwertzugriff, Unity-Tilemap-Abfrage,
+  Screenshotaufnahme, Kartenwechsel und Neubau wurde gegen den QA-Klon
+  kompiliert. Der Test der Auswertungslogik verwendet synthetische
+  Ereignisfolgen. Der reale Durchlauf und die manuelle Bildprüfung benötigen
+  einen erfolgreichen Spielstart im isolierten Profil.
