@@ -7,7 +7,7 @@ HP was damaged or that a visual screenshot has been examined.
 from __future__ import annotations
 
 import argparse
-from collections import Counter, defaultdict
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
@@ -50,7 +50,8 @@ def report(events: list[dict[str, str]]) -> dict:
     restored = set()
     stages = Counter()
     errors = []
-    ordered: dict[tuple[str, str, str, str], list[str]] = defaultdict(list)
+    pending: dict[tuple[str, str, str, str], str] = {}
+    full_cycles = 0
     configs = []
     applied = 0
     previews = set()
@@ -68,10 +69,10 @@ def report(events: list[dict[str, str]]) -> dict:
                     ("global_id", "building_id", "x", "y"))
         if any(not v for v in key):
             continue
-        ordered[key].append(kind + (
-            ":" + event.get("kind", "") if kind == "stage_applied" else ""))
         if kind == "restored":
             restored.add(key)
+            if pending.pop(key, None) == "fire":
+                full_cycles += 1
             continue
         applied += 1
         stages[event.get("kind", "")] += 1
@@ -82,17 +83,12 @@ def report(events: list[dict[str, str]]) -> dict:
             errors.append("non_write_applied_event")
         if event.get("kind") == "mechanical":
             mechanical.add(key)
+            pending[key] = "mechanical"
         elif event.get("kind") == "fire":
             fire.add(key)
+            if key in pending:
+                pending[key] = "fire"
     common = mechanical & fire & restored
-    full_cycles = sum(
-        any(e == "stage_applied:mechanical" for e in ordered[key][:i]) and
-        any(e == "stage_applied:fire" for e in ordered[key][1:i]) and
-        e == "restored"
-        for key in common
-        for i, e in enumerate(ordered[key])
-        if e == "restored"
-    )
     preview_only = applied > 0 and previews == {"True"}
     return {
         "mechanicalApplyEvents": stages.get("mechanical", 0),
@@ -115,7 +111,7 @@ def report(events: list[dict[str, str]]) -> dict:
         "screenPixelsVisuallyReviewed": False,
         "gameValueWritesByThisMod": False,
         "nativeSpriteFieldWritesObserved": applied > 0 and not errors,
-        "completePreviewCycleObserved": (bool(common) and
+        "completePreviewCycleObserved": (preview_only and bool(common) and
                                           full_cycles == len(common) and
                                           mechanical == fire == restored and
                                           not errors),

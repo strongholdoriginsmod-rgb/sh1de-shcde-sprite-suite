@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from zipfile import ZipFile
@@ -150,6 +152,17 @@ def test_log_report_rejects_reverse_rollback_order():
     assert report["orderedCompletedTileCycles"] == 0
 
 
+def test_log_report_does_not_match_stages_across_a_restore_or_call_live_data_preview():
+    mechanical, fire, restored = simulated_cycle()
+    report = L.report([mechanical, restored, fire, restored])
+    assert report["orderedCompletedTileCycles"] == 0
+    assert not report["completePreviewCycleObserved"]
+    fire["preview"] = "False"
+    report = L.report([mechanical, fire, restored])
+    assert report["orderedCompletedTileCycles"] == 1
+    assert not report["completePreviewCycleObserved"]
+
+
 def test_log_parser_finds_nested_fields_without_game_process():
     source = "\n".join(
         "[Info] SPRITESUITE_DAMAGE|" +
@@ -173,3 +186,75 @@ def test_full_runtime_source_avoids_missing_framework_assemblies():
     assert "t.Tile.tileImage = replacement;" in runtime
     assert "t.Tile.tileImage = t.Original;" in runtime
     assert "SPRITESUITE_DAMAGE|event=controls_reloaded" in runtime
+
+
+@pytest.mark.skipif(sys.platform != "win32" or not shutil.which("powershell.exe"),
+                    reason="Windows PowerShell installer")
+def test_installer_preserves_previous_files_on_conflict_or_partial_update(tmp_path):
+    game = tmp_path / "Spiel äöü"
+    out = tmp_path / "compile"
+    plugin = game / "BepInEx" / "plugins" / "SpriteSuiteBuildingDamageRuntime"
+    for group, names in {
+        "BepInEx/core": ("BepInEx.dll", "0Harmony.dll"),
+        "BepInEx/plugins/000shcdese": ("SHCDESE.dll",),
+        "Stronghold Crusader Definitive Edition_Data/Managed": (
+            "Assembly-CSharp.dll", "UnityEngine.dll", "UnityEngine.CoreModule.dll",
+            "UnityEngine.TilemapModule.dll", "UnityEngine.GridModule.dll",
+            "UnityEngine.ImageConversionModule.dll", "UnityEngine.JSONSerializeModule.dll",
+            "UnityEngine.InputLegacyModule.dll",
+        ),
+    }.items():
+        parent = game / group
+        parent.mkdir(parents=True)
+        for name in names:
+            (parent / name).touch()
+
+    # The compiler is unrelated to the transaction. Use a deterministic stand-in
+    # so the regression test needs neither private game binaries nor a C# SDK.
+    script = tmp_path / "compiler.py"
+    script.write_text(
+        "from pathlib import Path\n"
+        "import sys\n"
+        "target = next(arg[5:] for arg in sys.argv[1:] if arg.startswith('/out:'))\n"
+        "Path(target).write_bytes(Path(__file__).with_suffix('.data').read_bytes())\n",
+        encoding="utf-8",
+    )
+    compiler = tmp_path / "compiler.cmd"
+    compiler.write_text(f'@"{sys.executable}" "{script}" %*\n', encoding="mbcs")
+    input_binary = script.with_suffix(".data")
+    input_binary.write_bytes(b"first build")
+    config = tmp_path / "runtime.json"
+    config.write_text(json.dumps({"damageDirectory": "Grafiken äöü"}, ensure_ascii=False),
+                      encoding="utf-8")
+    archive = tmp_path / "damage.zip"
+    with ZipFile(archive, "w") as package:
+        package.writestr("damage-manifest.json", '{"buildings":[]}')
+    command = W.command(game, out, install=True, runtime_config=config)
+
+    def install(*extra):
+        return subprocess.run([*command, "-Csc", str(compiler), *extra],
+                              capture_output=True, encoding="utf-8", errors="replace",
+                              timeout=120, check=False)
+
+    first = install("-DamageArchive", str(archive))
+    assert first.returncode == 0, first.stderr
+    assert (plugin / "Grafiken äöü" / "damage-manifest.json").is_file()
+    before = {file.name: file.read_bytes() for file in plugin.iterdir() if file.is_file()}
+    input_binary.write_bytes(b"second build")
+    # Keep the original art destination in the attempted replacement config.
+    config.write_text(json.dumps({"enabled": False, "damageDirectory": "Grafiken äöü"},
+                                 ensure_ascii=False), encoding="utf-8")
+    duplicate = install("-DamageArchive", str(archive))
+    assert duplicate.returncode != 0
+    assert "already exists" in duplicate.stderr
+    assert all((plugin / name).read_bytes() == data for name, data in before.items())
+
+    # Fail after replacement of the DLL, while leaving user-owned content alone.
+    info = plugin / "info.json"
+    info.unlink()
+    info.mkdir()
+    failed = install()
+    assert failed.returncode != 0
+    assert info.is_dir()
+    assert (plugin / W.DLL_NAME).read_bytes() == before[W.DLL_NAME]
+    assert (plugin / "runtime.json").read_bytes() == before["runtime.json"]
