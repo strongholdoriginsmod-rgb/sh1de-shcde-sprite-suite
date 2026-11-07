@@ -34,7 +34,7 @@ if (-not (Test-Path -LiteralPath $venvPython)) {
         throw 'Python-Umgebung konnte nicht erstellt werden.'
     }
 }
-$version = (& $venvPython -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")').Trim()
+$version = (& $venvPython -c 'import sys; print(*sys.version_info[:2], sep=chr(46))').Trim()
 if ($LASTEXITCODE -ne 0 -or $version -notin @('3.13', '3.14')) {
     throw ('Fuer diesen Quellcode-Build wird Python 3.13/3.14 benoetigt. ' +
            'Ohne Python bitte das Windows-Portable-ZIP nutzen.')
