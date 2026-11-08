@@ -111,6 +111,38 @@
         return { start, end, dx, dy, length: Math.hypot(dx, dy),
             angleDegrees: Math.atan2(-dy, dx) * 180 / Math.PI };
     }
+    /** One source of truth for inverse-nearest image-generator registration.
+     * Damage requests and generic AI sprites must use identical pixel geometry. */
+    function modelRegistrationPlan(img) {
+        dimensions(img.width, img.height);
+        const landscape = img.width > img.height * 1.25;
+        const portrait = img.height > img.width * 1.25;
+        const width = landscape ? 1536 : 1024, height = portrait ? 1536 : 1024;
+        const scale = Math.floor(Math.min((width - 128) / img.width,
+            (height - 128) / img.height));
+        if (scale < 1) return null; // Never silently downsample the source.
+        return { width, height, scale,
+            left: Math.floor((width - img.width * scale) / 2),
+            top: height - 64 - img.height * scale,
+            sourceWidth: img.width, sourceHeight: img.height };
+    }
+    function modelRegisteredImage(img, plan) {
+        dimensions(img.width, img.height);
+        if (!plan || !Number.isSafeInteger(plan.scale) || plan.scale < 1 ||
+                img.width !== plan.sourceWidth || img.height !== plan.sourceHeight ||
+                !Number.isSafeInteger(plan.left) || !Number.isSafeInteger(plan.top) ||
+                !Number.isSafeInteger(plan.width) || !Number.isSafeInteger(plan.height) ||
+                plan.left < 0 || plan.top < 0 ||
+                plan.left + img.width * plan.scale > plan.width ||
+                plan.top + img.height * plan.scale > plan.height)
+            fail('Bildregistrierung ist ungültig oder passt nicht zur Vorlage.');
+        const out = image(plan.width, plan.height);
+        const scaled = plan.scale === 1 ? img :
+            resize(img, img.width * plan.scale, img.height * plan.scale);
+        // Raw rows preserve hidden RGB, alpha and all original pixel samples.
+        blit(out, scaled, plan.left, plan.top);
+        return out;
+    }
     function layout(frames, raw, getImage) {
         const s = scene(raw), ps = positions(s), f = footprint(s), used = new Set();
         let left = f.left, top = f.top, right = f.right, bottom = f.bottom;
@@ -866,6 +898,6 @@
         });
     }
     return Object.freeze({
-        VERSION, LIMITS, DEFAULT_SCENE, MATERIALS, fail, number, integer, dimensions, image, scene, positions, footprint, pivot, pixelAnchor, snapCoordinate, pivotFromPixel, measurePoints, layout, blit, compose, crop, alphaBounds, trimRect, flip, resize, channel, adjust, difference, parseName, targetName, safeName, safePath, uniqueNames, assignSlots, autoScene, ownerAt, partition, ownershipImage, ownershipMap, paintMap, splitAnalysis, split, pack, atlasImage, atlasDefinition, parseMetadata, atlasCropRect, csvString, parseCSV, json
+        VERSION, LIMITS, DEFAULT_SCENE, MATERIALS, fail, number, integer, dimensions, image, scene, positions, footprint, pivot, pixelAnchor, snapCoordinate, pivotFromPixel, measurePoints, modelRegistrationPlan, modelRegisteredImage, layout, blit, compose, crop, alphaBounds, trimRect, flip, resize, channel, adjust, difference, parseName, targetName, safeName, safePath, uniqueNames, assignSlots, autoScene, ownerAt, partition, ownershipImage, ownershipMap, paintMap, splitAnalysis, split, pack, atlasImage, atlasDefinition, parseMetadata, atlasCropRect, csvString, parseCSV, json
     });
 });

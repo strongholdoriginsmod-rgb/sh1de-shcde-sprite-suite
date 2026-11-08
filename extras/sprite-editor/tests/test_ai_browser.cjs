@@ -32,8 +32,12 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         for (let i = 0; i < 130; i++) {
             const portfile = path.join(profile, 'DevToolsActivePort');
             if (fs.existsSync(portfile)) {
-                port = Number(fs.readFileSync(portfile, 'utf8').split(/\r?\n/)[0]);
-                break;
+                try {
+                    port = Number(fs.readFileSync(portfile, 'utf8').split(/\r?\n/)[0]);
+                    if (Number.isSafeInteger(port) && port > 0) break;
+                } catch (error) {
+                    if (!['EBUSY', 'EACCES', 'ENOENT'].includes(error.code)) throw error;
+                }
             }
             if (chrome.exitCode != null) throw new Error('Browser exited: ' + chrome.exitCode);
             await sleep(100);
@@ -100,6 +104,47 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         await wait('SpriteEditor.inspect().state.frames.length === 25');
         const before = await evaluate('SpriteEditor.inspect().state.frames[0].imageId');
         const originalId = await evaluate('SpriteEditor.inspect().state.frames[0].originalId');
+        // Legacy ruler evidence must be imported into the SAME geometry canvas,
+        // never patched into an installed game or a separate atlas tool.
+        const rulerFile = path.join(downloads, 'zinnen-versatz.json');
+        fs.writeFileSync(rulerFile, JSON.stringify({
+            schema: 'zinnenlineal.versatz.v1',
+            frames: [{
+                name: 'tile_beispiel 000', gruppe: 'tile_beispiel', nummer: 0,
+                breite: 64, hoehe: 32, rechts: 8, hoch: 0,
+                pivot_x: .5, pivot_y: 0,
+                neu_pivot_x: .375, neu_pivot_y: 0
+            }]
+        }), 'utf8');
+        await evaluate('document.querySelector("[data-panel=geometry]").click()');
+        await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
+            '.find(b => b.textContent.includes("Zinnenlineal-JSON öffnen"))).click()');
+        const rulerDom = await send('DOM.getDocument');
+        const rulerInput = await send('DOM.querySelector', {
+            nodeId: rulerDom.root.nodeId, selector: '#file-input'
+        });
+        await send('DOM.setFileInputFiles', {
+            files: [rulerFile], nodeId: rulerInput.nodeId
+        });
+        await wait('document.getElementById("inspector-content").innerText.includes("Prüfstatus")');
+        assert.ok(await evaluate('document.getElementById("inspector-content").innerText.includes("review")'));
+        await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
+            '.find(b => b.textContent.includes("Anker-Overlay anzeigen"))).click()');
+        await wait('SpriteEditor.inspect().view === "sprite"');
+        await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
+            '.find(b => b.textContent.includes("Nach Sichtprüfung übernehmen"))).click()');
+        await wait('document.getElementById("modal").open');
+        await evaluate('(() => { document.querySelector("#modal [name=confirmed]").checked=true;' +
+            'document.querySelector("#modal [name=notes]").value="Ground anchor checked in visual overlay";' +
+            'document.getElementById("modal-submit").click(); })()');
+        await wait('SpriteEditor.inspect().state.frames[0].pivot.x === 0.375');
+        assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].pivotEvidence.manualReview'), true);
+        await evaluate('document.getElementById("undo").click()');
+        await wait('SpriteEditor.inspect().state.frames[0].pivot.x === 0.5');
+        await evaluate('document.getElementById("redo").click()');
+        await wait('SpriteEditor.inspect().state.frames[0].pivotEvidence.manualReview === true');
+        await evaluate('document.getElementById("undo").click()');
+        await wait('SpriteEditor.inspect().state.frames[0].pivot.x === 0.5');
         await evaluate('document.querySelector("[data-view=sprite]").click()');
         await evaluate('document.querySelector("[data-panel=geometry]").click()');
         assert.ok(await evaluate('document.getElementById("inspector-content").innerText.includes("Anker, Ebenen")'));
@@ -132,15 +177,27 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
             data: new Uint8Array(original.data) };
         modified.data[0] ^= 1;
         const candidate = path.join(downloads, 'smoke_candidate.png');
-        fs.writeFileSync(candidate, Buffer.from(await K.encodePNG(modified)));
+        const candidateBytes = await K.encodePNG(modified);
+        fs.writeFileSync(candidate, Buffer.from(candidateBytes));
+        const requestSHA256 = await K.sha256(payload['request.json']);
+        const manifest = path.join(downloads, 'smoke_candidate_meta.json');
+        fs.writeFileSync(manifest, JSON.stringify({
+            format:'sprite-suite.ai-candidate',version:1,variant:1,
+            assetClass:request.assetClass,model:request.model,
+            referenceSHA256:request.referenceSHA256,requestSHA256,
+            candidateSHA256:await K.sha256(candidateBytes),
+            registration:{registered:true,candidateWritten:true},
+            needsManualReview:true,inGameTested:false,originalGameModified:false
+        }), 'utf8');
         await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
             '.find(b => b.textContent.includes("Kandidaten-PNGs"))).click()');
         const dom = await send('DOM.getDocument');
         const input = await send('DOM.querySelector', {
             nodeId: dom.root.nodeId, selector: '#file-input'
         });
-        await send('DOM.setFileInputFiles', { files: [candidate], nodeId: input.nodeId });
+        await send('DOM.setFileInputFiles', { files: [candidate, manifest], nodeId: input.nodeId });
         await wait('document.getElementById("inspector-content").innerText.includes("Ungeprüfte Variante")');
+        assert.ok(await evaluate('document.getElementById("inspector-content").innerText.includes("Quell- und Auftrags-SHA passen")'));
         await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
             '.find(b => b.textContent.includes("Original + Variante"))).click()');
         await wait('document.getElementById("modal").open');
@@ -151,14 +208,18 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].originalId'),
             originalId, 'Original altered by candidate acceptance');
         assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].aiGeneration.manualReview'), true);
+        assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].aiGeneration.requestSHA256'),
+            requestSHA256, 'Accepted candidate lost the exact request digest');
         await evaluate('document.getElementById("undo").click()');
         await wait('SpriteEditor.inspect().state.frames[0].imageId === ' + JSON.stringify(before));
         await evaluate('document.getElementById("redo").click()');
         await wait('SpriteEditor.inspect().state.frames[0].aiGeneration.manualReview === true');
         await send('Page.navigate', {
-            url: pathToFileURL(path.join(root, 'Stronghold_Sprite_Editor_EN.html')).href
+            url: pathToFileURL(path.join(root, 'Stronghold_Sprite_Editor_EN.html')).href + '#ai'
         });
         await wait('document.querySelector("[data-panel=ai]")?.textContent.trim() === "AI workshop"');
+        assert.equal(await evaluate('SpriteEditor.inspect().panel'), 'ai',
+            'Suite deep-link must navigate without executing any tool');
         await evaluate('document.querySelector("[data-action=demo]").click()');
         await wait('SpriteEditor.inspect().state.frames.length === 25');
         await evaluate('document.querySelector("[data-panel=ai]").click()');

@@ -132,3 +132,44 @@ test('AI provenance survives validation and undo; disappears when pixels are rep
     history.store.get(candidateId).data[0] ^= 1;
     assert.throws(() => I.validate(touched,history.store), /nachweisbar/);
 });
+
+test('request SHA is bound to the exact archived JSON bytes', async () => {
+    const img = sample(), source = await K.encodePNG(img);
+    const bundle = await AI.makeRequestBundle(img, source, task);
+    const entries = await K.unzip(bundle.bytes);
+    const data = entries.find(row => row.name === 'request.json').data;
+    assert.equal(bundle.requestSHA256, await K.sha256(data));
+});
+
+test('AI candidate manifests are source- and request-bound but not provider signatures', async () => {
+    const img = sample(), source = await K.encodePNG(img);
+    const generated = await AI.makeRequestBundle(img, source, task);
+    const candidate = C.image(64, 32, new Uint8Array(img.data));
+    candidate.data[11] ^= 1;
+    const candidateSHA = await K.sha256(await K.encodePNG(candidate));
+    const metadata = {
+        format: 'sprite-suite.ai-candidate', version: 1, variant: 1,
+        assetClass: 'building', model: task.model,
+        referenceSHA256: generated.request.referenceSHA256,
+        requestSHA256: generated.requestSHA256,
+        candidateSHA256: candidateSHA,
+        registration: { registered: true, candidateWritten: true },
+        needsManualReview: true, inGameTested: false, originalGameModified: false
+    };
+    const verified = AI.verifyCandidateMetadata(metadata, generated.request.referenceSHA256,
+        candidateSHA, generated.requestSHA256);
+    assert.equal(verified.sourceMatched, true);
+    assert.equal(verified.requestMatched, true);
+    assert.equal(verified.apiOriginVerified, false);
+    for (const change of [
+        {referenceSHA256:'a'.repeat(64)}, {candidateSHA256:'b'.repeat(64)},
+        {requestSHA256:'c'.repeat(64)}, {assetClass:'made-up'},
+        {variant:5}, {needsManualReview:false}, {inGameTested:true},
+        {registration:{ registered:false,candidateWritten:true }}
+    ]) {
+        assert.throws(() => AI.verifyCandidateMetadata({...metadata,...change},
+            generated.request.referenceSHA256,candidateSHA,generated.requestSHA256));
+    }
+    assert.equal(AI.verifyCandidateMetadata(metadata, generated.request.referenceSHA256,
+        candidateSHA).requestMatched, false);
+});

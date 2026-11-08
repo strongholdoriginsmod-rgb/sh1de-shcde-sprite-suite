@@ -36,32 +36,11 @@
             restrictions: readable(raw.restrictions ?? '', 'Erhaltungsregeln', 0, 1600) };
     }
     function canvasPlan(img) {
-        C.dimensions(img.width, img.height);
-        const landscape = img.width > img.height * 1.25;
-        const portrait = img.height > img.width * 1.25;
-        const width = landscape ? 1536 : 1024, height = portrait ? 1536 : 1024;
-        const scale = Math.floor(Math.min((width - 128) / img.width,
-                                          (height - 128) / img.height));
-        if (scale < 1) fail('Sprite zu groß für verlustfreie KI-Registrierung; erst Arbeitskopie vorbereiten.');
-        return { width, height, scale, left: Math.floor((width - img.width * scale) / 2),
-            top: height - 64 - img.height * scale, sourceWidth: img.width,
-            sourceHeight: img.height };
+        const plan = C.modelRegistrationPlan(img);
+        if (!plan) fail('Sprite zu groß für verlustfreie KI-Registrierung; erst Arbeitskopie vorbereiten.');
+        return plan;
     }
-    function registeredImage(img, plan) {
-        if (img.width !== plan.sourceWidth || img.height !== plan.sourceHeight)
-            fail('Quellbild passt nicht zur Registrierungsplanung.');
-        const canvas = C.image(plan.width, plan.height);
-        const scaled = plan.scale === 1 ? img :
-            C.resize(img, img.width * plan.scale, img.height * plan.scale);
-        // Direct byte copy preserves hidden RGB and partially transparent pixels.
-        // Alpha compositing would silently rewrite the image before generation.
-        for (let y = 0; y < scaled.height; y++) {
-            const start = y * scaled.width * 4;
-            canvas.data.set(scaled.data.subarray(start, start + scaled.width * 4),
-                ((y + plan.top) * canvas.width + plan.left) * 4);
-        }
-        return canvas;
-    }
+    const registeredImage = C.modelRegisteredImage;
     function prompt(img, plan, settings) {
         const r = 'x=' + plan.left + '..' + (plan.left + img.width * plan.scale) +
             ', y=' + plan.top + '..' + (plan.top + img.height * plan.scale);
@@ -113,12 +92,41 @@
             'Abmessung, Alpha, Geometrie und Originaltreue visuell pruefen; danach manuell uebernehmen.',
             'Keine automatische Mod-Installation oder Ingame-Freigabe.',
         ].join('\n');
-        return { request, bytes: K.zip([
+        const requestBytes = K.encodeText(JSON.stringify(request, null, 2));
+        const requestSHA256 = await K.sha256(requestBytes);
+        return { request, requestSHA256, bytes: K.zip([
             { name: 'reference.png', data: original },
             { name: 'model_reference.png', data: registered },
-            { name: 'request.json', data: JSON.stringify(request, null, 2) },
+            { name: 'request.json', data: requestBytes },
             { name: 'WORKFLOW.txt', data: guide }
         ]) };
+    }
+    /** Generator metadata is a self-declared, hash-checked receipt,
+     * not a cryptographic signature from the image provider. */
+    function verifyCandidateMetadata(raw, sourceSHA256, candidateSHA256, plannedSHA256 = null) {
+        if (!raw || Array.isArray(raw) || typeof raw !== 'object' ||
+                raw.format !== 'sprite-suite.ai-candidate' || raw.version !== 1)
+            fail('Unbekanntes KI-Kandidatenmanifest.');
+        const digest = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+        if (!digest(sourceSHA256) || !digest(candidateSHA256) ||
+                !digest(raw.requestSHA256) ||
+                raw.referenceSHA256 !== sourceSHA256 ||
+                raw.candidateSHA256 !== candidateSHA256)
+            fail('Kandidat oder Quellbild passt nicht zum KI-Nachweis (SHA-256).');
+        if (!MODELS.includes(raw.model) || !ASSET_CLASSES.includes(raw.assetClass) ||
+                !Number.isSafeInteger(raw.variant) || raw.variant < 1 || raw.variant > 4 ||
+                raw.needsManualReview !== true ||
+                raw.inGameTested !== false || raw.originalGameModified !== false)
+            fail('KI-Manifest enthält unzulässige Angaben.');
+        if (!raw.registration || raw.registration.registered !== true ||
+                raw.registration.candidateWritten !== true)
+            fail('Kandidat hat keine gültige Rückregistrierung.');
+        if (plannedSHA256 && raw.requestSHA256 !== plannedSHA256)
+            fail('Kandidat gehört zu einem anderen KI-Auftrag.');
+        return { sourceMatched: true, requestMatched: !!plannedSHA256,
+            apiOriginVerified: false, modelClaim: raw.model,
+            assetClass: raw.assetClass, variant: raw.variant,
+            requestSHA256: raw.requestSHA256 };
     }
     function reviewCandidate(original, candidate) {
         C.dimensions(original.width, original.height);
@@ -146,5 +154,5 @@
             needsManualReview: true, approved: false };
     }
     return Object.freeze({ MODELS, ASSET_CLASSES, options, canvasPlan, registeredImage,
-        prompt, makeRequestBundle, reviewCandidate });
+        prompt, makeRequestBundle, verifyCandidateMetadata, reviewCandidate });
 });

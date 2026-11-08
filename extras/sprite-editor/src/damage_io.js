@@ -334,29 +334,10 @@
         stage.status = 'approved';
         return { state: I.validate(out, store), store };
     }
-    function modelCanvasPlan(img) {
-        // Pixel-exact, reversible registration: integer nearest-neighbour scale,
-        // a transparent border and a fixed bottom-centre image anchor.
-        // The original remains a separate unmodified asset in the bundle.
-        const landscape = img.width > img.height * 1.25;
-        const portrait = img.height > img.width * 1.25;
-        const width = landscape ? 1536 : 1024, height = portrait ? 1536 : 1024;
-        const scale = Math.floor(Math.min((width - 128) / img.width, (height - 128) / img.height));
-        if (scale < 1) return null; // Very large originals: do not perform lossy downsampling.
-        return { width, height, scale,
-            left: Math.floor((width - img.width * scale) / 2),
-            top: height - 64 - img.height * scale,
-            sourceWidth: img.width, sourceHeight: img.height };
-    }
-    function modelCanvas(img, plan) {
-        if (img.width !== plan.sourceWidth || img.height !== plan.sourceHeight)
-            fail('Die Registrierungsvorlage passt nicht zum Gebäude.');
-        const out = C.image(plan.width, plan.height);
-        const scaled = plan.scale === 1 ? img :
-            C.resize(img, img.width * plan.scale, img.height * plan.scale);
-        C.blit(out, scaled, plan.left, plan.top);
-        return out;
-    }
+    // Shared lossless geometry: the generic AI workshop and the HP/Fire
+    // damage tool must render exactly the same registered pixel canvas.
+    const modelCanvasPlan = C.modelRegistrationPlan;
+    const modelCanvas = C.modelRegisteredImage;
     async function makeRequestBundle(state, store, stageId, options = {}) {
         const { stage, profile, base } = getStage(state, stageId);
         const original = baseComposite(state, store, profile.buildingGroupId);

@@ -360,11 +360,22 @@ class Center(workshop.Suite):
                         rows.append(component + ": " +
                                     (str(len(files)) + " DLL-Fund(e)" if files else
                                      "nicht nachgewiesen"))
-            rows.extend(("", "Unity: " + str(report["unity_editor"] or "nicht gefunden"),
-                         ".NET: " + str(report["dotnet_directory"] or "nicht gefunden"),
-                         "Python: " + ", ".join(report["python_executables"][:5]),
-                         "Felder nur ergänzt: " + (", ".join(filled) if filled else "keine"),
-                         "Mehrere Spielkandidaten müssen manuell ausgewählt werden.",
+            rows.extend(("", "Unity-Vorschlag: " +
+                         str(report["unity_editor"] or "manuell auswählen"),
+                         "Unity-Hub-Kandidaten: " + str(len(report["unity_candidates"]))))
+            for candidate in report["unity_candidates"][:8]:
+                rows.append("  " + candidate["path"] + " (" +
+                            str(candidate["version_hint"] or "Version unbestätigt") + ")")
+            rows.extend((".NET-SDK: " +
+                         str(report["dotnet_directory"] or "nicht gefunden"),
+                         "Python-Interpreter: " +
+                         str(len(report["python_candidates"])) + " Kandidaten"))
+            for candidate in report["python_candidates"][:8]:
+                rows.append("  " + candidate["path"] + " (" +
+                            str(candidate["version_hint"] or "Version unbestätigt") + ")")
+            rows.extend(("Felder nur ergänzt: " + (", ".join(filled) if filled else "keine"),
+                         "Mehrere Spiel-/Editor-Kandidaten müssen manuell ausgewählt werden.",
+                         "Gefundene EXE/DLLs wurden nicht ausgeführt. Versionen sind Hinweise.",
                          "Vor Builds sind SHA, Spielversion und Runtime-ABI separat zu prüfen."))
             self.setup_save_status.set("Automatische Suche abgeschlossen. "
                                        "Geänderte Felder erst ausdrücklich speichern.")

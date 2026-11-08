@@ -266,12 +266,15 @@ def cmd_oeffnen(args) -> int:
     if not target.is_file():
         say(f"Editor fehlt: {target}")
         return 1
+    area = getattr(args, "bereich", None)
+    if area is not None and area not in ("geometry", "ai", "damage"):
+        raise ValueError("Unbekannter Editorbereich")
     if args.offline:
-        webbrowser.open(target.as_uri())
+        webbrowser.open(target.as_uri() + ("#" + area if area else ""))
     else:
         from sprite_editor_local import launch
-        launch("en" if target == english else "de")
-    say(f"Editor geoeffnet: {target}")
+        launch("en" if target == english else "de", area=area)
+    say(f"Editor geoeffnet: {target}" + (" (" + area + ")" if area else ""))
     return 0
 
 
@@ -291,6 +294,8 @@ def main(argv=None) -> int:
     p = sub.add_parser("oeffnen", help="HTML-Editor im Browser oeffnen")
     p.add_argument("--sprache", choices=("de", "en"))
     p.add_argument("--offline", action="store_true", help="Eigenständige Datei ohne lokale Codex-Anbindung öffnen")
+    p.add_argument("--bereich", choices=("geometry", "ai", "damage"),
+                   help="Nur zum Inspektor navigieren; keine Aktion ausführen")
     p.set_defaults(func=cmd_oeffnen)
     args = parser.parse_args(argv)
     return int(args.func(args) or 0)

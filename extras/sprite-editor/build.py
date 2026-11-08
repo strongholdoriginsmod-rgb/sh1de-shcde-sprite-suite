@@ -7,7 +7,7 @@ def build(destination: Path | None = None) -> Path:
     root = Path(__file__).resolve().parent
     target = destination or root / 'Stronghold_Sprite_Editor.html'
     html = (root / 'src/shell.html').read_text(encoding='utf-8')
-    for marker, file in [('CSS', 'style.css'), ('CORE', 'core.js'), ('CODEC', 'codec.js'), ('DAMAGE', 'damage.js'), ('IO', 'io.js'), ('DAMAGE_IO', 'damage_io.js'), ('AI', 'ai_workflow.js'), ('APP', 'app.js')]:
+    for marker, file in [('CSS', 'style.css'), ('CORE', 'core.js'), ('CODEC', 'codec.js'), ('DAMAGE', 'damage.js'), ('IO', 'io.js'), ('DAMAGE_IO', 'damage_io.js'), ('AI', 'ai_workflow.js'), ('PIVOT_EVIDENCE', 'pivot_evidence.js'), ('APP', 'app.js')]:
         content = (root / 'src' / file).read_text(encoding='utf-8')
         if file.endswith('.js') and '</script' in content.lower():
             raise ValueError(f'Unsafe embedded script terminator: {file}')

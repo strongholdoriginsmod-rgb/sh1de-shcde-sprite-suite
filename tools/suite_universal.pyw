@@ -2196,6 +2196,9 @@ class ExchangeTab(ttk.Frame):
         html_actions.pack(fill="x", padx=8, pady=(0, 4))
         ttk.Button(html_actions, text="Fuer Editor verpacken", command=self.export).pack(side="left", padx=6)
         ttk.Button(html_actions, text="Editor oeffnen", command=lambda: app.run([tool("editor_bruecke.py"), "oeffnen"], "Editor")).pack(side="left", padx=3)
+        ttk.Button(html_actions, text="KI-Werkstatt", command=lambda: app.run(
+            [tool("editor_bruecke.py"), "oeffnen", "--bereich", "ai"],
+            "KI-Werkstatt im Sprite-Editor")).pack(side="left", padx=3)
         ttk.Button(html_actions, text="Ergebnis zurueckholen ...", command=self.import_result).pack(side="left", padx=3)
         ttk.Button(html_actions, text="Ordner work/editor", command=lambda: os.startfile(self._ensure(ROOT / "work" / "editor"))).pack(side="left", padx=3)
 
@@ -2224,13 +2227,20 @@ class ExchangeTab(ttk.Frame):
         ).pack(side="left", padx=5)
         p = section(
             "Pivot-Vermessung aus dem Spiel (Zinnenlineal)",
-            "Messwerte der laufenden Spielprobe mit aktuellen Sprite-Indizes "
-            "abgleichen; Vorher/Nachher anzeigen und nur einen sicheren "
-            "Prüfbericht erzeugen. Keine automatische Atlas-Änderung."
+            "Pivots, Verschieben, Overlay, Fangraster und Zinnenlineal-JSON "
+            "direkt im gemeinsamen Sprite-Editor bearbeiten. "
+            "Die separate BC7-/Index-Gegenprüfung bleibt für historische "
+            "Installationsnachweise als Expertenfunktion erhalten."
         )
         ttk.Button(
-            p,text="Pivot-Messungen prüfen …",command=self.open_pivot_review
-        ).pack(side="left",padx=6)
+            p, text="Gemeinsamen Geometrie-Editor öffnen",
+            command=lambda: app.run(
+                [tool("editor_bruecke.py"), "oeffnen", "--bereich", "geometry"],
+                "Geometrie im Sprite-Editor"),
+        ).pack(side="left", padx=6)
+        ttk.Button(
+            p, text="Pivot-Messungen prüfen …", command=self.open_pivot_review
+        ).pack(side="left", padx=6)
 
         f2 = ttk.Frame(form)
         f2.pack(fill="x", padx=8)

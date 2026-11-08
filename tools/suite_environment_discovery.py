@@ -10,9 +10,11 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
-import stat
 import sys
+
+from suite_toolchain_inventory import (
+    safe as _safe_path, unity_editors, preferred_unity, python_interpreters,
+)
 
 GAME_DATA = {
     "sh1de": "Stronghold 1 Definitive Edition_Data",
@@ -27,23 +29,6 @@ GAME_ENV = {
     "shcde": "SPRITESUITE_SHCDE",
 }
 EXTENDER_DIR = Path("BepInEx/plugins/000shcdese")
-
-
-def _safe_path(value: str | Path) -> Path | None:
-    """Reject junctions/reparse points rather than follow installed-game links."""
-    try:
-        path = Path(value).expanduser().absolute()
-        for part in (path, *path.parents):
-            if not part.exists():
-                continue
-            if part.is_symlink():
-                return None
-            flags = getattr(part.lstat(), "st_file_attributes", 0)
-            if flags & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0):
-                return None
-        return path
-    except (ValueError, OSError, RuntimeError):
-        return None
 
 
 def _parse_libraries(steam: Path) -> list[Path]:
@@ -167,27 +152,35 @@ def discover(project: Path, *, roots: list[str | Path] | None = None,
     for kind in GAME_DATA:
         matches = [row for row in games if row["kind"] == kind]
         suggestions[kind] = matches[0]["root"] if len(matches) == 1 else None
-    from stronghold_europe_de.sdk_toolchain import find_dotnet_sdk
-    from stronghold_europe_de.unity_toolchain import standard_unity_editor_paths
-    unity_candidates = [chain.get("unity_editor"), env.get("STRONGHOLD_EUROPE_UNITY_EDITOR")]
-    unity_candidates += [str(p) for p in standard_unity_editor_paths("2021.3.45f2")]
-    unity = next((str(p) for v in unity_candidates if v
-                  if (p := _safe_path(v)) and p.is_file() and p.name.lower() == "unity.exe"), None)
-    dotnet = None
-    if chain.get("dotnet_directory") and (p := _safe_path(chain["dotnet_directory"])) and p.exists():
-        dotnet = str(p)
-    if not dotnet:
-        sdk = find_dotnet_sdk(project)
-        dotnet = str(sdk) if sdk else None
-    python_paths = []
-    for raw in (sys.executable, shutil.which("python"), shutil.which("python3")):
-        if raw and (p := _safe_path(raw)) and p.is_file() and str(p) not in python_paths:
-            python_paths.append(str(p))
+    from stronghold_europe_de.sdk_toolchain import (
+        find_dotnet_sdk, resolve_dotnet_directory, installed_sdk_versions,
+    )
+    editors = unity_editors(env, chain.get("unity_editor"))
+    unity = preferred_unity(editors)
+    sdk_candidates = []
+    for source, value in (
+        ("saved_config", chain.get("dotnet_directory")),
+        ("auto_discovery", find_dotnet_sdk(project)),
+    ):
+        if not value or not (path := _safe_path(value)):
+            continue
+        try:
+            root = resolve_dotnet_directory(path)
+            versions = installed_sdk_versions(root)
+            if versions and not any(x["path"] == str(root) for x in sdk_candidates):
+                sdk_candidates.append({"path": str(root), "source": source,
+                    "sdk_versions": list(versions), "executed": False})
+        except (OSError, ValueError, RuntimeError):
+            continue
+    dotnet = sdk_candidates[0]["path"] if sdk_candidates else None
+    python_candidates = python_interpreters(project, env)
     return {
-        "schema": "sprite-suite.environment-discovery.v1",
+        "schema": "sprite-suite.environment-discovery.v2",
         "games": games, "suggestions": suggestions,
-        "unity_editor": unity, "dotnet_directory": dotnet,
-        "python_executables": python_paths,
+        "unity_editor": unity, "unity_candidates": editors,
+        "dotnet_directory": dotnet, "dotnet_candidates": sdk_candidates,
+        "python_executables": [r["path"] for r in python_candidates],
+        "python_candidates": python_candidates,
         "python_current_version": sys.version.split()[0],
         "warnings": list(warnings) + list(chain_warnings),
         "automatic_install": False, "executed_discovered_binaries": False,

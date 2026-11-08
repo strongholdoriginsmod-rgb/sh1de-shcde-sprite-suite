@@ -50,7 +50,8 @@ def load_request(bundle: Path) -> tuple[dict, list[tuple[str, bytes]]]:
         if any(item.is_dir() or (item.external_attr >> 16) & 0o170000 == stat.S_IFLNK
                for item in files):
             raise ValueError("Verlinkte ZIP-Einträge werden abgewiesen.")
-        request = json.loads(archive.read("request.json"))
+        request_bytes = archive.read("request.json")
+        request = json.loads(request_bytes)
         original = archive.read("reference.png")
         registered = archive.read("model_reference.png")
     if not isinstance(request, dict):
@@ -96,6 +97,7 @@ def load_request(bundle: Path) -> tuple[dict, list[tuple[str, bytes]]]:
         raise ValueError("Original- oder Modellreferenz ist nicht SHA-verifiziert.")
     if "input_fidelity" in request:
         raise ValueError("GPT Image 2.6 unterstützt input_fidelity nicht.")
+    request["_request_sha256"] = _sha(request_bytes)
     return request, [("model_reference.png", registered)]
 
 
@@ -108,6 +110,12 @@ def _safe_output(output: Path) -> Path:
                 "stronghold 1 definitive edition" in item or
                 item in {"bepinex", "000shcdese"}):
             raise ValueError("Ausgabe innerhalb eines Spielverzeichnisses verboten.")
+    for parent in list(absolute.parents)[:10]:
+        if ((parent / "UnityPlayer.dll").is_file() and
+                any((parent / name).is_file() for name in (
+                    "Stronghold Crusader Definitive Edition.exe",
+                    "Stronghold 1 Definitive Edition.exe"))):
+            raise ValueError("Ausgabe unter einer Spielinstallation ist verboten.")
     if output.is_symlink() or (absolute.exists() and (not absolute.is_dir() or any(absolute.iterdir()))):
         raise ValueError("Kandidatenordner muss neu oder leer sein; vorhandene Ergebnisse schützen.")
     return absolute
@@ -142,6 +150,17 @@ def _generate_one(request: dict, images: list[tuple[str, bytes]]) -> tuple[bytes
     return raw, request_id
 
 
+def _write_status(target: Path, info: dict) -> None:
+    """Atomic local progress receipt; a killed worker is never certified as done."""
+    tmp = target / ".run-status.tmp"
+    with tmp.open("x", encoding="utf-8") as file:
+        json.dump(info, file, indent=2, ensure_ascii=False)
+        file.write("\n")
+        file.flush()
+        os.fsync(file.fileno())
+    os.replace(tmp, target / "run-status.json")
+
+
 def execute(request: dict, images: list[tuple[str, bytes]], output: Path) -> dict:
     from PIL import Image  # noqa: F401 -- required for deterministic inverse registration
     target = _safe_output(output)
@@ -149,32 +168,50 @@ def execute(request: dict, images: list[tuple[str, bytes]], output: Path) -> dic
         raise ValueError("OPENAI_API_KEY fehlt; kein kostenpflichtiger Aufruf gestartet.")
     target.mkdir(parents=True, exist_ok=True)
     rows = []
-    for index in range(1, request["variants"] + 1):
-        raw, request_id = _generate_one(request, images)
-        fitted, alignment = normalize_model_output(raw, request)
-        prefix = f"variant_{index:02d}"
-        with (target / (prefix + "_model_raw.png")).open("xb") as file:
-            file.write(raw)
-        if fitted:
-            with (target / (prefix + ".png")).open("xb") as file:
-                file.write(fitted)
-        meta = {
-            "format": "sprite-suite.ai-candidate",
-            "version": 1, "variant": index,
-            "model": request["model"],
-            "referenceSHA256": request["referenceSHA256"],
-            "modelOutputSHA256": _sha(raw),
-            "candidateSHA256": _sha(fitted) if fitted else None,
-            "requestId": request_id,
-            "registration": alignment,
-            "needsManualReview": True,
-            "inGameTested": False,
-            "originalGameModified": False
-        }
-        with (target / (prefix + "_meta.json")).open("x", encoding="utf-8") as file:
-            json.dump(meta, file, ensure_ascii=False, indent=2)
-        rows.append(meta)
+    status = {"schema": "sprite-suite.ai-execution.v1",
+              "requestSHA256": request["_request_sha256"],
+              "expectedVariants": request["variants"],
+              "completedVariants": 0, "status": "running",
+              "needsManualReview": True, "installed": False}
+    _write_status(target, status)
+    try:
+        for index in range(1, request["variants"] + 1):
+            raw, request_id = _generate_one(request, images)
+            fitted, alignment = normalize_model_output(raw, request)
+            prefix = f"variant_{index:02d}"
+            with (target / (prefix + "_model_raw.png")).open("xb") as file:
+                file.write(raw)
+            if fitted:
+                with (target / (prefix + ".png")).open("xb") as file:
+                    file.write(fitted)
+            meta = {
+                "format": "sprite-suite.ai-candidate",
+                "version": 1, "variant": index,
+                "assetClass": request["assetClass"], "model": request["model"],
+                "requestSHA256": request["_request_sha256"],
+                "referenceSHA256": request["referenceSHA256"],
+                "modelOutputSHA256": _sha(raw),
+                "candidateSHA256": _sha(fitted) if fitted else None,
+                "requestId": request_id,
+                "registration": alignment,
+                "needsManualReview": True,
+                "inGameTested": False, "originalGameModified": False
+            }
+            with (target / (prefix + "_meta.json")).open("x", encoding="utf-8") as file:
+                json.dump(meta, file, ensure_ascii=False, indent=2)
+            rows.append(meta)
+            status["completedVariants"] = index
+            status["status"] = "running"
+            _write_status(target, status)
+    except (ValueError, OSError, RuntimeError, TypeError, KeyError) as exc:
+        status["status"] = "partial_failure"
+        status["errorType"] = type(exc).__name__
+        _write_status(target, status)
+        raise
+    status["status"] = "candidates_ready_for_review"
+    _write_status(target, status)
     return {"generated": len(rows), "candidates": rows, "output": str(target),
+            "requestSHA256": request["_request_sha256"],
             "needsManualReview": True, "installed": False}
 
 
@@ -204,6 +241,7 @@ def main(argv: list[str] | None = None) -> int:
                 "assetClass": request["assetClass"],
                 "variants": request["variants"],
                 "sourceSHA256": request["referenceSHA256"],
+                "requestSHA256": request["_request_sha256"],
                 "output": str(args.output),
                 "wouldCall": API_URL, "networkRequest": False,
                 "requiresExecuteAndPaidConfirmation": True,

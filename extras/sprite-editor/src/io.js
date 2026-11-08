@@ -54,6 +54,11 @@
                 generation.imageContentSHA256 !== imageContentSHA256(img) ||
                 (generation.requestReferenceSHA256 != null &&
                  !digest(generation.requestReferenceSHA256)) ||
+                (generation.requestSHA256 != null &&
+                 !digest(generation.requestSHA256)) ||
+                (generation.generatorMetadataSHA256 != null &&
+                 (!digest(generation.generatorMetadataSHA256) ||
+                  generation.requestSHA256 == null)) ||
                 !['unverified', 'gpt-image-2.6-flare', 'gpt-image-2.6-sunburst']
                     .includes(generation.requestedModel) ||
                 generation.manualReview !== true || generation.apiOriginVerified !== false)
@@ -64,8 +69,34 @@
             imageContentSHA256: generation.imageContentSHA256,
             requestedModel: generation.requestedModel,
             requestReferenceSHA256: generation.requestReferenceSHA256 ?? null,
+            requestSHA256: generation.requestSHA256 ?? null,
+            generatorMetadataSHA256: generation.generatorMetadataSHA256 ?? null,
             reviewNotes: text(generation.reviewNotes, 'KI-Abnahmevermerk', 1200),
             manualReview: true, apiOriginVerified: false };
+    }
+    /** Historical pivot correction is a reviewed workspace edit, never a game approval. */
+    function validatePivotEvidence(value, imageId, img, currentPivot) {
+        if (value == null || value.appliedImageId !== imageId) return null;
+        if (!value || Array.isArray(value) || typeof value !== 'object')
+            C.fail('Ungültige Zinnenlineal-Provenienz.');
+        const digest = s => typeof s === 'string' && /^[a-f0-9]{64}$/.test(s);
+        const proposed = C.pivot(value.proposedPivot);
+        if (Math.abs(proposed.x - currentPivot.x) > 2e-5 ||
+                Math.abs(proposed.y - currentPivot.y) > 2e-5)
+            return null; // A later pivot edit invalidates the older review.
+        if (!digest(value.measurementSHA256) || !digest(value.imageContentSHA256) ||
+                value.imageContentSHA256 !== imageContentSHA256(img) ||
+                value.manualReview !== true || value.approvedForGame !== false)
+            C.fail('Zinnenlineal-Nachweis ist verändert oder nicht mehr gültig.');
+        return {
+            appliedImageId: id(value.appliedImageId),
+            measurementSHA256: value.measurementSHA256,
+            imageContentSHA256: value.imageContentSHA256,
+            measuredFrameName: text(value.measuredFrameName, 'Messname', 120),
+            proposedPivot: proposed,
+            reviewNotes: text(value.reviewNotes, 'Pivot-Abnahmevermerk', 1200),
+            manualReview: true, approvedForGame: false
+        };
     }
     const tick = () => new Promise(r => setTimeout(r, 0));
     function blank() {
@@ -193,12 +224,14 @@
                 store.get(originalMaskId);
             const rawTarget = text(f.targetName ?? '', 'Zielname'), target = rawTarget ? C.targetName(rawTarget).name : '';
             const aiGeneration = validateGeneration(f.aiGeneration, imageId, img);
+            const pivotEvidence = validatePivotEvidence(f.pivotEvidence, imageId, img, C.pivot(f.pivot));
             return {
                 id: fid, groupId, name: text(f.name, 'Dateiname'), group: text(f.group, 'Quellgruppe'), index: f.index === null ? null : C.integer(f.index, 'Quellindex', 0, 100000000), slot: C.integer(f.slot, 'Rasterplatz', 0, 4095),
                 imageId, originalId, maskId, originalMaskId, pivot: C.pivot(f.pivot), originalPivot: C.pivot(f.originalPivot || f.pivot), ppu: C.number(f.ppu, 'PPU', .001, 65536), originalPPU: C.number(f.originalPPU ?? f.ppu, 'Original-PPU', .001, 65536),
                 metadataStatus: ['assumed', 'imported', 'manual'].includes(f.metadataStatus) ? f.metadataStatus : C.fail('Ungültiger Metadatenstatus.'), targetName: target, targetConfirmed: bool(f.targetConfirmed),
                 dx: C.integer(f.dx, 'X-Versatz'), dy: C.integer(f.dy, 'Y-Versatz'), trimOffsetX: C.integer(f.trimOffsetX ?? 0, 'Trimversatz X'), trimOffsetY: C.integer(f.trimOffsetY ?? 0, 'Trimversatz Y'), visible: bool(f.visible, true), locked: bool(f.locked),
-                ...(aiGeneration ? { aiGeneration } : {})
+                ...(aiGeneration ? { aiGeneration } : {}),
+                ...(pivotEvidence ? { pivotEvidence } : {})
             };
         });
         for (const g of s.scenes) {

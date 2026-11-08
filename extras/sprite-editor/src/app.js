@@ -1,7 +1,7 @@
 /* Stronghold Sprite Editor. DOM and canvas view; all exports use the independent RGBA codec. */
 (function () {
     'use strict';
-    const C = window.SpriteCore, K = window.SpriteCodec, I = window.SpriteIO, D = window.SpriteDamage, DI = window.SpriteDamageIO, AI = window.SpriteAI, $ = id => document.getElementById(id);
+    const C = window.SpriteCore, K = window.SpriteCodec, I = window.SpriteIO, D = window.SpriteDamage, DI = window.SpriteDamageIO, AI = window.SpriteAI, PE = window.SpritePivotEvidence, $ = id => document.getElementById(id);
     if (!window.crypto?.getRandomValues || !window.CompressionStream || !window.DecompressionStream || !window.structuredClone) {
         document.body.textContent = 'Dieser Browser unterstützt die benötigten lokalen Datei- und Kompressionsfunktionen nicht. Die HTML-Datei in einer aktuellen Chromium-basierten Desktop-Version öffnen.';
         return;
@@ -25,8 +25,12 @@
         return n;
     };
     let history = new I.History(I.blank(), new I.AssetStore()), groupId = '', selected = new Set(), lastSelected = null, view = 'scene', panel = 'properties', dirty = false, busy = false, modalHandler = null, pendingFiles = [], toastTimer = null, aborter = null;
+    // Navigation-only deep link from the Suite. No imports, jobs or file writes.
+    const requestedPanel = window.location.hash.replace(/^#/, '');
+    if (['geometry', 'ai', 'damage'].includes(requestedPanel)) panel = requestedPanel;
     let damageBuildingId = '', damageKind = 'mechanical', damageHp = 100, damageApprovedOnly = false;
     let aiGoal = '', aiRestrictions = '', aiAssetClass = 'building', aiModel = AI.MODELS[0], aiVariants = 1, aiCandidates = [], aiCandidateIndex = 0, aiLastRequest = null;
+    let legacyPivotFile = null, showLegacyPivot = true;
     let playing = false, animIndex = 0, lastFrameTime = 0, pivotTool = false, measureTool = false, measureStart = null, measurement = null, snapStep = 1, brushTool = false, brushMap = null, drag = null, spaceDown = false, renderQueued = false, model = null, layoutError = '', fitNext = true, atlasGroup = '';
     let recoveryCandidate = null, recoveryTimer = null, recoveryRunning = false, recoveryAgain = false, recoveryEnabled = true, sessionId = I.uid('s'), autosaveGeneration = 0;
     try {
@@ -245,6 +249,7 @@
         aiCandidates = [];
         aiLastRequest = null;
         aiCandidateIndex = 0;
+        legacyPivotFile = null;
         measureStart = measurement = null;
         history = new I.History(result.state, result.store);
         selected = new Set();
@@ -1181,6 +1186,142 @@
                  'Zinnenlineal-Messdateien bleiben als nachvollziehbare Importbelege erhalten.')
         ]);
     }
+    /** Historical in-game ruler data is now a specialist input to this canvas. */
+    function legacyPivotReview(frame = primary()) {
+        if (!legacyPivotFile || !frame) return null;
+        const found = legacyPivotFile.rows.filter(row =>
+            frame.group === row.group && frame.index === row.number);
+        if (found.length !== 1) return null;
+        return PE.review(found[0], state().frames, store());
+    }
+    async function loadLegacyPivotFile() {
+        const files = await askFiles('.json', false);
+        if (!files.length) return;
+        if (files.length !== 1 || files[0].size > 2 * 1024 * 1024)
+            throw new Error('Nur eine Zinnenlineal-JSON-Datei bis 2 MiB wählen.');
+        await task('Zinnen-Messdaten ohne Spieländerung lesen', async opts => {
+            const bytes = new Uint8Array(await files[0].arrayBuffer());
+            K.aborted(opts.signal);
+            const decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+            const rows = PE.parseMeasurements(decoded);
+            const sourceSHA256 = await K.sha256(bytes);
+            legacyPivotFile = { rows, filename: C.safeName(files[0].name), sourceSHA256 };
+            showLegacyPivot = true;
+            panel = 'geometry';
+            message(rows.length + ' historische Zinnenlineal-Messungen geladen; keine Sprites geändert.');
+        });
+    }
+    function showLegacyPivotOverlay() {
+        const review = legacyPivotReview();
+        if (!review) throw new Error('Kein eindeutiger Zinnenlineal-Eintrag für diesen Sprite.');
+        if (!['review', 'already'].includes(review.status))
+            throw new Error(review.reason);
+        showLegacyPivot = true;
+        $('compare').value = 'current';
+        setView('sprite');
+        requestDraw();
+    }
+    function applyLegacyPivotReview() {
+        const frame = primary(), file = legacyPivotFile, review = legacyPivotReview();
+        if (!file || !frame || !review || review.status !== 'review')
+            throw new Error('Keine prüfbare Pivot-Messung für den ausgewählten Sprite.');
+        const boundImageId = frame.imageId, row = review.row;
+        modal('Gemessenen Pivot einzeln übernehmen', [
+            note('Geometrievorschlag aus ' + file.filename + '. Die Grafik bleibt unverändert; ' +
+                'weder BC7-Atlas noch installierte SHCDE-Dateien werden verändert.'),
+            line('Sprite', frame.name),
+            line('Messung', row.name + ' · rechts ' + row.right + ' / hoch ' + row.up + ' px'),
+            line('Ausgangspivot', row.oldPivot.x.toFixed(6) + ' / ' + row.oldPivot.y.toFixed(6)),
+            line('Zielpivot', row.newPivot.x.toFixed(6) + ' / ' + row.newPivot.y.toFixed(6)),
+            line('Messquellen-SHA', file.sourceSHA256.slice(0, 24) + '…'),
+            damagePreview(store().get(frame.imageId), 'Arbeitsbild vor Pivotkorrektur'),
+            checkbox('Ausgangs- und Zielanker am Overlay visuell geprüft; ' +
+                'Messquelle und Bildgröße stimmen überein.', false, 'confirmed'),
+            fields(field('Prüfvermerk', '', { type: 'textarea', name: 'notes',
+                wide: true, placeholder: 'Sichtprüfung der Grundlinie und Sprite-Position' }))
+        ], 'Nur Arbeits-Pivot übernehmen', data => {
+            if (!data.has('confirmed')) throw new Error('Explizite Sichtprüfung fehlt.');
+            const notes = String(data.get('notes') || '').trim();
+            if (notes.length < 8 || notes.length > 1200)
+                throw new Error('Prüfvermerk mit mindestens acht Zeichen erforderlich.');
+            const now = primary(), checked = legacyPivotReview();
+            if (file !== legacyPivotFile || !now ||
+                    now.id !== frame.id || now.imageId !== boundImageId ||
+                    !checked || checked.status !== 'review' ||
+                    checked.row.name !== row.name)
+                throw new Error('Bild oder Messquelle hat sich geändert; Prüfung wiederholen.');
+            const contentHash = I.imageContentSHA256(store().get(boundImageId));
+            edit(next => {
+                const updated = next.frames.find(item => item.id === frame.id);
+                if (!updated || updated.locked || updated.imageId !== boundImageId)
+                    throw new Error('Sprite gesperrt oder nicht mehr vorhanden.');
+                updated.pivot = { ...row.newPivot };
+                updated.metadataStatus = 'manual';
+                updated.pivotEvidence = {
+                    appliedImageId: boundImageId, measurementSHA256: file.sourceSHA256,
+                    imageContentSHA256: contentHash, measuredFrameName: row.name,
+                    proposedPivot: { ...row.newPivot }, reviewNotes: notes,
+                    manualReview: true, approvedForGame: false
+                };
+            }, 'Zinnenlineal-Pivot nach visueller Prüfung');
+            message('Messpivot in der Arbeitskopie übernommen; Original und Spiel unverändert.');
+        });
+    }
+    function exportLegacyPivotReport() {
+        const file = legacyPivotFile;
+        if (!file) throw new Error('Keine Zinnenlineal-Messungen geladen.');
+        const rows = PE.reviewAll(file.rows, state(), store()).map(result => ({
+            name: result.row.name, frameId: result.frameId, frameName: result.frameName || null,
+            status: result.status, reason: result.reason,
+            measuredOld: result.row.oldPivot, measuredNew: result.row.newPivot,
+            currentPivot: result.currentPivot || null,
+            approvedForGame: false
+        }));
+        download(JSON.stringify({
+            schema: 'sprite-suite.pivot-evidence-inspection.v1',
+            measurementSHA256: file.sourceSHA256,
+            measurementName: file.filename, rows,
+            installedGameChanged: false, approvedForGame: false
+        }, null, 2) + '\n', C.safeName(file.filename) + '_vergleich.json', 'application/json');
+    }
+    function legacyPivotSection() {
+        const file = legacyPivotFile, frame = primary(), review = legacyPivotReview(frame);
+        const items = [
+            note('Historisches Zinnenlineal direkt im Geometrie-Editor. ' +
+                'Bestehende Messungen werden nur lesend übernommen; keine automatische Atlasänderung.'),
+            buttons(button('Zinnenlineal-JSON öffnen…', loadLegacyPivotFile))
+        ];
+        if (file) {
+            items.push(line('Messdatei', file.filename),
+                line('Messungen', file.rows.length),
+                line('SHA-256', file.sourceSHA256.slice(0, 20) + '…'),
+                buttons(button('Messungsbericht exportieren…', exportLegacyPivotReport),
+                    button('Messdatei schließen', () => {
+                        legacyPivotFile = null;
+                        renderInspector();
+                        requestDraw();
+                    })));
+            if (review) {
+                items.push(line('Zugeordneter Frame', review.row.name),
+                    line('Prüfstatus', review.status),
+                    note(review.reason),
+                    line('Aktueller Pivot', review.currentPivot.x.toFixed(6) +
+                        ' / ' + review.currentPivot.y.toFixed(6)),
+                    line('Messvorschlag', review.row.newPivot.x.toFixed(6) +
+                        ' / ' + review.row.newPivot.y.toFixed(6)),
+                    buttons(button('Anker-Overlay anzeigen', showLegacyPivotOverlay, {
+                        disabled: !['review', 'already'].includes(review.status)
+                    }), button('Nach Sichtprüfung übernehmen…', applyLegacyPivotReview, {
+                        disabled: review.status !== 'review'
+                    })));
+            } else
+                items.push(note(frame ? 'Für diese Sprite-Gruppe wurde kein eindeutiger Messwert gefunden.' :
+                    'Nach dem Import links einen Sprite auswählen.'));
+        }
+        if (frame?.pivotEvidence)
+            items.push(line('Letzter Pivot-Prüfvermerk', frame.pivotEvidence.reviewNotes));
+        return section('Zinnenlineal · Messdaten im gemeinsamen Editor', items);
+    }
     function aiActiveCandidates() {
         const frame = primary();
         return frame ? aiCandidates.filter(row => row.frameId === frame.id &&
@@ -1198,7 +1339,7 @@
             if (primary()?.id !== frame.id || primary()?.imageId !== sourceImageId)
                 throw new Error('Sprite wurde während der Anfragevorbereitung geändert.');
             aiLastRequest = { frameId: frame.id, sourceImageId,
-                request: payload.request };
+                request: payload.request, requestSHA256: payload.requestSHA256 };
             download(payload.bytes, C.safeName(frame.name) + '_ki_auftrag.zip');
             message('KI-Auftragsbundle exportiert. Keine API-Anfrage gesendet.');
         });
@@ -1206,17 +1347,29 @@
     async function aiImportCandidates() {
         const frame = primary();
         if (!frame) throw new Error('Zuerst einen Sprite auswählen.');
-        const files = await askFiles('.png', true);
+        const files = await askFiles('.png,.json', true);
         if (!files.length) return;
-        if (files.length > 4 || files.some(file => !/\.png$/i.test(file.name)))
-            throw new Error('Maximal vier unabhängige PNG-Kandidaten importieren.');
+        const pngs = files.filter(file => /\.png$/i.test(file.name));
+        const metas = files.filter(file => /_meta\.json$/i.test(file.name));
+        if (pngs.length < 1 || pngs.length > 4 ||
+                files.length !== pngs.length + metas.length ||
+                metas.length > pngs.length || files.length > 8)
+            throw new Error('Bis vier PNG-Kandidaten und optional ihre _meta.json-Dateien wählen.');
+        const fileNames = new Set(files.map(file => file.name.toLowerCase()));
+        if (fileNames.size !== files.length)
+            throw new Error('Doppelte Kandidatendateinamen.');
         const sourceImageId = frame.imageId;
-        await task('Bildvarianten getrennt prüfen', async opts => {
+        await task('Bildvarianten und Herkunftsnachweise prüfen', async opts => {
             const original = store().get(sourceImageId), incoming = [];
+            const sourceSHA256 = await K.sha256(await store().bytes(sourceImageId, opts.signal));
+            const planned = aiLastRequest?.frameId === frame.id &&
+                aiLastRequest?.sourceImageId === sourceImageId ?
+                aiLastRequest.requestSHA256 : null;
             let totalPixels = 0;
-            for (let index = 0; index < files.length; index++) {
+            const usedMetas = new Set();
+            for (let index = 0; index < pngs.length; index++) {
                 K.aborted(opts.signal);
-                const file = files[index];
+                const file = pngs[index];
                 if (file.size > C.LIMITS.fileBytes)
                     throw new Error('Kandidatenbild ist größer als das Dateibudget.');
                 const bytes = new Uint8Array(await file.arrayBuffer());
@@ -1224,18 +1377,33 @@
                 totalPixels += image.width * image.height;
                 if (totalPixels > C.LIMITS.totalPixels)
                     throw new Error('Kandidaten überschreiten das 32-Megapixel-Arbeitsbudget.');
+                const checksum = await K.sha256(bytes);
+                const metaName = file.name.replace(/\.png$/i, '_meta.json').toLowerCase();
+                const metaFile = metas.find(candidate => candidate.name.toLowerCase() === metaName);
+                let receipt = null, receiptSHA256 = null;
+                if (metaFile) {
+                    if (metaFile.size > 1024 * 1024)
+                        throw new Error('KI-Manifest ist zu groß.');
+                    const metaBytes = new Uint8Array(await metaFile.arrayBuffer());
+                    const json = C.json(new TextDecoder('utf-8', { fatal: true }).decode(metaBytes));
+                    receipt = AI.verifyCandidateMetadata(json, sourceSHA256, checksum, planned);
+                    receiptSHA256 = await K.sha256(metaBytes);
+                    usedMetas.add(metaName);
+                }
                 incoming.push({ frameId: frame.id, sourceImageId,
-                    name: file.name, image,
-                    sha256: await K.sha256(bytes),
+                    name: file.name, image, sha256: checksum, receipt,
+                    receiptSHA256, sourceSHA256,
                     review: AI.reviewCandidate(original, image) });
-                opts.progress(index + 1, files.length, file.name);
+                opts.progress(index + 1, pngs.length, file.name);
                 await I.tick();
             }
+            if (usedMetas.size !== metas.length)
+                throw new Error('Ein KI-Metadatenbeleg besitzt keinen gleichnamigen PNG-Kandidaten.');
             if (primary()?.id !== frame.id || primary()?.imageId !== sourceImageId)
                 throw new Error('Sprite wurde während des Imports geändert.');
             aiCandidates = incoming;
             aiCandidateIndex = 0;
-            message('KI-Kandidaten als getrennte Vorschauen geladen; nichts übernommen.');
+            message('KI-Varianten und vorhandene SHA-Belege geprüft; keine Bilddatei übernommen.');
         });
     }
     function aiApprovalDialog() {
@@ -1256,6 +1424,11 @@
             line('Veränderte Pixel', review.stats.changedPixels),
             line('Geänderte Alphawerte', review.stats.alphaChanged),
             ...review.warnings.map(msg => el('p', { class: 'warning-text', text: msg })),
+            line('Quell- und Manifestabgleich', candidate.receipt ?
+                (candidate.receipt.requestMatched ?
+                    'SHA von Quelle, Kandidat und Auftrag passen' :
+                    'SHA von Quelle und Kandidat passen') :
+                'Kein Generatorbeleg, Herkunft unbestätigt'),
             note('Nur die aktuelle Arbeitskopie wird ersetzt. Das Original und der Undo-Verlauf bleiben erhalten. ' +
                 'Masken, Pivots und Spielkompatibilität müssen separat geprüft werden.'),
             checkbox('Ich habe Ausrichtung, Perspektive, Silhouette, Transparenz, Masken und Rechte geprüft.', false, 'reviewed'),
@@ -1286,12 +1459,12 @@
                     sourceSHA256: currentSHA,
                     candidateSHA256: candidate.sha256,
                     imageContentSHA256: I.imageContentSHA256(candidate.image),
-                    requestedModel: aiLastRequest?.frameId === frame.id &&
-                        aiLastRequest?.sourceImageId === sourceImageId ?
-                        aiLastRequest.request.model : 'unverified',
-                    requestReferenceSHA256: aiLastRequest?.frameId === frame.id &&
-                        aiLastRequest?.sourceImageId === sourceImageId ?
-                        aiLastRequest.request.referenceSHA256 : null,
+                    // A JSON receipt is self-declared, not a provider signature.
+                    requestedModel: candidate.receipt?.modelClaim || 'unverified',
+                    requestReferenceSHA256: candidate.receipt ?
+                        candidate.sourceSHA256 : null,
+                    requestSHA256: candidate.receipt?.requestSHA256 || null,
+                    generatorMetadataSHA256: candidate.receiptSHA256 || null,
                     reviewNotes: notes,
                     manualReview: true, apiOriginVerified: false
                 };
@@ -1347,6 +1520,8 @@
             ]),
             section('2 · Kandidaten vergleichen', [
                 buttons(button('Kandidaten-PNGs importieren…', aiImportCandidates)),
+                note('Optional die gleichnamigen *_meta.json-Dateien mit auswählen. ' +
+                    'Die Prüfsummen werden mit Quelle und exportiertem Auftrag abgeglichen.'),
                 ...(candidate ? [
                     fields(field('Variante', String(Math.min(aiCandidateIndex, candidates.length - 1)), {
                         wide: true, options: candidates.map((row, n) => [
@@ -1356,6 +1531,13 @@
                     damagePreview(candidate.image, 'Ungeprüfte Variante'),
                     line('Pixel verändert', candidate.review.stats.changedPixels),
                     line('Alpha verändert', candidate.review.stats.alphaChanged),
+                    line('Generatorbeleg', candidate.receipt ?
+                        (candidate.receipt.requestMatched ?
+                            'Quell- und Auftrags-SHA passen' :
+                            'Quell-SHA passt, Auftrag nicht hier vorbereitet') :
+                        'Ohne Manifest · Herkunft unbestätigt'),
+                    note('Ein Manifest allein beweist nicht den API-Absender. ' +
+                        'Nur das Prüfprotokoll und die manuelle Abnahme werden übernommen.'),
                     ...candidate.review.errors.map(msg =>
                         el('p', { class: 'error-text', text: msg })),
                     ...candidate.review.warnings.map(msg =>
@@ -1389,7 +1571,7 @@
             else if (panel === 'damage')
                 root.append(...damageSection());
             else if (panel === 'geometry')
-                root.append(geometrySection());
+                root.append(geometrySection(), legacyPivotSection());
             else if (panel === 'ai')
                 root.append(...aiSection());
             else if (panel === 'checks')
@@ -2052,6 +2234,30 @@
                 if (m && t.zoom > .16)
                     drawLabel(ctx, 'Δ ' + m.dx + ' / ' + m.dy + ' px',
                         ax + 9 / t.zoom, ay - 7 / t.zoom, t.zoom);
+            }
+        }
+        if (view === 'sprite' && showLegacyPivot && legacyPivotFile &&
+                $('compare').value === 'current') {
+            const review = legacyPivotReview(), frame = primary();
+            const item = model.items.find(p => p.frame?.id === frame?.id &&
+                p.imageId === frame?.imageId);
+            if (item && review && ['review', 'already'].includes(review.status)) {
+                const proposed = review.row.newPivot;
+                const currentAnchorX = item.x + frame.pivot.x * item.width;
+                const currentAnchorY = item.y + (1 - frame.pivot.y) * item.height;
+                const x = currentAnchorX - proposed.x * item.width;
+                const y = currentAnchorY - (1 - proposed.y) * item.height;
+                ctx.save();
+                ctx.strokeStyle = '#da8322';
+                ctx.fillStyle = '#da832217';
+                ctx.lineWidth = 2 / t.zoom;
+                ctx.setLineDash([5 / t.zoom, 3 / t.zoom]);
+                ctx.fillRect(x, y, item.width, item.height);
+                ctx.strokeRect(x, y, item.width, item.height);
+                ctx.setLineDash([]);
+                if (t.zoom > .14)
+                    drawLabel(ctx, 'Messvorschlag · Pivot', x, y - 8 / t.zoom, t.zoom);
+                ctx.restore();
             }
         }
         if (view === 'scene' || view === 'atlas')

@@ -111,3 +111,58 @@ def test_inverse_registration_reuses_existing_strict_geometry(tmp_path):
     assert ai.png_dimensions(normalized) == (64, 32)
     assert metadata["registered"]
     assert metadata["sampling"] == "nearest"
+
+
+def test_mock_generator_records_bound_candidate_receipts_and_completed_run(tmp_path, monkeypatch):
+    bundle = sample_bundle(tmp_path, variants=1)
+    request, images = ai.load_request(bundle)
+    assert request["_request_sha256"] == hashlib.sha256(
+        zipfile.ZipFile(bundle).read("request.json")).hexdigest()
+    monkeypatch.setenv("OPENAI_API_KEY", "offline-test-only")
+    monkeypatch.setattr(ai, "_generate_one",
+                        lambda *_args: (images[0][1], "synthetic-offline-test"))
+    result = ai.execute(request, images, tmp_path / "candidate_run")
+    status = json.loads((tmp_path / "candidate_run" / "run-status.json").read_text())
+    meta = json.loads((tmp_path / "candidate_run" / "variant_01_meta.json").read_text())
+    assert result["generated"] == 1
+    assert status["status"] == "candidates_ready_for_review"
+    assert status["completedVariants"] == 1
+    assert meta["requestSHA256"] == request["_request_sha256"]
+    assert meta["candidateSHA256"] == hashlib.sha256(
+        (tmp_path / "candidate_run" / "variant_01.png").read_bytes()).hexdigest()
+    assert meta["needsManualReview"]
+    assert not meta["inGameTested"]
+    assert not result["installed"]
+
+
+def test_interrupted_multi_variant_generation_is_marked_partial(tmp_path, monkeypatch):
+    bundle = sample_bundle(tmp_path, variants=2)
+    request, images = ai.load_request(bundle)
+    calls = {"n": 0}
+
+    def fake_image(*_args):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise ValueError("offline simulated second request failure")
+        return images[0][1], "offline-first"
+
+    monkeypatch.setenv("OPENAI_API_KEY", "offline-test-only")
+    monkeypatch.setattr(ai, "_generate_one", fake_image)
+    folder = tmp_path / "interrupted"
+    with pytest.raises(ValueError, match="simulated"):
+        ai.execute(request, images, folder)
+    status = json.loads((folder / "run-status.json").read_text())
+    assert status["status"] == "partial_failure"
+    assert status["expectedVariants"] == 2
+    assert status["completedVariants"] == 1
+    assert (folder / "variant_01_meta.json").is_file()
+    assert not (folder / "variant_02.png").exists()
+
+
+def test_real_unity_game_root_detected_even_when_directory_renamed(tmp_path):
+    synthetic_game = tmp_path / "RenamedQA"
+    synthetic_game.mkdir()
+    (synthetic_game / "UnityPlayer.dll").write_bytes(b"sentinel")
+    (synthetic_game / "Stronghold Crusader Definitive Edition.exe").write_bytes(b"sentinel")
+    with pytest.raises(ValueError, match="Spielinstallation"):
+        ai._safe_output(synthetic_game / "work" / "ai_candidate")
