@@ -947,13 +947,6 @@ class HudMenuWorkshop(ttk.Frame):
         if item.get("format","").lower() not in ("png","jpg","jpeg"):
             messagebox.showerror("ORIGINS Grafik","Nur PNG/JPG bearbeitbar.",parent=self)
             return
-        if not messagebox.askyesno(
-            "Originalgrafik als lokale Bearbeitungskopie",
-            f"{item['path']}\n\nDie Git-/LFS-Quelle wird erst per SHA geprüft. "
-            "Danach wird die Bildkopie im Werkstattordner erzeugt. "
-            "Noesis-Ressourcenschlüssel werden nicht automatisch geändert.",
-            parent=self,default="no"):
-            return
         if self._busy:return
         folder=self.kind_var.get()
         project=self._project(create=True)
@@ -1025,13 +1018,6 @@ class HudMenuWorkshop(ttk.Frame):
             "Paketname","Name des HUD-/Menüpakets:",
             parent=self,initialvalue="Europe HUD und Menüs")
         if not name:return
-        if not messagebox.askyesno(
-            "DLL-freies Paket",
-            f"{report['assets']} geprüfte Assets als versionneutrales "
-            f"Manifest-0-Paket {guid} unter work/se-asset-mods/ bauen?\n"
-            "Es erfolgt keine Änderung am Spiel oder Script Extender.",
-            parent=self,default="no"):
-            return
         self.app.run(
             [str(TOOLS/"se_asset_package.py"),"--source",str(self._project()),
              "--guid",guid,"--name",name],

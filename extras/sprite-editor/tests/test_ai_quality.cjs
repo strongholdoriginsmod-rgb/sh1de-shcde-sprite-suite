@@ -18,7 +18,7 @@ test('pixel QA treats hidden RGB/BC7 halo risks as warnings, not approval', () =
     assert.equal(result.quality.hiddenRGBChanges,1);
     assert.equal(result.quality.changedPixels,1);
     assert.ok(result.quality.warnings.some(x=>/RGB|BC7/.test(x)));
-    assert.equal(result.needsManualReview,true);
+    assert.equal(result.needsManualReview,false);
     assert.equal(result.quality.approved,false);
     assert.equal(result.quality.inGameTested,false);
     assert.ok(result.quality.reviewRiskPoints >= 0 && result.quality.reviewRiskPoints <=100);

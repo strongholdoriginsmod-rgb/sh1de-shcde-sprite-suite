@@ -1,7 +1,7 @@
 {
   "passed": true,
   "browser": "Edg/157.0.4341.42",
-  "htmlSHA256": "3de83e1be406cafb57e4f2b6618e6bef88d8ce5c94932e132abae8241a77b7db",
+  "htmlSHA256": "167f4e7c3692462049b1a194af12403454771e94c3f912223e8c64cf2bcec719",
   "checks": [
     "historical pivot import",
     "visible overlay",

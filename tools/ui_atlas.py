@@ -25,10 +25,11 @@ sucht, findet fuer Stronghold 1 nichts - es hat keinen Extender.  Die Blaetter
 lagen die ganze Zeit im Spiel selbst.
 
 Die Rechtecke sind allerdings ANDERS gepackt als bei Crusader, Crusaders XAML
-ist auf Stronghold 1 also nicht anwendbar.  Und Stronghold 1 liefert keine
-eigenen Woerterbuecher mit; Noesis uebersetzt sein XAML beim Bauen in die
-Anwendung.  Zum Herausschneiden dient deshalb tools/ui_sh1_extract.py, das die
-Rechtecke aus dem Bild selbst gewinnt.
+ist auf Stronghold 1 also nicht anwendbar. Die SH1-DE-Ressourcen lassen sich
+mit tools/ui_sh1_hud.py aus MonoBehaviour-Daten des eigenen Spiels lesen;
+der exportierte Arbeitsstand enthält baseline/UI-MasterAtlas.xaml.
+tools/ui_sh1_extract.py bleibt ein bildbasierter Spezialist für Ausschnitte.
+Freie vorhandene PNG/XAML-Paare öffnet tools/ui_atlas_workspace.py direkt.
 
     python tools/ui_atlas.py export --out work/ui
     ... edit the PNGs in work/ui/UI-MasterAtlas/ with any image editor ...

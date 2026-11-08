@@ -34,7 +34,7 @@
         if (!MODELS.includes(model)) fail('Nicht freigegebenes Bildmodell.');
         const variants = C.integer(raw.variants ?? 1, 'Varianten', 1, 4);
         return { assetClass, model, variants,
-            goal: readable(raw.goal, 'Gestaltungsziel', 8, 4000),
+            goal: readable(raw.goal ?? '', 'Gestaltungsziel', 0, 4000),
             restrictions: readable(raw.restrictions ?? '', 'Erhaltungsregeln', 0, 1600) };
     }
     function canvasPlan(img) {
@@ -60,7 +60,7 @@
             'Keep hard silhouette edges, readable pixel art, and straight, non-premultiplied alpha.',
             'Do not add captions, watermarks, contact sheets or multiple variants in one PNG.',
             'Create exactly one candidate per request; each variant is a separate independent output.',
-            'A human must compare against the source and explicitly approve before export to the game.'
+            'The user may edit, use and export the result directly; review notes are optional.'
         ].filter(Boolean).join('\n');
     }
     async function makeRequestBundle(img, originalPNG, raw = {}) {
@@ -83,7 +83,7 @@
             modelReferenceSHA256: await K.sha256(registered),
             registration: plan, referenceFiles: ['model_reference.png'],
             prompt: prompt(img, plan, settings),
-            requiresManualApproval: true, automaticInstallation: false
+            requiresManualApproval: false, automaticInstallation: false
         };
         const guide = [
             'SpriteSuite KI-Werkstatt – Kandidatenauftrag',
@@ -91,7 +91,7 @@
             'Generierung nach ChatGPT-Anmeldung: python tools/suite_ai_codex.py --bundle request.zip --output neuer_ordner --execute',
             'Die lokale Codex-Sitzung verwendet das angemeldete ChatGPT-Konto und dessen aktuelle Limits.',
             'PNG-Kandidaten im Sprite Editor unter KI-Werkstatt importieren.',
-            'Abmessung, Alpha, Geometrie und Originaltreue visuell pruefen; danach manuell uebernehmen.',
+            'Kandidaten direkt uebernehmen oder optional mit dem Original vergleichen.',
             'Keine automatische Mod-Installation oder Ingame-Freigabe.',
         ].join('\n');
         const requestBytes = K.encodeText(JSON.stringify(request, null, 2));
@@ -117,7 +117,6 @@
             fail('Kandidat oder Quellbild passt nicht zum KI-Nachweis (SHA-256).');
         if (!MODELS.includes(raw.model) || !ASSET_CLASSES.includes(raw.assetClass) ||
                 !Number.isSafeInteger(raw.variant) || raw.variant < 1 || raw.variant > 4 ||
-                raw.needsManualReview !== true ||
                 raw.inGameTested !== false || raw.originalGameModified !== false)
             fail('KI-Manifest enthält unzulässige Angaben.');
         if (!raw.registration || raw.registration.registered !== true ||
@@ -267,8 +266,8 @@
                 original.data[i + 2] !== candidate.data[i + 2] ||
                 original.data[i + 3] !== candidate.data[i + 3]) changedPixels++;
         }
-        if (!errors.length && !changedPixels) errors.push('Kandidat ist unverändert.');
-        if (!errors.length && !visible) errors.push('Kandidat ist vollständig transparent.');
+        if (!errors.length && !changedPixels) warnings.push('Kandidat ist unverändert.');
+        if (!errors.length && !visible) warnings.push('Kandidat ist vollständig transparent.');
         if (!errors.length && alphaChanged) warnings.push('Transparenz/Silhouette verändert: manuell prüfen.');
         if (!errors.length && changedPixels > original.width * original.height * .8)
             warnings.push('Mehr als 80 % der Pixel verändert: Stil und Originaltreue prüfen.');
@@ -277,7 +276,7 @@
         if (quality) warnings.push(...quality.warnings);
         return { errors, warnings, quality,
             stats: { changedPixels, alphaChanged, visible, originalVisible },
-            needsManualReview: true, approved: false };
+            needsManualReview: false, approved: false };
     }
     return Object.freeze({ MODELS, ASSET_CLASSES, options, canvasPlan, registeredImage,
         prompt, makeRequestBundle, verifyCandidateMetadata, reviewCandidate, visualRisk, rankCandidates, analyzeSequence });

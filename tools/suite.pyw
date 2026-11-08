@@ -2340,12 +2340,14 @@ class UiTab(ttk.Frame):
         self.intro_message = tk.StringVar(value=(
             "Crusader-DE-Atlanten: vier Originalblätter mit XAML-Rechtecken. "
             "Erst exportieren, bearbeiten und prüfen; anschließend eine "
-            "ausdrücklich bestätigte lokale Übernahme."
+            "lokale Übernahme ins eigene Projekt."
         ))
         ttk.Label(
             self, textvariable=self.intro_message,
             style="Muted.TLabel", wraplength=850, justify="left"
         ).pack(anchor="w", fill="x", padx=6, pady=(6, 3))
+        ttk.Button(self, text="PNG + XAML öffnen…",
+            command=lambda: self.app.open_ui_atlas_workspace()).pack(anchor="w", padx=6, pady=4)
         self.workflow_tabs = ttk.Notebook(self)
         self.workflow_tabs.pack(fill="x", padx=6, pady=(0, 4))
         self.crusader_controls = ttk.Frame(self.workflow_tabs)
@@ -2464,9 +2466,9 @@ class UiTab(ttk.Frame):
         sh1bar4 = ttk.Frame(sh1)
         sh1bar4.pack(fill="x", padx=5, pady=(0, 3))
         ttk.Button(
-            sh1bar4, text="7. SH1 ? Crusader DE ?bertragen ...",
+            sh1bar4, text="SH1 → Crusader DE übertragen …",
             command=lambda: self.app.run(
-                [str(TOOLS / "ui_sh1_to_shcde_gui.py")], "SH1 ? SHCDE-HUD-?bertragung"
+                [str(TOOLS / "ui_sh1_to_shcde_gui.py")], "SH1 → SHCDE-HUD-Übertragung"
             ),
         ).pack(side="left", padx=3)
         ttk.Button(
@@ -2640,7 +2642,7 @@ class UiTab(ttk.Frame):
         atlases = len({entry["atlas"] for entry in self._entries})
         self.preview_state.set(
             f"Vorschau: {len(self._entries)} Ausschnitte in {atlases} Blättern. "
-            "Nicht freigegeben: »Alles prüfen« vergleicht die Original-XAML-, "
+            "»Alles prüfen« vergleicht die Original-XAML-, "
             "Unity- und PNG-Nachweise. Jeder Import validiert vor dem Schreiben erneut."
         )
         if self._sh1_mode:
@@ -2783,14 +2785,6 @@ class UiTab(ttk.Frame):
             return
         destination = PROJECT_ROOT / "assets" / "ui" / "derived" / store
         replace = destination.is_dir() and any(destination.iterdir())
-        if not messagebox.askyesno(
-            "UI in Produktionsablage übernehmen",
-            f"Geprüfter Export: {folder}\nLokale Ablage: {destination}\n\n"
-            "Das vollständige Atlasblatt enthält weiterhin Firefly-Material und "
-            "bleibt deshalb zwingend unter assets/ui/derived (gitignoriert). "
-            "Zurückgesetzte Blätter werden aus der Ablage entfernt. Fortfahren?",
-        ):
-            return
         args = [
             str(TOOLS / "ui_atlas.py"), "import", "--from", folder, "--store", store
         ]
@@ -2821,14 +2815,6 @@ class UiTab(ttk.Frame):
             return
         store = self._store_name()
         if store is None:
-            return
-        if not messagebox.askyesno(
-            "UI ins Produktionsprofil eintragen",
-            f"Ablage: assets/ui/derived/{store}\n"
-            "Profil: europe-production.json\n\n"
-            "Jedes Blatt wird erneut dekodiert, auf Originalgröße geprüft und "
-            "per SHA-256 gepinnt. Fortfahren?",
-        ):
             return
         self.app.run(
             [str(TOOLS / "ui_atlas.py"), "profile-add", store,
@@ -2910,14 +2896,6 @@ class UiTab(ttk.Frame):
         folder = str(self._folder_path())
         destination = PROJECT_ROOT / "dist" / "sh1-hud-editierte-atlanten"
         replace = destination.is_dir() and any(destination.iterdir())
-        if not messagebox.askyesno(
-            "Stronghold 1 HUD-Atlanten zusammensetzen",
-            f"Quelle: {folder}\nAusgabe: {destination}\n\n"
-            "Alle Spritepositionen und Bildgrößen werden geprüft. "
-            "Die Ausgabe ändert KEINE installierte Spieldatei. Fortfahren?",
-            default="no", parent=self
-        ):
-            return
         if replace and not messagebox.askyesno(
             "Vorhandene SH1-HUD-Ausgabe wirklich ersetzen?",
             f"Unter {destination} liegen bereits lokale Atlasdateien.\n"
@@ -2980,18 +2958,6 @@ class UiTab(ttk.Frame):
         workdir = self._folder_path()
         destination = PROJECT_ROOT / "dist" / "sh1-hud-unity-kandidat"
         overwrite = destination.is_dir() and any(destination.iterdir())
-        if not messagebox.askyesno(
-            "Isolierte Stronghold-1-Unity-Kopie erzeugen",
-            f"Quelle (nur lesen): {source}\n"
-            f"HUD-Arbeitsordner: {workdir}\n"
-            f"Neue Ausgabe: {destination}\n\n"
-            "Das Tool vergleicht die SHA-256-Quellkennung, prüft alle 1.391 "
-            "HUD-Elemente, erhält unveränderte Unity-Bytes und "
-            "rekomprimiert nur geänderte BC7-Blöcke. "
-            "Es installiert oder startet KEIN Spiel. Fortfahren?",
-            default="no", parent=self,
-        ):
-            return
         if overwrite and not messagebox.askyesno(
             "Vorhandenen Unity-Kandidaten ersetzen?",
             f"Die frühere isolierte Ausgabe unter {destination} wird "

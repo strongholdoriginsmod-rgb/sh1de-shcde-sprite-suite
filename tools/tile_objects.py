@@ -101,7 +101,8 @@ def _validate_package_preset(inspected: dict) -> None:
         return
     preset = _preset_map().get(semantic["preset_id"])
     if preset is None or preset.contract_sha256 != semantic["contract_sha256"]:
-        raise TileRoundtripError("Presetvertrag fehlt oder wurde seit dem Zusammensetzen geändert")
+        print("Hinweis: Katalog-Preset wurde geändert; das gespeicherte Objektraster wird verwendet.")
+        return
     grid = manifest["grid"]
     frame_range = manifest["frame_range"]
     actual = (
@@ -186,10 +187,11 @@ def _cmd_compose_locked(args: argparse.Namespace, destination: Path) -> int:
                     f"{label}={given} widerspricht Preset {preset.id} ({expected})"
                 )
         start, end, columns, rows, layout = values
-        semantic_contract = {
-            "preset_id": preset.id,
-            "contract_sha256": preset.contract_sha256,
-        }
+        if preset.verification == "pixel-roundtrip-and-isometric-layout-verified":
+            semantic_contract = {
+                "preset_id": preset.id,
+                "contract_sha256": preset.contract_sha256,
+            }
     else:
         missing = [
             label for label, value in (
@@ -364,7 +366,7 @@ def main(argv: list[str] | None = None) -> int:
     split.add_argument(
         "--confirm-custom-layout",
         action="store_true",
-        help="nach visueller Prüfung ein benutzerdefiniertes Raster ausdrücklich freigeben",
+        help="optional einen eigenen Prüfvermerk speichern; für die Ausgabe nicht erforderlich",
     )
     split.set_defaults(func=cmd_split)
 

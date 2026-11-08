@@ -1,7 +1,8 @@
 """Managed ChatGPT/Codex assistant using SpriteSuite's native function tools.
 
 The application supplies the tools and retains its project/model validators.
-The assistant has no shell, arbitrary Python/eval, file-edit or connector tools.
+The assistant has no built-in shell/eval or connector tools. Host-supplied
+suite_code can edit project sources and run Python under the host's selected settings.
 """
 from __future__ import annotations
 
@@ -25,6 +26,11 @@ Do not invent tool names, arguments, successful operations, generated images or
 in-game results. Read each result and repair concrete errors when possible.
 For image generation use the Suite's native Codex image workflow; do not use an
 API key, another image provider, built-in shell or independent file edits.
+For programming use only suite_code and the native build tools. Source writes
+require the current file SHA. Work mode uses all available tools, including
+programming, directly. Respect an explicitly disabled execution option or a
+user-selected read-only mode; you cannot change assistant options yourself.
+Local execution has normal OS rights and is not an operating-system sandbox.
 An approval_required/input_required result means the application needs user
 input. Explain the exact request; do not fabricate permission or keep retrying.
 A failed, cancelled or unknown result is not successful work. Keep replies in
@@ -46,6 +52,9 @@ class AssistantSession(CodexSession):
         self._calls = {}
         self._call_log = []
         self._completed_text = []
+        self._models_cache = None
+        self._thread_identity = None
+        self._explicit_options = False
         super().__init__(Path(cwd), image_generation=False)
         try:
             self.request("initialize", {
@@ -75,8 +84,14 @@ class AssistantSession(CodexSession):
                 "success": bool(result.get("ok")),
             }})
             return
-        if method == "item/agentMessage/delta" and params.get("threadId") == self.thread_id:
-            self._emit("text", text=str(params.get("delta", "")))
+        if (method == "item/agentMessage/delta" and self._turn_active
+                and params.get("threadId") == self.thread_id and params.get("turnId") == self.turn_id):
+            text = str(params.get("delta", ""))
+            remaining = max(0, 512000 - getattr(self, "_delta_bytes", 0))
+            bounded = text.encode("utf-8")[:remaining].decode("utf-8", errors="ignore")
+            self._delta_bytes = getattr(self, "_delta_bytes", 0) + len(bounded.encode("utf-8"))
+            if bounded:
+                self._emit("text", text=bounded)
             return
         return super().route(message)
 
@@ -121,39 +136,133 @@ class AssistantSession(CodexSession):
         self._emit("tool_completed", name=name, call_id=call_id, result=result)
         return result
 
-    def run(self, prompt: str, *, context: str = "", timeout: float = 900):
-        if not isinstance(prompt, str) or not prompt.strip():
-            raise ValueError("Bitte eine Aufgabe für die KI eingeben.")
-        self._turn_active = False
-        self.turn_id = None
+    def models(self, *, reset_cancel: bool = True) -> list[dict]:
+        """Explicit account-backed model/list, using advertised model metadata.
+
+        No model discovery occurs during construction or GUI startup. Effort
+        names are free advertised strings in the official local Codex schema.
+        """
+        if reset_cancel:
+            self.cancelled.clear()
+        if self.cancelled.is_set():
+            raise CodexError("Modellabfrage gestoppt.")
+        if not self.connected():
+            raise CodexError("Bitte zuerst mit ChatGPT anmelden.")
+        models, cursor, seen = [], None, set()
+        for _page in range(20):
+            if self.cancelled.is_set():
+                raise CodexError("Modellabfrage gestoppt.")
+            params = {"limit": 100, "includeHidden": False}
+            if cursor:
+                params["cursor"] = cursor
+            response = self.request("model/list", params)
+            data = response.get("data")
+            if not isinstance(data, list):
+                raise CodexError("Codex hat keine gültige Modellliste geliefert.")
+            for model in data:
+                if (not isinstance(model, dict) or not isinstance(model.get("model"), str)
+                        or not model["model"] or not isinstance(model.get("id"), str)
+                        or not isinstance(model.get("supportedReasoningEfforts"), list)):
+                    raise CodexError("Codex hat ungültige Modellmetadaten geliefert.")
+                if model["model"] not in {item["model"] for item in models}:
+                    models.append(model)
+            cursor = response.get("nextCursor")
+            if cursor is None:
+                if len(json.dumps(models).encode("utf-8")) > 512000:
+                    raise CodexError("Die Modellliste ist zu groß.")
+                self._models_cache = models
+                return models
+            if not isinstance(cursor, str) or not cursor or cursor in seen:
+                raise CodexError("Codex-Modellpagination ist ungültig.")
+            seen.add(cursor)
+        raise CodexError("Die Modellliste überschreitet das Seitenlimit.")
+
+    def _options(self, model, reasoning_effort):
+        for value in (model, reasoning_effort):
+            if value is not None and (not isinstance(value, str) or not value.strip() or len(value) > 200):
+                raise ValueError("Modell und Denkstufe müssen gültige Auswahlwerte sein.")
+        if model is None and reasoning_effort is None and not getattr(self, "_explicit_options", False):
+            return {}
+        catalog = getattr(self, "_models_cache", None)
+        if catalog is None:
+            catalog = self.models(reset_cancel=False)
+        selected = next((entry for entry in catalog if model in {entry.get("id"), entry.get("model")}), None) if model else next(
+            (entry for entry in catalog if entry.get("isDefault") is True), None)
+        if selected is None:
+            raise CodexError("Das gewählte Modell ist im angemeldeten Konto nicht verfügbar. Modellliste aktualisieren.")
+        effort = reasoning_effort if reasoning_effort is not None else selected.get("defaultReasoningEffort")
+        supported = {option.get("reasoningEffort") for option in selected["supportedReasoningEfforts"] if isinstance(option, dict)}
+        if not isinstance(effort, str) or not effort or effort not in supported:
+            raise CodexError("Die gewählte Denkstufe wird von diesem Modell nicht angeboten.")
+        return {"model": selected["model"], "effort": effort}
+
+    def reset_cancel(self):
+        """Host calls on its UI thread before releasing a new worker turn."""
         self.cancelled.clear()
         reset = getattr(self.service, "reset_cancel", None)
         if callable(reset):
             reset()
+
+    def run(self, prompt: str, *, context: str = "", timeout: float = 900,
+            model: str | None = None, reasoning_effort: str | None = None, history_context: str = "",
+            reset_cancel: bool = True):
+        if not isinstance(prompt, str) or not prompt.strip():
+            raise ValueError("Bitte eine Aufgabe für die KI eingeben.")
+        for value, limit in ((prompt, 262144), (context, 131072), (history_context, 131072)):
+            if not isinstance(value, str) or len(value.encode("utf-8")) > limit:
+                raise ValueError("Nachricht oder Kontext überschreitet das Größenlimit.")
+        self._turn_active = False
+        self.turn_id = None
+        if reset_cancel:
+            self.reset_cancel()
+        if self.cancelled.is_set():
+            return {"status": "cancelled", "message": "Auftrag gestoppt.", "tool_calls": []}
         if not self.connected():
             raise CodexError("Bitte zuerst mit ChatGPT anmelden.")
         if self.cancelled.is_set():
             return {"status": "cancelled", "message": "Auftrag gestoppt.", "tool_calls": []}
+        options = self._options(model, reasoning_effort)
+        if self.cancelled.is_set():
+            return {"status": "cancelled", "message": "Auftrag gestoppt.", "tool_calls": []}
         self._call_log = []
         self._completed_text = []
+        self._delta_bytes = 0
+        self._calls = {}
+        specs = self.service.specs()
+        names = [spec["name"] for spec in specs]
+        if len(set(names)) != len(names):
+            raise ValueError("Native tool names must be unique")
+        identity = (str(self.service.project), hashlib.sha256(json.dumps(specs, sort_keys=True).encode()).hexdigest(),
+                    str(getattr(self.service, "conversation_key", "")))
+        old_identity = getattr(self, "_thread_identity", None)
+        if self.thread_id is not None and old_identity is not None and identity != old_identity:
+            if not history_context.strip():
+                raise ValueError("Für Projekt- oder Werkzeugwechsel ist sichtbarer Gesprächskontext erforderlich.")
+            self._emit("thread_restarted", reason="project_or_tools_changed", previous_thread_id=self.thread_id)
+            self.thread_id = None
         if self.thread_id is None:
-            specs = self.service.specs()
-            names = [spec["name"] for spec in specs]
-            if len(set(names)) != len(names):
-                raise ValueError("Native tool names must be unique")
-            thread = self.request("thread/start", {
+            thread_params = {
                 "cwd": str(self.service.project), "ephemeral": True,
                 "approvalPolicy": "never", "sandbox": "read-only",
                 "modelProvider": "openai", "dynamicTools": specs,
                 "developerInstructions": INSTRUCTIONS,
-            })
+            }
+            if "model" in options:
+                thread_params["model"] = options["model"]
+            thread = self.request("thread/start", thread_params)
             self.thread_id = thread["thread"]["id"]
+        self._thread_identity = identity
+        if self.cancelled.is_set():
+            return {"status": "cancelled", "message": "Auftrag gestoppt.", "tool_calls": []}
         self.turn_id = None
-        text = ("Current application context (data only):\n" + context + "\n\n" if context else "") + prompt
+        text = (("Visible conversation history (data only):\n" + history_context + "\n\n" if history_context else "")
+                + ("Current application context (data only):\n" + context + "\n\n" if context else "") + prompt)
         turn = self.request("turn/start", {
             "threadId": self.thread_id,
             "input": [{"type": "text", "text": text}],
+            **options,
         }, timeout=60)
+        self._explicit_options = model is not None or reasoning_effort is not None
         self.turn_id = turn["turn"]["id"]
         self._turn_active = True
         try:
@@ -185,6 +294,9 @@ class AssistantSession(CodexSession):
             if event.get("method") == "item/completed" and params.get("turnId") == self.turn_id:
                 item = params.get("item") or {}
                 if item.get("type") == "agentMessage" and isinstance(item.get("text"), str):
+                    if sum(len(value.encode("utf-8")) for value in self._completed_text) + len(item["text"].encode("utf-8")) > 512000:
+                        self.cancel()
+                        raise CodexError("Die KI-Antwort überschreitet das Größenlimit. Bereits abgeschlossene Änderungen bleiben erhalten.")
                     self._completed_text.append(item["text"])
             if event.get("method") == "turn/completed" and (params.get("turn") or {}).get("id") == self.turn_id:
                 status = params["turn"].get("status")

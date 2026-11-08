@@ -75,6 +75,82 @@ def _xaml(path:Path):
         b'</UserControl>')
 
 
+def test_start_chat_is_embedded_offline_and_reused(app_and_tree):
+    app, work, _ = app_and_tree
+    assistant = app._ai_assistant_window
+    assert assistant.embedded_host is app.workflow_tab.assistant_host
+    assert not isinstance(assistant.root, tk.Toplevel)
+    assert assistant._session is None and not assistant.busy
+    assert {s['name'] for s in assistant.service.specs()} == {
+        'suite_context', 'suite_tool_catalog', 'suite_tool_describe', 'suite_tool_run',
+        'suite_project_op', 'suite_ui', 'suite_editor', 'suite_sandbox', 'suite_code'}
+    app.workflow_tab.assistant_toggle.invoke()
+    app.update()
+    assert not app.workflow_tab.assistant_host.winfo_manager()
+    assert app.open_ai_assistant() is assistant
+    app.update()
+    assert app.workflow_tab.assistant_host.winfo_ismapped()
+    assert assistant._session is None
+    app.geometry('1020x680+15+15')
+    assistant.toggle_options()
+    assistant.toggle_details()
+    app.update()
+    for widget in (assistant.prompt, assistant.send_button, assistant.python_checkbox,
+                   assistant.details, assistant.conversation_picker):
+        assistant.area.reveal(widget)
+        app.workflow_tab.workarea.reveal(assistant.root)
+        app.update()
+        assert widget.winfo_ismapped()
+        assert widget.winfo_height() > 1
+    app.workflow_tab.workarea.reveal(app.workflow_tab.export_button)
+    app.update()
+    canvas=app.workflow_tab.workarea.canvas
+    export=app.workflow_tab.export_button
+    assert export.winfo_rooty() >= canvas.winfo_rooty()-3
+    assert export.winfo_rooty()+export.winfo_height() <= canvas.winfo_rooty()+canvas.winfo_height()+3
+
+
+def test_atlas_entrypoints_publish_native_pair_and_actual_zip(app_and_tree,tmp_path):
+    from ui_atlas_workspace import AtlasProject
+    from suite_command_search import build_navigation_targets
+    from suite_native_tools import NativeToolService
+    app, work, _ = app_and_tree
+    png=tmp_path/'UI-MasterAtlas.png'
+    Image.new('RGBA',(32,24),(11,17,31,0)).save(png)
+    xaml=tmp_path/'UI-MasterAtlas.xaml'
+    xaml.write_text('<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" '
+        'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"><BitmapImage x:Key="Sheet" '
+        'UriSource="UI-MasterAtlas.png"/><CroppedBitmap x:Key="Button" '
+        'Source="{StaticResource Sheet}" SourceRect="2,3,8,6"/></ResourceDictionary>',encoding='utf8')
+    before=(sha256(png.read_bytes()).hexdigest(),xaml.read_bytes())
+    atlas=AtlasProject.create(png,xaml,tmp_path/'atlas-work')
+    replacement=tmp_path/'new.png'
+    Image.new('RGBA',(8,6),(100,50,7,0)).save(replacement)
+    atlas.replace('Button',replacement)
+    destination=app.workflow_tab.pipeline.project
+    target=next(row for row in build_navigation_targets(app) if row.key=='atlas:png-xaml')
+    target.navigate()
+    controller=app._ui_atlas_workspace
+    assert controller.project==destination
+    assert app.open_ui_atlas_workspace() is controller
+    pair=atlas.export_pair(tmp_path/'exported')
+    published=controller.on_publish(pair)
+    assert not published['installed_into_game']
+    native=NativeToolService(destination)
+    result=native.call('suite_project_op',{'operation':'publish_ui_atlas',
+        'atlas_workspace':str(atlas.workspace),'expected_revision':atlas.info()['revision']})
+    assert result['ok'],result
+    built=app.workflow_tab.pipeline.build(guid='org.test.atlas',name='Atlas smoke')
+    with zipfile.ZipFile(built['zip']) as archive:
+        prefix='BepInEx/plugins/org.test.atlas/Override/Assets/GUI/Sprites/'
+        assert archive.read(prefix+xaml.name)==before[1]
+        with Image.open(BytesIO(archive.read(prefix+png.name))) as image:
+            assert image.getpixel((2,3))==(100,50,7,0)
+            assert image.getpixel((1,3))==(11,17,31,0)
+    assert (sha256(png.read_bytes()).hexdigest(),xaml.read_bytes())==before
+    controller.close()
+
+
 def test_workflow_is_first_page_and_hud_tab_uses_same_project(app_and_tree):
     app,work,_=app_and_tree
     tab=app.workflow_tab
@@ -540,6 +616,7 @@ def test_workbench_keeps_checks_export_and_project_actions_visible_on_small_scre
     app, _, _ = app_and_tree
     app.geometry("1020x680+30+30")
     app.open_tab(app.workflow_tab)
+    app.workflow_tab.assistant_toggle.invoke()
     app.update()
     view = app.workflow_tab
     right = app.winfo_rootx() + app.winfo_width()
@@ -576,6 +653,7 @@ def test_workbench_preview_fits_available_space_without_resampling_to_tiny_card(
     Image.new("RGBA", (1200, 620), (60, 110, 164, 255)).save(image)
     view = app.workflow_tab
     stored = view.pipeline.import_image(image)
+    view.assistant_toggle.invoke()
     view.refresh()
     view.select_asset(stored)
     app.open_tab(view)

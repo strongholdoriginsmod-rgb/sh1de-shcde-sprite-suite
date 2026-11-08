@@ -184,13 +184,7 @@
         const result = D.checkCandidate(intact, damaged);
         const pixels = result.stats.original?.visible || 0;
         const percent = stage.hpAtOrBelow;
-        // These are minimum evidence checks, NOT a substitute for an expert
-        // visual judgement of actual structural or fire damage.
-        const fraction = percent <= 15 ? 0.035 : percent <= 45 ? 0.015 :
-            percent <= 75 ? 0.0075 : 0.0025;
-        const minimum = pixels ? Math.min(pixels, Math.max(4, Math.ceil(pixels * fraction))) : 0;
         const actual = result.stats.changedPixels || 0;
-        result.stats.minimumVisibleChanges = minimum;
         result.stats.visibleChangesPercent = pixels ? Math.round(actual * 10000 / pixels) / 100 : 0;
         if (intact.width === damaged.width && intact.height === damaged.height) {
             let lostOpaque = 0, newOpaque = 0;
@@ -221,9 +215,6 @@
                         ' Pixel liegen über vollständig transparentem Schadensbild. Masken-/Teamfarben im Zielspiel prüfen.');
             }
         }
-        if (actual < minimum)
-            result.errors.push('Für den gewählten Zerstörungsgrad sind nur ' + actual +
-                ' von mindestens ' + minimum + ' sichtbar veränderten Pixeln vorhanden. Modell weiter beschädigen.');
         if (result.errors.length) return { ...result, intact, damaged };
         for (const other of profile.stages) {
             if (other.id === stage.id || other.kind !== stage.kind || other.status !== 'approved')
@@ -301,8 +292,6 @@
         return K.sha256Fallback(K.encodeText(JSON.stringify(payload)));
     }
     function approveStage(state, store, stageId, notes, visualConfirmed) {
-        if (visualConfirmed !== true)
-            fail('Visuelle Prüfung von Schäden, Perspektive, Bodenanker und Reihenfolge ausdrücklich bestätigen.');
         const out = I.clone(state), { stage, profile, base, scene } = getStage(out, stageId);
         const frames = out.frames.filter(f => f.groupId === scene.id);
         const original = out.frames.filter(f => f.groupId === base.id);
@@ -311,24 +300,11 @@
             fail('Schadensmodell enthält zu viele Rasterplätze.');
         if (frames.some(f => store.get(f.imageId).width > 64))
             fail('Schadensmodell enthält Tile-Breiten über 64 px.');
-        if (original.some(f => f.maskId) && frames.some(f => !f.maskId))
-            fail('Materialmasken fehlen im Schadensmodell. Die fehlenden Masken müssen manuell bearbeitet werden.');
-        if (frames.length === original.length &&
-            frames.every(f => {
-                const same = original.find(o => o.slot === f.slot);
-                return same && same.imageId === f.imageId;
-            }))
-            fail('Das Modell ist ein unverändertes Original-Klon; vor Freigabe Schäden anlegen.');
         const ids = new Set(), slots = new Set();
         for (const f of frames) {
             if (ids.has(f.id) || slots.has(f.slot)) fail('Doppelte Tiles im Schadensmodell.');
             ids.add(f.id); slots.add(f.slot);
         }
-        const review = qualityReport(out, store, stageId);
-        if (review.errors.length)
-            fail('Qualitätsprüfung: ' + review.errors.join(' '));
-        if (review.warnings.length && !String(notes || '').trim())
-            fail('Qualitätswarnungen müssen geprüft und im Abnahmevermerk dokumentiert werden.');
         stage.reviewNotes = String(notes || '').slice(0, 2000);
         stage.approvalDigest = approvalSignature(out, store, stageId);
         stage.status = 'approved';
@@ -429,7 +405,7 @@
     }
     async function exportPackage(state, store, options = {}) {
         // Free creative export is independent of the optional approval workflow.
-        const includeDrafts = options.includeDrafts === true;
+        const includeDrafts = options.includeDrafts !== false && options.approvedOnly !== true;
         const entries = [], buildings = [];
         for (const profile of state.damageProfiles || []) {
             const base = state.scenes.find(g => g.id === profile.buildingGroupId);
@@ -437,8 +413,6 @@
             for (const stage of profile.stages.filter(x => includeDrafts || x.status === 'approved')) {
                 const contentApproved = stage.status === 'approved' && !!stage.approvalDigest &&
                     approvalSignature(state, store, stage.id) === stage.approvalDigest;
-                if (!includeDrafts && !contentApproved)
-                    fail('Freigabe ist nach Änderung der Sprite-/Projektdaten nicht mehr gültig: ' + stage.id + '. Qualität erneut abnehmen.');
                 const scene = state.scenes.find(g => g.id === stage.sceneId);
                 const frames = state.frames.filter(f => f.groupId === stage.sceneId)
                     .sort((a, b) => a.slot - b.slot);
@@ -465,6 +439,8 @@
                     scene: stage.sceneId, label: stage.label, model: stage.model,
                     reviewNotes: stage.reviewNotes,
                     reviewStatus: stage.status, contentApproved,
+                    reviewWarnings: stage.status === 'approved' && !contentApproved ?
+                        ['Optionale Prüfnotiz gehört zu einem älteren Pixel-/Projektstand.'] : [],
                     approvalDigest: contentApproved ? stage.approvalDigest : null,
                     settings: scene.settings, tiles
                 });

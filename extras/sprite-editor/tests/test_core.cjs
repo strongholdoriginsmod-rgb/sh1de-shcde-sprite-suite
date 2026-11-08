@@ -456,10 +456,10 @@ test('Legacy v0.1 keeps pixels, placement, original bytes and source uncertainty
     A.equal(r.state.scenes[0].source, 'custom');
     eq(await r.store.bytes(r.state.frames[0].originalId), b);
 });
-test('Preflight blocks unconfirmed targets, duplicate targets, mixed PPU and partial masks', async () => {
+test('Preflight warns for unconfirmed targets while keeping collision, PPU and mask errors', async () => {
     const { s, st } = await fixture();
     s.frames[0].targetConfirmed = false;
-    A.ok(I.preflight(s, st).some(i => i.code === 'UNCONFIRMED'));
+    A.ok(I.preflight(s, st).some(i => i.code === 'UNCONFIRMED' && i.level === 'warning'));
     s.frames[0].targetConfirmed = true;
     s.frames[1].targetName = s.frames[0].targetName;
     A.ok(I.preflight(s, st).some(i => i.code === 'DUPLICATE_TARGET'));
@@ -473,7 +473,7 @@ test('Preflight blocks unconfirmed targets, duplicate targets, mixed PPU and par
 test('Single overrides demand real dimensions; mask materials fail closed', async () => {
     const { s, st } = await fixture();
     s.export.mode = 'sprites';
-    A.ok(I.preflight(s, st).some(i => i.code === 'SPRITE_REFERENCE'));
+    A.ok(I.preflight(s, st).some(i => i.code === 'SPRITE_REFERENCE' && i.level === 'warning'));
     s.references = s.frames.map(f => ({ name: f.targetName, imageId: null, maskId: null, width: 17, height: 13, pivot: null, ppu: null }));
     A.ok(!I.preflight(s, st).some(i => i.level === 'error'));
     s.references[0].width = 18;

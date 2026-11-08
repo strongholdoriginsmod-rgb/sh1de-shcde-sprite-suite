@@ -54,6 +54,8 @@ RISK_TOOLS: dict[str,ToolPolicy]={
     "hud_menu_project_transfer.py":WORK,
     "suite_workflow.py":WORK,
     "ui_atlas.py":WORK,
+    "ui_atlas_workspace.py":WORK,
+    "suite_ui_atlas_workspace.py":WORK,
     "ui_extra_atlas.py":WORK,
     "build_locale.py":WORK,
     "sprites.py":WORK,
@@ -68,6 +70,8 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         return READ
     name=Path(tool).name
     command={arg.casefold() for arg in args}
+    if name=="ui_atlas_workspace.py":
+        return READ if command & {"info", "list"} else WORK
     if name in {"Suite","Pipeline","suite_workflow.py"}:
         if "install" in command or "uninstall" in command:
             return GAME

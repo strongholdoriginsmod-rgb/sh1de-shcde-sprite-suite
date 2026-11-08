@@ -104,8 +104,11 @@ def project_from_recent() -> Path:
 
 
 def new_project(slug: str) -> Path:
-    if not isinstance(slug, str) or not re.fullmatch(r"[a-z][a-z0-9-]{2,49}", slug):
-        raise UnifiedFlowError("Projekt-ID: 3–50 Zeichen, a-z, 0-9 und Bindestrich")
+    from hud_menu_project_transfer import _name
+    try:
+        slug = _name(slug)
+    except ValueError as exc:
+        raise UnifiedFlowError(str(exc)) from exc
     output = hud.WORK / "projects" / slug
     if output.exists() or is_link_or_reparse(output):
         raise UnifiedFlowError("Projekt existiert bereits – bitte vorhandenes Projekt öffnen")
@@ -129,6 +132,22 @@ class ProjectPipeline:
 
     def import_mod_file(self, path: Path, *, relative: str) -> Path:
         return hud.import_mod_file(path, relative, project=self.project)
+
+    def publish_ui_atlas_pair(self, pair: dict, *, cancel=None) -> dict:
+        from suite_ui_atlas_bridge import publish_pair
+        return publish_pair(self.project, pair, cancel=cancel)
+
+    def publish_ui_atlas(self, workspace: Path, *, expected_revision: str,
+                         cancel=None) -> dict:
+        from ui_atlas_workspace import AtlasProject
+        from uuid import uuid4
+        atlas = AtlasProject.open(workspace)
+        if atlas.info()["revision"] != expected_revision:
+            raise UnifiedFlowError("Atlas-Arbeitsstand wurde inzwischen verändert")
+        destination = hud._metadata_dir(self.project)/"atlas-gen"/uuid4().hex[:12]
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        pair = atlas.export_pair(destination, cancel=cancel)
+        return self.publish_ui_atlas_pair(pair, cancel=cancel)
 
     def create_image(self, name: str, width: int, height: int,
                      *, category: str = "Menüs / UI-Bilder") -> Path:

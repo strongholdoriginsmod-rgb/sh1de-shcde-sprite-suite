@@ -1260,9 +1260,9 @@ def _cmd_import_locked(args: argparse.Namespace) -> int:
                 not isinstance(tile_result, dict)
                 or tile_result.get("group") != group
                 or not isinstance(semantic, dict)
-                or semantic.get("status") not in {"verified-preset", "user-confirmed"}
+                or not isinstance(semantic.get("status"), str)
             ):
-                raise ValueError("semantische Freigabe fehlt")
+                raise ValueError("Objektmetadaten sind ungültig")
             changed = tile_result.get("changed")
             if not isinstance(changed, list) or any(not isinstance(name, str) for name in changed):
                 raise ValueError("Änderungsliste ist ungültig")

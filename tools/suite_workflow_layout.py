@@ -85,6 +85,27 @@ def build_workflow(view):
     ttk.Label(status, textvariable=view.stage_text,
               style="WorkspaceCaption.TLabel").pack(side="left")
 
+    chat = ttk.Frame(root, style="WorkspacePanel.TFrame", padding=(11, 6))
+    chat.pack(fill="x", padx=13, pady=(0, 7))
+    view.assistant_panel = chat
+    chat_header = ttk.Frame(chat, style="WorkspacePanel.TFrame")
+    chat_header.pack(fill="x")
+    ttk.Label(chat_header, text="CHATGPT · FRAGEN & AUFTRÄGE",
+              style="WorkspaceSection.TLabel").pack(side="left")
+    view.assistant_host = ttk.Frame(chat, height=345)
+    view.assistant_host.pack(fill="x", expand=False, pady=(5, 0))
+    view.assistant_host.pack_propagate(False)
+    def reveal_chat(show=True):
+        if show:
+            view.assistant_host.pack(fill="x", expand=False, pady=(5, 0))
+        else:
+            view.assistant_host.pack_forget()
+        view.assistant_toggle.configure(text=("Chat einklappen" if show else "Chat einblenden"))
+    view.show_assistant_host = lambda: reveal_chat(True)
+    view.assistant_toggle = ttk.Button(chat_header, text="Chat einklappen",
+        command=lambda: reveal_chat(not bool(view.assistant_host.winfo_manager())))
+    view.assistant_toggle.pack(side="right")
+
     main = ttk.Panedwindow(root, orient="horizontal", style="Workspace.TPanedwindow")
     main.pack(fill="both", expand=True, padx=13, pady=(0, 7))
     view.main_split = main
@@ -170,6 +191,9 @@ def build_workflow(view):
     more.grid(row=0, column=2, rowspan=2, sticky="ns")
     view.actions_menu = tk.Menu(more, tearoff=False)
     view.actions_menu.add_command(label="KI-Assistent", command=view.app.open_ai_assistant)
+    view.actions_menu.add_command(label="UI-Atlas (PNG + XAML)…",
+        command=lambda: view.app.open_ui_atlas_workspace())
+    view.atlas_menu_index = view.actions_menu.index("end")
     view.actions_menu.add_command(label="Modding Studio", command=view.app.open_modding_studio)
     view.actions_menu.add_command(label="Assetquelle prüfen", command=view.inspect_selected_asset)
     view.inspect_asset_menu_index = view.actions_menu.index("end")

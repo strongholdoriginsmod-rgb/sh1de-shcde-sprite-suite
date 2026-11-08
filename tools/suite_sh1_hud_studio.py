@@ -412,14 +412,6 @@ class Sh1HudStudio(ttk.Frame):
         entry = self._need_entry()
         if entry is None:
             return
-        if not messagebox.askyesno(
-            "Bearbeitung rückgängig machen",
-            f"{entry['key']} auf den Originalzustand aus dem Spiel zurücksetzen?\n\n"
-            "Die aktuelle Bearbeitung wird vorher in work/sh1-hud-ruecksetzen gesichert. "
-            "Es werden keine Spielressourcen verändert.",
-            parent=self, default="no",
-        ):
-            return
         workspace = self._project_root
         try:
             digest = digest_file(Path(entry["path"]))
@@ -566,14 +558,6 @@ class Sh1HudStudio(ttk.Frame):
             return
         destination = ROOT / "dist" / "sh1-hud-editierte-atlanten"
         overwrite = destination.is_dir() and any(destination.iterdir())
-        if not messagebox.askyesno(
-            "SH1-HUD-Atlanten zusammensetzen",
-            f"{len(self.entries)} Bilder aus {work} gegen die originalen "
-            "XAML-Rechtecke prüfen und drei Atlas-PNGs ausschließlich unter "
-            f"{destination} erzeugen? Keine Spielinstallation.",
-            parent=self, default="no",
-        ):
-            return
         if overwrite and not messagebox.askyesno(
             "Frühere SH1-Atlas-Ausgabe ersetzen",
             f"Die frühere Ausgabe unter {destination} wird ersetzt. "
@@ -610,14 +594,6 @@ class Sh1HudStudio(ttk.Frame):
             return
         target = ROOT / "dist" / "sh1-hud-unity-kandidat"
         overwrite = target.is_dir() and any(target.iterdir())
-        if not messagebox.askyesno(
-            "Isolierte Unity-Datei erstellen",
-            "Die GUI benutzt den bestehenden SHA-geprüften Offline-Patcher. "
-            "Er patcht keine Installation und startet kein Spiel.\n\n"
-            f"Original: {source}\nProjekt: {work}\nAusgabe: {target}\n\nFortfahren?",
-            parent=self, default="no",
-        ):
-            return
         if overwrite and not messagebox.askyesno(
             "Unity-Kandidaten ersetzen",
             "Der bestehende isolierte Unity-Kandidat wird ersetzt. "

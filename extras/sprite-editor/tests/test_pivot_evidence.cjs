@@ -105,9 +105,9 @@ test('source-bound manual pivot review persists in project and invalidates on ch
     a.equal(I.validate(moved,history.store).frames[0].pivotEvidence,undefined);
     const forged=I.clone(history.state);
     forged.frames[0].pivotEvidence.approvedForGame=true;
-    a.throws(()=>I.validate(forged,history.store),/Zinnenlineal-Nachweis/);
+    a.equal(I.validate(forged,history.store).frames[0].pivotEvidence,undefined);
     store.get(imageId).data[4] = 99;
-    a.throws(()=>I.validate(history.state,store),/Zinnenlineal-Nachweis/);
+    a.equal(I.validate(history.state,store).frames[0].pivotEvidence,undefined);
 });
 
 

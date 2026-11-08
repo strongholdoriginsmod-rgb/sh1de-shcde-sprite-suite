@@ -715,7 +715,7 @@
                             x.targetName = v ? C.targetName(v).name : '';
                             x.targetConfirmed = false;
                         }) }))] : []),
-                buttons(button('Serie zuordnen…', mappingDialog)), buttons(checkbox('Zielnamen manuell bestätigt', ff.every(x => x.targetConfirmed), '', v => frameUpdate(x => x.targetConfirmed = v))),
+                buttons(button('Serie zuordnen…', mappingDialog)),
                 ...(ref ? [line('Zielreferenz', ref.imageId ? 'PNG vorhanden' : 'Nur Metadaten'), line('Zielgröße', ref.width && ref.height ? `${ref.width} × ${ref.height} px` : 'Nicht bekannt'), line('Ziel-PPU', ref.ppu ?? 'Nicht bekannt'), buttons(button('Pivot / PPU übernehmen', adoptReferences))] : [note('Keine passende SHCDE-Zielreferenz geladen. Gleiche Nummern in SHDE und SHCDE belegen keine gleiche Zuordnung.')])
             ]));
         }
@@ -964,7 +964,7 @@
             damageOpenScene(scene.id);
             message(result.clippedPixels ?
                 'Tiles gespeichert. Ausgeblendete Pixel: ' + result.clippedPixels + '. Kandidaten-PNG bleibt im Projekt.' :
-                'Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Freigabe noch ausstehend.');
+                'Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Export ist direkt möglich.');
         });
     }
     function damagePreview(img, label) {
@@ -989,7 +989,6 @@
         const summary = [
             line('Sichtbar veränderte Pixel', (review.stats.changedPixels || 0).toLocaleString('de-DE')),
             line('Veränderung · % Original', (review.stats.visibleChangesPercent ?? 0) + '%'),
-            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel'),
             ...(review.stats.structuralLossPixels === undefined ? [] : [
                 line('Entfernte opake Originalpixel', review.stats.structuralLossPixels),
                 line('Neue opake Bildpixel', review.stats.newOpaquePixels)
@@ -998,7 +997,7 @@
                 line('Maskenpixel ohne sichtbare Bilddeckung', review.stats.orphanMaskPixels)
             ])
         ];
-        modal('Schadensmodell abnehmen', [
+        modal('Schadensmodell vergleichen · optionale Notiz', [
             el('div', { class: 'damage-review-gallery' }, [
                 damagePreview(review.intact, 'Original'),
                 ...(closestApproved ? [damagePreview(DI.baseComposite(state(), store(), closestApproved.sceneId).image,
@@ -1008,13 +1007,12 @@
             ...summary,
             ...review.errors.map(msg => el('p', { class: 'error-text', text: msg })),
             ...review.warnings.map(msg => el('p', { class: 'warning-text', text: msg })),
-            note('Bilder und Zerstörungsreihenfolge anhand echter SHCDE-Referenzen prüfen; formale Pixelwerte ersetzen keine visuelle Abnahme.'),
-            checkbox('Perspektive, sichtbare Zerstörungsreihenfolge, Bodenanker, Transparenz, schwarze Punkte und Materialmasken geprüft', false, 'confirmed'),
-            fields(field('Abnahmevermerk', stage.reviewNotes, { name: 'notes', type: 'textarea', wide: true }))
-        ], 'Verbindlich freigeben', data => {
+            note('Vergleich und Notizen sind optional. Modelle können ohne Freigabe direkt verwendet und exportiert werden.'),
+            fields(field('Notiz (optional)', stage.reviewNotes, { name: 'notes', type: 'textarea', wide: true }))
+        ], 'Als geprüft markieren', data => {
             const result = DI.approveStage(state(), store(), stageId, data.get('notes'), data.has('confirmed'));
             commit(result.state, 'Schadensstufe freigegeben', result.store, { keepDamageApproval: true });
-            message('Schadensmodell freigegeben. Weitere Tile-Änderungen setzen es auf Entwurf zurück.');
+            message('Optionaler Vergleichsmarker gespeichert. Export ist unabhängig davon möglich.');
         });
     }
     function damageRemove(stageId) {
@@ -1028,10 +1026,10 @@
             }, 'Schadensstufe entfernt');
         });
     }
-    async function damageExportPackage(includeDrafts = false) {
+    async function damageExportPackage(includeDrafts = true) {
         await task('Schadensbibliothek exportieren', async opts => {
             const result = await DI.exportPackage(state(), store(), { ...opts, includeDrafts });
-            const suffix = includeDrafts ? '_gebaeudeschaden_alle.zip' : '_gebaeudeschaden.zip';
+            const suffix = includeDrafts ? '_gebaeudeschaden.zip' : '_gebaeudeschaden_markiert.zip';
             download(result.bytes, C.safeName(state().project.name) + suffix);
             message(includeDrafts ? 'Alle Schadensstufen frei exportiert, einschließlich Entwürfen.' :
                 'Freigegebene Stufen und HP-Manifest exportiert.');
@@ -1073,7 +1071,7 @@
             }, { min: 0, max: 100 })),
             fields(field('Vorschau-Modus', damageApprovedOnly ? 'approved' : 'all', {
                 wide: true, options: [['all', 'Alle Modelle einschließlich Entwürfen'],
-                    ['approved', 'Nur freigegebene Modelle (Export)']],
+                    ['approved', 'Nur als geprüft markierte Modelle']],
                 onchange: v => { damageApprovedOnly = v === 'approved'; renderInspector(); }
             })),
             line('Freigabestatus', selectedStage ?
@@ -1127,16 +1125,16 @@
                     buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,
                         s => { s.candidateId = null; s.status = 'draft'; })))
                 ] : []),
-                buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
+                buttons(button('Vergleich und Notiz…', () => damageApproveDialog(stage.id)),
                     button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
                 buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),
-                note('Freigaben sind an den Pixel-, Masken-, HP- und Generatorstand gebunden. Änderungen und ältere Freigaben ohne Zustandsprüfsumme müssen erneut abgenommen werden.')
+                note('Prüfnotizen sind optional und an den damaligen Pixelstand gebunden. Geänderte Modelle bleiben direkt exportierbar.')
             ]));
         }
         sections.push(section('Ausgabe', [
-            buttons(button('Alle HP-Schadensmodelle exportieren…', () => damageExportPackage(true)),
-                button('HP-Schadensmodelle exportieren…', () => damageExportPackage(false))),
-            note('Freier Export: alle Stufen einschließlich Entwürfen und verworfenen Varianten. Der zweite Export enthält nur nach Inhaltsabgleich freigegebene Stufen. Beide ZIPs sind eigenständige Grafikpakete.')
+            buttons(button('HP-Schadensmodelle exportieren…', () => damageExportPackage(true)),
+                button('Nur markierte Schadensmodelle exportieren…', () => damageExportPackage(false))),
+            note('Standardexport: alle Stufen einschließlich Entwürfen und verworfenen Varianten. Der optionale zweite Export filtert nur nach gesetztem Vergleichsmarker. Beide ZIPs sind eigenständige Grafikpakete.')
         ]));
         return sections;
     }
@@ -1267,15 +1265,11 @@
             line('Zielpivot', row.newPivot.x.toFixed(6) + ' / ' + row.newPivot.y.toFixed(6)),
             line('Messquellen-SHA', file.sourceSHA256.slice(0, 24) + '…'),
             damagePreview(store().get(frame.imageId), 'Arbeitsbild vor Pivotkorrektur'),
-            checkbox('Ausgangs- und Zielanker am Overlay visuell geprüft; ' +
-                'Messquelle und Bildgröße stimmen überein.', false, 'confirmed'),
-            fields(field('Prüfvermerk', '', { type: 'textarea', name: 'notes',
+            fields(field('Notiz (optional)', '', { type: 'textarea', name: 'notes',
                 wide: true, placeholder: 'Sichtprüfung der Grundlinie und Sprite-Position' }))
         ], 'Nur Arbeits-Pivot übernehmen', data => {
-            if (!data.has('confirmed')) throw new Error('Explizite Sichtprüfung fehlt.');
             const notes = String(data.get('notes') || '').trim();
-            if (notes.length < 8 || notes.length > 1200)
-                throw new Error('Prüfvermerk mit mindestens acht Zeichen erforderlich.');
+            if (notes.length > 1200) throw new Error('Notiz überschreitet 1200 Zeichen.');
             const now = primary(), checked = legacyPivotReview();
             if (file !== legacyPivotFile || !now ||
                     now.id !== frame.id || now.imageId !== boundImageId ||
@@ -1293,7 +1287,7 @@
                     appliedImageId: boundImageId, measurementSHA256: file.sourceSHA256,
                     imageContentSHA256: contentHash, measuredFrameName: row.name,
                     proposedPivot: { ...row.newPivot }, reviewNotes: notes,
-                    manualReview: true, approvedForGame: false
+                    manualReview: false, approvedForGame: false
                 };
             }, 'Zinnenlineal-Pivot nach visueller Prüfung');
             message('Messpivot in der Arbeitskopie übernommen; Original und Spiel unverändert.');
@@ -1343,7 +1337,7 @@
                         ' / ' + review.row.newPivot.y.toFixed(6)),
                     buttons(button('Anker-Overlay anzeigen', showLegacyPivotOverlay, {
                         disabled: !['review', 'already'].includes(review.status)
-                    }), button('Nach Sichtprüfung übernehmen…', applyLegacyPivotReview, {
+                    }), button('Gemessenen Pivot übernehmen…', applyLegacyPivotReview, {
                         disabled: review.status !== 'review'
                     })));
             } else
@@ -1466,7 +1460,7 @@
             damagePreview(source, 'Arbeitsoriginal'),
             damagePreview(candidate.image, 'Kandidat: ' + candidate.name)
         ];
-        modal('KI-Kandidaten bildbezogen abnehmen', [
+        modal('KI-Kandidaten übernehmen', [
             el('div', { class: 'damage-review-gallery' }, inspected),
             line('Veränderte Pixel', review.stats.changedPixels),
             line('Geänderte Alphawerte', review.stats.alphaChanged),
@@ -1478,17 +1472,13 @@
                 'Kein Generatorbeleg, Herkunft unbestätigt'),
             note('Nur die aktuelle Arbeitskopie wird ersetzt. Das Original und der Undo-Verlauf bleiben erhalten. ' +
                 'Masken, Pivots und Spielkompatibilität müssen separat geprüft werden.'),
-            checkbox('Ich habe Ausrichtung, Perspektive, Silhouette, Transparenz, Masken und Rechte geprüft.', false, 'reviewed'),
-            fields(field('Abnahmevermerk', '', {
+            fields(field('Notiz (optional)', '', {
                 name: 'notes', type: 'textarea', wide: true,
                 placeholder: 'Warum entspricht dieser Kandidat der Vorlage?'
             }))
         ], 'Kandidaten übernehmen', async data => {
-            if (!data.has('reviewed'))
-                throw new Error('Sichtprüfung muss ausdrücklich bestätigt werden.');
             const notes = String(data.get('notes') || '').trim();
-            if (notes.length < 8 || notes.length > 1200)
-                throw new Error('Abnahmevermerk mit mindestens acht Zeichen erforderlich.');
+            if (notes.length > 1200) throw new Error('Notiz überschreitet 1200 Zeichen.');
             const current = primary();
             if (!current || current.id !== frame.id || current.imageId !== sourceImageId)
                 throw new Error('Quelle hat sich geändert; Kandidat erneut prüfen.');
@@ -1513,15 +1503,15 @@
                     requestSHA256: candidate.receipt?.requestSHA256 || null,
                     generatorMetadataSHA256: candidate.receiptSHA256 || null,
                     reviewNotes: notes,
-                    manualReview: true, apiOriginVerified: false
+                    manualReview: false, apiOriginVerified: false
                 };
                 updated.metadataStatus = 'manual';
-                commit(nextState, 'KI-Kandidat nach Sichtprüfung übernehmen', next, { fit: true });
+                commit(nextState, 'KI-Kandidat übernehmen', next, { fit: true });
                 aiCandidates = [];
                 aiCandidateIndex = 0;
                 aiLastRequest = null;
                 view = 'sprite';
-                message('Geprüfter KI-Kandidat übernommen. Spieltest und Exportprüfung stehen aus.');
+                message('KI-Kandidat übernommen. Bearbeitung und Export sind direkt möglich.');
             });
         });
     }
@@ -1592,7 +1582,7 @@
                 buttons(button('KI-Auftragsbundle exportieren…', () => aiExportRequest())),
                 note('Enthält unverändertes Referenz-PNG, registrierte Arbeitsvorlage, ' +
                     'Prompt, Prüfsummen und die Anleitung für Codex. Offline und ohne API-Kosten. ' +
-                    'Jede Variante benötigt einen eigenständigen Kandidaten und eine eigene Freigabe.'),
+                    'Jede Variante ist ein eigenständiger Kandidat und kann direkt übernommen werden.'),
                 ...(aiLastRequest?.frameId === frame.id &&
                     aiLastRequest?.sourceImageId === frame.imageId ?
                     [line('Vorbereitete Modellanfrage', aiLastRequest.request.model +
@@ -1628,12 +1618,12 @@
                             'Quell-SHA passt, Auftrag nicht hier vorbereitet') :
                         'Ohne Manifest · Herkunft unbestätigt'),
                     note('Ein Manifest allein beweist nicht den API-Absender. ' +
-                        'Nur das Prüfprotokoll und die manuelle Abnahme werden übernommen.'),
+                        'Vorhandene Herkunftsbelege und optionale Notizen werden übernommen.'),
                     ...candidate.review.errors.map(msg =>
                         el('p', { class: 'error-text', text: msg })),
                     ...candidate.review.warnings.map(msg =>
                         el('p', { class: 'warning-text', text: msg })),
-                    buttons(button('Original + Variante abnehmen…', aiApprovalDialog, {
+                    buttons(button('Original + Variante übernehmen…', aiApprovalDialog, {
                         disabled: !!candidate.review.errors.length
                     })),
                     buttons(button('Varianten verwerfen', () => {
@@ -1641,10 +1631,9 @@
                         aiCandidateIndex = 0;
                         renderInspector();
                     }))
-                ] : [note('Noch kein Kandidat geladen. PNGs bleiben bis zur ' +
-                    'ausdrücklichen Abnahme außerhalb des Projekts.')]),
+                ] : [note('Noch kein Kandidat geladen. Einen Kandidaten importieren und direkt übernehmen.')]),
                 ...(frame.aiGeneration ?
-                    [line('Letzte manuelle KI-Abnahme', frame.aiGeneration.reviewNotes),
+                    [line('Letzte KI-Notiz', frame.aiGeneration.reviewNotes),
                      line('Quellnachweis', frame.aiGeneration.sourceSHA256.slice(0, 16) + '…')] : []),
                 ...(groupFrames().length >= 2 ? [buttons(button(
                     'Animationsfolge auf Anker-/Alpha-Sprünge prüfen…', aiAnimationAudit))] : []),
@@ -1723,9 +1712,9 @@
                 text: `${ff.length} ausgewählte Sprites. Reihenfolge: aktuelle Rasterplätze. Die Zielnamen müssen aus SHCDE stammen; Quellnummern sind keine verifizierte Übersetzung.`
             }),
             fields(field('SHCDE-GM-Gruppe', t.group, { name: 'group', wide: true }), field('Erster Zielindex', t.index, { name: 'start', type: 'number', min: 0, max: 1000000 })),
-            el('div', { class: 'field-inline' }, [checkbox('Abstände der Quellnummern erhalten', false, 'gaps')]), el('div', { class: 'field-inline' }, [checkbox('Zielnamen manuell geprüft', false, 'confirmed')])
+            el('div', { class: 'field-inline' }, [checkbox('Abstände der Quellnummern erhalten', false, 'gaps')])
         ], 'Zuordnen', data => {
-            const group = String(data.get('group')), start = C.integer(data.get('start'), 'Zielindex', 0, 1000000), gaps = !!data.get('gaps'), confirmed = !!data.get('confirmed');
+            const group = String(data.get('group')), start = C.integer(data.get('start'), 'Zielindex', 0, 1000000), gaps = !!data.get('gaps');
             C.targetName(group + '-' + start);
             if (gaps && ff.some(f => f.index === null))
                 throw new Error('Nicht alle Quellen besitzen eine Bildnummer.');
@@ -1734,7 +1723,7 @@
                 ff.forEach((old, i) => {
                     const f = s.frames.find(f => f.id === old.id);
                     f.targetName = C.targetName(group + '-' + (start + (gaps ? old.index - min : i))).name;
-                    f.targetConfirmed = confirmed;
+                    f.targetConfirmed = false;
                 });
             }, 'Zielserie zuordnen');
         });
@@ -1923,11 +1912,10 @@
     }
     const exportTypes = [['merged', 'Gesamtbild · PNG'], ['tiles', 'Bearbeitete Tiles · ZIP'], ['originals', 'Unveränderte Originale · ZIP'], ['ora', 'Ebenen · OpenRaster'], ['atlas', 'Atlas + Metadaten · ZIP'], ['mod', 'Modpaket · ZIP'], ['semod', 'Modpaket · SEMOD'], ['csv', 'Zielzuordnung · CSV'], ['split', 'Schnitt · ZIP'], ['ownership', 'Schnittmaske · PNG'], ['report', 'Prüfbericht · JSON'], ['project', 'Projekt · SHSPRITE']];
     function exportDialog() {
-        const type = field('Format', 'merged', { name: 'kind', wide: true, options: exportTypes }), scope = field('Umfang', 'group', { name: 'scope', wide: true, options: [['group', 'Aktuelle Gruppe'], ['selected', 'Ausgewählte Sprites'], ['all', 'Alle Gruppen']] }), details = el('p'), warnings = el('div', { class: 'field-inline' }, [checkbox('Hinweise geprüft; In-Game-Test folgt.', false, 'ack')]);
+        const type = field('Format', 'merged', { name: 'kind', wide: true, options: exportTypes }), scope = field('Umfang', 'group', { name: 'scope', wide: true, options: [['group', 'Aktuelle Gruppe'], ['selected', 'Ausgewählte Sprites'], ['all', 'Alle Gruppen']] }), details = el('p');
         const refresh = () => {
             const kind = type.querySelector('select').value, isMod = ['mod', 'semod'].includes(kind);
             scope.hidden = !['tiles', 'originals', 'atlas', 'csv'].includes(kind);
-            warnings.hidden = !isMod;
             if (isMod) {
                 const issues = I.preflight(state(), store()), errors = issues.filter(i => i.level === 'error');
                 details.textContent = `Alle sichtbaren Sprites · ${errors.length} Fehler · ${issues.length - errors.length} Hinweise. ` + (errors.length ? errors[0].message : 'Das Paket wird vorbereitet, nicht installiert.');
@@ -1939,10 +1927,8 @@
         };
         type.querySelector('select').onchange = refresh;
         refresh();
-        modal('Exportieren', [fields(type, scope), details, warnings], 'Exportieren', async (data) => {
+        modal('Exportieren', [fields(type, scope), details], 'Exportieren', async (data) => {
             const kind = String(data.get('kind'));
-            if (['mod', 'semod'].includes(kind) && !data.get('ack'))
-                throw new Error('Exporthinweise bestätigen.');
             await exportDirect(kind, String(data.get('scope') || 'group'));
         });
     }

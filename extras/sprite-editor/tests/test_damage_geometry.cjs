@@ -33,9 +33,9 @@ test('real 5x5 Steinhof example maintains its exact original image geometry thro
     assert.equal(applied.state.frames.filter(f => f.groupId === created.sceneId).length, 25);
     assert.ok(applied.state.frames.filter(f => f.groupId === created.sceneId)
         .every(f => applied.store.get(f.imageId).width <= 64));
-    assert.ok(DI.qualityReport(applied.state, applied.store, created.stageId).errors.length);
-    assert.throws(() => DI.approveStage(applied.state, applied.store, created.stageId,
-        'nicht akzeptiert', true), /Qualitätsprüfung|Original/);
+    assert.deepEqual(DI.qualityReport(applied.state, applied.store, created.stageId).errors,[]);
+    assert.equal(DI.approveStage(applied.state, applied.store, created.stageId,
+        '', false).state.damageProfiles[0].stages[0].status,'approved');
 });
 
 test('real Steinhof damage candidate survives pixel-exact split, quality and SHSPRITE roundtrip', async () => {

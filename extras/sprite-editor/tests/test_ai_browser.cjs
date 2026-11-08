@@ -133,17 +133,17 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
             '.find(b => b.textContent.includes("Anker-Overlay anzeigen"))).click()');
         await wait('SpriteEditor.inspect().view === "sprite"');
         await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
-            '.find(b => b.textContent.includes("Nach Sichtprüfung übernehmen"))).click()');
+            '.find(b => b.textContent.includes("Gemessenen Pivot übernehmen"))).click()');
         await wait('document.getElementById("modal").open');
-        await evaluate('(() => { document.querySelector("#modal [name=confirmed]").checked=true;' +
-            'document.querySelector("#modal [name=notes]").value="Ground anchor checked in visual overlay";' +
+        assert.equal(await evaluate('document.querySelectorAll("#modal input[type=checkbox]").length'),0);
+        await evaluate('(() => { document.querySelector("#modal [name=notes]").value="";' +
             'document.getElementById("modal-submit").click(); })()');
         await wait('SpriteEditor.inspect().state.frames[0].pivot.x === 0.375');
-        assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].pivotEvidence.manualReview'), true);
+        assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].pivotEvidence.manualReview'), false);
         await evaluate('document.getElementById("undo").click()');
         await wait('SpriteEditor.inspect().state.frames[0].pivot.x === 0.5');
         await evaluate('document.getElementById("redo").click()');
-        await wait('SpriteEditor.inspect().state.frames[0].pivotEvidence.manualReview === true');
+        await wait('SpriteEditor.inspect().state.frames[0].pivotEvidence?.manualReview === false');
         await evaluate('document.getElementById("undo").click()');
         await wait('SpriteEditor.inspect().state.frames[0].pivot.x === 0.5');
         await evaluate('document.querySelector("[data-view=sprite]").click()');
@@ -154,7 +154,7 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         await evaluate('document.querySelector("[data-panel=ai]").click()');
         assert.ok(await evaluate('document.getElementById("inspector-content").innerText.includes("Briefing")'));
         await evaluate('(() => { const t = document.querySelector("#inspector-content textarea");' +
-            't.value="Repair the battlements without changing the base, isometric style or anchor."; ' +
+            't.value="x"; ' +
             't.dispatchEvent(new Event("change", {bubbles: true})); })()');
         await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
             '.find(b => b.textContent.includes("KI-Auftragsbundle"))).click()');
@@ -171,7 +171,8 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         const payload = Object.fromEntries(entries.map(entry => [entry.name, entry.data]));
         const request = JSON.parse(K.decodeText(payload['request.json']));
         assert.equal(request.automaticInstallation, false);
-        assert.match(request.prompt, /Repair the battlements/);
+        assert.equal(request.goal,'x');
+        assert.equal(request.requiresManualApproval,false);
         assert.equal(request.referenceSHA256, await K.sha256(payload['reference.png']));
         const original = await K.decodePNG(payload['reference.png']);
         const modified = { width: original.width, height: original.height,
@@ -203,19 +204,19 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
             '.find(b => b.textContent.includes("Original + Variante"))).click()');
         await wait('document.getElementById("modal").open');
-        await evaluate('(() => { document.querySelector("#modal [name=reviewed]").checked=true;' +
-            'document.querySelector("#modal [name=notes]").value="Manual visual review in isolated QA";' +
+        assert.equal(await evaluate('document.querySelectorAll("#modal input[type=checkbox]").length'),0);
+        await evaluate('(() => { document.querySelector("#modal [name=notes]").value="x";' +
             'document.getElementById("modal-submit").click(); })()');
         await wait('SpriteEditor.inspect().state.frames[0].imageId !== ' + JSON.stringify(before));
         assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].originalId'),
             originalId, 'Original altered by candidate acceptance');
-        assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].aiGeneration.manualReview'), true);
+        assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].aiGeneration.manualReview'), false);
         assert.equal(await evaluate('SpriteEditor.inspect().state.frames[0].aiGeneration.requestSHA256'),
             requestSHA256, 'Accepted candidate lost the exact request digest');
         await evaluate('document.getElementById("undo").click()');
         await wait('SpriteEditor.inspect().state.frames[0].imageId === ' + JSON.stringify(before));
         await evaluate('document.getElementById("redo").click()');
-        await wait('SpriteEditor.inspect().state.frames[0].aiGeneration.manualReview === true');
+        await wait('SpriteEditor.inspect().state.frames[0].aiGeneration?.manualReview === false');
         await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
             '.find(b => b.textContent.includes("Animationsfolge auf Anker"))).click()');
         let sequenceFile;

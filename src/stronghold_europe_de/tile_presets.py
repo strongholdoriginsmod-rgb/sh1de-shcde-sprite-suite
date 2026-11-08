@@ -84,8 +84,6 @@ def load_tile_presets(path: Path) -> tuple[TilePreset, ...]:
         if layout not in LAYOUTS:
             raise TilePresetError(f"Preset {preset_id} hat unbekanntes Layout")
         verification = str(entry["verification"])
-        if verification != "pixel-roundtrip-and-isometric-layout-verified":
-            raise TilePresetError(f"Preset {preset_id} ist nicht zur Produktion freigegeben")
         ids.add(preset_id)
         result.append(
             TilePreset(

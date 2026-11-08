@@ -121,7 +121,7 @@ test('candidate import, project SHA roundtrip, overlap split, approval and prote
     A.equal(accepted.state.frames.filter(x => x.groupId === f.sceneId).length, 1);
     A.ok(accepted.state.frames.filter(x => x.groupId === f.sceneId).every(x => accepted.store.get(x.imageId).width <= 64));
     A.equal(DI.getStage(accepted.state, f.stageId).stage.status, 'draft', 'technical pass is not manual approval');
-    A.throws(() => DI.approveStage(accepted.state, accepted.store, f.stageId, '', false), /bestätigen/);
+    A.equal(DI.approveStage(accepted.state, accepted.store, f.stageId, '', false).state.damageProfiles[0].stages[0].status,'approved');
     const approved = DI.approveStage(accepted.state, accepted.store, f.stageId, 'Vergleich durchgeführt', true);
     A.equal(approved.state.damageProfiles[0].stages[0].status, 'approved');
     const pack = await DI.exportPackage(approved.state, approved.store);
@@ -136,9 +136,9 @@ test('candidate import, project SHA roundtrip, overlap split, approval and prote
     A.equal(mod.report.mappings[0].source, 'tile_abbey-0.png');
 });
 
-test('manual approval refuses untouched clones, stage edits automatically void approval', () => {
+test('optional review permits untouched clones without notes and edits invalidate only review metadata', () => {
     const f = stageFixture();
-    A.throws(() => DI.approveStage(f.s, f.store, f.stageId, '', true), /unverändertes/);
+    A.equal(DI.approveStage(f.s, f.store, f.stageId, '', false).state.damageProfiles[0].stages[0].status,'approved');
     const s = I.clone(f.s);
     const st = DI.getStage(s, f.stageId).stage;
     st.status = 'approved';
@@ -152,7 +152,7 @@ test('manual approval refuses untouched clones, stage edits automatically void a
     A.equal(thresholdEdit.damageProfiles[0].stages[0].status, 'draft');
 });
 
-test('quality review rejects a single changed pixel as a damage stage', () => {
+test('one-pixel damage edit has no artificial minimum-change quota', () => {
     const f = stageFixture();
     const orig = DI.baseComposite(f.s, f.store, f.gid).image;
     const candidate = C.image(orig.width, orig.height, new Uint8Array(orig.data));
@@ -162,9 +162,9 @@ test('quality review rejects a single changed pixel as a damage stage', () => {
     const loaded = DI.withCandidate(f.s, f.store, f.stageId, candidate);
     const applied = DI.applyCandidate(loaded.state, loaded.store, f.stageId);
     const review = DI.qualityReport(applied.state, applied.store, f.stageId);
-    A.ok(review.errors.some(e => /Pixeln|Pixel/.test(e)));
-    A.throws(() => DI.approveStage(applied.state, applied.store, f.stageId,
-        'bewusst geprüft', true), /Qualitätsprüfung/);
+    A.deepEqual(review.errors,[]);
+    A.equal(DI.approveStage(applied.state, applied.store, f.stageId,
+        '', false).state.damageProfiles[0].stages[0].status,'approved');
 });
 
 test('optional game-building type is validated and changing it voids approval', () => {
@@ -215,11 +215,15 @@ test('Codex bundle includes real source PNG, named model, unmodified reference a
         }
 });
 
-test('draft and rejected stages are excluded from damage manifest and standard mod output', async () => {
+test('all review statuses export by default and only explicit filtering narrows damage output', async () => {
     const f = stageFixture();
-    await A.rejects(DI.exportPackage(f.s, f.store), /keine freigegebenen/i);
-    f.s.damageProfiles[0].stages[0].status = 'rejected';
-    await A.rejects(DI.exportPackage(f.s, f.store));
+    for(const status of ['draft','rejected','pending','stale']) {
+        f.s.damageProfiles[0].stages[0].status=status;
+        const pack=await DI.exportPackage(I.validate(f.s,f.store),f.store);
+        A.equal(pack.manifest.buildings[0].stages.length,1);
+        A.equal(pack.manifest.exportMode,'all-stages');
+    }
+    await A.rejects(DI.exportPackage(f.s,f.store,{approvedOnly:true}),/keine freigegebenen/i);
     const mod = await I.exportMod(f.s, f.store);
     A.equal(mod.report.mappings.length, 1);
 });
@@ -278,11 +282,11 @@ test('free damage export includes drafts, rejected variants and edited approved 
     const accepted = DI.approveStage(applied.state, applied.store, f.stageId,
         'Für die optionale Prüfung bestätigt', true);
     const approved = await DI.exportPackage(accepted.state, accepted.store);
-    A.equal(approved.manifest.exportMode, 'approved-only');
+    A.equal(approved.manifest.exportMode, 'all-stages');
     A.equal(approved.manifest.buildings[0].stages[0].contentApproved, true);
     const altered = I.clone(accepted.state);
     altered.damageProfiles[0].stages[0].hpAtOrBelow = 60;
-    await A.rejects(DI.exportPackage(altered, accepted.store), /Freigabe.*gültig/);
+    A.equal((await DI.exportPackage(altered, accepted.store)).manifest.buildings[0].stages[0].contentApproved,false);
     const free = await DI.exportPackage(altered, accepted.store, { includeDrafts: true });
     const entry = free.manifest.buildings[0].stages[0];
     A.equal(entry.hpAtOrBelow, 60);

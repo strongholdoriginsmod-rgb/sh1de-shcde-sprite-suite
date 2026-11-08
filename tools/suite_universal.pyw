@@ -2718,6 +2718,12 @@ class Universal(center.Center):
         self.target_tab = TargetTab(self.notebook, self)
         from suite_unified_workflow import UnifiedWorkflowTab
         self.workflow_tab = UnifiedWorkflowTab(self.notebook, self)
+        self._assistant_embed_host = self.workflow_tab.assistant_host
+        def show_assistant_host():
+            self.open_tab(self.workflow_tab)
+            self.workflow_tab.show_assistant_host()
+            self.workflow_tab.workarea.canvas.yview_moveto(0)
+        self._show_assistant_host = show_assistant_host
         # The shared project page is the only normal workflow guide.
         # Specialist backup and five-step controls remain under More.
         self.hud_menu_tab.journey.pack_forget()
@@ -2758,6 +2764,9 @@ class Universal(center.Center):
                  "'Streng' oben rechts schaltet um. / Lenient mode is the default: deviations are "
                  "reported, not blocked. 'Strict' at the top right switches.", "muted")
         os.environ["SEDE_SPRACHE"] = LANG.code
+        # Construct the embedded conversation UI only. Account/model requests
+        # remain explicit user actions inside the assistant.
+        self.after_idle(self.open_ai_assistant)
         self.tab_home.refresh_quick_language(LANG.code == "en")
         self.after(200, lambda: LANG.apply(self))
 
@@ -3112,7 +3121,24 @@ class Universal(center.Center):
                 NativeQtTools(lambda: getattr(
                     getattr(self.sandbox_tab, "bridge", None), "window", None)),
             )
-        return open_assistant(self, extra_delegates=extras)
+        host = open_assistant(self, extra_delegates=extras)
+        if not getattr(host, "_native_code_registered", False):
+            from suite_assistant_code import NativeCodeTools
+            host.add_delegate(NativeCodeTools(lambda: host.service.delegate.project,
+                execution_enabled=lambda: host.service.mode != "questions" and host.service.code_run_enabled))
+            host._native_code_registered = True
+        return host
+
+    def open_ui_atlas_workspace(self):
+        from suite_ui_atlas_workspace import open_workspace
+        project = self.workflow_tab.pipeline.project
+        def publish(pair):
+            if self.workflow_tab.pipeline.project != project:
+                raise ValueError("Aktives Projekt wurde inzwischen gewechselt")
+            result = self.workflow_tab.pipeline.publish_ui_atlas_pair(pair)
+            self.workflow_tab.refresh()
+            return result
+        return open_workspace(self, project=project, on_publish=publish)
 
     def open_modding_studio(self):
         """Open authoring modules in the current project's portable metadata."""
@@ -3164,6 +3190,12 @@ class Universal(center.Center):
         self.sandbox_tab.select_sprite(group, frame)
 
     def destroy(self):
+        for atlas in tuple(getattr(self, "_ui_atlas_windows", {}).values()):
+            if atlas.root.winfo_exists():
+                if atlas.busy:
+                    atlas.close(on_closed=self.destroy)
+                    return
+                atlas.close()
         workflow = getattr(self, "workflow_tab", None)
         studio = getattr(self, "_modding_studio_window", None)
         if (workflow is not None and studio is not None and

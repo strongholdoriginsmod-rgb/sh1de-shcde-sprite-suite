@@ -17,12 +17,12 @@
       ],
       "pageErrors": [],
       "externalNetworkRequests": [],
-      "htmlSHA256": "3de83e1be406cafb57e4f2b6618e6bef88d8ce5c94932e132abae8241a77b7db",
+      "htmlSHA256": "167f4e7c3692462049b1a194af12403454771e94c3f912223e8c64cf2bcec719",
       "syntheticOnly": true,
       "gameStarted": false,
       "evidence": {
         "beforeDrag": {
-          "state": "ab234508d8f1a7f28fc089a9b425e7d2bcc361ba1bca85807912a3dcc219008c",
+          "state": "1da9be47d5dcea02499ea50d33f30934cf458fc5932f0daa576815cedd544d23",
           "canvas": "5b7c87c81a08dffa274479810d673702f9a51e67f20f6fd28ceb9a3759b19a48",
           "undo": 0,
           "redo": 0,
@@ -30,7 +30,7 @@
           "pixels": 97280
         },
         "afterDrag": {
-          "state": "48fdbb3f53ad8a51924316e8ff72667da70193fe4ab259cc6c532fc85cf2b325",
+          "state": "2b24c1b109c9fb6564870811b9a62c8cb9d11a7a674f61eaa1e3e48564b2732e",
           "canvas": "752c1bab86ec492dbedd161ff22958feb419f7c3e959e4fcb01dd95e7ba1961f",
           "undo": 1,
           "redo": 0,
@@ -38,7 +38,7 @@
           "pixels": 97280
         },
         "brushBefore": {
-          "state": "3c82a0ad33ee26dfdaedabc46314ef872536f860e6185de7c08899b79bbc3cf7",
+          "state": "857d4db7dfe5265fd2542554636c204179c7ae30fb7758075e5b263ec51774d8",
           "canvas": "ea1e4878082d3f43d53fb8ba2702672ea59f4a8ab46f96a7a32a6c4fb9f47ef9",
           "undo": 1,
           "redo": 0,
@@ -46,7 +46,7 @@
           "pixels": 269312
         },
         "brushAfter": {
-          "state": "ec12e323068715f9aac473a45e0a0d7ea2a64cd2804c40de871fb011ae85756b",
+          "state": "04535875b1bacaadf231d03ed8a62521013c569849d53b6f1b525959211af140",
           "canvas": "d0ae50cfb897be16b1652f3051e137d17993127692d6522ba4c1f032a9edb875",
           "undo": 2,
           "redo": 0,
@@ -54,7 +54,7 @@
           "pixels": 355328
         },
         "afterCancel": {
-          "state": "3c82a0ad33ee26dfdaedabc46314ef872536f860e6185de7c08899b79bbc3cf7",
+          "state": "857d4db7dfe5265fd2542554636c204179c7ae30fb7758075e5b263ec51774d8",
           "canvas": "ea1e4878082d3f43d53fb8ba2702672ea59f4a8ab46f96a7a32a6c4fb9f47ef9",
           "undo": 1,
           "redo": 1,
@@ -78,12 +78,12 @@
       ],
       "pageErrors": [],
       "externalNetworkRequests": [],
-      "htmlSHA256": "7a54e8ae8aa4665110dc50c9ecfbbd6c683b4c632dfa0c9f0e681defb8cd9d9d",
+      "htmlSHA256": "e8c06150f304a21ab9de86ddd2199112b6b3e7a3062cfc0f032f3edcddbb0b50",
       "syntheticOnly": true,
       "gameStarted": false,
       "evidence": {
         "beforeDrag": {
-          "state": "12b6cef806f66d82c50e443ff3b1c28c6cbceec14443057dcb7618e3db264f5f",
+          "state": "3d1385fe32c5a7c59385de94dac67226e281e740968b6f9c37deb7317763fce5",
           "canvas": "5b7c87c81a08dffa274479810d673702f9a51e67f20f6fd28ceb9a3759b19a48",
           "undo": 0,
           "redo": 0,
@@ -91,7 +91,7 @@
           "pixels": 97280
         },
         "afterDrag": {
-          "state": "ec6b875eda1240b89fb04ef6dca6f17175b1a6162c6819da48f4e5e7dc024598",
+          "state": "37254063857f6f7f8afd86cad09c5af9e3a6622b39f3fcf1e5d68a35907024c2",
           "canvas": "752c1bab86ec492dbedd161ff22958feb419f7c3e959e4fcb01dd95e7ba1961f",
           "undo": 1,
           "redo": 0,
@@ -99,7 +99,7 @@
           "pixels": 97280
         },
         "brushBefore": {
-          "state": "b8dacd79222df1f4c11219a8cc1718f0e676682b0f237a0321da75dd6d5bdd6b",
+          "state": "fe03215202f1d8ab4df9cf78b54adfb3f89f3f19d724f20c64127bbc89c0cc12",
           "canvas": "2fea972a75c9a15feec9be169c03970c6312f8b858e6285916a595e96a0f88d1",
           "undo": 1,
           "redo": 0,
@@ -107,7 +107,7 @@
           "pixels": 269312
         },
         "brushAfter": {
-          "state": "90f5c7c8356428a4eb01627491d4a31a76a2ea09dc7be773a5322d0e51a32bea",
+          "state": "a9f5e3296e9de00d3be0be315c88ce4ecd2500684573dec8bbbc47e2713e22a4",
           "canvas": "644a00f27fd58cdf76d248e00ca35c1cff58350b9aeeddcbdc4bb997b1094007",
           "undo": 2,
           "redo": 0,
@@ -115,7 +115,7 @@
           "pixels": 355328
         },
         "afterCancel": {
-          "state": "b8dacd79222df1f4c11219a8cc1718f0e676682b0f237a0321da75dd6d5bdd6b",
+          "state": "fe03215202f1d8ab4df9cf78b54adfb3f89f3f19d724f20c64127bbc89c0cc12",
           "canvas": "2fea972a75c9a15feec9be169c03970c6312f8b858e6285916a595e96a0f88d1",
           "undo": 1,
           "redo": 1,

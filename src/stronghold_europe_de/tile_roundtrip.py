@@ -845,11 +845,6 @@ def split_object(
     source_index = inspected["source_index"]
     images: dict[str, Image.Image] = inspected["images"]
     semantic = manifest["semantic"]
-    if semantic["status"] != "verified-preset" and not confirm_custom_layout:
-        raise TileRoundtripError(
-            "custom tile layout is not semantically verified; inspect the current "
-            "preview and repeat with explicit custom-layout confirmation"
-        )
     output_directory = output_directory.resolve()
     staging = _prepare_directory(output_directory, replace)
     try:
@@ -877,7 +872,7 @@ def split_object(
             filename = _safe_flat_name(str(indexed[name]["file"]), "frame filename")
             image.save(staging / filename, format="PNG", optimize=False, compress_level=9)
         result_summary = dict(inspected["summary"])
-        if semantic["status"] == "custom-unconfirmed":
+        if semantic["status"] == "custom-unconfirmed" and confirm_custom_layout:
             result_summary["semantic"] = {
                 "status": "user-confirmed",
                 "preset_id": None,

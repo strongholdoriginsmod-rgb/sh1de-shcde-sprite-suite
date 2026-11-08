@@ -50,6 +50,70 @@ def _png_bytes(color):
     return stream.getvalue()
 
 
+def test_8192_atlas_native_publish_package_and_editable_backup(isolated,tmp_path):
+    from ui_atlas_workspace import AtlasProject
+    from suite_native_tools import NativeToolService
+    import hud_menu_project_transfer as transfer
+    _,work=isolated
+    project=flow.new_project('full-atlas')
+    pipeline=flow.ProjectPipeline(project)
+    png=tmp_path/'UI-MasterAtlas.png'
+    with Image.new('RGBA',(8192,8192),(29,57,83,0)) as original:
+        original.save(png)
+    xaml=tmp_path/'UI-MasterAtlas.xaml'
+    xaml.write_text('<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" '
+        'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"><BitmapImage x:Key="Sheet" UriSource="UI-MasterAtlas.png"/>'
+        '<CroppedBitmap x:Key="Edge" Source="{StaticResource Sheet}" SourceRect="8184,8186,8,6"/>'
+        '</ResourceDictionary>',encoding='utf8')
+    originals=(sha256(png.read_bytes()).hexdigest(),xaml.read_bytes())
+    workspace=hud._metadata_dir(project)/'ui-atlas-workspaces'/'large'
+    workspace.parent.mkdir(parents=True)
+    atlas=AtlasProject.create(png,xaml,workspace)
+    patch=tmp_path/'patch.png'
+    with Image.new('RGBA',(8,6),(101,11,3,0)) as image:image.save(patch)
+    atlas.replace('Edge',patch)
+    native=NativeToolService(project)
+    stale=native.call('suite_project_op',{'operation':'publish_ui_atlas',
+        'atlas_workspace':str(atlas.workspace),'expected_revision':'old'})
+    assert not stale['ok']
+    published=native.call('suite_project_op',{'operation':'publish_ui_atlas',
+        'atlas_workspace':str(atlas.workspace),'expected_revision':atlas.info()['revision']})
+    assert published['ok'],published
+    from suite_assistant_code import NativeCodeTools
+    from suite_ai_assistant import ConversationStore
+    code=NativeCodeTools(lambda: project)
+    first=code.call('suite_code',{'operation':'write','path':'helper.lua',
+        'content':'return 1\n','expected_sha256':''})
+    assert first['ok'],first
+    second=code.call('suite_code',{'operation':'write','path':'helper.lua',
+        'content':'return 2\n','expected_sha256':first['result']['sha256']})
+    assert second['ok'],second
+    conversation=ConversationStore.new()
+    conversation['messages']=[{'role':'user','text':'Prüfe meinen Atlas.'}]
+    ConversationStore(project).save(conversation)
+    result=pipeline.build(guid='large.atlas',name='Full atlas')
+    assert result['zip_verified_against_project']
+    with zipfile.ZipFile(result['zip']) as archive:
+        assert not any('code-revs' in name or 'assistant-conversations' in name
+                       or '.before' in name for name in archive.namelist())
+        prefix='BepInEx/plugins/large.atlas/Override/Assets/GUI/Sprites/'
+        assert archive.read(prefix+xaml.name)==originals[1]
+        with Image.open(BytesIO(archive.read(prefix+png.name))) as image:
+            assert image.size==(8192,8192)
+            assert image.getpixel((8184,8186))==(101,11,3,0)
+            assert image.getpixel((8183,8186))==(29,57,83,0)
+    backup=tmp_path/'editable-atlas.zip'
+    transfer.create_archive(project,backup)
+    restored=Path(transfer.restore_archive(backup,project_name='atlas-restored')['project'])
+    assert ConversationStore(restored).load(conversation['id'])['messages']==conversation['messages']
+    assert (hud._metadata_dir(restored)/'code-revs'/Path(second['result']['backup']).name).read_text()=='return 1\n'
+    restored_atlas=AtlasProject.open(hud._metadata_dir(restored)/'ui-atlas-workspaces'/'large')
+    assert restored_atlas.info()['revision']==atlas.info()['revision']
+    with restored_atlas.preview('Edge') as crop:
+        assert crop.getpixel((0,0))==(101,11,3,0)
+    assert (sha256(png.read_bytes()).hexdigest(),xaml.read_bytes())==originals
+
+
 def test_single_real_editable_project_roundtrips_and_builds_exact_zip(
     isolated,tmp_path
 ):
@@ -217,6 +281,14 @@ def test_cannot_create_duplicate_workspace_or_leave_worktree(isolated,tmp_path):
         flow.ProjectPipeline(tmp_path/"outside")
     with pytest.raises(flow.UnifiedFlowError):
         flow.new_project("../escape")
+
+
+@pytest.mark.parametrize('name',['X','Mein Menü'])
+def test_project_name_needs_no_lowercase_slug_or_minimum_length(isolated,name):
+    _,work=isolated
+    project=flow.new_project(name)
+    assert project==work/'projects'/name
+    assert project.is_dir()
 
 
 def test_legacy_menu_commands_are_never_claimed_to_be_runtime_verified(

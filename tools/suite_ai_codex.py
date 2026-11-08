@@ -70,14 +70,15 @@ def load_request(bundle: Path | io.BytesIO) -> tuple[dict, list[tuple[str, bytes
             request.get("complexity") != "high" or
             request.get("background") != "transparent" or
             request.get("output_format") != "png" or
-            request.get("requiresManualApproval") is not True or
             request.get("automaticInstallation") is not False):
         raise ValueError("Anfrage verletzt die kontrollierte Ausgabe.")
-    goal = request.get("goal")
-    prompt = request.get("prompt")
-    if (not isinstance(goal, str) or len(goal.strip()) < 8 or len(goal) > 4000
-            or not isinstance(prompt, str) or not 40 <= len(prompt) <= 32000):
+    goal = request.get("goal", "")
+    prompt = request.get("prompt", "")
+    if (not isinstance(goal, str) or len(goal) > 4000
+            or not isinstance(prompt, str) or len(prompt) > 32000):
         raise ValueError("Unzulässige Zielbeschreibung oder Promptlänge.")
+    request["goal"] = goal
+    request["prompt"] = prompt or goal or "Create one image variant from the supplied reference."
     if request.get("referenceFiles") != ["model_reference.png"]:
         raise ValueError("Referenz muss die registrierte Vorlagendatei sein.")
     plan = request.get("registration")
@@ -159,7 +160,7 @@ def execute(request: dict, images: list[tuple[str, bytes]], output: Path) -> dic
               "requestSHA256": request["_request_sha256"],
               "expectedVariants": request["variants"],
               "completedVariants": 0, "status": "running",
-              "needsManualReview": True, "installed": False}
+              "needsManualReview": False, "installed": False}
     _write_status(target, status)
     try:
         for index in range(1, request["variants"] + 1):
@@ -181,7 +182,7 @@ def execute(request: dict, images: list[tuple[str, bytes]], output: Path) -> dic
                 "candidateSHA256": _sha(fitted) if fitted else None,
                 "provider": "codex-chatgpt", "generationId": request_id,
                 "registration": alignment,
-                "needsManualReview": True,
+                "needsManualReview": False,
                 "inGameTested": False, "originalGameModified": False
             }
             with (target / (prefix + "_meta.json")).open("x", encoding="utf-8") as file:
@@ -203,7 +204,7 @@ def execute(request: dict, images: list[tuple[str, bytes]], output: Path) -> dic
     return {"generated": len(rows), "normalizedCandidates": candidate_count,
             "candidates": rows, "output": str(target),
             "requestSHA256": request["_request_sha256"],
-            "needsManualReview": True, "installed": False}
+            "needsManualReview": False, "installed": False}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -229,7 +230,7 @@ def main(argv: list[str] | None = None) -> int:
                 "output": str(args.output),
                 "provider": "codex-chatgpt", "networkRequest": False,
                 "requiresExecute": True,
-                "needsManualReview": True, "gameFilesModified": False
+                "needsManualReview": False, "gameFilesModified": False
             }
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0

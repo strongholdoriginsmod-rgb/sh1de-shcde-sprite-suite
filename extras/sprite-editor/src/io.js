@@ -61,8 +61,8 @@
                   generation.requestSHA256 == null)) ||
                 !['unverified', 'gpt-image-2.6-flare', 'gpt-image-2.6-sunburst']
                     .includes(generation.requestedModel) ||
-                generation.manualReview !== true || generation.apiOriginVerified !== false)
-            C.fail('KI-Herkunft ist nicht ausreichend nachweisbar.');
+                generation.apiOriginVerified !== false)
+            return null; // Optional stale provenance never blocks the current image.
         return { appliedImageId: id(generation.appliedImageId),
             sourceSHA256: generation.sourceSHA256,
             candidateSHA256: generation.candidateSHA256,
@@ -71,8 +71,8 @@
             requestReferenceSHA256: generation.requestReferenceSHA256 ?? null,
             requestSHA256: generation.requestSHA256 ?? null,
             generatorMetadataSHA256: generation.generatorMetadataSHA256 ?? null,
-            reviewNotes: text(generation.reviewNotes, 'KI-Abnahmevermerk', 1200),
-            manualReview: true, apiOriginVerified: false };
+            reviewNotes: text(generation.reviewNotes ?? '', 'KI-Notiz', 1200),
+            manualReview: bool(generation.manualReview), apiOriginVerified: false };
     }
     /** Historical pivot correction is a reviewed workspace edit, never a game approval. */
     function validatePivotEvidence(value, imageId, img, currentPivot) {
@@ -80,22 +80,24 @@
         if (!value || Array.isArray(value) || typeof value !== 'object')
             C.fail('Ungültige Zinnenlineal-Provenienz.');
         const digest = s => typeof s === 'string' && /^[a-f0-9]{64}$/.test(s);
-        const proposed = C.pivot(value.proposedPivot);
+        let proposed;
+        try { proposed = C.pivot(value.proposedPivot); }
+        catch (_error) { return null; }
         if (Math.abs(proposed.x - currentPivot.x) > 2e-5 ||
                 Math.abs(proposed.y - currentPivot.y) > 2e-5)
             return null; // A later pivot edit invalidates the older review.
         if (!digest(value.measurementSHA256) || !digest(value.imageContentSHA256) ||
                 value.imageContentSHA256 !== imageContentSHA256(img) ||
-                value.manualReview !== true || value.approvedForGame !== false)
-            C.fail('Zinnenlineal-Nachweis ist verändert oder nicht mehr gültig.');
+                value.approvedForGame !== false)
+            return null;
         return {
             appliedImageId: id(value.appliedImageId),
             measurementSHA256: value.measurementSHA256,
             imageContentSHA256: value.imageContentSHA256,
             measuredFrameName: text(value.measuredFrameName, 'Messname', 120),
             proposedPivot: proposed,
-            reviewNotes: text(value.reviewNotes, 'Pivot-Abnahmevermerk', 1200),
-            manualReview: true, approvedForGame: false
+            reviewNotes: text(value.reviewNotes ?? '', 'Pivot-Notiz', 1200),
+            manualReview: bool(value.manualReview), approvedForGame: false
         };
     }
     const tick = () => new Promise(r => setTimeout(r, 0));
@@ -648,7 +650,7 @@
                 add('error', 'DUPLICATE_TARGET', `Ziel mehrfach belegt: ${target.name}`, f);
             names.set(key, f);
             if (!ref && !f.targetConfirmed)
-                add('error', 'UNCONFIRMED', 'Zielzuordnung weder durch Referenz belegt noch manuell bestätigt.', f);
+                add('warning', 'UNCONFIRMED', 'Zielzuordnung ohne Zielreferenz; Existenz im Spiel ist nicht nachgewiesen.', f);
             else if (!ref)
                 add('warning', 'NO_REFERENCE', 'Ziel nur manuell zugeordnet; Existenz und Animation im Spiel ungeprüft.', f);
             if (f.metadataStatus === 'assumed')
@@ -657,7 +659,7 @@
                 add('warning', 'BUILDING_WIDTH', 'Gebäude-Sprite breiter als das 64-px-Arbeitsraster der Vorlage.', f);
             if (mode === 'sprites') {
                 if (!ref || ref.width === null || ref.height === null)
-                    add('error', 'SPRITE_REFERENCE', 'Einzel-Override benötigt eine Zielreferenz mit exakten Abmessungen.', f);
+                    add('warning', 'SPRITE_REFERENCE', 'Keine Zielreferenz mit exakten Abmessungen; Export verwendet die Arbeitsbildgröße.', f);
                 else if (a.width !== ref.width || a.height !== ref.height)
                     add('error', 'SPRITE_SIZE', `Einzel-Override: ${a.width} × ${a.height}, Ziel erwartet ${ref.width} × ${ref.height}.`, f);
                 if (ref?.pivot && (Math.abs(f.pivot.x - ref.pivot.x) > 1e-8 || Math.abs(f.pivot.y - ref.pivot.y) > 1e-8))

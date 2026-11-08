@@ -21,15 +21,22 @@ def test_production_entrypoint_connects_browser_and_existing_qt_without_initiali
     spec = importlib.util.spec_from_loader(loader.name, loader)
     module = importlib.util.module_from_spec(spec)
     loader.exec_module(module)
-    monkeypatch.setattr(suite_ai_assistant, "open_assistant", lambda app, **kwargs: kwargs["extra_delegates"])
+    class Host:
+        def __init__(self, extra):
+            self.extra = list(extra)
+            self.service = SimpleNamespace(delegate=SimpleNamespace(project=Path("synthetic-project")),
+                                           mode="tasks", code_run_enabled=True)
+        def add_delegate(self, value):self.extra.append(value)
+    monkeypatch.setattr(suite_ai_assistant, "open_assistant", lambda app, **kwargs: Host(kwargs["extra_delegates"]))
     app = SimpleNamespace(sandbox_tab=SimpleNamespace(bridge=None))
-    services = module.Universal.open_ai_assistant(app)
-    assert {s.specs()[0]["name"] for s in services} == {"suite_editor", "suite_sandbox"}
+    host = module.Universal.open_ai_assistant(app)
+    services = host.extra
+    assert {s.specs()[0]["name"] for s in services} == {"suite_editor", "suite_sandbox", "suite_code"}
     assert services[0].requires_gui_thread is False
     assert services[1].requires_gui_thread is True
     assert services[1].provider() is None
     app._assistant_extra_delegates = ()
-    assert module.Universal.open_ai_assistant(app) == ()
+    assert [item.specs()[0]["name"] for item in module.Universal.open_ai_assistant(app).extra] == ["suite_code"]
 
 
 class Native:
@@ -519,3 +526,339 @@ def test_cancelled_queued_ui_rpc_never_reappears_after_new_turn(app):
     host.close()
     while host.root.winfo_exists() and time.monotonic()<deadline:
         app.update();time.sleep(.01)
+
+
+def settle(host, app, timeout=5):
+    deadline = time.monotonic() + timeout
+    while host.busy and time.monotonic() < deadline:
+        app.update()
+        time.sleep(.01)
+    assert not host.busy, host.status.get()
+
+
+def close_host(host, app):
+    host.close()
+    deadline = time.monotonic() + 5
+    while host.root.winfo_exists() and time.monotonic() < deadline:
+        app.update()
+        time.sleep(.01)
+    assert not host.root.winfo_exists()
+
+
+def history_project(app, tmp_path, monkeypatch, name="history-project"):
+    import hud_menu_workspace as hud
+    work = tmp_path / "work"
+    work.mkdir(exist_ok=True)
+    monkeypatch.setattr(hud, "ROOT", tmp_path)
+    monkeypatch.setattr(hud, "WORK", work)
+    project = work / name
+    project.mkdir(exist_ok=True)
+    app.workflow_tab.pipeline.project = project
+    return project
+
+
+def test_embedded_startup_reuses_home_chat_without_account_or_model_calls(app):
+    from suite_ai_assistant import open_assistant
+    created, shown = [], []
+    class Session:
+        def __init__(self,*args,**kwargs):created.append(True)
+    holder = ttk.Frame(app, height=345)
+    holder.pack(fill="x")
+    holder.pack_propagate(False)
+    app._assistant_embed_host = holder
+    app._show_assistant_host = lambda:shown.append(True)
+    before = [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)]
+    host = open_assistant(app,delegate=Native(app.workflow_tab.pipeline.project),session_factory=Session)
+    app.update()
+    assert host.root.master is holder
+    assert [w for w in app.winfo_children() if isinstance(w, tk.Toplevel)] == before
+    assert open_assistant(app) is host and shown == [True]
+    assert not created and host._session is None
+    assert host.mode_choice.get()=="Aufträge (alle Werkzeuge)" and host.allow_python.get() is True
+    host.prompt.insert("1.0", "private unsent draft")
+    state = snapshot(host.service)
+    assert "private unsent draft" not in str(state)
+    assert not any(row["id"].startswith(str(host.root)) for row in state["widgets"])
+    assert host.prompt.winfo_rooty() >= host.root.winfo_rooty()
+    assert host.prompt.winfo_rooty() + host.prompt.winfo_height() <= host.root.winfo_rooty() + host.root.winfo_height()
+    host.toggle_options()
+    app.update()
+    host.area.reveal(host.python_checkbox)
+    app.update()
+    assert host.python_checkbox.winfo_rooty() >= host.area.canvas.winfo_rooty()
+    assert host.python_checkbox.winfo_rooty() + host.python_checkbox.winfo_height() <= host.area.canvas.winfo_rooty() + host.area.canvas.winfo_height()
+    close_host(host, app)
+
+
+def test_models_and_efforts_are_loaded_on_request_and_passed_to_real_session_api(app):
+    calls, runs = [], []
+    class Session:
+        def __init__(self,*args,**kwargs):calls.append("created")
+        def models(self,**kwargs):
+            calls.append(("models",kwargs))
+            return [{"model":"account-model","displayName":"Account choice","isDefault":True,
+                     "supportedReasoningEfforts":[{"reasoningEffort":"advertised-effort"}]}]
+        def reset_cancel(self):calls.append("reset")
+        def run(self,prompt,**kwargs):runs.append(kwargs);return {"status":"completed","message":"Answered"}
+        def cancel(self):pass
+        def close(self):pass
+    host = AssistantWindow(app,delegate=Native(app.workflow_tab.pipeline.project),session_factory=Session)
+    assert calls == []
+    assert host.model_picker.cget("values") == ("Kontostandard",)
+    host.load_models()
+    settle(host, app)
+    assert ("models",{"reset_cancel":False}) in calls
+    assert "advertised-effort" in host.effort_picker.cget("values")
+    assert "high" not in host.effort_picker.cget("values")
+    host.model_choice.set("Account choice [account-model]")
+    host.effort_choice.set("advertised-effort")
+    host.prompt.insert("1.0","Answer this")
+    host.send();settle(host,app)
+    assert runs[0]["model"] == "account-model" and runs[0]["reasoning_effort"] == "advertised-effort"
+    assert runs[0]["reset_cancel"] is False
+    assert len([call for call in calls if isinstance(call,tuple)]) == 1
+    close_host(host,app)
+
+
+def test_question_mode_rejects_all_mutations_and_report_flag_aliases(app):
+    native = service(app)
+    invoked = []
+    native.delegate.call = lambda name,args:invoked.append((name,args)) or {"ok":True,"result":{}}
+    native.configure_mode("questions")
+    for name,args in (("suite_ui",{"operation":"set","widget_id":str(app.entry),"value":"changed"}),
+                      ("suite_project_op",{"operation":"create_image"}),
+                      ("suite_editor",{"operation":"execute","request":{"operation":"import"}}),
+                      ("suite_tool_run",{"name":"qa_hp_fire_live_log.py","arguments":["--output=would-write.json"]}),
+                      ("suite_code",{"operation":"write","path":"file.py"}),
+                      ("suite_code",{"operation":"run","path":"file.py"})):
+        result = native.call(name,args)
+        assert result["error"]["code"] == "mode_restricted"
+    assert not invoked and app.entry.get() == "original"
+    assert native.call("suite_ui",{"operation":"snapshot"})["ok"]
+    assert native.call("suite_tool_run",{"name":"existing.py","arguments":["--help"]})["ok"]
+
+
+def test_code_delegate_gets_save_guard_captured_project_and_optional_execution_limit(app):
+    calls, saved, refreshed = [], [], []
+    native = service(app)
+    editor = SimpleNamespace(save=lambda:saved.append(True))
+    app.workflow_tab._dirty_windows = lambda:[] if saved else [editor]
+    app.workflow_tab.refresh = lambda:refreshed.append(True)
+    class Code:
+        requires_gui_thread=False
+        def specs(self):return [{"name":"suite_code"}]
+        def call(self,name,args):calls.append((name,args,native.delegate.project));return {"ok":True,"result":{}}
+    assert native.add_delegate(Code())
+    assert not native.add_delegate(Code())
+    assert native.mode=="tasks" and native.code_run_enabled
+    assert native.call("suite_code",{"operation":"write"})["ok"]
+    assert native.call("suite_code",{"operation":"run"})["ok"]
+    native.configure_mode("tasks",False)
+    assert native.call("suite_code",{"operation":"run"})["error"]["code"] == "mode_restricted"
+    native.configure_mode("code",False)
+    assert native.call("suite_code",{"operation":"write"})["ok"]
+    assert saved and refreshed and calls[0][2] == app.workflow_tab.pipeline.project
+    assert native.call("suite_code",{"operation":"run"})["error"]["code"] == "mode_restricted"
+    native.configure_mode("code",True)
+    assert native.call("suite_code",{"operation":"run"})["ok"]
+    assert len(calls) == 4
+
+
+def test_turn_options_are_frozen_while_busy_and_stop_cannot_reset_code_gate(app):
+    entered, release = threading.Event(), threading.Event()
+    mutations, seen = [], []
+    class Code:
+        requires_gui_thread=False
+        def specs(self):return [{"name":"suite_code"}]
+        def call(self,*args):mutations.append(True);return {"ok":True,"result":{}}
+        def cancel(self):pass
+        def reset_cancel(self):pass
+    class Session:
+        def __init__(self,cwd,service,on_event):self.service=service
+        def run(self,prompt,**kwargs):
+            seen.append((self.service.mode,self.service.code_run_enabled,kwargs["reset_cancel"]))
+            entered.set();assert release.wait(3)
+            result=self.service.call("suite_code",{"operation":"run"})
+            seen.append(result)
+            return {"status":"cancelled","message":"Stopped"}
+        def cancel(self):pass
+        def close(self):pass
+    host=AssistantWindow(app,delegate=Native(app.workflow_tab.pipeline.project),extra_delegates=(Code(),),session_factory=Session)
+    host.prompt.insert("1.0","Run explicit synthetic code");host.send()
+    assert entered.wait(1)
+    assert host.mode_picker.instate(["disabled"]) and host.python_checkbox.instate(["disabled"])
+    host.mode_choice.set("Fragen (nur lesen)");host.allow_python.set(False)
+    assert host.service.mode == "tasks" and host.service.code_run_enabled
+    host.cancel();release.set();settle(host,app)
+    assert seen[0] == ("tasks",True,False)
+    assert seen[1]["error"]["code"] == "cancelled" and not mutations
+    close_host(host,app)
+
+
+def test_local_history_roundtrip_is_bounded_redacted_and_never_resumes_remote_thread(app,tmp_path,monkeypatch):
+    from suite_ai_assistant import ConversationStore
+    project=history_project(app,tmp_path,monkeypatch)
+    sessions=[]
+    class Session:
+        def __init__(self,*args,**kwargs):sessions.append(self)
+        def run(self,prompt,**kwargs):return {"status":"completed","message":"Saved answer","threadId":"do-not-persist"}
+        def cancel(self):pass
+        def close(self):pass
+    host=AssistantWindow(app,delegate=Native(project),session_factory=Session)
+    host.prompt.insert("1.0","Keep note api_key=sk-1234567890abcdefghijk password=synthetic-secret")
+    host.send();settle(host,app)
+    store=ConversationStore(project)
+    files=list(store.folder.glob("*.json"));assert len(files)==1
+    raw=files[0].read_text("utf8")
+    assert "synthetic-secret" not in raw and "sk-1234567890abcdefghijk" not in raw and "do-not-persist" not in raw
+    close_host(host,app)
+    restored=AssistantWindow(app,delegate=Native(project),session_factory=Session)
+    assert len(sessions)==1 and restored._session is None
+    assert "Saved answer" in restored.log.get("1.0","end")
+    assert "Saved answer" in restored._history_context()
+    conversation=ConversationStore.new()
+    conversation["messages"]=[{"role":"user","text":"x"*9000} for _ in range(200)]
+    bounded=store.save(conversation)
+    path=store.folder/(bounded["id"]+".json")
+    assert path.stat().st_size<=store.MAX_BYTES and len(bounded["messages"])<=store.MAX_MESSAGES
+    assert all(len(row["text"])<=6000 for row in bounded["messages"])
+    with pytest.raises(ValueError):store.load("../auth")
+    close_host(restored,app)
+
+
+def test_project_switch_starts_new_session_and_drops_queued_old_chat_events(app,tmp_path,monkeypatch):
+    first=history_project(app,tmp_path,monkeypatch,"first")
+    instances,runs=[],[]
+    class Session:
+        def __init__(self,cwd,service,on_event):self.cwd=Path(cwd);instances.append(self)
+        def run(self,prompt,**kwargs):runs.append((self.cwd,kwargs["history_context"]));return {"status":"completed","message":"Project answer"}
+        def reset_cancel(self):pass
+        def cancel(self):pass
+        def close(self):pass
+    host=AssistantWindow(app,delegate=Native(first),session_factory=Session)
+    host.prompt.insert("1.0","Old project context");host.send();settle(host,app)
+    old_generation=host._session_generation
+    second=first.parent/"second";second.mkdir();app.workflow_tab.pipeline.project=second
+    host.prompt.insert("1.0","New project request");host.send()
+    host._queue.put(("event",(host._active_epoch,old_generation,{"type":"text","text":"STALE OLD REPLY"})))
+    settle(host,app)
+    assert [row.cwd for row in instances]==[first,second]
+    assert "Old project context" not in runs[-1][1]
+    assert "STALE OLD REPLY" not in host.log.get("1.0","end")
+    assert "Old project context" not in host.log.get("1.0","end")
+    close_host(host,app)
+
+
+def test_select_saved_conversation_uses_local_context_with_new_ephemeral_session(app,tmp_path,monkeypatch):
+    project=history_project(app,tmp_path,monkeypatch)
+    instances,runs=[],[]
+    class Session:
+        def __init__(self,*args,**kwargs):instances.append(self)
+        def run(self,prompt,**kwargs):runs.append(kwargs);return {"status":"completed","message":"Local saved answer"}
+        def cancel(self):pass
+        def close(self):pass
+    host=AssistantWindow(app,delegate=Native(project),session_factory=Session)
+    host.prompt.insert("1.0","First local topic");host.send();settle(host,app)
+    first_id=host._conversation["id"]
+    assert host.new_conversation()
+    host.prompt.insert("1.0","Second local topic");host.send();settle(host,app)
+    assert len(instances)==2 and first_id!=host._conversation["id"]
+    first_label=next(label for label,ident in host._history_choices.items() if ident==first_id)
+    host.conversation_choice.set(first_label)
+    assert host.select_conversation()
+    assert "First local topic" in host.log.get("1.0","end")
+    assert "Second local topic" not in host.log.get("1.0","end")
+    host.prompt.insert("1.0","Continue first topic");host.send();settle(host,app)
+    assert len(instances)==3 and "First local topic" in runs[-1]["history_context"]
+    assert "Second local topic" not in runs[-1]["history_context"]
+    close_host(host,app)
+
+
+def test_old_callback_reference_keeps_prior_turn_epoch_on_reused_session(app):
+    callbacks=[]
+    entered,release=threading.Event(),threading.Event()
+    class Session:
+        def __init__(self,cwd,service,on_event):self.on_event=on_event;self.runs=0
+        def run(self,prompt,**kwargs):
+            self.runs+=1;callbacks.append(self.on_event)
+            if self.runs==2:
+                entered.set();assert release.wait(3)
+            return {"status":"completed","message":"Current answer"}
+        def reset_cancel(self):pass
+        def cancel(self):pass
+        def close(self):pass
+    host=AssistantWindow(app,delegate=Native(app.workflow_tab.pipeline.project),session_factory=Session)
+    host.prompt.insert("1.0","First turn");host.send();settle(host,app)
+    host.prompt.insert("1.0","Second turn");host.send();assert entered.wait(1)
+    callbacks[0]({"type":"text","text":"OLD CALLBACK LEAK"})
+    callbacks[1]({"type":"text","text":"Current streamed reply"})
+    release.set();settle(host,app)
+    assert "OLD CALLBACK LEAK" not in host.log.get("1.0","end")
+    assert "Current streamed reply" in host.log.get("1.0","end")
+    close_host(host,app)
+
+
+def test_embedded_details_toggle_maps_actual_scrolledtext_frame(app):
+    holder=ttk.Frame(app,height=345)
+    holder.pack(fill="x");holder.pack_propagate(False)
+    host=AssistantWindow(app,delegate=Native(app.workflow_tab.pipeline.project),embedded_host=holder)
+    app.update()
+    assert not host.details.winfo_ismapped()
+    host.toggle_details();app.update()
+    assert host.details.frame.winfo_manager()=="grid"
+    assert host.details.winfo_ismapped()
+    host.area.reveal(host.details.frame);app.update()
+    assert host.details.frame.winfo_rooty()>=host.area.canvas.winfo_rooty()
+    assert host.details.frame.winfo_rooty()+host.details.frame.winfo_height()<=host.area.canvas.winfo_rooty()+host.area.canvas.winfo_height()
+    host.toggle_details();app.update()
+    assert not host.details.winfo_ismapped()
+    close_host(host,app)
+
+
+def test_default_all_tools_code_routing_without_tk_or_optin(tmp_path):
+    calls=[]
+    project=tmp_path/"synthetic-project";project.mkdir()
+    callback_root=SimpleNamespace(report_callback_exception=lambda *_args:None)
+    pipeline=SimpleNamespace(project=project,activate=lambda:None)
+    app=SimpleNamespace(_root=lambda:callback_root,workflow_tab=SimpleNamespace(
+        pipeline=pipeline,_dirty_windows=lambda:[],refresh=lambda:None))
+    native=GuiToolService(app,Native(project),lambda callback:callback())
+    class Code:
+        requires_gui_thread=False
+        def specs(self):return [{"name":"suite_code"}]
+        def call(self,name,args):calls.append(args["operation"]);return {"ok":True,"result":{}}
+    native.add_delegate(Code())
+    # Fresh production defaults allow the requested programming operations.
+    assert native.mode=="tasks" and native.code_run_enabled
+    assert native.call("suite_code",{"operation":"write"})["ok"]
+    assert native.call("suite_code",{"operation":"run"})["ok"]
+    for mode in ("tasks","code"):
+        native.configure_mode(mode,False)
+        assert native.call("suite_code",{"operation":"write"})["ok"]
+        assert native.call("suite_code",{"operation":"run"})["error"]["code"]=="mode_restricted"
+        native.configure_mode(mode,True)
+        assert native.call("suite_code",{"operation":"run"})["ok"]
+    native.configure_mode("questions",True)
+    assert not native.code_run_enabled
+    for operation in ("write","run"):
+        assert native.call("suite_code",{"operation":operation})["error"]["code"]=="mode_restricted"
+    assert calls==["write","run","write","run","write","run"]
+
+
+def test_options_preserve_user_execution_choice_without_tk():
+    class Value:
+        def __init__(self,value):self.value=value
+        def get(self):return self.value
+        def set(self,value):self.value=value
+    class Control:
+        def configure(self,**kwargs):self.options=kwargs
+    host=SimpleNamespace(_chosen_model=lambda:None,effort_picker=Control(),effort_choice=Value("Standard"),
+                         mode_choice=Value("Aufträge (alle Werkzeuge)"),allow_python=Value(True),
+                         python_checkbox=Control(),busy=False,MODES=AssistantWindow.MODES)
+    for selected in (True,False):
+        host.allow_python.set(selected)
+        for mode in ("Aufträge (alle Werkzeuge)","Programmieren (Projektdateien)","Fragen (nur lesen)"):
+            host.mode_choice.set(mode)
+            AssistantWindow._options_changed(host)
+            assert host.allow_python.get() is selected
+            assert host.python_checkbox.options["state"]==("disabled" if mode=="Fragen (nur lesen)" else "normal")

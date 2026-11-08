@@ -1,0 +1,279 @@
+> Historical archive through RC4, 8 November 2026. These instructions describe the old version. Current instructions: [README](../README.md). Relative links below point to the preserved historical commit.
+
+# SH1DE → SHCDE Universal Suite 2.0 (Stronghold Europe / ORIGINS)
+
+## Consolidated release candidate, 8 November 2026
+
+The shared geometry and AI editor, historical measurements, environment discovery, project/asset inspection, twelve authoring workspaces and SHCDE workbench are integrated. The **AI assistant** uses the existing project tools, Suite UI, local sprite editor and opened Qt sandbox through native interfaces. Sign-in and image jobs use the local Codex client with a ChatGPT account, without an API key. Scrollable work areas keep lower controls reachable in small windows. The **Windows start package** includes Python and installs the remaining dependencies locally on first launch; that step needs an internet connection. [Integration and acceptance report](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_RELEASE_KONSOLIDIERUNG_20261108.md).
+
+Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Static GUI/sprite packages use **no fixed SE version and no C# DLL**; optional C# runtimes retain separate ABI safety checks. Interface **German / English** (switchable). Deutsch: [README.md](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/README.md)
+
+## Unified Stronghold specialist discovery (development branch, Nov 6, 2026)
+
+**Ctrl+K** now searches 16 existing command-line specialists plus the new historic tool matrix by task and English/German keywords, then navigates to their existing **All tools** form. Selection does not run scripts, build packages or modify games. The read-only tool matrix compares older Stronghold/SpriteSuite development roots using SHA-256 without importing or executing scanned code: `python tools/suite_tool_inventory.py --compare "E:\SU_base" --format markdown`. [Analysis (German)](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_ANALYSE_20261106.md) · [Implementation plan (German)](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_IMPLEMENTIERUNGSPLAN_20261106.md). This is not a new release.
+
+## Current Python and game compatibility (Nov 5, 2026)
+
+The [Python 3.15 / game-source compatibility matrix](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)
+separates **source support (3.13–3.15)**, actually running Tcl/Qt environments,
+Python 3.15 source-built wheels and unproven native game ABI hooks.
+Use **Tools → Compatibility check → Inspect game data** to inspect an installed
+game/Script Extender folder read-only, without relaxing safe installation
+guards. The original Python 3.13 Windows portable remains the local
+release baseline.
+
+## Guided tutorial, illustrated manual and compatibility (Nov 4, 2026)
+
+Open **Tutorial (Ctrl+F1)** from the left sidebar, select a learning path and navigate with **Back / Next**. Highlighted real controls are never invoked automatically. Progress stays in per-user local settings.
+
+The **[14-page illustrated PDF manual](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf)** includes genuine Windows screenshots (German text); open it via **Tools > PDF manual**. **Tools > Compatibility check** performs a read-only Windows, Python, Tcl/Tk, Qt and optional Steam diagnostic. Unknown native Unity/Noesis/Script Extender builds are never auto-approved. [Details and safety boundaries](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_ANLEITUNGSMODUS_2026-11-04.md).
+
+## Redesigned interface
+
+**Workflow-first revision, November 4, 2026:** Project files, a responsive preview and editing actions now share one workbench; validation and static mod-ZIP export stay visible at 1020 × 680. The layout editor has a larger canvas, more accessible layer properties and a reliable first-time fit. [Workflow and release limitations (German)](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_WORKFLOW_FIRST_UI_2026-11-04.md).
+
+
+SpriteSuite now opens with a persistent sidebar, direct task shortcuts
+and a simpler **HUD & menus** workflow: open an image, edit pixels,
+arrange the layout and prepare the export. Specialist tools, technical
+paths and full logs are available on demand, rather than crowding the
+main screen. The layout editor separates layer editing from saving
+and exporting. It now shows the next necessary step, displays image
+filenames before long resource paths, and groups advanced layer actions
+in a right-click menu. The HUD/menu workshop now remembers the last
+project, selected image and saved layout name in a relative state
+file under `work/`; the last imported image is selected immediately.
+Actual project assets and editable layers remain in their existing
+workspace and metadata files.
+
+[Updated interface guide](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_UI_QUICKSTART_EN_2026-10-28.md).
+
+## Back up and transfer complete editable projects
+
+In **HUD & menus**, use **Back up project…** and
+**Open project ZIP…**. A project archive contains editable graphics,
+layers, exact positions, original imports, revisions and export manifests.
+It does not include an installed game or a QA installation receipt.
+Restoring uses a new project folder and never overwrites an existing
+project. Unsaved changes in open pixel, text or layout editors must be
+saved before a project backup or project switch; failed saves abort the
+operation. Legacy metadata is safely copied to a relocatable folder on
+first use, leaving the original untouched.
+
+[Project transfer instructions (German)](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/PROJEKTARCHIVE_2026-10-29.md).
+[Quality audit and remaining limits (German)](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/QUALITAETSAUDIT_2026-10-29.md).
+
+## Download
+
+**Windows portability notice:** Fully extract the ZIP to a **short destination** such as `C:/SpriteSuite` or `E:/SS`; avoid deeply nested Downloads/archive paths. Bundled Qt assets include long relative paths, and some Windows extractors fail around 260 characters even when the ZIP is valid. Short paths containing spaces and accented characters have been tested. Never mix the bundled Python files with another installation.
+
+
+| Variant | Contents | How |
+|---|---|---|
+| **Windows start package RC4** | Suite and Python; additional packages are downloaded and hash-verified on first launch | [Prerelease v2.0.0-rc.4](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) · no separate Python installation; internet needed for first setup |
+| **Windows Portable 2.0.0 (local release candidate)** | Suite and bundled Python runtime; **no separate Python installation** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – not yet approved as a public stable release; [release review (German)](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/RELEASE_CANDIDATE_2026-11-04.md) |
+| **Previously published portable release** | Historical safe-project-backup build | [Windows release from October 30, 2026](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) |
+| **Source ZIP RC4** | full application code and tools, but **without** the Python runtime | [Source and checksum in the RC4 release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) |
+| Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
+
+Game graphics are **not** distributed. They are created from your own installed games when reading and building.
+**No SH1DE, SHCDE or Script Extender version number is a blanket access gate.**
+Previously unknown games can be fingerprinted and registered. A write-capable
+target still requires a mapping for that exact game fingerprint, and native
+C# operations still require matching API/ABI evidence.
+[Version-neutral workflow and safety contract](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
+
+## HUD & menus – integrated graphics workshop
+
+The new **HUD & menus** workspace combines menu and HUD graphics,
+alpha-aware pixel painting, transparent PNG creation, resource-key variants,
+original-versus-edited previews, XAML patches, Origins graphics, AtlasBuilder,
+OpenRaster and version-neutral DLL-free asset packaging. Unknown game and
+Script Extender version numbers are not blanket rejections. Game originals
+remain unchanged; edited files stay under work/.
+[HUD and menu workshop guide](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/HUD_MENU_WERKSTATT_2026-10-28.md).
+
+**New: direct-manipulation HUD/menu layout editor.** Drag, resize, rotate,
+layer, align, duplicate and copy/paste images directly in the visual preview.
+Persist exact coordinates, anchors, pivots, opacity and ordering; bake them
+into a composite PNG and preserve per-layer transforms in a separate JSON
+manifest. Only the verified composite and optional XAML patches enter the
+DLL-free package.
+[Layout designer / exact export documentation](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
+
+**Game-targeted Noesis output:** The layout designer now identifies a
+real, uniquely named container in installed HUD/menu XAML, pins its
+SHA-256, generates a static Add patch alongside the composed PNG,
+and packages both as a DLL-free asset mod. Optional QA-only
+installation and hash-verified rollback never alter original games.
+[Noesis in-game attachment guide](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
+
+## Setup
+
+1. Extract to a **short path**, e.g. `D:\SU` (Unity creates deep paths).
+2. Double-click **`Suite starten.cmd`**.
+   - *Windows Portable:* Python and GUI packages are already bundled. **No separate Python, pip or setup is required.**
+   - *Source ZIP:* developers may use Python **3.13 or 3.14** with automatically selected hash-verified dependency locks.
+   - [Portable Windows startup guide](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_WINDOWS_PORTABLE_2026-10-28.md).
+3. For BC7 package builds: install **Unity 2021.3.45f2** via Unity Hub (`unityhub://2021.3.45f2/88f88f591b2e`) and a **.NET SDK 8 or newer** (10 recommended). Enter them in the *Setup* tab.
+4. Keep the **existing Script Extender**. Use **Editor & exchange** to build **DLL-free asset mods** from edited HUD/GUI assets. No standalone version checker or automatic extender changes. C# runtimes still need ABI checks.
+5. *Setup* → enter game folders → *Save paths* → *Read games*.
+
+Top right: **Sprache / Language** and **Strict**. The default is **lenient mode**: deviations (versions, reference hashes, placement proofs) are reported and logged and the workflow continues; *Adopt proofs* writes the measured values. *Strict* blocks as before.
+
+**Ctrl+K — Find a workspace or tool:** Search all 14 workspaces, the
+Sandbox game HUD, AtlasBuilder, pivot measurements, animations and pixel
+comparison, even while the embedded Qt game map has keyboard focus.
+Searching never runs a build, installs a mod, or changes files.
+Press Enter to navigate and Esc to close. Both languages are supported.
+
+**Whole-application usability:** Eight short, readable main tabs remain
+visible; **Bereich öffnen / Go to** provides direct access to all 14
+workspaces including legacy tools. **Alle Reiter** expands the complete tab
+strip, while **Reiter bündeln** restores the compact view. The log can be
+shown whenever needed and no longer permanently takes up workspace height.
+Long action rows have named overflow menus and editor/build forms can scroll.
+[Complete workspace usability notes](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/WHOLE_SUITE_USABILITY_2026-10-13.md)
+(German). [Additional bilingual UI, keyboard and accessibility audit](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_UI_GESAMTPRUEFUNG_2026-10-13.md) (German).
+
+## Tabs
+
+| Tab | Purpose |
+|---|---|
+| **Setup** | game and tool paths, environment check, read games |
+| **Asset catalogue** | all graphics groups by theme (buildings, castle, units, animals, vegetation, landscape, effects …), four views per frame: delivered, Crusader, Stronghold 1, working copy. Replace (fitted at the foot point), take over, copy direction/damage blocks, redirect whole objects, own categories and new assets |
+| **Diagnosis & repair** | checks known error classes: edge anchors (shifted battlements), partially redirected tile objects, donor identity, frame drift between game versions, canvases, bundle integrity |
+| **Sandbox** | **Fully embedded Sandbox Studio in the existing Sprite Suite window** (Tk + Qt on Windows): real map-engine sprite frames, interactive placement, shared asset catalogue navigation, pixel editor, live refresh, minimap and HUD tools in the same tab. No separate GUI process. See `docs/SANDBOX_MAIN_SUITE_INTEGRATION.md`. Full Unity shader/gameplay HUD parity remains work in progress. |
+| **Editor & exchange** | HTML sprite editor out and back, SE atlas with the AtlasBuilder (`Override/Atlas`, PNG or BC7 DDS), buildings as layers (ORA) |
+| **Targets and mods** | manage game targets and install own mods – each with a backup and restore |
+| **Edit sprites / Build package** | Europe BC7 package via Unity, incremental group cache |
+
+**Integrated sandbox:** The tab now has **Open map**, **Palette**,
+**Inspector**, **Focus**, and **Reset layout** controls. **More tools** gives
+access to the animation editor, game HUD, maps-folder picker, comparison
+tool, and asset-catalogue shortcut. The embedded Qt tool picker exposes
+every inspector/HUD without a row of truncated dock tabs. The map takes
+most of the available workspace; a DPI-aware Win32 resize keeps the Qt
+child clipped exactly to its Tk host. The selected maps directory is
+remembered privately in `config/sandbox-maps.local.json`; original game
+files are not changed. See `docs/SANDBOX_MAIN_SUITE_INTEGRATION.md`.
+
+**Project-wide release preflight:** In **Diagnosis & repair**, select a BC7
+profile and use **Verify entire build (SHA-256)**. This checks every delivered
+file, the bundle index, profile/group identities and optional explicitly
+selected pivot approvals without installing or changing any game files.
+The results are an **offline integrity snapshot**, not proof of in-game
+functional correctness. See `docs/RELEASE_PREFLIGHT.md` (German).
+
+**New: Pivot-to-BC7 staging.** Diagnosis can cross-check an explicitly
+approved Zinnenlineal measurement against the original measurement file,
+current sprite/index, the published BC7 manifest, and the **exact
+corresponding immutable BC7 group-cache atlas**. Pivots that are already
+correct in the shipped atlas are excluded from rebuild proposals. The
+measurement review window also provides **Check pivot in BC7 atlas**.
+It writes only a source-pinned, **non-applicable change intent**: native
+geometry proofs and BC7 bundles still require a separate reviewed rebuild.
+See [Pivot/BC7 staging](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/PIVOT_BC7_STUFENPLAN.md) (German).
+
+**Synthetic BC7 V2 rehearsal:** In **Diagnosis & repair**, use
+**Prepare synthetic BC7 pivot rehearsal** to construct two
+isolated, fully validated V2 Unity input projects and compare
+changed/unchanged group cache identities. This exercises the
+real preparation code but **does not run Unity or produce an
+encoded bundle**; the required pinned Unity 2021.3.45f2 editor
+is currently unavailable. See [BC7 rehearsal](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/PIVOT_BC7_REHEARSAL.md).
+
+**Native battlement proof (new):** In **Diagnosis & repair**, choose
+**Verify native battlement geometry proof**. The published BC7 cache atlas
+and original SH1DE/Crusader mapping independently reconstruct all four
+frozen anim_castle geometry/origin hashes for 95 SH1DE and 11 original
+Crusader frames. This is read-only provenance, not an installer or
+permission to change frozen game assets.
+See [Native BC7 provenance](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/PIVOT_NATIVE_PROVENANCE.md) (German).
+
+**Flexible local setup:** Unity and .NET tool paths can now be saved
+without selecting either game installation first. Partial configuration
+updates preserve unrelated settings; changing saved game directories
+requires confirmation in the GUI and keeps a backup. Invalid settings
+are validated before replacing existing files. **Setup status** now
+reports missing or malformed local settings without starting tools, while
+a damaged toolchain JSON can be repaired only with explicit consent and
+a backup of its original bytes. Invalid game-path TOML now produces
+an actionable warning in setup rather than preventing the main window
+from opening. Other Suite functions remain usable.
+See [Setup instructions](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/EINRICHTEN.md) (German).
+
+**Build prerequisites (new):** Under **Build packages → Check build
+prerequisites**, inspect the selected profile, original-game paths,
+sprite mapping, exact pinned Unity editor, .NET SDK and any existing
+output before building. Missing inputs remain **blockers** instead
+of being suppressed by the lenient setup doctor. This does not start
+Unity, modify project files or certify a release. The SDK can also
+be found in portable work/toolchains folders, DOTNET_ROOT or system
+locations when PATH is missing or points to a runtime-only installation.
+The real builder still probes the SDK version before writing output.
+The **Build package (preflight)** button always repeats this check,
+asks for explicit consent (default **No**) and treats failed
+post-build validation as an error, even in lenient setup mode. Unsaved
+game/Unity selections and manual SDK overrides differing from the
+actual SDK the builder will use do not count as valid build inputs.
+See [Build readiness](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/BUILD_READINESS.md) (German).
+
+**Build completion feedback:** After an actual tracked Suite build,
+the window separates the build/validator exit code from an independent
+SHA-256 offline audit. **Show build result** displays verified files,
+warnings, previous-manifest comparison and clearly pending in-game
+approval. Failed or cancelled attempts never inherit a prior package's
+success, and no installation is triggered.
+See [Build completion](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/BUILD_COMPLETION.md) (German).
+
+**Persistent local build history:** **Build packages → Show build history**
+checks a local SHA-256-linked journal of genuine Suite build attempts
+across application restarts. Incomplete/cancelled sessions never
+turn into a success; entries cannot install or approve a release.
+See [Build history](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/BUILD_HISTORY.md) (German).
+
+## Three delivery routes
+
+1. **Europe BC7 package** – all groups as BC7 AssetBundles with a runtime DLL for SE 2.x.
+2. **Single images** – `Override/Sprites/<name>.png`, override the atlas by name.
+3. **SE atlas** – `Override/Atlas/<group>/atlas.dds|png`, loaded by the Script Extender itself.
+
+## Limits
+
+- The sandbox approximates team colour (red channel of the mask) and wind; lighting and fog are missing.
+- Images the game never requests do not appear; new slots need runtime code.
+- The UI texture list (128 entries) and the UI lane runtime check (114) are not unified yet; validating with UI BC7 therefore shows a warning.
+- Log output of the command-line tools is German.
+
+## Included
+
+- **AtlasBuilder** by Serpens66 (`extras/atlasbuilder`, with permission); BC7 encoder `texconv` from Microsoft DirectXTex (in branch `komplett`, otherwise via `fetch_texconv.py`).
+- **Stronghold Sprite Editor** 1.0 (`extras/sprite-editor`, MIT), with a bilingual version.
+- Atlas contract (`extras/atlas-contract`).
+
+See [Script Extender compatibility and unverified runtime ABI](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SCRIPT_EXTENDER.md).
+
+## Stronghold Origins: full HUD/GUI graphics catalog
+
+The **ORIGINS Grafiken** workspace indexes all **13,562** versioned entries from the [Stronghold Europe graphics repository](https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten), including **4,086 HUD/GUI assets**, Noesis XAML, historic blue/silver color schemes and the GUI atlases. Start the Universal Suite, open **ORIGINS Grafiken**, search and filter every source path, and select an authorized local Git-LFS clone to verify SHA-256 provenance and create isolated editable copies. The native Stronghold 1 DE HUD Studio remains accessible.
+
+Large and partly game-derived binary resources remain in the access-managed graphics repository. The Suite source contains the complete path/Git-ID catalog and processing tools. [Setup and limitations](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/ORIGINS_GRAFIKDATEN_KATALOG.md).
+
+## Shared integration: building damage and tool consolidation (2026-11-06)
+
+In the SpriteSuite-launched sprite editor, **Damage → AI sprites with Codex** uses ChatGPT sign-in to generate custom HP/fire progressions and alternate versions of the selected building. The local Codex client receives prompts and references and uses your ChatGPT plan for image generation. Results can be exported as editable tiles and damage packages.
+
+See [building damage instructions](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md) and the [integration handoff / test matrix](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).
+
+## Building-damage runtime preflight
+
+The tool `tools/building_damage_runtime_preflight.py` validates approved SpriteSuite building-damage libraries. `python tools/qa_building_damage_runtime.py` builds a synthetic 5×5 export, checks every PNG/SHA-256 and the manifest, and tests a read-only C# building selector against a synthetic Script Extender API. The real game-API reader is disabled unless `SHCDE_BUILDING_DAMAGE_READONLY_API` is explicitly enabled. No in-game renderer switcher is installed. See [runtime assessment](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/GEBAEUDESCHADEN_RUNTIME_AUDIT_PLAN_20261106.md).
+
+### Content-bound building-damage review
+
+Approved building damage models now carry a SHA-256 self-consistency digest of the intact art, altered tiles, masks, HP settings, geometry, and relevant generator inputs. Any subsequent change blocks silent export until manually reviewed. The HP preview can show all drafts or exportable, approved stages only. Legacy approved projects without this digest remain readable, but must be reviewed again before export. See [building damage guide](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md).
+
+### Read-only building footprint and sprite mapping audit
+
+`python tools/qa_building_damage_runtime.py` now checks building occupancy versus the SpriteSuite grid while leaving all renderer mappings unverified. Use `--verify-shcdese <local-SHCDESE.dll-path>` to compile-check an actual local Script Extender API surface without loading or running the game. See [building footprint audit](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/blob/db10f46a857c0977a1a5b436c4b0e881abf427d5/docs/GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md).

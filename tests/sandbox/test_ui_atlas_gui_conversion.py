@@ -261,7 +261,8 @@ def test_gui_export_completion_is_bound_to_its_own_job(
     assert app.done_hooks == []
     assert tab.folder.get() == "work/ui"
     assert len(tab._entries) == 2
-    assert "Nicht freigegeben" in tab.preview_state.get()
+    assert "Nicht freigegeben" not in tab.preview_state.get()
+    assert "2 Ausschnitte" in tab.preview_state.get()
 
 
 def test_gui_store_stage_order_safe_name_and_profile_target(gui, monkeypatch):
@@ -342,7 +343,7 @@ def test_gui_sh1_hud_build_requires_explicit_replacement_consent(
     destination.mkdir(parents=True)
     sentinel = destination / "existing.png"
     sentinel.write_bytes(b"keep old work")
-    decisions = iter([True, False])
+    decisions = iter([False])
     monkeypatch.setattr(
         module.messagebox, "askyesno",
         lambda *args, **kwargs: next(decisions),
@@ -350,3 +351,22 @@ def test_gui_sh1_hud_build_requires_explicit_replacement_consent(
     tab.sh1_hud_build()
     assert not app.tasks
     assert sentinel.read_bytes() == b"keep old work"
+
+
+def test_ui_workspace_operations_need_no_quality_approval_dialog(gui,sample,monkeypatch):
+    _root,tab,app,module=gui
+    def forbidden(*args,**kwargs):
+        raise AssertionError('No preliminary approval for a chosen workspace operation')
+    monkeypatch.setattr(module.messagebox,'askyesno',forbidden)
+    tab.store.delete(0,'end')
+    tab.store.insert(0,'free-work')
+    tab.store_import()
+    assert app.tasks[-1][0][1:3]==['import','--from']
+    tab.profile_write()
+    assert app.tasks[-1][0][-1]=='--write'
+    tab._sh1_mode=True
+    tab.folder.delete(0,'end')
+    tab.folder.insert(0,'work/sh1-hud-editierbar')
+    tab.sh1_hud_build()
+    assert app.tasks[-1][0][1]=='build'
+    assert '--replace' not in app.tasks[-1][0]

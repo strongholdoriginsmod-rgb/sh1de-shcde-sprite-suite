@@ -106,5 +106,15 @@
   "Zuerst einen Sprite auswählen. Für die Generierung SpriteSuite mit dem lokalen Codex-Client öffnen.": "Select a sprite first. Open SpriteSuite with the local Codex client to generate images.",
   "Modellausgabe benötigt eine erneute Ausrichtungsprüfung. Rohbilder und Belege wurden gesichert.": "The model output needs an alignment review. Raw images and receipts have been saved.",
   "KI-Auftragsbundle exportiert.": "AI request bundle exported.",
-  "nicht vergleichbar": "not comparable"
+  "nicht vergleichbar": "not comparable",
+  "KI-Kandidaten übernehmen": "Use AI candidate",
+  "Notiz (optional)": "Note (optional)",
+  "Original + Variante übernehmen…": "Use original and candidate…",
+  "Letzte KI-Notiz": "Last AI note",
+  "Noch kein Kandidat geladen. Einen Kandidaten importieren und direkt übernehmen.": "No candidate loaded. Import and use a candidate directly.",
+  "Ein Manifest allein beweist nicht den API-Absender. Vorhandene Herkunftsbelege und optionale Notizen werden übernommen.": "A manifest alone does not prove the provider. Available provenance and optional notes are retained.",
+  "Enthält unverändertes Referenz-PNG, registrierte Arbeitsvorlage, Prompt, Prüfsummen und die Anleitung für Codex. Offline und ohne API-Kosten. Jede Variante ist ein eigenständiger Kandidat und kann direkt übernommen werden.": "Contains the unchanged reference PNG, registered model reference, prompt, checksums and Codex instructions. Offline, without API fees. Each variant is an independent candidate and can be used directly.",
+  "Gemessenen Pivot übernehmen…": "Apply measured pivot…",
+  "Notiz überschreitet 1200 Zeichen.": "Note exceeds 1200 characters.",
+  "KI-Kandidat übernommen. Bearbeitung und Export sind direkt möglich.": "AI candidate applied. Editing and export are available directly."
 }

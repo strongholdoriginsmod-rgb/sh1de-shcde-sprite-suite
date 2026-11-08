@@ -82,6 +82,11 @@ def build_navigation_targets(app) -> tuple[SearchTarget, ...]:
         add(f"workspace:{index}", de, en, "Arbeitsbereich", "Workspace",
             (de, en), lambda tab=widget: app.open_tab(tab))
 
+    if hasattr(app, "open_ui_atlas_workspace"):
+        add("atlas:png-xaml", "UI-Atlas · PNG + XAML", "UI atlas · PNG + XAML",
+            "Grafik", "Graphics", ("UI MasterAtlas", "atlas import", "XAML", "atlas öffnen"),
+            app.open_ui_atlas_workspace)
+
     editor = app.exchange_tab
     for index, section in enumerate(editor.section_targets):
         en = {

@@ -26,7 +26,7 @@ Ein Sprite kann über seine Bodenraute hinausragen. Seine PNG-Höhe wird nicht a
 
 **Importieren → Quellmetadaten (JSON)** übernimmt passende Pivots und PPU für die aktuelle Quellgruppe. **SHCDE-Zielreferenzen (PNG / ZIP)** und **SHCDE-Zielmetadaten (JSON)** speichern dagegen separate Zielvorlagen. Bei einzelnen Referenz-PNGs darf die Metadaten-Datei vor oder nach den Bildern geladen werden. Ein bereits bebilderter Referenzeintrag wird nicht still durch einen zweiten Import ersetzt.
 
-Unter **Ziel** einen einzelnen Zielnamen eingeben oder mehrere ausgewählte Frames mit **Serie zuordnen…** auf eine bekannte SHCDE-GM-Gruppe und deren ersten Index abbilden. „Abstände der Quellnummern erhalten“ ist optional. Zielnamen erst nach tatsächlichem Abgleich bestätigen. Als Alternative eine CSV importieren:
+Unter **Ziel** einen einzelnen Zielnamen eingeben oder mehrere ausgewählte Frames mit **Serie zuordnen…** einer SHCDE-GM-Gruppe und deren erstem Index zuweisen. „Abstände der Quellnummern erhalten“ ist optional. Eine Bestätigungscheckbox ist nicht erforderlich. Ohne passende Zielreferenz bleibt die Existenz des Namens im Spiel ungeprüft; der Editor meldet einen Hinweis und erlaubt den Export. Als Alternative eine CSV importieren:
 
 ```csv
 source,target,pivot_x,pivot_y,ppu,offset_x,offset_y
@@ -66,13 +66,13 @@ Raster, Frontanker und „Hintere Flächen nach oben verlängern“ anpassen. Na
 
 ## 6. Atlas und Modpaket
 
-Unter **Ziel** den Ersetzungsweg wählen. Ein **Einzel-Override** benötigt Zielabmessungen als Referenz und identische Bildmaße. Bei **Atlas** müssen PPU innerhalb derselben Zielgruppe konsistent sein. Zielgruppen umfassen beim Modexport sämtliche sichtbaren Frames des Projekts, auch wenn sie aus unterschiedlichen Quellgruppen kommen.
+Unter **Ziel** den Ersetzungsweg wählen. Ein **Einzel-Override** verwendet ohne Zielreferenz die Arbeitsbildgröße und gibt dazu einen Hinweis aus. Liegen exakte Zielabmessungen vor, müssen die Bildmaße übereinstimmen. Bei **Atlas** müssen PPU innerhalb derselben Zielgruppe konsistent sein. Zielgruppen umfassen beim Modexport sämtliche sichtbaren Frames des Projekts, auch wenn sie aus unterschiedlichen Quellgruppen kommen. Doppelte Zielnamen sowie für das gewählte Material fehlende Masken bleiben technische Fehler.
 
 Material, Abstand, Randwiederholung und maximale Atlas-Kantenlänge festlegen. Es wird nicht rotiert; Masken verwenden dieselben Packpositionen. Randwiederholung darf den Abstand nicht übersteigen. Die tatsächliche maximale Bildfläche von 16 Megapixeln gilt zusätzlich zur eingestellten Kantenlänge. Ein größerer Wert hebt diese Schutzgrenze nicht auf.
 
 Unter **Projekt → Projekteinstellungen** Autor, Mod-ID und Version eintragen. **Prüfung** zeigt blockierende Fehler getrennt von Warnungen. Ein fehlerfreier Bericht bestätigt lediglich die formalen Regeln dieser Anwendung. Er bestätigt weder die Existenz frei eingegebener Ziel-IDs noch die richtige Animationsrolle, Materialwirkung oder Spielkompatibilität.
 
-„Modpaket · ZIP“ enthält den Pfad `BepInEx/plugins/<Mod-ID>/`. „Modpaket · SEMOD“ enthält dagegen `info.json` direkt an der Archivwurzel. Beide sind Varianten desselben vorbereiteten Assetmods; nicht gleichzeitig installieren. Der mitgelieferte `port-report.json` enthält Zuordnungen, Metadaten, Prüfergebnisse, Hashes und ausdrücklich `inGameTested: false`. Voraussetzung und Abnahmeverfahren stehen im Recherchebericht. Originale Spieldateien werden durch den Editor nicht geöffnet oder verändert.
+„Modpaket · ZIP“ enthält den Pfad `BepInEx/plugins/<Mod-ID>/`. „Modpaket · SEMOD“ enthält dagegen `info.json` direkt an der Archivwurzel. Beide sind Varianten desselben vorbereiteten Assetmods; nicht gleichzeitig installieren. Der Export benötigt keine zusätzliche Freigabecheckbox oder Prüfnotiz. Der mitgelieferte `port-report.json` enthält Zuordnungen, Metadaten, Prüfergebnisse, Hashes und ausdrücklich `inGameTested: false`. Der Recherchebericht erläutert das Format und ein mögliches Spielprüfverfahren; er ist keine Warte- oder Freigabevoraussetzung für den Export. Originale Spieldateien werden durch den Editor nicht geöffnet oder verändert.
 
 ## 7. Tastatur
 

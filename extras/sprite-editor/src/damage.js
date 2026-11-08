@@ -66,12 +66,8 @@
                     const candidateId = stage.candidateId === null || stage.candidateId === undefined ? null : ident(stage.candidateId, 'Kandidatenbild');
                     if (candidateId && store && !store.has(candidateId))
                         fail('Kandidatenbild fehlt.');
-                    const requestedStatus = stage.status ?? 'draft';
-                    if (!['draft', 'approved', 'rejected'].includes(requestedStatus))
-                        fail('Unbekannter Freigabestatus.');
-                    const suppliedDigest = stage.approvalDigest ?? null;
-                    if (suppliedDigest !== null && (typeof suppliedDigest !== 'string' || !/^[a-f0-9]{64}$/.test(suppliedDigest)))
-                        fail('Ungültige Zustandsprüfsumme der Schadensfreigabe.');
+                    const requestedStatus = ['draft', 'approved', 'rejected', 'pending', 'stale'].includes(stage.status) ? stage.status : 'draft';
+                    const suppliedDigest = typeof stage.approvalDigest === 'string' && /^[a-f0-9]{64}$/.test(stage.approvalDigest) ? stage.approvalDigest : null;
                     // Legacy approvals predate content binding. Never silently export them as reviewed.
                     const status = requestedStatus === 'approved' && !suppliedDigest ? 'draft' : requestedStatus;
                     const approvalDigest = status === 'approved' ? suppliedDigest : null;
@@ -146,10 +142,10 @@
         const a = C.alphaBounds(original), b = C.alphaBounds(candidate);
         stats.original = { visible: a.opaque + a.partial, bounds: [a.left, a.top, a.right, a.bottom] };
         stats.candidate = { visible: b.opaque + b.partial, bounds: [b.left, b.top, b.right, b.bottom] };
-        if (b.empty) errors.push('Kandidatenbild ist vollständig transparent.');
-        if (a.empty) errors.push('Original besitzt keine sichtbaren Pixel.');
+        if (b.empty) warnings.push('Kandidatenbild ist vollständig transparent.');
+        if (a.empty) warnings.push('Original besitzt keine sichtbaren Pixel.');
         if (!a.empty && !b.empty && Math.abs(a.bottom - b.bottom) > 2)
-            errors.push('Bodenanker verschoben: Unterkante weicht um mehr als zwei Pixel ab.');
+            warnings.push('Bodenanker verschoben: Unterkante weicht um mehr als zwei Pixel ab.');
         if (candidate.width === original.width && candidate.height === original.height) {
             let intersection = 0, orig = 0, opaqueOutside = 0, changed = 0, partial = 0;
             for (let i = 0; i < original.data.length; i += 4) {

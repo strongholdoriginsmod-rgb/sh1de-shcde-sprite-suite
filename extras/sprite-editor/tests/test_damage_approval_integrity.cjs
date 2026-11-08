@@ -40,7 +40,7 @@ test('an approved stage carries a content-bound SHA-256 fingerprint, survives SH
     const fresh=await DI.exportPackage(reopened.state,reopened.store);
     A.equal(fresh.manifest.buildings[0].stages[0].approvalDigest,stage.approvalDigest);
 });
-test('stage translation, original tile revisions, and in-place pixel mutations invalidate export without a UI commit',async()=>{
+test('stale review metadata is reported without preventing exact current damage export',async()=>{
     const f=fixture();
     const scenario=[
         ['stage offset',s=>s.frames.find(x=>x.groupId===f.sceneId).dy+=1],
@@ -55,23 +55,24 @@ test('stage translation, original tile revisions, and in-place pixel mutations i
     for(const [label,mutate] of scenario){
         const state=I.clone(f.state);
         mutate(state);
-        await A.rejects(DI.exportPackage(state,f.store),/Freigabe.*gültig/,label);
+        const packed=await DI.exportPackage(state,f.store);
+        A.equal(packed.manifest.buildings[0].stages[0].contentApproved,false,label);
+        A.equal(packed.manifest.buildings[0].stages[0].approvalDigest,null,label);
     }
     const original=f.store.get(f.state.frames.find(x=>x.groupId===f.groupId).imageId);
     original.data[(12*64+29)*4]^=8;
-    await A.rejects(DI.exportPackage(f.state,f.store),/Freigabe.*gültig/,
-        'immutable buffers must be verified even if an external tool changed bytes in place');
+    A.equal((await DI.exportPackage(f.state,f.store)).manifest.buildings[0].stages[0].contentApproved,false);
     original.data[(12*64+29)*4]^=8;
     A.equal((await DI.exportPackage(f.state,f.store)).manifest.buildings.length,1);
 });
-test('legacy approved stages with missing fingerprints revert to draft on import, never silently export',async()=>{
+test('legacy review fingerprints may expire without blocking the current sprites',async()=>{
     const f=fixture();
     const legacy=I.clone(f.state);
     delete legacy.damageProfiles[0].stages[0].approvalDigest;
     const normalized=I.validate(legacy,f.store);
     A.equal(normalized.damageProfiles[0].stages[0].status,'draft');
     A.equal(normalized.damageProfiles[0].stages[0].approvalDigest,null);
-    await A.rejects(DI.exportPackage(normalized,f.store),/keine freigegebenen/);
+    A.equal((await DI.exportPackage(normalized,f.store)).manifest.buildings[0].stages[0].contentApproved,false);
     const reopened=await I.readProject(await K.unzip(await I.writeProject(normalized,f.store)));
     A.equal(reopened.state.damageProfiles[0].stages[0].status,'draft');
 });
@@ -92,10 +93,12 @@ test('manual label edits keep valid approval; substantive editor edits must clea
     D.invalidateApprovals(f.state,differentModel);
     A.equal(differentModel.damageProfiles[0].stages[0].status,'draft');
 });
-test('non-hash or malformed hash in user project is rejected instead of accepted as reviewed',()=>{
+test('malformed optional review hash is discarded without certifying reviewed content',()=>{
     const f=fixture(), corrupted=I.clone(f.state);
     corrupted.damageProfiles[0].stages[0].approvalDigest='not-really-a-hash';
-    A.throws(()=>I.validate(corrupted,f.store),/Zustandsprüfsumme/);
+    const normalized=I.validate(corrupted,f.store);
+    A.equal(normalized.damageProfiles[0].stages[0].approvalDigest,null);
+    A.equal(normalized.damageProfiles[0].stages[0].status,'draft');
 });
 
 test('quality review warns about mask pixels retained outside visible ruined material',()=>{
@@ -115,7 +118,7 @@ test('quality review warns about mask pixels retained outside visible ruined mat
     A.ok(report.stats.orphanMaskPixels>=30);
     A.ok(report.stats.structuralLossPixels>=30);
     A.ok(report.warnings.some(w=>w.includes('Materialmaske')));
-    A.throws(()=>DI.approveStage(st,next,f.stageId,'',true),/Qualitätswarnungen/);
+    A.equal(DI.approveStage(st,next,f.stageId,'',false).state.damageProfiles[0].stages[0].status,'approved');
 });
 
 test('restored building silhouette in a worse damage stage is flagged against approved milder stage',()=>{
@@ -138,7 +141,7 @@ test('restored building silhouette in a worse damage stage is flagged against ap
     frame.imageId=store.add(stronger);
     const report=DI.qualityReport(heavyState,store,heavy.stageId);
     A.ok(report.warnings.some(w=>w.includes('zuvor entfernte opake Bildpixel')));
-    A.throws(()=>DI.approveStage(heavyState,store,heavy.stageId,'',true),/Qualitätswarnungen/);
+    A.equal(DI.approveStage(heavyState,store,heavy.stageId,'',false).state.damageProfiles[0].stages.find(s=>s.id===heavy.stageId).status,'approved');
     A.equal(DI.approveStage(heavyState,store,heavy.stageId,
         'Unterschiedliche Ruinenkonturen manuell überprüft',true).state.damageProfiles[0]
         .stages.find(s=>s.id===heavy.stageId).status,'approved');

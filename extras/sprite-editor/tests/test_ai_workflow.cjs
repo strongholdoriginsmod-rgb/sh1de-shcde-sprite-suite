@@ -45,7 +45,7 @@ test('AI request registers RGBA without modifying original source', async () => 
     assert.equal(request.referenceSHA256, await K.sha256(source));
     assert.equal(request.variants, 2);
     assert.equal(request.model, 'gpt-image-2.6-flare');
-    assert.equal(request.requiresManualApproval, true);
+    assert.equal(request.requiresManualApproval, false);
     assert.equal(request.automaticInstallation, false);
     assert.equal(request.registration.scale >= 1, true);
     assert.match(request.prompt, /ground baseline/i);
@@ -67,27 +67,31 @@ test('AI request registers RGBA without modifying original source', async () => 
 test('model, asset class, variant count, and prompt must validate before export', async () => {
     for (const bad of [
         {model: 'fictitious'}, {variants: 0}, {variants: 5},
-        {assetClass: '../..'}, {goal: 'short'},
+        {assetClass: '../..'}, {goal: 'x'.repeat(4001)},
         {goal: '\0invalid sufficiently long'},
     ]) {
         assert.throws(() => AI.options({...task,...bad}));
     }
     assert.throws(() => AI.canvasPlan(C.image(1800, 1800)), /zu groß/);
+    assert.equal(AI.options({...task,goal:'x'}).goal,'x');
+    assert.equal(AI.options({...task,goal:''}).goal,'');
 });
 
-test('candidate review blocks wrong size, unchanged and fully transparent image', () => {
+test('candidate review blocks wrong size and only warns for unchanged or transparent art', () => {
     const img = sample();
     const unchanged = AI.reviewCandidate(img, img);
-    assert.ok(unchanged.errors.some(s => /unverändert/.test(s)));
+    assert.deepEqual(unchanged.errors,[]);
+    assert.ok(unchanged.warnings.some(s => /unverändert/.test(s)));
     assert.ok(AI.reviewCandidate(img, C.image(20, 20)).errors.length);
-    assert.ok(AI.reviewCandidate(img, C.image(64, 32)).errors.some(s => /transparent/.test(s)));
+    assert.deepEqual(AI.reviewCandidate(img, C.image(64, 32)).errors,[]);
+    assert.ok(AI.reviewCandidate(img, C.image(64, 32)).warnings.some(s => /transparent/.test(s)));
     const different = C.image(64, 32, new Uint8Array(img.data));
     different.data[(15 * img.width + 30) * 4] = 66;
     const checked = AI.reviewCandidate(img, different);
     assert.deepEqual(checked.errors, []);
     assert.equal(checked.stats.changedPixels, 1);
     assert.equal(checked.stats.alphaChanged, 0);
-    assert.equal(checked.needsManualReview, true);
+    assert.equal(checked.needsManualReview, false);
 });
 
 test('AI provenance survives validation and undo; disappears when pixels are replaced', async () => {
@@ -127,10 +131,10 @@ test('AI provenance survives validation and undo; disappears when pixels are rep
     assert.equal(clean.frames[0].aiGeneration,undefined);
     const forged = I.clone(history.state);
     forged.frames[0].aiGeneration.apiOriginVerified = true;
-    assert.throws(() => I.validate(forged,history.store), /nachweisbar/);
+    assert.equal(I.validate(forged,history.store).frames[0].aiGeneration,undefined);
     const touched = I.clone(history.state);
     history.store.get(candidateId).data[0] ^= 1;
-    assert.throws(() => I.validate(touched,history.store), /nachweisbar/);
+    assert.equal(I.validate(touched,history.store).frames[0].aiGeneration,undefined);
 });
 
 test('request SHA is bound to the exact archived JSON bytes', async () => {
@@ -164,7 +168,7 @@ test('AI candidate manifests are source- and request-bound but not provider sign
     for (const change of [
         {referenceSHA256:'a'.repeat(64)}, {candidateSHA256:'b'.repeat(64)},
         {requestSHA256:'c'.repeat(64)}, {assetClass:'made-up'},
-        {variant:5}, {needsManualReview:false}, {inGameTested:true},
+        {variant:5}, {inGameTested:true},
         {registration:{ registered:false,candidateWritten:true }}
     ]) {
         assert.throws(() => AI.verifyCandidateMetadata({...metadata,...change},
@@ -172,4 +176,6 @@ test('AI candidate manifests are source- and request-bound but not provider sign
     }
     assert.equal(AI.verifyCandidateMetadata(metadata, generated.request.referenceSHA256,
         candidateSHA).requestMatched, false);
+    assert.equal(AI.verifyCandidateMetadata({...metadata,needsManualReview:false},
+        generated.request.referenceSHA256,candidateSHA).sourceMatched,true);
 });

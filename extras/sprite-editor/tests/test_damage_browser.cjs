@@ -98,8 +98,8 @@ async function run() {
         await wait(page, () => window.SpriteEditor.inspect().state.damageProfiles[0].gameBuildingType === 108);
         checks.push('Expliziter Gebäudetyp wird mit dem Profil gespeichert');
 
-        await clickLabel(page, 'Alle HP-Schadensmodelle exportieren…');
-        const freeZip = await waitForZip(tmp, '_gebaeudeschaden_alle.zip');
+        await clickLabel(page, 'HP-Schadensmodelle exportieren…');
+        const freeZip = await waitForZip(tmp, '_gebaeudeschaden.zip');
         const freeFiles = await K.unzip(new Uint8Array(fs.readFileSync(freeZip)));
         const freeManifest = JSON.parse(K.decodeText(freeFiles.find(e => e.name === 'damage-manifest.json').data));
         assert.equal(freeManifest.exportMode, 'all-stages');
@@ -146,24 +146,20 @@ async function run() {
         assert.equal(s.status, 'draft');
         checks.push('Kandidat über echten Dateidialog importiert, nicht automatisch freigegeben');
 
-        // An identical candidate must not be considered a meaningful damage state.
+        // Identical art remains usable without notes or a mandatory approval.
         await page.evaluate(() => { window.__damageImageBefore = window.SpriteEditor.inspect().state.frames.find(f =>
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId; });
         await clickLabel(page, 'PNG als Tiles zerlegen');
         await wait(page, () => window.SpriteEditor.inspect().state.frames.find(f =>
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId !== window.__damageImageBefore);
-        await clickLabel(page, 'Qualität abnehmen…');
+        await clickLabel(page, 'Vergleich und Notiz…');
         await wait(page, () => document.querySelector('#modal').open);
         assert.equal(await page.$$eval('.damage-review-canvas', nodes => nodes.length), 2);
-        await page.evaluate(() => {
-            document.querySelector('#modal [name="confirmed"]').checked = true;
-            document.querySelector('#modal-submit').click();
-        });
-        await wait(page, () => !document.querySelector('#modal-error').hidden);
-        const refusal = await page.$eval('#modal-error', n => n.textContent);
-        assert(/identisch|Original|veränderten Pixeln|Modell weiter beschädigen/.test(refusal), refusal);
-        await page.evaluate(() => document.querySelector('[data-action="close-modal"]').click());
-        checks.push('Identisches KI-Bild wird trotz ausdrücklichem Klick nicht freigegeben');
+        assert.equal(await page.$$eval('#modal input[type=checkbox]', nodes=>nodes.length),0);
+        await page.evaluate(() => document.querySelector('#modal-submit').click());
+        await wait(page, () => !document.querySelector('#modal').open);
+        assert.equal((await state(page)).damageProfiles[0].stages[0].status,'approved');
+        checks.push('Identisches KI-Bild ohne Pflichtnotiz oder Bestätigung nutzbar');
 
         // Change a real opaque pixel and import it through the same user flow.
         const changed = await K.decodePNG(original);
@@ -193,12 +189,11 @@ async function run() {
         await clickLabel(page, 'PNG als Tiles zerlegen');
         await wait(page, () => window.SpriteEditor.inspect().state.frames.find(f =>
             f.groupId === window.SpriteEditor.inspect().state.damageProfiles[0].stages[0].sceneId).imageId !== window.__damageImageBefore);
-        await clickLabel(page, 'Qualität abnehmen…');
+        await clickLabel(page, 'Vergleich und Notiz…');
         await wait(page, () => document.querySelector('#modal').open);
         assert.equal(await page.$$eval('.damage-review-canvas', nodes => nodes.length), 2);
         await page.evaluate(() => {
-            document.querySelector('#modal [name="confirmed"]').checked = true;
-            document.querySelector('#modal [name="notes"]').value = 'Technische und visuelle Prüfung bestätigt';
+            document.querySelector('#modal [name="notes"]').value = 'x';
             document.querySelector('#modal-submit').click();
         });
         try {
@@ -209,7 +204,7 @@ async function run() {
                 stage: window.SpriteEditor.inspect().state.damageProfiles[0].stages[0] }));
             throw new Error('Cannot approve modified stage: ' + JSON.stringify(diagnostic));
         }
-        checks.push('Verändertes Schadensmodell nur nach manueller Abnahme freigegeben');
+        checks.push('Verändertes Schadensmodell mit optionaler Ein-Zeichen-Notiz markiert');
         assert.match((await state(page)).damageProfiles[0].stages[0].approvalDigest, /^[a-f0-9]{64}$/);
         await field(page, 'Vorschau-Modus', 'approved');
         assert((await page.evaluate(() => [...document.querySelectorAll('.info-line')]
@@ -217,8 +212,8 @@ async function run() {
         await field(page, 'Vorschau-Modus', 'all');
         checks.push('Freigegebene Vorschau und Pixelzustandsprüfsumme sind gültig');
 
-        await clickLabel(page, 'HP-Schadensmodelle exportieren…');
-        const damageZip = await waitForZip(tmp, '_gebaeudeschaden.zip');
+        await clickLabel(page, 'Nur markierte Schadensmodelle exportieren…');
+        const damageZip = await waitForZip(tmp, '_gebaeudeschaden_markiert.zip');
         const damageEntries = await K.unzip(new Uint8Array(fs.readFileSync(damageZip)));
         const manifest = JSON.parse(K.decodeText(damageEntries.find(x => x.name === 'damage-manifest.json').data));
         assert.equal(manifest.runtimeHookInstalled, false);

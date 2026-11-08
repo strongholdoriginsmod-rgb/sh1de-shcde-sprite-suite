@@ -32,7 +32,7 @@ def menu(page,action):page.locator('.menu summary').click();page.locator(f'.menu
 def export(page,kind,filename,scope=None):
  page.locator('header [data-action="export"]').click();page.get_by_label('Format',exact=True).select_option(kind)
  if scope:page.get_by_label('Umfang',exact=True).select_option(scope)
- if kind in ('mod','semod'):page.locator('[name="ack"]').check()
+ if kind in ('mod','semod'):assert_(page.locator('[name="ack"]').count()==0,'No mandatory export approval')
  with page.expect_download(timeout=20000) as d:page.locator('#modal-submit').click()
  file=OUT/filename;d.value.save_as(file);quiet(page);waitfor(page,"!document.getElementById('modal').open");return file
 

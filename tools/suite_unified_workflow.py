@@ -93,6 +93,8 @@ class UnifiedWorkflowTab(ttk.Frame):
             label=self._localize("Mod-Dateien unverändert hinzufügen…"))
         self.actions_menu.entryconfigure(self.custom_export_menu_index,
             label=self._localize("Mod-ZIP speichern unter…"))
+        self.actions_menu.entryconfigure(self.atlas_menu_index,
+            label=("UI atlas (PNG + XAML)…" if english else "UI-Atlas (PNG + XAML)…"))
         english=self.app.language.get().upper()=="EN"
         translated={key:(CATEGORY_EN.get(key,key) if english else key)
                     for key in hud.CATEGORIES}
@@ -132,6 +134,10 @@ class UnifiedWorkflowTab(ttk.Frame):
             if getattr(widget,"project",None)!=self.pipeline.project:
                 continue
             studio=getattr(widget,"_studio_controller",None)
+            atlas=getattr(widget,"_atlas_controller",None)
+            if atlas is not None:
+                if atlas.is_dirty():found.append(atlas)
+                continue
             if studio is not None:
                 if studio.is_dirty():found.append(studio)
                 continue
@@ -185,14 +191,17 @@ class UnifiedWorkflowTab(ttk.Frame):
             try:stack.extend(node.winfo_children())
             except tk.TclError:continue
             if (not only_noesis and isinstance(node,tk.Toplevel) and
-                    getattr(node,"_studio_controller",None) is not None and
+                    (getattr(node,"_studio_controller",None) is not None or
+                     getattr(node,"_atlas_controller",None) is not None) and
                     node.winfo_exists() and getattr(node,"project",None)==project):
                 to_close.append(node)
             elif (isinstance(node,allowed) and node.winfo_exists() and
                     getattr(node,"project",None)==project):
                 to_close.append(node)
         for node in to_close:
-            node.destroy()
+            atlas=getattr(node,"_atlas_controller",None)
+            if atlas is not None:atlas.close()
+            else:node.destroy()
         if only_noesis:
             self._visual_window=None
         else:
@@ -233,7 +242,7 @@ class UnifiedWorkflowTab(ttk.Frame):
 
     def create_project(self):
         slug=simpledialog.askstring("Neues Mod-Projekt",
-            "Projekt-ID (a-z, 0-9, Bindestrich; mindestens 3 Zeichen):",
+            "Projektname (zum Beispiel Mein Menü):",
             initialvalue="mein-mod-projekt",parent=self)
         if not slug:return
         if not self._save_pending("dem Anlegen eines anderen Projekts"):

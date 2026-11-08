@@ -80,6 +80,11 @@ def _png(payload: bytes) -> dict:
             rgba = image.convert("RGBA")
             pixels = rgba.tobytes()
             bbox = rgba.getchannel("A").getbbox()
+    except AssetInspectionError:
+        # A bounded inspection is not evidence of damaged input. The project
+        # pipeline can report its existing budget warning without decoding a
+        # large atlas, while actual decoder failures remain hard errors.
+        raise
     except (OSError, UnidentifiedImageError, ValueError) as exc:
         raise AssetInspectionError("PNG ist nicht lesbar oder beschädigt") from exc
     visible = partial = hidden_rgb = 0

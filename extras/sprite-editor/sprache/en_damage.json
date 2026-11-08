@@ -108,5 +108,13 @@
   "Bildaufträge nutzen deinen ChatGPT-Tarif und gegebenenfalls Codex-Guthaben. Abbrechen stoppt weitere Aufträge nach dem laufenden Bild.": "Image jobs use your ChatGPT plan and available Codex credits. Cancelling stops further jobs after the current image.",
   "Pixel außerhalb des Tile-Rasters ausblenden": "Hide pixels outside the tile grid",
   "Kopie ans Tile-Raster anpassen": "Fit a copy to the tile grid",
-  "Die Rasteranpassung blendet Pixel ohne Tile-Zuordnung aus. Das Kandidaten-PNG bleibt erhalten.": "Fitting hides pixels with no tile assignment and retains the original candidate PNG."
+  "Die Rasteranpassung blendet Pixel ohne Tile-Zuordnung aus. Das Kandidaten-PNG bleibt erhalten.": "Fitting hides pixels with no tile assignment and retains the original candidate PNG.",
+  "Vergleich und Notiz…": "Compare and add note…",
+  "Schadensmodell vergleichen · optionale Notiz": "Compare damage model · optional note",
+  "Als geprüft markieren": "Mark as reviewed",
+  "Nur markierte Schadensmodelle exportieren…": "Export marked damage models only…",
+  "Nur als geprüft markierte Modelle": "Models marked as reviewed only",
+  "Vergleich und Notizen sind optional. Modelle können ohne Freigabe direkt verwendet und exportiert werden.": "Comparison and notes are optional. Models can be used and exported directly without approval.",
+  "Prüfnotizen sind optional und an den damaligen Pixelstand gebunden. Geänderte Modelle bleiben direkt exportierbar.": "Review notes are optional and refer to their recorded pixel state. Modified models remain directly exportable.",
+  "Standardexport: alle Stufen einschließlich Entwürfen und verworfenen Varianten. Der optionale zweite Export filtert nur nach gesetztem Vergleichsmarker. Beide ZIPs sind eigenständige Grafikpakete.": "Default export includes all stages, including drafts and discarded variants. The optional second export filters by the comparison marker only. Both ZIPs are independent graphics packages."
 }

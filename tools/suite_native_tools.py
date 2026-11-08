@@ -80,9 +80,10 @@ PAGING = {"offset": {"type": "integer", "minimum": 0},
 PROJECT_PROPERTIES = {
     "operation": {"type": "string", "enum": ["create_image", "import_image",
         "import_mod_file", "import_patch", "inspect", "audit", "build", "backup",
-        "restore", "new", "open"]},
+        "restore", "new", "open", "publish_ui_atlas"]},
     **{name: STRING for name in ("source", "relative_path", "category", "name",
-        "guid", "author", "version", "output", "project", "project_name", "game_document")},
+        "guid", "author", "version", "output", "project", "project_name", "game_document",
+        "atlas_workspace", "expected_revision")},
     "width": {"type": "integer", "minimum": 1, "maximum": 16384},
     "height": {"type": "integer", "minimum": 1, "maximum": 16384},
 }
@@ -377,6 +378,8 @@ class NativeToolService:
                 finally:
                     if process.poll() is None:
                         self._stop(process)
+                if reason is None and out.stat().st_size + err.stat().st_size > MAX_CAPTURE:
+                    reason = "output_limit"
                 result = {"returncode": process.returncode,
                           "output_truncated": out.stat().st_size > MAX_TEXT or err.stat().st_size > MAX_TEXT}
                 for label, stream in (("stdout", stdout), ("stderr", stderr)):
@@ -455,6 +458,9 @@ class NativeToolService:
             output = pipeline.import_mod_file(_check_path(required("source")), relative=relative)
         elif operation == "import_patch":
             output = pipeline.import_patch(_check_path(required("source")), game_document=args.get("game_document"))
+        elif operation == "publish_ui_atlas":
+            return pipeline.publish_ui_atlas(_check_path(required("atlas_workspace")),
+                expected_revision=required("expected_revision"), cancel=self._cancel.is_set)
         elif operation == "inspect":
             return pipeline.inspect_asset(required("relative_path"))
         elif operation == "audit":

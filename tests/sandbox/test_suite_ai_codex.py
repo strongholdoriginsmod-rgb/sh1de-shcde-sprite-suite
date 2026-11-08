@@ -82,7 +82,6 @@ def test_invalid_source_and_model_do_not_generate(tmp_path):
         {"variants": 17},
         {"referenceSHA256": "a" * 64},
         {"size": "64x32"},
-        {"requiresManualApproval": False},
         {"registration": {"width": 1024}},
         {"referenceFiles": ["reference.png"]},
         {"input_fidelity": "high"},
@@ -126,9 +125,19 @@ def test_mock_generator_records_bound_candidate_receipts_and_completed_run(tmp_p
     assert meta["requestSHA256"] == request["_request_sha256"]
     assert meta["candidateSHA256"] == hashlib.sha256(
         (tmp_path / "candidate_run" / "variant_01.png").read_bytes()).hexdigest()
-    assert meta["needsManualReview"]
+    assert meta["needsManualReview"] is False
     assert not meta["inGameTested"]
     assert not result["installed"]
+
+
+@pytest.mark.parametrize("goal,prompt,approval", [("x", "x", False), ("", "", None), ("a", "edit", True)])
+def test_short_or_empty_briefs_have_no_approval_or_minimum_text_gate(tmp_path, monkeypatch, goal, prompt, approval):
+    bundle = sample_bundle(tmp_path, overrides={"goal": goal, "prompt": prompt, "requiresManualApproval": approval})
+    request, images = ai.load_request(bundle)
+    assert request["goal"] == goal
+    assert isinstance(request["prompt"], str) and request["prompt"]
+    monkeypatch.setattr(ai, "_generate_one", lambda *_args: pytest.fail("Offline validation must not generate"))
+    assert ai.main(["--bundle", str(bundle), "--output", str(tmp_path / "unused")]) == 0
 
 
 def test_interrupted_multi_variant_generation_is_marked_partial(tmp_path, monkeypatch):

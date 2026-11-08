@@ -2713,12 +2713,8 @@ label {
                     const candidateId = stage.candidateId === null || stage.candidateId === undefined ? null : ident(stage.candidateId, 'Kandidatenbild');
                     if (candidateId && store && !store.has(candidateId))
                         fail('Kandidatenbild fehlt.');
-                    const requestedStatus = stage.status ?? 'draft';
-                    if (!['draft', 'approved', 'rejected'].includes(requestedStatus))
-                        fail('Unbekannter Freigabestatus.');
-                    const suppliedDigest = stage.approvalDigest ?? null;
-                    if (suppliedDigest !== null && (typeof suppliedDigest !== 'string' || !/^[a-f0-9]{64}$/.test(suppliedDigest)))
-                        fail('Ungültige Zustandsprüfsumme der Schadensfreigabe.');
+                    const requestedStatus = ['draft', 'approved', 'rejected', 'pending', 'stale'].includes(stage.status) ? stage.status : 'draft';
+                    const suppliedDigest = typeof stage.approvalDigest === 'string' && /^[a-f0-9]{64}$/.test(stage.approvalDigest) ? stage.approvalDigest : null;
                     // Legacy approvals predate content binding. Never silently export them as reviewed.
                     const status = requestedStatus === 'approved' && !suppliedDigest ? 'draft' : requestedStatus;
                     const approvalDigest = status === 'approved' ? suppliedDigest : null;
@@ -2793,10 +2789,10 @@ label {
         const a = C.alphaBounds(original), b = C.alphaBounds(candidate);
         stats.original = { visible: a.opaque + a.partial, bounds: [a.left, a.top, a.right, a.bottom] };
         stats.candidate = { visible: b.opaque + b.partial, bounds: [b.left, b.top, b.right, b.bottom] };
-        if (b.empty) errors.push('Kandidatenbild ist vollständig transparent.');
-        if (a.empty) errors.push('Original besitzt keine sichtbaren Pixel.');
+        if (b.empty) warnings.push('Kandidatenbild ist vollständig transparent.');
+        if (a.empty) warnings.push('Original besitzt keine sichtbaren Pixel.');
         if (!a.empty && !b.empty && Math.abs(a.bottom - b.bottom) > 2)
-            errors.push('Bodenanker verschoben: Unterkante weicht um mehr als zwei Pixel ab.');
+            warnings.push('Bodenanker verschoben: Unterkante weicht um mehr als zwei Pixel ab.');
         if (candidate.width === original.width && candidate.height === original.height) {
             let intersection = 0, orig = 0, opaqueOutside = 0, changed = 0, partial = 0;
             for (let i = 0; i < original.data.length; i += 4) {
@@ -2917,8 +2913,8 @@ label {
                   generation.requestSHA256 == null)) ||
                 !['unverified', 'gpt-image-2.6-flare', 'gpt-image-2.6-sunburst']
                     .includes(generation.requestedModel) ||
-                generation.manualReview !== true || generation.apiOriginVerified !== false)
-            C.fail('KI-Herkunft ist nicht ausreichend nachweisbar.');
+                generation.apiOriginVerified !== false)
+            return null; // Optional stale provenance never blocks the current image.
         return { appliedImageId: id(generation.appliedImageId),
             sourceSHA256: generation.sourceSHA256,
             candidateSHA256: generation.candidateSHA256,
@@ -2927,8 +2923,8 @@ label {
             requestReferenceSHA256: generation.requestReferenceSHA256 ?? null,
             requestSHA256: generation.requestSHA256 ?? null,
             generatorMetadataSHA256: generation.generatorMetadataSHA256 ?? null,
-            reviewNotes: text(generation.reviewNotes, 'KI-Abnahmevermerk', 1200),
-            manualReview: true, apiOriginVerified: false };
+            reviewNotes: text(generation.reviewNotes ?? '', 'KI-Notiz', 1200),
+            manualReview: bool(generation.manualReview), apiOriginVerified: false };
     }
     /** Historical pivot correction is a reviewed workspace edit, never a game approval. */
     function validatePivotEvidence(value, imageId, img, currentPivot) {
@@ -2936,22 +2932,24 @@ label {
         if (!value || Array.isArray(value) || typeof value !== 'object')
             C.fail('Ungültige Zinnenlineal-Provenienz.');
         const digest = s => typeof s === 'string' && /^[a-f0-9]{64}$/.test(s);
-        const proposed = C.pivot(value.proposedPivot);
+        let proposed;
+        try { proposed = C.pivot(value.proposedPivot); }
+        catch (_error) { return null; }
         if (Math.abs(proposed.x - currentPivot.x) > 2e-5 ||
                 Math.abs(proposed.y - currentPivot.y) > 2e-5)
             return null; // A later pivot edit invalidates the older review.
         if (!digest(value.measurementSHA256) || !digest(value.imageContentSHA256) ||
                 value.imageContentSHA256 !== imageContentSHA256(img) ||
-                value.manualReview !== true || value.approvedForGame !== false)
-            C.fail('Zinnenlineal-Nachweis ist verändert oder nicht mehr gültig.');
+                value.approvedForGame !== false)
+            return null;
         return {
             appliedImageId: id(value.appliedImageId),
             measurementSHA256: value.measurementSHA256,
             imageContentSHA256: value.imageContentSHA256,
             measuredFrameName: text(value.measuredFrameName, 'Messname', 120),
             proposedPivot: proposed,
-            reviewNotes: text(value.reviewNotes, 'Pivot-Abnahmevermerk', 1200),
-            manualReview: true, approvedForGame: false
+            reviewNotes: text(value.reviewNotes ?? '', 'Pivot-Notiz', 1200),
+            manualReview: bool(value.manualReview), approvedForGame: false
         };
     }
     const tick = () => new Promise(r => setTimeout(r, 0));
@@ -3504,7 +3502,7 @@ label {
                 add('error', 'DUPLICATE_TARGET', `Ziel mehrfach belegt: ${target.name}`, f);
             names.set(key, f);
             if (!ref && !f.targetConfirmed)
-                add('error', 'UNCONFIRMED', 'Zielzuordnung weder durch Referenz belegt noch manuell bestätigt.', f);
+                add('warning', 'UNCONFIRMED', 'Zielzuordnung ohne Zielreferenz; Existenz im Spiel ist nicht nachgewiesen.', f);
             else if (!ref)
                 add('warning', 'NO_REFERENCE', 'Ziel nur manuell zugeordnet; Existenz und Animation im Spiel ungeprüft.', f);
             if (f.metadataStatus === 'assumed')
@@ -3513,7 +3511,7 @@ label {
                 add('warning', 'BUILDING_WIDTH', 'Gebäude-Sprite breiter als das 64-px-Arbeitsraster der Vorlage.', f);
             if (mode === 'sprites') {
                 if (!ref || ref.width === null || ref.height === null)
-                    add('error', 'SPRITE_REFERENCE', 'Einzel-Override benötigt eine Zielreferenz mit exakten Abmessungen.', f);
+                    add('warning', 'SPRITE_REFERENCE', 'Keine Zielreferenz mit exakten Abmessungen; Export verwendet die Arbeitsbildgröße.', f);
                 else if (a.width !== ref.width || a.height !== ref.height)
                     add('error', 'SPRITE_SIZE', `Einzel-Override: ${a.width} × ${a.height}, Ziel erwartet ${ref.width} × ${ref.height}.`, f);
                 if (ref?.pivot && (Math.abs(f.pivot.x - ref.pivot.x) > 1e-8 || Math.abs(f.pivot.y - ref.pivot.y) > 1e-8))
@@ -3892,13 +3890,7 @@ label {
         const result = D.checkCandidate(intact, damaged);
         const pixels = result.stats.original?.visible || 0;
         const percent = stage.hpAtOrBelow;
-        // These are minimum evidence checks, NOT a substitute for an expert
-        // visual judgement of actual structural or fire damage.
-        const fraction = percent <= 15 ? 0.035 : percent <= 45 ? 0.015 :
-            percent <= 75 ? 0.0075 : 0.0025;
-        const minimum = pixels ? Math.min(pixels, Math.max(4, Math.ceil(pixels * fraction))) : 0;
         const actual = result.stats.changedPixels || 0;
-        result.stats.minimumVisibleChanges = minimum;
         result.stats.visibleChangesPercent = pixels ? Math.round(actual * 10000 / pixels) / 100 : 0;
         if (intact.width === damaged.width && intact.height === damaged.height) {
             let lostOpaque = 0, newOpaque = 0;
@@ -3929,9 +3921,6 @@ label {
                         ' Pixel liegen über vollständig transparentem Schadensbild. Masken-/Teamfarben im Zielspiel prüfen.');
             }
         }
-        if (actual < minimum)
-            result.errors.push('Für den gewählten Zerstörungsgrad sind nur ' + actual +
-                ' von mindestens ' + minimum + ' sichtbar veränderten Pixeln vorhanden. Modell weiter beschädigen.');
         if (result.errors.length) return { ...result, intact, damaged };
         for (const other of profile.stages) {
             if (other.id === stage.id || other.kind !== stage.kind || other.status !== 'approved')
@@ -4009,8 +3998,6 @@ label {
         return K.sha256Fallback(K.encodeText(JSON.stringify(payload)));
     }
     function approveStage(state, store, stageId, notes, visualConfirmed) {
-        if (visualConfirmed !== true)
-            fail('Visuelle Prüfung von Schäden, Perspektive, Bodenanker und Reihenfolge ausdrücklich bestätigen.');
         const out = I.clone(state), { stage, profile, base, scene } = getStage(out, stageId);
         const frames = out.frames.filter(f => f.groupId === scene.id);
         const original = out.frames.filter(f => f.groupId === base.id);
@@ -4019,24 +4006,11 @@ label {
             fail('Schadensmodell enthält zu viele Rasterplätze.');
         if (frames.some(f => store.get(f.imageId).width > 64))
             fail('Schadensmodell enthält Tile-Breiten über 64 px.');
-        if (original.some(f => f.maskId) && frames.some(f => !f.maskId))
-            fail('Materialmasken fehlen im Schadensmodell. Die fehlenden Masken müssen manuell bearbeitet werden.');
-        if (frames.length === original.length &&
-            frames.every(f => {
-                const same = original.find(o => o.slot === f.slot);
-                return same && same.imageId === f.imageId;
-            }))
-            fail('Das Modell ist ein unverändertes Original-Klon; vor Freigabe Schäden anlegen.');
         const ids = new Set(), slots = new Set();
         for (const f of frames) {
             if (ids.has(f.id) || slots.has(f.slot)) fail('Doppelte Tiles im Schadensmodell.');
             ids.add(f.id); slots.add(f.slot);
         }
-        const review = qualityReport(out, store, stageId);
-        if (review.errors.length)
-            fail('Qualitätsprüfung: ' + review.errors.join(' '));
-        if (review.warnings.length && !String(notes || '').trim())
-            fail('Qualitätswarnungen müssen geprüft und im Abnahmevermerk dokumentiert werden.');
         stage.reviewNotes = String(notes || '').slice(0, 2000);
         stage.approvalDigest = approvalSignature(out, store, stageId);
         stage.status = 'approved';
@@ -4137,7 +4111,7 @@ label {
     }
     async function exportPackage(state, store, options = {}) {
         // Free creative export is independent of the optional approval workflow.
-        const includeDrafts = options.includeDrafts === true;
+        const includeDrafts = options.includeDrafts !== false && options.approvedOnly !== true;
         const entries = [], buildings = [];
         for (const profile of state.damageProfiles || []) {
             const base = state.scenes.find(g => g.id === profile.buildingGroupId);
@@ -4145,8 +4119,6 @@ label {
             for (const stage of profile.stages.filter(x => includeDrafts || x.status === 'approved')) {
                 const contentApproved = stage.status === 'approved' && !!stage.approvalDigest &&
                     approvalSignature(state, store, stage.id) === stage.approvalDigest;
-                if (!includeDrafts && !contentApproved)
-                    fail('Freigabe ist nach Änderung der Sprite-/Projektdaten nicht mehr gültig: ' + stage.id + '. Qualität erneut abnehmen.');
                 const scene = state.scenes.find(g => g.id === stage.sceneId);
                 const frames = state.frames.filter(f => f.groupId === stage.sceneId)
                     .sort((a, b) => a.slot - b.slot);
@@ -4173,6 +4145,8 @@ label {
                     scene: stage.sceneId, label: stage.label, model: stage.model,
                     reviewNotes: stage.reviewNotes,
                     reviewStatus: stage.status, contentApproved,
+                    reviewWarnings: stage.status === 'approved' && !contentApproved ?
+                        ['Optionale Prüfnotiz gehört zu einem älteren Pixel-/Projektstand.'] : [],
                     approvalDigest: contentApproved ? stage.approvalDigest : null,
                     settings: scene.settings, tiles
                 });
@@ -4239,7 +4213,7 @@ label {
         if (!MODELS.includes(model)) fail('Nicht freigegebenes Bildmodell.');
         const variants = C.integer(raw.variants ?? 1, 'Varianten', 1, 4);
         return { assetClass, model, variants,
-            goal: readable(raw.goal, 'Gestaltungsziel', 8, 4000),
+            goal: readable(raw.goal ?? '', 'Gestaltungsziel', 0, 4000),
             restrictions: readable(raw.restrictions ?? '', 'Erhaltungsregeln', 0, 1600) };
     }
     function canvasPlan(img) {
@@ -4265,7 +4239,7 @@ label {
             'Keep hard silhouette edges, readable pixel art, and straight, non-premultiplied alpha.',
             'Do not add captions, watermarks, contact sheets or multiple variants in one PNG.',
             'Create exactly one candidate per request; each variant is a separate independent output.',
-            'A human must compare against the source and explicitly approve before export to the game.'
+            'The user may edit, use and export the result directly; review notes are optional.'
         ].filter(Boolean).join('\n');
     }
     async function makeRequestBundle(img, originalPNG, raw = {}) {
@@ -4288,7 +4262,7 @@ label {
             modelReferenceSHA256: await K.sha256(registered),
             registration: plan, referenceFiles: ['model_reference.png'],
             prompt: prompt(img, plan, settings),
-            requiresManualApproval: true, automaticInstallation: false
+            requiresManualApproval: false, automaticInstallation: false
         };
         const guide = [
             'SpriteSuite KI-Werkstatt – Kandidatenauftrag',
@@ -4296,7 +4270,7 @@ label {
             'Generierung nach ChatGPT-Anmeldung: python tools/suite_ai_codex.py --bundle request.zip --output neuer_ordner --execute',
             'Die lokale Codex-Sitzung verwendet das angemeldete ChatGPT-Konto und dessen aktuelle Limits.',
             'PNG-Kandidaten im Sprite Editor unter KI-Werkstatt importieren.',
-            'Abmessung, Alpha, Geometrie und Originaltreue visuell pruefen; danach manuell uebernehmen.',
+            'Kandidaten direkt uebernehmen oder optional mit dem Original vergleichen.',
             'Keine automatische Mod-Installation oder Ingame-Freigabe.',
         ].join('\n');
         const requestBytes = K.encodeText(JSON.stringify(request, null, 2));
@@ -4322,7 +4296,6 @@ label {
             fail('Kandidat oder Quellbild passt nicht zum KI-Nachweis (SHA-256).');
         if (!MODELS.includes(raw.model) || !ASSET_CLASSES.includes(raw.assetClass) ||
                 !Number.isSafeInteger(raw.variant) || raw.variant < 1 || raw.variant > 4 ||
-                raw.needsManualReview !== true ||
                 raw.inGameTested !== false || raw.originalGameModified !== false)
             fail('KI-Manifest enthält unzulässige Angaben.');
         if (!raw.registration || raw.registration.registered !== true ||
@@ -4472,8 +4445,8 @@ label {
                 original.data[i + 2] !== candidate.data[i + 2] ||
                 original.data[i + 3] !== candidate.data[i + 3]) changedPixels++;
         }
-        if (!errors.length && !changedPixels) errors.push('Kandidat ist unverändert.');
-        if (!errors.length && !visible) errors.push('Kandidat ist vollständig transparent.');
+        if (!errors.length && !changedPixels) warnings.push('Kandidat ist unverändert.');
+        if (!errors.length && !visible) warnings.push('Kandidat ist vollständig transparent.');
         if (!errors.length && alphaChanged) warnings.push('Transparenz/Silhouette verändert: manuell prüfen.');
         if (!errors.length && changedPixels > original.width * original.height * .8)
             warnings.push('Mehr als 80 % der Pixel verändert: Stil und Originaltreue prüfen.');
@@ -4482,7 +4455,7 @@ label {
         if (quality) warnings.push(...quality.warnings);
         return { errors, warnings, quality,
             stats: { changedPixels, alphaChanged, visible, originalVisible },
-            needsManualReview: true, approved: false };
+            needsManualReview: false, approved: false };
     }
     return Object.freeze({ MODELS, ASSET_CLASSES, options, canvasPlan, registeredImage,
         prompt, makeRequestBundle, verifyCandidateMetadata, reviewCandidate, visualRisk, rankCandidates, analyzeSequence });
@@ -5675,7 +5648,7 @@ label {
                             x.targetName = v ? C.targetName(v).name : '';
                             x.targetConfirmed = false;
                         }) }))] : []),
-                buttons(button('Serie zuordnen…', mappingDialog)), buttons(checkbox('Zielnamen manuell bestätigt', ff.every(x => x.targetConfirmed), '', v => frameUpdate(x => x.targetConfirmed = v))),
+                buttons(button('Serie zuordnen…', mappingDialog)),
                 ...(ref ? [line('Zielreferenz', ref.imageId ? 'PNG vorhanden' : 'Nur Metadaten'), line('Zielgröße', ref.width && ref.height ? `${ref.width} × ${ref.height} px` : 'Nicht bekannt'), line('Ziel-PPU', ref.ppu ?? 'Nicht bekannt'), buttons(button('Pivot / PPU übernehmen', adoptReferences))] : [note('Keine passende SHCDE-Zielreferenz geladen. Gleiche Nummern in SHDE und SHCDE belegen keine gleiche Zuordnung.')])
             ]));
         }
@@ -5924,7 +5897,7 @@ label {
             damageOpenScene(scene.id);
             message(result.clippedPixels ?
                 'Tiles gespeichert. Ausgeblendete Pixel: ' + result.clippedPixels + '. Kandidaten-PNG bleibt im Projekt.' :
-                'Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Freigabe noch ausstehend.');
+                'Kandidat pixelgenau und mit hinteren 1-px-Überlappungen zerlegt. Export ist direkt möglich.');
         });
     }
     function damagePreview(img, label) {
@@ -5949,7 +5922,6 @@ label {
         const summary = [
             line('Sichtbar veränderte Pixel', (review.stats.changedPixels || 0).toLocaleString('de-DE')),
             line('Veränderung · % Original', (review.stats.visibleChangesPercent ?? 0) + '%'),
-            line('Für diese Schadensstufe erforderlich', (review.stats.minimumVisibleChanges ?? 0) + ' Pixel'),
             ...(review.stats.structuralLossPixels === undefined ? [] : [
                 line('Entfernte opake Originalpixel', review.stats.structuralLossPixels),
                 line('Neue opake Bildpixel', review.stats.newOpaquePixels)
@@ -5958,7 +5930,7 @@ label {
                 line('Maskenpixel ohne sichtbare Bilddeckung', review.stats.orphanMaskPixels)
             ])
         ];
-        modal('Schadensmodell abnehmen', [
+        modal('Schadensmodell vergleichen · optionale Notiz', [
             el('div', { class: 'damage-review-gallery' }, [
                 damagePreview(review.intact, 'Original'),
                 ...(closestApproved ? [damagePreview(DI.baseComposite(state(), store(), closestApproved.sceneId).image,
@@ -5968,13 +5940,12 @@ label {
             ...summary,
             ...review.errors.map(msg => el('p', { class: 'error-text', text: msg })),
             ...review.warnings.map(msg => el('p', { class: 'warning-text', text: msg })),
-            note('Bilder und Zerstörungsreihenfolge anhand echter SHCDE-Referenzen prüfen; formale Pixelwerte ersetzen keine visuelle Abnahme.'),
-            checkbox('Perspektive, sichtbare Zerstörungsreihenfolge, Bodenanker, Transparenz, schwarze Punkte und Materialmasken geprüft', false, 'confirmed'),
-            fields(field('Abnahmevermerk', stage.reviewNotes, { name: 'notes', type: 'textarea', wide: true }))
-        ], 'Verbindlich freigeben', data => {
+            note('Vergleich und Notizen sind optional. Modelle können ohne Freigabe direkt verwendet und exportiert werden.'),
+            fields(field('Notiz (optional)', stage.reviewNotes, { name: 'notes', type: 'textarea', wide: true }))
+        ], 'Als geprüft markieren', data => {
             const result = DI.approveStage(state(), store(), stageId, data.get('notes'), data.has('confirmed'));
             commit(result.state, 'Schadensstufe freigegeben', result.store, { keepDamageApproval: true });
-            message('Schadensmodell freigegeben. Weitere Tile-Änderungen setzen es auf Entwurf zurück.');
+            message('Optionaler Vergleichsmarker gespeichert. Export ist unabhängig davon möglich.');
         });
     }
     function damageRemove(stageId) {
@@ -5988,10 +5959,10 @@ label {
             }, 'Schadensstufe entfernt');
         });
     }
-    async function damageExportPackage(includeDrafts = false) {
+    async function damageExportPackage(includeDrafts = true) {
         await task('Schadensbibliothek exportieren', async opts => {
             const result = await DI.exportPackage(state(), store(), { ...opts, includeDrafts });
-            const suffix = includeDrafts ? '_gebaeudeschaden_alle.zip' : '_gebaeudeschaden.zip';
+            const suffix = includeDrafts ? '_gebaeudeschaden.zip' : '_gebaeudeschaden_markiert.zip';
             download(result.bytes, C.safeName(state().project.name) + suffix);
             message(includeDrafts ? 'Alle Schadensstufen frei exportiert, einschließlich Entwürfen.' :
                 'Freigegebene Stufen und HP-Manifest exportiert.');
@@ -6033,7 +6004,7 @@ label {
             }, { min: 0, max: 100 })),
             fields(field('Vorschau-Modus', damageApprovedOnly ? 'approved' : 'all', {
                 wide: true, options: [['all', 'Alle Modelle einschließlich Entwürfen'],
-                    ['approved', 'Nur freigegebene Modelle (Export)']],
+                    ['approved', 'Nur als geprüft markierte Modelle']],
                 onchange: v => { damageApprovedOnly = v === 'approved'; renderInspector(); }
             })),
             line('Freigabestatus', selectedStage ?
@@ -6087,16 +6058,16 @@ label {
                     buttons(button('Kandidat verwerfen', () => damageStageEdit(stage.id,
                         s => { s.candidateId = null; s.status = 'draft'; })))
                 ] : []),
-                buttons(button('Qualität abnehmen…', () => damageApproveDialog(stage.id)),
+                buttons(button('Vergleich und Notiz…', () => damageApproveDialog(stage.id)),
                     button('Verwerfen', () => damageStageEdit(stage.id, s => s.status = 'rejected'))),
                 buttons(button('Stufe entfernen…', () => damageRemove(stage.id))),
-                note('Freigaben sind an den Pixel-, Masken-, HP- und Generatorstand gebunden. Änderungen und ältere Freigaben ohne Zustandsprüfsumme müssen erneut abgenommen werden.')
+                note('Prüfnotizen sind optional und an den damaligen Pixelstand gebunden. Geänderte Modelle bleiben direkt exportierbar.')
             ]));
         }
         sections.push(section('Ausgabe', [
-            buttons(button('Alle HP-Schadensmodelle exportieren…', () => damageExportPackage(true)),
-                button('HP-Schadensmodelle exportieren…', () => damageExportPackage(false))),
-            note('Freier Export: alle Stufen einschließlich Entwürfen und verworfenen Varianten. Der zweite Export enthält nur nach Inhaltsabgleich freigegebene Stufen. Beide ZIPs sind eigenständige Grafikpakete.')
+            buttons(button('HP-Schadensmodelle exportieren…', () => damageExportPackage(true)),
+                button('Nur markierte Schadensmodelle exportieren…', () => damageExportPackage(false))),
+            note('Standardexport: alle Stufen einschließlich Entwürfen und verworfenen Varianten. Der optionale zweite Export filtert nur nach gesetztem Vergleichsmarker. Beide ZIPs sind eigenständige Grafikpakete.')
         ]));
         return sections;
     }
@@ -6227,15 +6198,11 @@ label {
             line('Zielpivot', row.newPivot.x.toFixed(6) + ' / ' + row.newPivot.y.toFixed(6)),
             line('Messquellen-SHA', file.sourceSHA256.slice(0, 24) + '…'),
             damagePreview(store().get(frame.imageId), 'Arbeitsbild vor Pivotkorrektur'),
-            checkbox('Ausgangs- und Zielanker am Overlay visuell geprüft; ' +
-                'Messquelle und Bildgröße stimmen überein.', false, 'confirmed'),
-            fields(field('Prüfvermerk', '', { type: 'textarea', name: 'notes',
+            fields(field('Notiz (optional)', '', { type: 'textarea', name: 'notes',
                 wide: true, placeholder: 'Sichtprüfung der Grundlinie und Sprite-Position' }))
         ], 'Nur Arbeits-Pivot übernehmen', data => {
-            if (!data.has('confirmed')) throw new Error('Explizite Sichtprüfung fehlt.');
             const notes = String(data.get('notes') || '').trim();
-            if (notes.length < 8 || notes.length > 1200)
-                throw new Error('Prüfvermerk mit mindestens acht Zeichen erforderlich.');
+            if (notes.length > 1200) throw new Error('Notiz überschreitet 1200 Zeichen.');
             const now = primary(), checked = legacyPivotReview();
             if (file !== legacyPivotFile || !now ||
                     now.id !== frame.id || now.imageId !== boundImageId ||
@@ -6253,7 +6220,7 @@ label {
                     appliedImageId: boundImageId, measurementSHA256: file.sourceSHA256,
                     imageContentSHA256: contentHash, measuredFrameName: row.name,
                     proposedPivot: { ...row.newPivot }, reviewNotes: notes,
-                    manualReview: true, approvedForGame: false
+                    manualReview: false, approvedForGame: false
                 };
             }, 'Zinnenlineal-Pivot nach visueller Prüfung');
             message('Messpivot in der Arbeitskopie übernommen; Original und Spiel unverändert.');
@@ -6303,7 +6270,7 @@ label {
                         ' / ' + review.row.newPivot.y.toFixed(6)),
                     buttons(button('Anker-Overlay anzeigen', showLegacyPivotOverlay, {
                         disabled: !['review', 'already'].includes(review.status)
-                    }), button('Nach Sichtprüfung übernehmen…', applyLegacyPivotReview, {
+                    }), button('Gemessenen Pivot übernehmen…', applyLegacyPivotReview, {
                         disabled: review.status !== 'review'
                     })));
             } else
@@ -6426,7 +6393,7 @@ label {
             damagePreview(source, 'Arbeitsoriginal'),
             damagePreview(candidate.image, 'Kandidat: ' + candidate.name)
         ];
-        modal('KI-Kandidaten bildbezogen abnehmen', [
+        modal('KI-Kandidaten übernehmen', [
             el('div', { class: 'damage-review-gallery' }, inspected),
             line('Veränderte Pixel', review.stats.changedPixels),
             line('Geänderte Alphawerte', review.stats.alphaChanged),
@@ -6438,17 +6405,13 @@ label {
                 'Kein Generatorbeleg, Herkunft unbestätigt'),
             note('Nur die aktuelle Arbeitskopie wird ersetzt. Das Original und der Undo-Verlauf bleiben erhalten. ' +
                 'Masken, Pivots und Spielkompatibilität müssen separat geprüft werden.'),
-            checkbox('Ich habe Ausrichtung, Perspektive, Silhouette, Transparenz, Masken und Rechte geprüft.', false, 'reviewed'),
-            fields(field('Abnahmevermerk', '', {
+            fields(field('Notiz (optional)', '', {
                 name: 'notes', type: 'textarea', wide: true,
                 placeholder: 'Warum entspricht dieser Kandidat der Vorlage?'
             }))
         ], 'Kandidaten übernehmen', async data => {
-            if (!data.has('reviewed'))
-                throw new Error('Sichtprüfung muss ausdrücklich bestätigt werden.');
             const notes = String(data.get('notes') || '').trim();
-            if (notes.length < 8 || notes.length > 1200)
-                throw new Error('Abnahmevermerk mit mindestens acht Zeichen erforderlich.');
+            if (notes.length > 1200) throw new Error('Notiz überschreitet 1200 Zeichen.');
             const current = primary();
             if (!current || current.id !== frame.id || current.imageId !== sourceImageId)
                 throw new Error('Quelle hat sich geändert; Kandidat erneut prüfen.');
@@ -6473,15 +6436,15 @@ label {
                     requestSHA256: candidate.receipt?.requestSHA256 || null,
                     generatorMetadataSHA256: candidate.receiptSHA256 || null,
                     reviewNotes: notes,
-                    manualReview: true, apiOriginVerified: false
+                    manualReview: false, apiOriginVerified: false
                 };
                 updated.metadataStatus = 'manual';
-                commit(nextState, 'KI-Kandidat nach Sichtprüfung übernehmen', next, { fit: true });
+                commit(nextState, 'KI-Kandidat übernehmen', next, { fit: true });
                 aiCandidates = [];
                 aiCandidateIndex = 0;
                 aiLastRequest = null;
                 view = 'sprite';
-                message('Geprüfter KI-Kandidat übernommen. Spieltest und Exportprüfung stehen aus.');
+                message('KI-Kandidat übernommen. Bearbeitung und Export sind direkt möglich.');
             });
         });
     }
@@ -6552,7 +6515,7 @@ label {
                 buttons(button('KI-Auftragsbundle exportieren…', () => aiExportRequest())),
                 note('Enthält unverändertes Referenz-PNG, registrierte Arbeitsvorlage, ' +
                     'Prompt, Prüfsummen und die Anleitung für Codex. Offline und ohne API-Kosten. ' +
-                    'Jede Variante benötigt einen eigenständigen Kandidaten und eine eigene Freigabe.'),
+                    'Jede Variante ist ein eigenständiger Kandidat und kann direkt übernommen werden.'),
                 ...(aiLastRequest?.frameId === frame.id &&
                     aiLastRequest?.sourceImageId === frame.imageId ?
                     [line('Vorbereitete Modellanfrage', aiLastRequest.request.model +
@@ -6588,12 +6551,12 @@ label {
                             'Quell-SHA passt, Auftrag nicht hier vorbereitet') :
                         'Ohne Manifest · Herkunft unbestätigt'),
                     note('Ein Manifest allein beweist nicht den API-Absender. ' +
-                        'Nur das Prüfprotokoll und die manuelle Abnahme werden übernommen.'),
+                        'Vorhandene Herkunftsbelege und optionale Notizen werden übernommen.'),
                     ...candidate.review.errors.map(msg =>
                         el('p', { class: 'error-text', text: msg })),
                     ...candidate.review.warnings.map(msg =>
                         el('p', { class: 'warning-text', text: msg })),
-                    buttons(button('Original + Variante abnehmen…', aiApprovalDialog, {
+                    buttons(button('Original + Variante übernehmen…', aiApprovalDialog, {
                         disabled: !!candidate.review.errors.length
                     })),
                     buttons(button('Varianten verwerfen', () => {
@@ -6601,10 +6564,9 @@ label {
                         aiCandidateIndex = 0;
                         renderInspector();
                     }))
-                ] : [note('Noch kein Kandidat geladen. PNGs bleiben bis zur ' +
-                    'ausdrücklichen Abnahme außerhalb des Projekts.')]),
+                ] : [note('Noch kein Kandidat geladen. Einen Kandidaten importieren und direkt übernehmen.')]),
                 ...(frame.aiGeneration ?
-                    [line('Letzte manuelle KI-Abnahme', frame.aiGeneration.reviewNotes),
+                    [line('Letzte KI-Notiz', frame.aiGeneration.reviewNotes),
                      line('Quellnachweis', frame.aiGeneration.sourceSHA256.slice(0, 16) + '…')] : []),
                 ...(groupFrames().length >= 2 ? [buttons(button(
                     'Animationsfolge auf Anker-/Alpha-Sprünge prüfen…', aiAnimationAudit))] : []),
@@ -6683,9 +6645,9 @@ label {
                 text: `${ff.length} ausgewählte Sprites. Reihenfolge: aktuelle Rasterplätze. Die Zielnamen müssen aus SHCDE stammen; Quellnummern sind keine verifizierte Übersetzung.`
             }),
             fields(field('SHCDE-GM-Gruppe', t.group, { name: 'group', wide: true }), field('Erster Zielindex', t.index, { name: 'start', type: 'number', min: 0, max: 1000000 })),
-            el('div', { class: 'field-inline' }, [checkbox('Abstände der Quellnummern erhalten', false, 'gaps')]), el('div', { class: 'field-inline' }, [checkbox('Zielnamen manuell geprüft', false, 'confirmed')])
+            el('div', { class: 'field-inline' }, [checkbox('Abstände der Quellnummern erhalten', false, 'gaps')])
         ], 'Zuordnen', data => {
-            const group = String(data.get('group')), start = C.integer(data.get('start'), 'Zielindex', 0, 1000000), gaps = !!data.get('gaps'), confirmed = !!data.get('confirmed');
+            const group = String(data.get('group')), start = C.integer(data.get('start'), 'Zielindex', 0, 1000000), gaps = !!data.get('gaps');
             C.targetName(group + '-' + start);
             if (gaps && ff.some(f => f.index === null))
                 throw new Error('Nicht alle Quellen besitzen eine Bildnummer.');
@@ -6694,7 +6656,7 @@ label {
                 ff.forEach((old, i) => {
                     const f = s.frames.find(f => f.id === old.id);
                     f.targetName = C.targetName(group + '-' + (start + (gaps ? old.index - min : i))).name;
-                    f.targetConfirmed = confirmed;
+                    f.targetConfirmed = false;
                 });
             }, 'Zielserie zuordnen');
         });
@@ -6883,11 +6845,10 @@ label {
     }
     const exportTypes = [['merged', 'Gesamtbild · PNG'], ['tiles', 'Bearbeitete Tiles · ZIP'], ['originals', 'Unveränderte Originale · ZIP'], ['ora', 'Ebenen · OpenRaster'], ['atlas', 'Atlas + Metadaten · ZIP'], ['mod', 'Modpaket · ZIP'], ['semod', 'Modpaket · SEMOD'], ['csv', 'Zielzuordnung · CSV'], ['split', 'Schnitt · ZIP'], ['ownership', 'Schnittmaske · PNG'], ['report', 'Prüfbericht · JSON'], ['project', 'Projekt · SHSPRITE']];
     function exportDialog() {
-        const type = field('Format', 'merged', { name: 'kind', wide: true, options: exportTypes }), scope = field('Umfang', 'group', { name: 'scope', wide: true, options: [['group', 'Aktuelle Gruppe'], ['selected', 'Ausgewählte Sprites'], ['all', 'Alle Gruppen']] }), details = el('p'), warnings = el('div', { class: 'field-inline' }, [checkbox('Hinweise geprüft; In-Game-Test folgt.', false, 'ack')]);
+        const type = field('Format', 'merged', { name: 'kind', wide: true, options: exportTypes }), scope = field('Umfang', 'group', { name: 'scope', wide: true, options: [['group', 'Aktuelle Gruppe'], ['selected', 'Ausgewählte Sprites'], ['all', 'Alle Gruppen']] }), details = el('p');
         const refresh = () => {
             const kind = type.querySelector('select').value, isMod = ['mod', 'semod'].includes(kind);
             scope.hidden = !['tiles', 'originals', 'atlas', 'csv'].includes(kind);
-            warnings.hidden = !isMod;
             if (isMod) {
                 const issues = I.preflight(state(), store()), errors = issues.filter(i => i.level === 'error');
                 details.textContent = `Alle sichtbaren Sprites · ${errors.length} Fehler · ${issues.length - errors.length} Hinweise. ` + (errors.length ? errors[0].message : 'Das Paket wird vorbereitet, nicht installiert.');
@@ -6899,10 +6860,8 @@ label {
         };
         type.querySelector('select').onchange = refresh;
         refresh();
-        modal('Exportieren', [fields(type, scope), details, warnings], 'Exportieren', async (data) => {
+        modal('Exportieren', [fields(type, scope), details], 'Exportieren', async (data) => {
             const kind = String(data.get('kind'));
-            if (['mod', 'semod'].includes(kind) && !data.get('ack'))
-                throw new Error('Exporthinweise bestätigen.');
             await exportDirect(kind, String(data.get('scope') || 'group'));
         });
     }

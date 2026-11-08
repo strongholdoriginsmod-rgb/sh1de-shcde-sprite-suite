@@ -2,8 +2,9 @@
 
 The SHCDE XAML rectangles and atlas geometry remain authoritative. This does
 not create new Noesis resources, import new HUD states or prove gameplay parity.
-Mappings require a human's semantic approval; mismatched geometry requires
-separate explicit approval. All unselected target crops remain byte-for-byte.
+Users freely select one or many mappings and a fitting mode. No justification,
+semantic approval or running-game acceptance is required to build a candidate.
+All unselected target crop files remain byte-for-byte unchanged.
 """
 from __future__ import annotations
 
@@ -108,10 +109,8 @@ def _row(src: dict, target: dict, *, explicit_alias: bool = False) -> dict:
         "target_size": [target["width"], target["height"]],
         "source_png_sha256": _sha(Path(src["path"])),
         "target_png_sha256": _sha(Path(target["path"])),
-        "fit": "exact" if same else "skip",
-        "approved": False,
-        "semantic_reviewed": False,
-        "geometry_reviewed": False,
+        "fit": "exact" if same else "contain",
+        "selected": False,
         "explicit_alias": explicit_alias,
         "state_note": "",
     }
@@ -139,9 +138,9 @@ def create_plan(source: str | Path, target: str | Path) -> dict:
             "different_size": len(matching) - same,
             "source_without_target_key": len(sources) - len(matching),
             "target_without_source_key": len(targets) - len(matching),
-            "approved": 0, "notes": (
-                "Keine automatische Semantikfreigabe. Fehlende SHCDE-Schlüssel "
-                "benötigen eine explizite Zielzuordnung oder neue XAML/Noesis-Logik."
+            "selected": 0, "notes": (
+                "Grafiken und Zielslots frei auswählen. Unterschiedliche Maße "
+                "mit contain oder stretch einpassen; Zielrechtecke bleiben fest."
             )
         },
     }
@@ -200,17 +199,17 @@ def _validate_plan(plan_path: Path):
         occupied.add(row["target_key"])
         if row.get("fit") not in (*FITS, "skip"):
             raise BridgeError("Nur exaktes Kopieren, Einpassen oder bewusstes Strecken erlaubt")
-        for key in ("approved", "semantic_reviewed", "geometry_reviewed", "explicit_alias"):
-            if type(row.get(key)) is not bool:
-                raise BridgeError(f"{row['target_key']}: {key} muss bool sein")
-        if row["source_key"] != row["target_key"] and not row["explicit_alias"]:
-            raise BridgeError("Aliase müssen ausdrücklich als solche markiert sein")
+        # Read old plans without enforcing their former policy/approval fields.
+        # Selection is an editing choice, never a separate permission gate.
+        row["selected"] = row.get("selected", row.get("approved", False))
+        if type(row["selected"]) is not bool:
+            raise BridgeError(f"{row['target_key']}: selected muss bool sein")
+        row["explicit_alias"] = row["source_key"] != row["target_key"]
         if row["fit"] == "exact" and row["source_size"] != row["target_size"]:
-            if row["approved"]:
+            if row["selected"]:
                 raise BridgeError(f"{row['target_key']}: Größenkonflikt darf nicht exakt kopiert werden")
-        if row["approved"] and (not row["semantic_reviewed"] or row["fit"] == "skip"
-                               or (row["fit"] != "exact" and not row["geometry_reviewed"])):
-            raise BridgeError(f"{row['target_key']}: Funktions- oder Größenfreigabe fehlt")
+        if row["selected"] and row["fit"] == "skip":
+            raise BridgeError(f"{row['target_key']}: Für ausgewählte Grafiken einen Fit-Modus wählen")
     return plan, source, target, sources, targets
 
 
@@ -221,16 +220,17 @@ def _fit_image(image: Image.Image, target_size: tuple[int, int], mode: str) -> I
         return image.copy()
     width, height = target_size
     if mode == "stretch":
-        return image.resize(target_size, Image.Resampling.LANCZOS)
+        return image.resize(target_size, Image.Resampling.NEAREST)
     if mode != "contain":
         raise BridgeError("Unbekannter Geometriemodus")
     factor = min(width / image.width, height / image.height)
     new_size = (max(1, min(width, round(image.width * factor))),
                 max(1, min(height, round(image.height * factor))))
-    scaled = image.resize(new_size, Image.Resampling.LANCZOS)
+    scaled = image.resize(new_size, Image.Resampling.NEAREST)
     result = Image.new("RGBA", target_size, (0, 0, 0, 0))
-    result.alpha_composite(scaled, ((width - new_size[0]) // 2,
-                                    (height - new_size[1]) // 2))
+    result.paste(scaled, ((width - new_size[0]) // 2,
+                          (height - new_size[1]) // 2))
+    scaled.close()
     return result
 
 
@@ -332,6 +332,7 @@ def apply_plan(
     plan_file: str | Path, output: str | Path, *,
     source_game: Path | None = None, target_game: Path | None = None,
     target_xaml: Path | None = None, allow_offline: bool = False,
+    target_keys: list[str] | None = None, fit: str | None = None,
 ) -> dict:
     plan, source, target, sources, targets = _validate_plan(Path(plan_file))
     output = under_work(output, must_exist=False)
@@ -342,21 +343,33 @@ def apply_plan(
         raise BridgeError("Kandidaten-Ausgabe besteht bereits: niemals stillschweigend ersetzen")
     if output.parent.is_symlink():
         raise BridgeError("Ausgabeordner darf kein Link sein")
-    approved = [row for row in plan["mapping"] if row["approved"]]
-    if not approved:
-        raise BridgeError("Kein Element fachlich freigegeben; keine automatische Übernahme")
-    if len(approved) > MAX_MAPPINGS:
-        raise BridgeError("Zu viele Elementfreigaben")
-    if allow_offline:
-        if any(item is not None for item in (source_game, target_game, target_xaml)):
-            raise BridgeError("Offline-Modus niemals mit Teilnachweisen mischen")
-        proofs: dict = {"source_native_verified": False, "target_native_verified": False,
-                        "offline_only_not_release_approved": True}
+    if target_keys is not None:
+        if (not isinstance(target_keys, list) or any(not isinstance(key, str) for key in target_keys)
+                or len(set(target_keys)) != len(target_keys)):
+            raise BridgeError("Zielauswahl muss eine Liste eindeutiger Schlüssel sein")
+        by_target = {row["target_key"]: row for row in plan["mapping"]}
+        if any(key not in by_target for key in target_keys):
+            raise BridgeError("Unbekannter Zielschlüssel in der Auswahl")
+        selected = [dict(by_target[key]) for key in target_keys]
     else:
+        selected = [dict(row) for row in plan["mapping"] if row["selected"]]
+    if not selected:
+        raise BridgeError("Keine Grafiken ausgewählt")
+    if len(selected) > MAX_MAPPINGS:
+        raise BridgeError("Zu viele ausgewählte Grafiken")
+    for row in selected:
+        row["fit"] = fit if fit is not None else row["fit"]
+        if row["fit"] not in FITS:
+            raise BridgeError("Bitte exact, contain oder stretch wählen")
+        if row["fit"] == "exact" and row["source_size"] != row["target_size"]:
+            raise BridgeError("Ungleiche Größen erfordern contain oder stretch")
+    proofs: dict = {"source_native_verified": False, "target_native_verified": False,
+                    "native_provenance_checked": False}
+    if any(item is not None for item in (source_game, target_game, target_xaml)):
         if source_game is None or target_game is None or target_xaml is None:
             raise BridgeError(
-                "Für eine quellgebundene Übertragung SH1-Asset, SHCDE-Asset "
-                "und SHCDE-XAML-Ordner übergeben"
+                "Für die optionale native Herkunftsprüfung alle drei Quellen angeben: "
+                "SH1-Asset, SHCDE-Asset und SHCDE-XAML-Ordner"
             )
         source_proof = _native_sh1_check(Path(source_game), source, plan["source_game_sha256"])
         target_proof = _native_shcde_check(
@@ -364,20 +377,20 @@ def apply_plan(
         )
         proofs = {"source_native_verified": True, "target_native_verified": True,
                   "source": source_proof, "target": target_proof,
-                  "offline_only_not_release_approved": False}
+                  "native_provenance_checked": True}
     output.parent.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix="." + output.name + "-stage-", dir=output.parent))
     try:
         _copy_target_tree(target, stage, targets)
         details = []
-        for row in approved:
+        for row in selected:
             src, tgt = sources[row["source_key"]], targets[row["target_key"]]
             current = Path(src["path"])
             destination = stage / tgt["atlas"] / tgt["file"]
             if _sha(current) != row["source_png_sha256"]:
-                raise BridgeError(f"SH1-Bild seit Freigabe verändert: {src['key']}")
+                raise BridgeError(f"SH1-Bild seit Planung verändert: {src['key']}")
             if _sha(destination) != row["target_png_sha256"]:
-                raise BridgeError(f"SHCDE-Bild seit Freigabe verändert: {tgt['key']}")
+                raise BridgeError(f"SHCDE-Bild seit Planung verändert: {tgt['key']}")
             with Image.open(current) as original:
                 if original.size != tuple(row["source_size"]):
                     raise BridgeError(f"SH1-Bildgröße geändert: {src['key']}")
@@ -400,11 +413,9 @@ def apply_plan(
                 "after_target_png_sha256": _sha(destination),
                 "target_size": row["target_size"],
                 "source_size": row["source_size"],
-                "semantic_reviewed": True,
-                "geometry_reviewed": row["geometry_reviewed"],
             })
         # Every unselected output PNG must be preserved *byte-for-byte*.
-        altered = {row["target_key"] for row in approved}
+        altered = {row["target_key"] for row in selected}
         for key, entry in targets.items():
             if key not in altered and _sha(Path(entry["path"])) != _sha(
                 stage / entry["atlas"] / entry["file"]
@@ -428,14 +439,17 @@ def apply_plan(
             "runtime_game_tested": False,
             "new_xaml_resources_created": False,
             "native_provenance": proofs,
-            "approved_transfers": details,
+            "transfers": details,
+            "approved_transfers": details,  # Compatibility for older readers.
             "total_target_sprites": len(targets),
             "untouched_target_sprites": len(targets) - len(details),
         }
         (stage / "sh1_to_shcde_bridge.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
-        os.replace(stage, output)
+        if output.exists():
+            raise BridgeError("Kandidaten-Ausgabe wurde inzwischen erstellt: keine Überschreibung")
+        os.rename(stage, output)
         return report
     finally:
         if stage.exists():
@@ -469,43 +483,68 @@ def verify_candidate(output: str | Path):
             "in_game_certified": False}
 
 
+def select_mappings(
+    plan_path: str | Path, selections: list[dict], *, replace_selection: bool = True,
+) -> list[dict]:
+    """Select freely chosen source/target pairs in one autosaved operation.
+
+    Every selection is an ordinary edit choice. Notes and prior semantic,
+    visual, geometry or in-game approvals are never required.
+    """
+    plan, source, target, sources, targets = _validate_plan(Path(plan_path))
+    if not isinstance(selections, list) or len(selections) > MAX_MAPPINGS:
+        raise BridgeError("Auswahl muss eine Liste von Zuordnungen sein")
+    if replace_selection:
+        for row in plan["mapping"]:
+            row["selected"] = False
+    result = []
+    occupied = set()
+    for choice in selections:
+        if not isinstance(choice, dict) or set(choice) - {"source_key", "target_key", "fit", "state_note"}:
+            raise BridgeError("Auswahl enthält ungültige Zuordnungsfelder")
+        source_key, target_key = choice.get("source_key"), choice.get("target_key")
+        if source_key not in sources or target_key not in targets:
+            raise BridgeError("SH1-Quell- oder SHCDE-Zielschlüssel fehlt")
+        if target_key in occupied:
+            raise BridgeError("Zielschlüssel mehrfach ausgewählt")
+        occupied.add(target_key)
+        row = _row(sources[source_key], targets[target_key], explicit_alias=source_key != target_key)
+        fit = choice.get("fit", row["fit"])
+        if fit not in FITS:
+            raise BridgeError("Bitte exact, contain oder stretch wählen")
+        if fit == "exact" and row["source_size"] != row["target_size"]:
+            raise BridgeError("Ungleiche Größen erfordern contain oder stretch")
+        note = choice.get("state_note", "")
+        if not isinstance(note, str):
+            raise BridgeError("Eine optionale Notiz muss Text sein")
+        row.update(fit=fit, selected=True, state_note=note)
+        existing = next((index for index, old in enumerate(plan["mapping"]) if old["target_key"] == target_key), None)
+        if existing is None:
+            plan["mapping"].append(row)
+        else:
+            plan["mapping"][existing] = row
+        result.append(row)
+    _validate_plan_rows_in_memory(plan, sources, targets)
+    plan["coverage"].pop("approved", None)
+    plan["coverage"]["selected"] = sum(row["selected"] for row in plan["mapping"])
+    _save_plan(Path(plan_path), plan)
+    return result
+
+
+def select_mapping(
+    plan_path: str | Path, source_key: str, target_key: str, *,
+    fit: str = "exact", state_note: str = "",
+) -> dict:
+    return select_mappings(plan_path, [dict(source_key=source_key, target_key=target_key,
+                                           fit=fit, state_note=state_note)], replace_selection=False)[0]
+
+
 def approve_mapping(
     plan_path: str | Path, source_key: str, target_key: str, *,
-    fit: str, state_note: str,
+    fit: str = "exact", state_note: str = "",
 ):
-    """Approve exactly one named mapping; names alone are never enough."""
-    if fit not in FITS:
-        raise BridgeError("Bitte einen der Modi exact, contain oder stretch wählen")
-    if len(state_note.strip()) < 8:
-        raise BridgeError("Fachliche Element-/Zustandsbegründung (mind. 8 Zeichen) fehlt")
-    plan, source, target, sources, targets = _validate_plan(Path(plan_path))
-    if source_key not in sources or target_key not in targets:
-        raise BridgeError("SH1-Quell- oder SHCDE-Zielschlüssel fehlt")
-    matching = [
-        row for row in plan["mapping"] if row["target_key"] == target_key
-    ]
-    if len(matching) > 1:
-        raise BridgeError("Zielschlüssel mehrfach vorhanden")
-    if matching:
-        if matching[0]["source_key"] != source_key:
-            raise BridgeError("Ziel bereits anderweitig zugeordnet")
-        row = matching[0]
-    else:
-        row = _row(sources[source_key], targets[target_key], explicit_alias=True)
-        plan["mapping"].append(row)
-    if fit == "exact" and row["source_size"] != row["target_size"]:
-        raise BridgeError("Ungleiche Größen erfordern bewusstes contain oder stretch")
-    row.update({
-        "fit": fit, "approved": True, "semantic_reviewed": True,
-        "geometry_reviewed": fit != "exact",
-        "state_note": state_note.strip(),
-    })
-    # Format, paths, disjoint trees, source PNG digests and target PNG digests
-    # are all checked again before accepting the approval.
-    _validate_plan_rows_in_memory(plan, sources, targets)
-    plan["coverage"]["approved"] = sum(x["approved"] for x in plan["mapping"])
-    _save_plan(Path(plan_path), plan)
-    return row
+    """Compatibility spelling for select_mapping; no approval requirement."""
+    return select_mapping(plan_path, source_key, target_key, fit=fit, state_note=state_note)
 
 
 def _validate_plan_rows_in_memory(plan: dict, sources: dict, targets: dict):
@@ -520,10 +559,9 @@ def _validate_plan_rows_in_memory(plan: dict, sources: dict, targets: dict):
             "target_png_sha256"
         ] != _sha(Path(t["path"])):
             raise BridgeError("Eine Bilddatei wurde seit dem Plan verändert")
-        if row["approved"] and (not row["semantic_reviewed"]
-                                or row["fit"] == "skip"
-                                or (row["fit"] != "exact" and not row["geometry_reviewed"])):
-            raise BridgeError("Freigabe ohne vollständige Prüfung")
+        if row["selected"] and (row["fit"] not in FITS or
+                (row["fit"] == "exact" and row["source_size"] != row["target_size"])):
+            raise BridgeError("Ausgewählte Grafik benötigt einen passenden Fit-Modus")
 
 
 def revoke_mapping(plan_path: str | Path, target_key: str):
@@ -531,9 +569,9 @@ def revoke_mapping(plan_path: str | Path, target_key: str):
     rows = [row for row in plan["mapping"] if row["target_key"] == target_key]
     if len(rows) != 1:
         raise BridgeError("Zielzuordnung nicht gefunden")
-    rows[0].update({"approved": False, "semantic_reviewed": False,
-                    "geometry_reviewed": False, "fit": "skip"})
-    plan["coverage"]["approved"] = sum(x["approved"] for x in plan["mapping"])
+    rows[0]["selected"] = False
+    plan["coverage"].pop("approved", None)
+    plan["coverage"]["selected"] = sum(x["selected"] for x in plan["mapping"])
     _save_plan(Path(plan_path), plan)
     return rows[0]
 
@@ -542,31 +580,32 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest="command", required=True)
 
-    p = subs.add_parser("plan", help="Nur Zuordnungsvorschläge; keine automatischen Freigaben")
+    p = subs.add_parser("plan", help="Quell-/Zielzuordnungen für freie Grafikauswahl vorbereiten")
     p.add_argument("--sh1", required=True, help="SH1-HUD-Arbeitsprojekt")
     p.add_argument("--shcde", required=True, help="SHCDE-ui_atlas-Export")
     p.add_argument("--out", required=True, help="Neues Mapping-JSON UNTER work")
 
-    p = subs.add_parser("approve", help="Bestätigte einzelne Zuordnung in den Plan aufnehmen")
+    p = subs.add_parser("select", aliases=["approve"], help="Eine oder mehrere Grafiken direkt auswählen")
     p.add_argument("--plan", required=True)
-    p.add_argument("--source-key", required=True)
-    p.add_argument("--target-key", required=True)
+    p.add_argument("--source-key", action="append", required=True)
+    p.add_argument("--target-key", action="append", required=True)
     p.add_argument("--fit", choices=FITS, required=True)
-    p.add_argument("--state-note", required=True,
-                   help="Manuell geprüfte Funktion/Zustand des Zielslots")
+    p.add_argument("--state-note", default="", help="Optionale Notiz, ohne Mindestlänge")
 
-    p = subs.add_parser("revoke", help="Zuordnung sperren")
+    p = subs.add_parser("revoke", help="Grafik aus der gespeicherten Auswahl nehmen")
     p.add_argument("--plan", required=True)
     p.add_argument("--target-key", required=True)
 
-    p = subs.add_parser("apply", help="Genehmigte Bilder in einen NEUEN SHCDE-Zielexport übertragen")
+    p = subs.add_parser("apply", help="Ausgewählte Bilder direkt in einen NEUEN SHCDE-Zielexport übertragen")
     p.add_argument("--plan", required=True)
     p.add_argument("--out", required=True)
+    p.add_argument("--target-key", action="append", help="Direkte Mehrfachauswahl ohne vorherigen select-Aufruf")
+    p.add_argument("--fit", choices=FITS, help="Fit-Modus für diese Auswahl")
     p.add_argument("--source-game", help="Native SH1-DE-Assetdatei")
     p.add_argument("--target-game", help="Native SHCDE-Assetdatei")
     p.add_argument("--target-xaml", help="Originaler SHCDE-Noesis-XAML-Ordner")
     p.add_argument("--offline-no-native", action="store_true",
-                   help="Nur synthetisches Offline-QA; ausdrücklich keine Releasefreigabe")
+                   help="Kompatibilitätsflag; ohne Originalquellen ist Übertragung standardmäßig offline")
 
     p = subs.add_parser("verify", help="Weiter bearbeitete SHCDE-Exportkopie prüfen")
     p.add_argument("--from", dest="folder", required=True)
@@ -580,9 +619,12 @@ def main(argv=None) -> int:
             document = create_plan(args.sh1, args.shcde)
             _save_plan(file, document)
             result = {"plan": str(file), "coverage": document["coverage"]}
-        elif args.command == "approve":
-            result = approve_mapping(args.plan, args.source_key, args.target_key,
-                                     fit=args.fit, state_note=args.state_note)
+        elif args.command in {"select", "approve"}:
+            if len(args.source_key) != len(args.target_key):
+                raise BridgeError("Gleich viele Quell- und Zielschlüssel angeben")
+            result = select_mappings(args.plan, [dict(source_key=source, target_key=target,
+                fit=args.fit, state_note=args.state_note) for source, target in zip(args.source_key, args.target_key)],
+                replace_selection=False)
         elif args.command == "revoke":
             result = revoke_mapping(args.plan, args.target_key)
         elif args.command == "apply":
@@ -592,6 +634,7 @@ def main(argv=None) -> int:
                 target_game=Path(args.target_game) if args.target_game else None,
                 target_xaml=Path(args.target_xaml) if args.target_xaml else None,
                 allow_offline=args.offline_no_native,
+                target_keys=args.target_key, fit=args.fit,
             )
             result = {"candidate": str(under_work(args.out)),
                       "transfers": len(result["approved_transfers"]),

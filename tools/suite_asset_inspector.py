@@ -33,6 +33,10 @@ class AssetInspectionError(ValueError):
     pass
 
 
+class AssetInspectionBudgetError(AssetInspectionError):
+    """Inspection was skipped; this does not establish malformed input."""
+
+
 def _image_info(file: Path) -> dict:
     from stronghold_europe_de.asset_inspector import (
         inspect_asset, AssetInspectionError as SharedInspectionError,
@@ -113,7 +117,8 @@ def _json_info(file: Path) -> dict:
 
 def _xaml_info(file: Path) -> dict:
     if file.stat().st_size > MAX_XML:
-        raise AssetInspectionError("XAML/XML über 4 MB")
+        raise AssetInspectionBudgetError(
+            "XAML/XML überschreitet das 4-MiB-Inspektionsbudget; XML wurde nicht geparst")
     raw = file.read_bytes()
     upper = raw.upper()
     if b"<!DOCTYPE" in upper or b"<!ENTITY" in upper:
@@ -197,6 +202,9 @@ def inspect_assets(source: Path | str) -> dict:
                                      "not_executed": True, "native_abi_verified": False}
             else:
                 row["inspection"] = {"hash_only": True}
+        except AssetInspectionBudgetError as exc:
+            row["status"] = "warning"
+            row["inspection"] = {"warning": str(exc), "xml_parsed": False}
         except (AssetInspectionError, OSError, OverflowError) as exc:
             row["status"] = "invalid"
             row["inspection"] = {"error": str(exc)}

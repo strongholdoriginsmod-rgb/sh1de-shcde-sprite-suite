@@ -113,6 +113,8 @@ SPECIALISTS: tuple[Specialist, ...] = (
                "Grafik", "Graphics", ("animation", "3d", "einheiten")),
     Specialist("ui_atlas.py", "UI-Atlanten", "UI atlases",
                "Atlas", "Atlas", ("noesis", "hud", "export", "import")),
+    Specialist("ui_atlas_workspace.py", "UI-Atlas aus PNG und XAML bearbeiten", "Edit UI atlas from PNG and XAML",
+               "Atlas", "Atlas", ("masteratlas", "crops", "replace", "undo", "png", "xaml")),
     Specialist("se_atlas.py", "Script-Extender-AtlasBuilder", "Script Extender AtlasBuilder",
                "Atlas", "Atlas", ("bc7", "dds", "override")),
     Specialist("background_v2_pipeline.py", "Hintergrund-Pipeline", "Background pipeline",

@@ -1,307 +1,68 @@
-# SH1DE → SHCDE Universal-Suite 2.0 (Stronghold Europe / ORIGINS)
+# SpriteSuite 2.0 · Stronghold-Modding
 
-## Konsolidierter Release-Kandidat vom 08.11.2026
+Grafiken, Atlanten, HUDs, Noesis-Seiten, Gebäude, Animationen und eigene Mod-Dateien in einem gemeinsamen Projekt bearbeiten, prüfen und als Mod-ZIP ausgeben. Hinzu kommen Fachwerkzeuge für Script Extender, Lua, C# und SHCDE-Spielinhalte. Deutsch und Englisch sind in der Oberfläche umschaltbar. [English](README.en.md).
 
-Gemeinsamer Geometrie- und KI-Editor, historische Messdaten, automatische Werkzeugerkennung, Projekt-/Assetinspektion, zwölf Modding-Arbeitsbereiche und die SHCDE-Werkbank sind verbunden. Der integrierte **KI-Assistent** bedient die vorhandenen Projektwerkzeuge, die Suite-Oberfläche, den lokalen Sprite-Editor und die geöffnete Qt-Sandbox über native Schnittstellen. Anmeldung und Bildaufträge verwenden die lokale Codex-Sitzung mit ChatGPT-Konto, ohne API-Schlüssel. Scrollbare Arbeitsflächen halten auch untere Felder bei kleinen Fenstern erreichbar. Das **Windows-Startpaket** enthält Python und installiert beim ersten Start die übrigen Abhängigkeiten lokal; Internet wird dafür benötigt. [Release- und Integrationsbericht](docs/SPRITESUITE_RELEASE_KONSOLIDIERUNG_20261108.md).
+## Aktueller Stand
 
-Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Statische HUD-/Sprite-Pakete entstehen **ohne feste SE-Version und ohne eigene C#-DLL**; für optionale C#-Plugins gelten getrennte ABI-Schutzprüfungen. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
+**RC5** entwickelt RC4 auf `main` weiter: Ein direkter **PNG-plus-XAML-Atlas-Arbeitsbereich** und ein **ChatGPT-Chat auf der Startseite** verbinden die vorhandenen Werkzeuge mit dem gemeinsamen Projekt. Pflichtbegründungen und künstliche Qualitätsfreigaben für den SH1-Transfer, KI-Kandidaten und eigene Schadens-/Tile-Entwürfe sind entfernt. Die heruntergeladene RC4 enthält diese Änderungen noch nicht. [RC5-Änderungen und Prüfung](docs/SPRITESUITE_RC5_20261108.md).
 
-## Gemeinsame Stronghold-Fachwerkzeuge (Entwicklungszweig, 06.11.2026)
+**Echte HP-/Feuer-Spielabnahme ist weiterhin offen.** Die isolierte SHCDE-QA-Kopie scheitert am Steam-Start mit `Application load error T:0000065432`. Erfolgreiche Datei-, GUI- und ZIP-Tests ersetzen keinen beobachteten Sprite-Wechsel im laufenden Spiel. Alte Entwicklungszweige und Worktrees bleiben bis zur vollständigen Abnahme erhalten. [Konsolidierung und Abnahme](docs/SPRITESUITE_RELEASE_KONSOLIDIERUNG_20261108.md).
 
-**Strg+K** findet nun auch 16 vorhandene CLI-Fachwerkzeuge und die neue historische Toolmatrix nach Aufgabe und deutschem/englischem Namen. Ein Treffer öffnet ausschließlich das passende Formular unter **Alle Werkzeuge**; er startet kein Skript, keinen Build und keine Installation. Der normale Projektablauf und alle vorhandenen Schutzprüfungen bleiben unverändert.
+## Herunterladen und starten
 
-Die neue lesende Toolmatrix vergleicht historische Stronghold-/SpriteSuite-Entwicklungsordner anhand von SHA-256, vorhandenen Einstiegspunkten und Risikoklassen, ohne Programme zu importieren oder auszuführen: `python tools/suite_tool_inventory.py --compare "E:\SU_base" --format markdown`. [Technische Analyse](docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_ANALYSE_20261106.md) · [Umsetzungsplan](docs/STRONGHOLD_TOOL_KONSOLIDIERUNG_IMPLEMENTIERUNGSPLAN_20261106.md). Kein neuer Release.
+Für Windows-Nutzer ist das **Windows-Startpaket** richtig. Es enthält Python; beim ersten Start lädt es die übrigen Abhängigkeiten anhand festgelegter Hashes in seinen eigenen Ordner. Dafür ist Internet nötig. Eine separate Python-Installation wird nicht benötigt.
 
-## Aktuelle Python-/Spiele-Kompatibilität (05.11.2026)
+- [Vorabversion RC5 mit Windows-Startpaket, Quellcode und SHA-256-Dateien](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.5).
+- **Source ZIP** enthält den Quellcode für Entwicklung und eigene Builds, keine fertig eingerichtete Python-Umgebung.
+- Das vollständige Offline-Paket mit vorinstallierten Qt-/FMOD-Komponenten ist ein lokal geprüfter Entwicklungsbuild und kein öffentliches Release-Asset.
 
-Die neue [Python-3.15-/Spielstruktur-Kompatibilitätsmatrix](docs/SPRITESUITE_PY315_LATEST_COMPAT_2026-11-05.md)
-unterscheidet **Quellunterstützung (3.13–3.15)**, die wirklich startende Tcl/Qt-Umgebung,
-nachinstallierbare Python-3.15-Quellbuilds und noch ungeprüfte native Spiel-ABI.
-Unter **Werkzeuge → Kompatibilität prüfen → Spielstruktur prüfen** kann ein
-ausgewählter Game-/SE-Ordner ohne Installation gelesen werden. Neue Versionen
-werden nicht pauschal ausgeschlossen, aber ohne echten Ingame-Beleg auch nicht
-als native Plugin-Freigabe behauptet. Die bisherige Python-3.13-Portable-Ausgabe
-bleibt vorerst die auslieferbare lokale Referenz.
+Das ZIP vollständig in einen eigenen kurzen Ordner wie `C:/SpriteSuite` entpacken und `SpriteSuite/Suite starten.cmd` öffnen. Ein kurzer Pfad vermeidet Probleme mit langen Qt-Dateinamen unter Windows. Spielgrafiken und Spiele werden nicht mitgeliefert.
 
-## Interaktive Anleitung und bebildertes Handbuch (04.11.2026)
+## UI-MasterAtlas bearbeiten
 
-**Sofort erreichbar:** Links **Anleitung (Strg+F1)** anklicken, Lernpfad auswählen, mit **Zurück / Weiter** durch echte Bedienelemente gehen. Ein markierter Befehl wird dadurch **nicht automatisch ausgeführt**. Der Lernfortschritt bleibt nutzerlokal; alle Projektdateien und Spielinstallationen bleiben unverändert.
+Ab RC5: **Strg+K → UI-Atlas · PNG + XAML**. Alternativ **Projekt & Dateien → Mehr → UI-Atlas (PNG + XAML)…** oder **Oberfläche → PNG + XAML öffnen…**.
 
-Das neue **[14-seitige PDF-Handbuch mit Original-Screenshots](docs/SPRITESUITE_ILLUSTRIERTES_HANDBUCH.pdf)** kann auch direkt unter **Werkzeuge > PDF-Handbuch** geöffnet werden. **Werkzeuge > Kompatibilität prüfen** bietet eine nur lesende Windows-/Python-/Tcl-/Qt-/Steam-Diagnose; die Freigabe unbekannter Spiel-/Noesis-/ABI-Versionen bleibt gesperrt. [Bedienung, Demo, Grenzen und Kompatibilitätsmatrix](docs/SPRITESUITE_ANLEITUNGSMODUS_2026-11-04.md).
+1. Atlas-PNG und passende XAML wählen. Die XAML liefert Sprite-Namen und Rechtecke. Bei mehreren Bildblättern gegebenenfalls den `BitmapImage`-Key angeben.
+2. **PNG + XAML als Arbeitsstand öffnen**, Sprite-Eintrag suchen und auswählen. Ein zweiter Atlas kann als Quelle dienen.
+3. **Auswahl ersetzen**: `exact` verlangt die Zielgröße; `contain` und `stretch` passen die Quelle ausdrücklich an. Zielrechtecke bleiben erhalten.
+4. Rückgängig, Wiederholen und Original wiederherstellen sind dauerhaft verfügbar. Originaldateien bleiben erhalten.
+5. **Ins Mod-Projekt übernehmen** schreibt PNG und unveränderte XAML nach `Override/Assets/GUI/Sprites/` des aktiven Projekts. Anschließend prüfen, sichern und Mod-ZIP bauen. Der Export installiert nichts ins Spiel.
 
-## Neue Oberfläche
+Der neue Arbeitsbereich unterstützt unter anderem 8192 × 8192 Pixel große MasterAtlanten. Für die Tk-Anzeige werden nur ausgewählte Ausschnitte verwendet. Zusätzliche Bildblätter derselben XAML müssen separat verfügbar sein; dazu erscheinen Warnungen. [Atlas-Anleitung](docs/UI_ATLAS_PNG_XAML.md).
 
-**Workflow-Überarbeitung vom 4. November 2026:** Statt übereinander gestapelter Schrittkarten stehen jetzt Projektdateien, skalierende Vorschau und Bearbeiten nebeneinander. Prüfung und statischer Mod-ZIP-Export bleiben bei 1020 × 680 sichtbar. Der Layout-Designer nutzt die vergrößerte Zeichenfläche, zeigt Ebeneneigenschaften früher und passt den anfänglichen Zoom korrekt ein. [Bedienung und Grenzen](docs/SPRITESUITE_WORKFLOW_FIRST_UI_2026-11-04.md).
+Crusader-DE-XAML liegt gewöhnlich unter `<Spiel>/BepInEx/plugins/000shcdese/Override/Assets/GUI/Sprites/UI-MasterAtlas.xaml`. Originalpixel können in `globalgamemanagers.assets` liegen; dafür bleibt der Spieleexport unter **Oberfläche** verfügbar. XAML aus einer Mod wie `Stronghold1Textures` muss zu deren Atlas passen. Eine Atlas-XAML ist eine Ressourcenliste und keine HUD-Layoutdatei.
 
+Das ältere Fenster **Stronghold 1 HUD → Crusader DE** ordnet bereits exportierte SH1-DE-Elemente Crusader-Zielen zu. Für SH1 Classic gelten die gesonderten GM1-Werkzeuge. [Aktuelle Workflows](docs/WORKFLOWS.md).
 
-Die SpriteSuite besitzt eine feste Seitennavigation, eine kürzere
-Startseite mit Direkteinstiegen und einen vereinfachten Bereich
-**HUD & Menüs**: Bild öffnen → Pixel bearbeiten → Layout gestalten →
-Export vorbereiten. Technische Arbeitsordner, ältere Spezialseiten
-und ausführliche Protokolle bleiben bei Bedarf erreichbar, stehen
-aber nicht mehr ständig im Vordergrund. Der Layout-Designer gruppiert
-Bildebenen, Ansicht, Speicherung und Export getrennt.
-Der Layout-Designer nennt jetzt stets den nächsten notwendigen Schritt,
-zeigt Bilddateinamen statt langer Ressourcenpfade und bündelt seltene
-Ebenenbefehle im Rechtsklickmenü. Die HUD-/Menüwerkstatt öffnet nach dem
-Neustart das letzte Projekt, die zuletzt gewählte Grafik und das
-zuletzt gespeicherte Layout erneut. Der Zustandsvermerk bleibt unter
-`work/`; gespeicherte Ebenendaten werden nicht überschrieben.
-
-[Anleitung zur neuen Bedienoberfläche](docs/SPRITESUITE_NEUE_OBERFLAECHE_2026-10-28.md).
-
-## Herunterladen
-
-**Wichtig für Windows-Kompatibilität:** Das Portable-ZIP in einen **kurzen Zielpfad** entpacken, zum Beispiel `C:/SpriteSuite` oder `E:/SS`, statt in einen mehrfach verschachtelten Downloads-/Archivordner. Die mitgelieferten Qt-Dateien besitzen lange relative Namen. Bei ungefähr 260 Zeichen im vollständigen Pfad kann die Windows-Entpackung fehlschlagen, auch wenn die ZIP-Prüfsumme korrekt ist. Leere kurze Ordner mit Umlauten und Leerzeichen wurden erfolgreich getestet. Bitte vor dem Start **vollständig** entpacken; keine Einzeldateien in fremde Python-Installationen mischen.
+In diesem Transferfenster ab RC5 die gewünschten Zeilen mehrfach auswählen und direkt übertragen. Eine Pflichtbegründung, Mindesttextlänge oder Einzelfreigabe gibt es dort nicht mehr. Originalquellen können zusätzlich geprüft werden; für die normale Übertragung sind installierte Spiele nicht erforderlich.
 
+## ChatGPT auf der Startseite
 
-| Variante | Inhalt | Wie |
-|---|---|---|
-| **Windows-Startpaket RC4** | Suite und Python; zusätzliche Pakete werden beim ersten Start hashgeprüft heruntergeladen | [Neue Vorabversion v2.0.0-rc.4](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) · keine separate Python-Installation, Internet beim Erststart nötig |
-| **Windows Portable 2.0.0 (lokaler Release-Kandidat)** | Suite mit Python-Laufzeit im ZIP; **keine Python-Installation nötig** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – noch keine öffentliche Stable-Freigabe; [Release- und Abnahmestand](docs/RELEASE_CANDIDATE_2026-11-04.md) |
-| **Frühere öffentlich angebotene Portable-Ausgabe** | Historischer Stand mit sicherer Projektsicherung | [Windows-Release vom 30. Oktober 2026](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) |
-| **Quellcode RC4** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | [Quellcode und Prüfsumme im RC4-Release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) |
-| Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
-
-Spielgrafik wird **nicht** verteilt. Sie entsteht beim Einlesen und Bauen aus den eigenen, installierten Spielen.
-**Spiel- und Script-Extender-Versionsnummern sind keine pauschale Sperre:**
-Unbekannte Versionen können inventarisiert, als Ziel registriert und
-mit passendem Mapping bearbeitet werden. Native ABI-Integritätsprüfungen
-bleiben unabhängig von der Versionsnummer bestehen.
-[Details zur versionsoffenen Verarbeitung](docs/VERSIONSOFFENE_SH1DE_SHCDE_SE_2026-10-28.md).
-
-## Projekte vollständig sichern und auf einen anderen PC übertragen
-
-Unter **HUD & Menüs** stehen **Projekt sichern …** und
-**Projekt aus ZIP öffnen …** bereit. Das Archiv enthält die
-bearbeitbaren Arbeitsgrafiken, Ebenen, Positionen, Import-Originale,
-Revisionen und Positionsmanifeste. Es enthält **keine** Spieleinstallation
-oder QA-Installationsbelege. Beim Wiederherstellen wird ein neuer
-Projektname vorgeschlagen. Vorhandene Projekte werden niemals
-überschrieben. Vor der Sicherung werden offene Pixeleditoren, Texteditoren
-und Layouts auf ungespeicherte Änderungen geprüft; ein fehlgeschlagenes
-Speichern verhindert ein unvollständiges Projektarchiv.
-
-Alte Metadaten aus der bisherigen absoluten Installationspfadkennung
-werden beim ersten Zugriff kontrolliert in eine portable Ablage
-übernommen; das Original bleibt als Sicherung erhalten. Diese Übernahme
-sollte **vor dem Kopieren auf einen anderen PC** auf dem Ursprungsrechner
-durchgeführt werden.
-
-[Schritt-für-Schritt-Anleitung und Sicherheitsregeln für Projektarchive](docs/PROJEKTARCHIVE_2026-10-29.md).
-[Prüfstand und noch offene Grenzen](docs/QUALITAETSAUDIT_2026-10-29.md).
-
-## HUD & Menüs – neue integrierte Grafikwerkstatt
-
-Der eigene Reiter **HUD & Menüs** verbindet Menü- und HUD-Grafiken,
-Alpha-Pixeleditor, neue transparente PNGs, Resource-Key-Kopien,
-Vorher/Nachher, XAML-Patch-Editor, Origins-Grafiken, AtlasBuilder,
-OpenRaster und das DLL-freie Asset-Modpaket. Keine Spielversion und keine
-Script-Extender-Version wird allein wegen ihrer Nummer ausgeschlossen.
-Originale bleiben unverändert; die Arbeitskopien liegen unter work/.
-[Anleitung: HUD & Menüs maximal bearbeiten](docs/HUD_MENU_WERKSTATT_2026-10-28.md).
-
-**Neu: Photoshop-ähnlicher Layout-Designer.** Einzelbilder direkt auf einer
-Gesamtvorschau einfügen, ziehen, skalieren und drehen, mehrere Ebenen
-verwenden, anordnen, ausrichten und ihre Positionen samt Anker/Pivot,
-Deckkraft und Rotation dauerhaft speichern. Der PNG-Export berechnet genau
-diese Transformationen; das Modpaket übernimmt nur die geprüfte
-Komposition und auf Wunsch eigene XAML-Patches.
-[Layout-Designer und Exportvertrag](docs/HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md).
-
-**Spielbezogene Noesis-Anbindung:** Der Layout-Designer kann jetzt
-installierte HUD-/Menü-XAML-Dateien lesen, einen echten Container per
-SHA-256 nachweisen, ein statisches XAML-Add-Patch zusammen mit der
-komponierten PNG als DLL-freies Modpaket exportieren und die Mod nur
-in einer ausdrücklich gekennzeichneten QA-Spielkopie mit
-kontrollierbarem Rückbau testen.
-[Anleitung: Noesis-HUD-/Menüanbindung](docs/NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
-
-## Stronghold 1 DE: HUD im Sprite Suite Editor bearbeiten
-
-Dieser Zweig erweitert **Oberfläche** um einen eigenen Stronghold-1-HUD-Editor: 1.391 original benannte und pixelgenau editierbare UI-Ausschnitte, sichere Größen-/Quellprüfungen, drei rückbaubare PNG-Atlanten und eine **isoliert erzeugte Unity-Kandidatendatei** mit den bearbeiteten Bildern. Die originale Spielinstallation wird nicht verändert. Die Spielgrafiken bleiben auf dem jeweiligen Rechner und werden mit `tools/ui_sh1_hud.py export` aus der eigenen Installation gewonnen.
-
-**[Anleitung: Stronghold 1 HUD bearbeiten](docs/STRONGHOLD1_HUD_SPRITESUITE.md)** — inklusive GUI, Original-XAML, Pixelbearbeitung und Atlas-Rückbau. **[Geprüfte Unity-Kopie als isolierter Kandidat](docs/STRONGHOLD1_UNITY_HUD_KANDIDAT.md)** — mit BC7-Blockänderungen, Byte- und SHA-256-Prüfungen sowie ausdrücklichen Grenzen des noch nicht im Spiel getesteten Einbaus.
-
-## Einrichten
-
-1. Ordner an einen **kurzen Pfad** entpacken, z. B. `D:\SU` (Unity legt tiefe Pfade an).
-2. **`Suite starten.cmd`** doppelklicken.
-   - *Windows-Startpaket RC4:* Python ist enthalten. Der Erststart installiert die gesperrten Paketversionen lokal mit SHA-256-Prüfung; dafür ist Internet erforderlich. Danach wird die lokale Umgebung wiederverwendet.
-   - *Windows Portable:* Python und sämtliche GUI-Pakete sind bereits im entpackten Ordner. **Kein Python, pip oder Setup auf dem PC nötig.**
-   - *Quellcode-ZIP:* für Entwickler mit Python **3.13 oder 3.14**; `setup.ps1` verwendet automatisch den passenden hashgeprüften Lock. Fehlt Python, die Portable-Ausgabe aus den Releases laden.
-   - [Anleitung für den portablen Windows-Start](docs/SPRITESUITE_WINDOWS_PORTABLE_2026-10-28.md).
-3. Für den BC7-Paketbau: **Unity 2021.3.45f2** über Unity Hub installieren (`unityhub://2021.3.45f2/88f88f591b2e`) und ein **.NET SDK ab 8** (empfohlen 10). Im Reiter *Einrichten* eintragen.
-4. Den **vorhandenen Script Extender** beibehalten. Unter **Editor & Austausch** eigene Grafiken als **DLL-freies Asset-Modpaket** bauen. Kein separater Versionschecker, kein automatischer SE-Wechsel. Für Gameplay-C#-Mods bleiben API-/ABI-Schutzprüfungen bestehen.
-5. *Einrichten* → Spielordner eintragen → *Pfade speichern* → *Spiele einlesen*.
-
-Oben rechts: **Sprache / Language** und **Streng**. Bei der **diagnostischen Einrichtungskontrolle** werden Abweichungen im Nachsichtmodus weiterhin protokolliert; *Streng* blockiert dort. **Beim tatsächlichen Paketbau** sind fehlende Voraussetzungen und eine fehlgeschlagene Nachvalidierung immer blockierend – ein fehlerhaftes Paket wird nicht als erfolgreicher Bau gemeldet.
-
-**Strg+K – Bereich/Werkzeug suchen:** Von überall schnell zum Katalog, zum Sandkasten-Spiel-HUD, zum AtlasBuilder, zum Pivot-Messwerkzeug oder zur Pixelvergleichsansicht springen; auch direkt aus der eingebetteten Qt-Spielkarte. Die Suche startet **keine** Builds oder Installationen. Enter öffnet die gewählte Ansicht, Esc schließt die Suche. Die Suche funktioniert in Deutsch und Englisch.
-
-**Bedienung der gesamten Oberfläche:** Die acht wichtigsten Bereiche bleiben als
-kurze Reiter sichtbar. Über **Bereich öffnen** kann jeder der 14 Bereiche,
-auch ein historisches Werkzeug, direkt aufgerufen werden. **Alle Reiter**
-zeigt bei Bedarf die vollständige Reiterleiste; **Reiter bündeln** stellt
-die kompakte Ansicht wieder her. Das Protokoll ist über **Protokoll anzeigen**
-jederzeit erreichbar und nimmt bei geschlossenem Zustand keine Arbeitsfläche
-weg. Lange Aktionslisten sind in thematische Menüs sortiert, und die
-Editier- und Buildformulare können gescrollt werden.
-[Genauere Bedienungs- und Layoutabnahme](docs/WHOLE_SUITE_USABILITY_2026-10-13.md).
-[Erweiterte UI-Prüfung: Deutsch/Englisch, Tastatur, Zugänglichkeit und 56 Ansichtsproben](docs/SPRITESUITE_UI_GESAMTPRUEFUNG_2026-10-13.md).
-
-## Die Reiter
-
-| Reiter | Zweck |
-|---|---|
-| **Einrichten** | Spiel- und Werkzeugpfade, Umgebung prüfen, Spiele einlesen |
-| **Asset-Katalog** | alle Grafikgruppen thematisch geordnet (Gebäude, Burg, Einheiten, Tiere, Vegetation, Landschaft, Effekte …), je Frame vier Ansichten: ausgeliefert, Crusader, Stronghold 1, Arbeitskopie. Ersetzen (wird am Fußpunkt eingepasst), übernehmen, Richtungs-/Schadensblöcke kopieren, ganze Objekte umlenken, eigene Kategorien und neue Assets |
-| **Diagnose & Reparatur** | prüft bekannte Fehlerklassen: Kantenanker (verschobene Zinnen), teilweise umgelenkte Kachelobjekte, Spender-Identität, Frame-Drift zwischen Spielständen, Leinwände, Bundle-Integrität |
-| **Sandkasten** | **Vollständig eingebettetes Sandbox Studio im gleichen Sprite-Suite-Hauptfenster** (Tk/Qt unter Windows): echte Originalkarten-Enginegrafiken, interaktives Platzieren, Grafikkatalog-Verknüpfung, Pixeleditor, Live-Reload, Minikarte und Spiel-HUDs im vorhandenen Reiter. Kein separater GUI-Prozess. Details: `docs/SANDBOX_MAIN_SUITE_INTEGRATION.md`. Vollständige Unity-Shader-/Gameplay-HUD-Parität bleibt offen. |
-| **Editor & Austausch** | HTML-Sprite-Editor hin und zurück, SE-Atlas mit dem AtlasBuilder (`Override/Atlas`, PNG oder BC7-DDS), Gebäude als Ebenen (ORA) |
-| **Ziele & Mods** | Spielziele verwalten und eigene Mods installieren – jeweils mit Sicherung und Zurückspielen |
-| **Sprites bearbeiten / Paket bauen** | Europa-BC7-Paket über Unity, inkrementeller Gruppencache |
-
-**Integrierter Sandkasten:** Der Reiter bietet **Karte öffnen**,
-**Palette**, **Inspector**, **Fokus** und **Layout zurück**.
-Unter **Weitere Werkzeuge** liegen Animation / Frames, Spiel-HUD,
-Kartenordner wählen, Pixelvergleich und der Katalogsprung. Die
-integrierte Qt-Werkzeugauswahl erreicht jeden Inspector und jedes HUD,
-während die Spielkarte den Großteil der Fläche erhält. Bei Windows-DPI-
-Skalierung stimmt die physische Qt-Kindfenstergröße mit dem Tk-Host überein.
-Nach der Auswahl bleibt das Originalkartenverzeichnis
-lokal in `config/sandbox-maps.local.json` gespeichert. Die
-Original-Spiel-Dateien werden dabei nicht verändert. Qualitätstests:
-`docs/SPRITESUITE_QUALITAETSPRUEFUNG_2026-10-11.md`.
-
-**Neue Werkstatt-Erweiterungen:** Unter **Editor & Austausch** lassen sich Zinnenlineal-Pivots am Originalsprite überprüfen und einzelne Vorschläge ausdrücklich freigeben oder ablehnen (nur revisionsgebundene JSON-Protokolle, keine Atlasänderung). **Diagnose & Reparatur** bietet außerdem eine read-only QA-Altinventur und den **projektweiten Release-Abgleich**: alle ausgelieferten BC7-Dateien mit SHA-256 prüfen, Profil/Index/Manifest abgleichen und optional ein ausdrücklich gewähltes Pivot-Freigabeprotokoll gegenprüfen – ohne Installation. Details: `docs/HISTORISCHE_WERKZEUGE_INTEGRATION.md` und `docs/RELEASE_PREFLIGHT.md`.
-
-**Neu: Pivot → BC7-Stufenentwurf.** Die Diagnose kann jetzt eine bewusst
-freigegebene Zinnenlineal-Messung nochmals gegen Original-Messdatei, PNG,
-Spriteindex und den gesamten aktuellen BC7-Produktionsbau verifizieren.
-Der zugehörige tatsächliche, SHA-256-gebundene BC7-Atlas wird über
-den exakt passenden Gruppen-Cache geprüft: Pivots, die darin bereits
-richtig sind, erzeugen **keinen** weiteren Neubauvorschlag.
-Im Pivot-Prüffenster steht dafür **Pivot im BC7-Atlas prüfen** bereit.
-Nur ein nicht anwendbarer, quellgebundener Änderungsplan wird ausgegeben;
-native Geometrie- und Cache-Proofs sowie das Bundle müssten für die
-tatsächliche Umsetzung gesondert neu erstellt und geprüft werden.
-Anleitung: [Pivot/BC7-Stufenplan](docs/PIVOT_BC7_STUFENPLAN.md).
-
-**BC7-V2-Testprojekt (neu):** Unter **Diagnose & Reparatur →
-Synthetische BC7-Pivot-Probe vorbereiten** lassen sich zwei
-isolierte Unity-Eingabeprojekte mit echten V2-Builderprüfungen
-erstellen: ein veränderter Pivot und eine unveränderte Kontrollgruppe.
-Pixel bleiben identisch; Metadaten und Gruppencache-Keys werden geprüft.
-**Es findet kein Unity-Encoderlauf statt.** Die exakt benötigte
-Unity-Version 2021.3.45f2 ist derzeit nicht am gepinnten Werkzeugpfad
-vorhanden. Details: [BC7-Projektprobe](docs/PIVOT_BC7_REHEARSAL.md).
-
-**Echter nativer Zinnen-Beweis (neu):** Unter **Diagnose & Reparatur →
-Nativen Zinnen-Geometriebeweis prüfen** vergleicht die Suite alle
-106 veröffentlichten anim_castle-Frames mit dem ursprünglichen
-SH1DE-/Crusader-Mapping und rekonstruiert **alle vier eingefrorenen
-Geometrie-/Herkunftsnachweise SHA-identisch**. 95 SH1DE-Frames
-und 11 Crusader-Fallbacks sind bestätigt, einschließlich des
-bereits richtigen anim_castle 002. Kein Spiel- oder Atlas-Patch.
-Anleitung: [Nativer BC7-Herkunftsbeweis](docs/PIVOT_NATIVE_PROVENANCE.md).
-
-**Einrichtung ohne unnötige Sperren:** Unity- und .NET-Pfade können im Reiter
-**Einrichten** auch ohne bereits konfigurierte Spielordner gespeichert
-werden. Alte Werkzeugpfade bleiben bei Teiländerungen erhalten;
-Spielpfadänderungen verlangen eine Bestätigung und erhalten Sicherungen.
-Ungültige neue Einstellungen ersetzen keine funktionierende Konfiguration.
-**Einrichtungsstatus** zeigt fehlende Voraussetzungen rein lesend an.
-Beschädigtes Werkzeug-JSON unterbricht andere Suite-Funktionen nicht
-mehr und lässt sich nach Sicherung ausdrücklich reparieren. Auch
-fehlerhafte Spielpfad-TOML-Dateien verursachen beim Öffnen des
-Einrichtungsreiters keinen Absturz mehr, sondern einen Warnhinweis.
-[Einrichtung und schrittweises Speichern](docs/EINRICHTEN.md).
-
-**Bauvoraussetzungen vor dem Paketbau (neu):** Unter **Paket bauen →
-Bauvoraussetzungen prüfen** werden das gewählte Profil, Originalspielpfade,
-Mapping, der exakt festgeschriebene Unity-Editor, das .NET-SDK und eine
-möglicherweise schon vorhandene Paketausgabe getrennt geprüft.
-Fehlende Voraussetzungen erscheinen ausdrücklich als **Blockaden**
-mit konkreten Einrichtungsschritten. Der Check startet keinen
-Builder oder Installer und ist **keine Releasefreigabe**.
-Das .NET SDK kann auch aus portablen Installationen, DOTNET_ROOT
-oder dem Systemverzeichnis erkannt werden; ein ungeeigneter
-PATH-Eintrag führt nicht unnötig zur Sperre. Der echte Builder
-prüft die SDK-Version vor dem Build nochmals durch Ausführen.
-Der eigentliche Button **Paket bauen (mit Vorprüfung)** führt denselben
-Check frisch aus, verlangt bei erfüllten Voraussetzungen eine ausdrückliche
-Startbestätigung (Standard **Nein**) und meldet eine fehlerhafte
-Build-Nachvalidierung als Misserfolg – auch im Nachsichtmodus.
-[Anleitung zur Bau-Bereitschaft](docs/BUILD_READINESS.md).
-
-**Bauabschluss im Hauptfenster:** Nach einem in der Suite gestarteten
-Paketbau werden Build-/Validator-Exitcode und anschließend der unabhängige
-SHA-256-Release-Preflight getrennt ausgewertet. Die Statuszeile und
-**Bauergebnis anzeigen** zeigen Fehler, Warnungen, geprüfte Dateien,
-den Vergleich zum vorherigen Manifest und die stets noch
-**ausstehende Ingame-Abnahme** – ohne automatische Installation.
-Siehe [Paketbau-Abschluss](docs/BUILD_COMPLETION.md).
-
-**Dauerhafter Bauverlauf:** Unter **Paket bauen → Bauverlauf anzeigen**
-bleiben echte, aus der Suite gestartete BC7-Bauversuche über Neustarts
-nachvollziehbar. Der lokale SHA-256-verkettete Verlauf unterscheidet
-abgeschlossene, fehlgeschlagene und **nicht bestätigte** Starts und
-ist ausdrücklich keine neue Release- oder Ingamefreigabe.
-[Verlauf und Sicherheitsgrenzen](docs/BUILD_HISTORY.md).
-
-## Drei Lieferwege
-
-1. **Europa-BC7-Paket** – alle Gruppen als BC7-AssetBundles mit Laufzeit-DLL für SE 2.x.
-2. **Einzelbilder** – `Override/Sprites/<name>.png`, überlagern den Atlas nach Namen.
-3. **SE-Atlas** – `Override/Atlas/<gruppe>/atlas.dds|png`, lädt der Script Extender selbst.
-
-## Grenzen
-
-- Die historische Tkinter-Sandbox nähert Teamfarben, Wind und Licht lediglich
-  an. Das neue Sandbox Studio nutzt bereits echte Spriteframes und originale
-  Tilemap-Schatten-/Farbregeln; Wind-, Wasser- und Foliage-Shader sowie
-  Nebel sind aber noch nicht vollständig spielidentisch.
-- Bilder, die das Spiel nie anfragt, erscheinen nicht; neue Plätze brauchen Laufzeitcode.
-- Die UI-Texturliste (128 Einträge) und der Laufzeitprüfer der UI-Spur (114) sind noch nicht vereinheitlicht; beim Validieren mit UI-BC7 gibt es daher eine Warnung.
-- Protokollausgaben der Kommandozeilenwerkzeuge sind deutsch.
-
-## Beigaben
-
-- **AtlasBuilder** von Serpens66 (`extras/atlasbuilder`, mit Erlaubnis); BC7-Encoder `texconv` von Microsoft DirectXTex (im Zweig `komplett`, sonst über `fetch_texconv.py`).
-- **Stronghold Sprite Editor** 1.0 (`extras/sprite-editor`, MIT), mit zweisprachiger Fassung.
-- Atlasvertrag (`extras/atlas-contract`).
-
-Weitere Einschränkungen und Testgrenzen: [Script Extender und Asset-Mods](docs/SCRIPT_EXTENDER.md).
-
-## Stronghold Origins: vollständiger HUD-/GUI-Grafikkatalog
-
-Der Arbeitsbereich **ORIGINS Grafiken** umfasst alle **13.562** bekannten Dateien aus dem versionierten [Stronghold-Europe-Grafikdaten-Projekt](https://gitlab.com/strongholdoriginsmod/stronghold-europe-grafikdaten), darunter **4.086 HUD-/GUI-Elemente**, Noesis-XAML, das Blau/Silber-HUD und die GUI-Atlanten. Über **Suite starten.cmd → ORIGINS Grafiken** lassen sich alle Dateinamen suchen, filtern und per Git-/LFS-SHA-256 prüfen. Berechtigte Mitwirkende wählen ihren lokalen Git-LFS-Klon und erzeugen daraus getrennte Bearbeitungskopien mit Herkunftsnachweis. Das originale Stronghold-1-HUD bleibt zusätzlich im eigenen **SH1 HUD-Studio** erreichbar.
-
-Die großen, teilweise spielabgeleiteten Binärdaten verbleiben im zugangsverwalteten Grafikdatenprojekt. Im Sprite-Suite-Quellcode liegen der vollständige Katalog mit den Original-Git-IDs und die Verarbeitung. [Einrichtung und Grenzen](docs/ORIGINS_GRAFIKDATEN_KATALOG.md).
-
-## Gemeinsamer Entwicklungsstand: Gebäudeschäden und Werkzeugkonsolidierung (06.11.2026)
-
-Im über SpriteSuite gestarteten Sprite-Editor bietet **Schaden → KI-Sprites mit Codex** die Anmeldung im ChatGPT-Konto, eigene HP-/Feuer-Serien und Gebäudeversionen aus dem gewählten Original. Der lokale Codex-Client erhält Prompt und Referenzbilder und nutzt die Bildgenerierung des ChatGPT-Tarifs. Ergebnisse können als bearbeitbare Tiles und freie Schadenspakete exportiert werden.
-
-Bedienung: [Gebäudeschaden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md). Arbeitszweige, Konfliktregeln, Tests und Übergaben: [Gemeinsame Integration](docs/SPRITESUITE_GEMEINSAME_INTEGRATION_20261106.md).
-
-## Gebäudeschadensmodelle: Runtime-Vorabprüfung
-
-Unter `tools/building_damage_runtime_preflight.py` lassen sich freigegebene SpriteSuite-Schadensbibliotheken sicher überprüfen. Die optional erzeugte C#-Zuordnungstabelle kann über `python tools/qa_building_damage_runtime.py` vollständig offline gegen einen reproduzierten 5×5-Testdatensatz und eine synthetische Gebäude-API getestet werden. Der externe Gebäudeleseadapter bleibt durch `SHCDE_BUILDING_DAMAGE_READONLY_API` deaktiviert, solange Spiel-API, Hauptthread und per-Gebäude-Renderer nicht gesondert nachgewiesen sind. Der eingebaute Editor und seine Spiel-Mod-Ausgabe bleiben unverändert. Technischer Plan: [Gebäudeschaden-Runtime](docs/GEBAEUDESCHADEN_RUNTIME_AUDIT_PLAN_20261106.md).
-
-### Abnahmeprüfung für Gebäude-Schadensmodelle
-
-Zusätzlich zur bisherigen visuellen Freigabe bindet eine SHA-256-Zustandsprüfsumme jetzt die tatsächlich exportierten Original-/Schadensbilder, Masken, Raster, HP-Werte und relevante Generatorangaben. Änderungen nach der Abnahme verhindern einen stillen Export. Im Reiter **Schaden** kann die Vorschau zwischen allen Entwürfen und nur freigegebenen Modellen wechseln. Ältere freigegebene Projekte ohne die neue Prüfsumme sind weiterhin lesbar, müssen vor erneutem Export aber neu abgenommen werden. Details: [Gebäudeschäden](extras/sprite-editor/dokumentation/GEBAEUDESCHADEN.md).
-
-### Gebäude-Footprints prüfen, bevor Sprite-Modelle umgeschaltet werden
-
-Die neue optionale Offline-QA `python tools/qa_building_damage_runtime.py` prüft zusätzlich die tatsächlich belegten Spiel-Kacheln gegenüber den SpriteSuite-Rastermaßen, ohne ungeprüfte Richtungen oder Grafikslot-Zuordnungen zu übernehmen. Über `--verify-shcdese <Pfad-zur-SHCDESE.dll>` können auch die tatsächlichen Signaturen einer lokal vorhandenen Script-Extender-Version **nur kompiliert** werden. Details und offene Spielabnahme: [Gebäude-Footprint-Audit](docs/GEBAEUDESCHADEN_FOOTPRINT_API_AUDIT_20261106.md).
-
-### Echte SHCDE-Grafiklayer-Messung und ein-Kachel-Kanarientest
-
-Die aktuelle Entwicklung enthält unter `tools/building_damage_layer_audit.py` eine SHA-256-gebundene, reproduzierbare Auswertung der grafischen Gebäude-Tiles gegenüber den tatsächlich belegten Spielkacheln. Ein zusätzlicher, **nur explizit im markierten QA-Klon** einschaltbarer Test `qa_building_damage_live.py --qa-save <QA-Save> --qa-canary --install-qa` setzt höchstens ein Originalspiel-Sprite kurz auf ein kompatibles anderes Native-Sprite und stellt es anschließend über die originale Engine-Methode wieder her. Die Standardfassung bleibt lesend. Dieser QA-Eingriff ersetzt keine vollständige automatische HP-/Feuerschaden-Umschaltung. Nachweise, Sicherheitsgrenzen und Spielprotokolle: [SHCDE Renderer-QA](docs/GEBAEUDESCHADEN_SPIEL_RENDERER_QA_20261106.md).
-
-#### Tatsächliche Grafikslots gegenüber Gameplay-Footprints
-
-`tools/building_damage_layer_audit.py` kann aus einem echten, SHA-256-gesicherten QA-Spielprotokoll nun auch **alle unbestätigten SpriteSuite-Rasterorientierungen** für vollständig gezeichnete Gebäudesprites berechnen. Beispiel: 8×8-Bildraster mit 64 Grafik-Tiles, von denen im Spiel 28 **außerhalb** der Gameplay-Belegungsfläche liegen. Ergebnisse sind reine Prüf- und Zuordnungshypothesen, keine automatischen Renderer-Eingriffe. Nähere Angaben: [Gebäude-Renderer-QA](docs/GEBAEUDESCHADEN_SPIEL_RENDERER_QA_20261106.md).
+Der Chat bietet Eingabe, lokalen Gesprächsverlauf sowie Optionen für Modell, Denkstufe und Arbeitsmodus. Modelle werden aus der tatsächlich angemeldeten Codex-Sitzung geladen. Die Anmeldung erfolgt über den offiziellen lokalen Codex-Client mit ChatGPT-Konto, ohne API-Schlüssel. Google-Anmeldung erfolgt gegebenenfalls im offiziellen Anmeldefenster. Verfügbarkeit und Verbrauch richten sich nach dem Konto und seinem Codex-Kontingent.
+
+- **Fragen**: Projekt und angebotene Werkzeuge lesend untersuchen.
+- **Aufträge**: standardmäßig alle nativen Werkzeuge einschließlich eigener Programmierung verwenden.
+- **Programmieren**: dieselben Werkzeuge gezielt für Projektcode verwenden, Dateien mit Änderungsprüfung schreiben und Revisionen aufbewahren. Lokale Python-Ausführung ist in den Arbeitsmodi eingeschaltet und kann in den Optionen abgeschaltet werden.
+
+Ausgeführter Python-Code besitzt die Rechte des Suite-Prozesses; es besteht keine Betriebssystem-Sandbox. Der Assistent kann seine Ausführungsoption nicht selbst einschalten. Stop verwendet die vorhandenen Abbruchpfade. Der lokale Verlauf ist kein synchronisierter ChatGPT-Webverlauf. [Chat-Bedienung und Grenzen](docs/KI_CHAT_STARTSEITE.md).
+
+Für Sprite- und Schadensvarianten bleibt die KI-Werkstatt angebunden: Original auswählen, Anzahl und Art beschreiben und passende Prompts an Codex übergeben. Ein erfolgreicher Generierungsauftrag beweist keine passende SpriteSlot-/Gameplay-Zuordnung im Spiel.
+
+## Projekt, Layout und weitere Werkzeuge
+
+**Projekt & Dateien** verbindet Import, Pixel-/Textbearbeitung, Layout, Prüfung und Mod-ZIP. Eigene DLLs, Lua, Konfigurationen, Audio und andere Mod-Assets können unverändert importiert werden. Archive ungeprüfter Runtime-Dateien bleiben als Entwurf kenntlich. Originale, Revisionen und bearbeitbare Metadaten gehören zur Projektsicherung; Wiederherstellen erstellt ein neues Projekt.
+
+**Strg+K** findet Arbeitsbereiche und Fachwerkzeuge. Ein Suchtreffer öffnet den Arbeitsbereich oder das Formular; die Aktion wird dort ausgelöst. Scrollbare Arbeitsflächen und eigene Werkzeugfenster halten überlaufende Bereiche erreichbar. Der Startseiten-Chat kann eingeklappt werden.
+
+Native Spiel-Plugins benötigen passende API-/ABI-Nachweise und echte Spieltests. Neue Spiel- oder Script-Extender-Versionen sind kein pauschales Modding-Verbot. Ein erfolgreich gebautes ZIP ist keine allgemeine Ingame-Freigabe.
+
+## Dokumentation und Entwicklung
+
+- [Aktuelle Kurzanleitung](docs/KURZANLEITUNG.md) und [aktuelle Workflows](docs/WORKFLOWS.md).
+- [PNG-plus-XAML-Atlas](docs/UI_ATLAS_PNG_XAML.md) und [Startseiten-Chat](docs/KI_CHAT_STARTSEITE.md).
+- [Projekte sichern und übertragen](docs/PROJEKTARCHIVE_2026-10-29.md).
+- [Historische README bis RC4](docs/README_HISTORISCH_BIS_RC4_DE.md) und [historische Workflows](docs/WORKFLOWS_HISTORISCH_BIS_20261107.md). Release-, Versions- und Menüangaben dort beschreiben den damaligen Stand.
+
+Das illustrierte PDF vom 4. November bleibt ein historisches Teilhandbuch. Für neue Funktionen gelten die aktuellen Anleitungen oben.
+
+Quellstart im Repository: `python tools/suite_start.py`. Abhängigkeiten stehen in den Requirements-Dateien; der Windows-Startpaketbau verwendet einen Hash-Lock. CI prüft Kern- und Fachwerkzeuge auf Python 3.13 und 3.14. Native Spieltests benötigen eine gültige Spiel-/Steam-Umgebung.

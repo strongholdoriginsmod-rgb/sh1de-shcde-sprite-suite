@@ -1,333 +1,275 @@
-# Abläufe
+# Aktuelle Arbeitsabläufe in SpriteSuite
 
-Alle Befehle aus dem Suite-Verzeichnis. `python` meint den Interpreter der
-eingerichteten `.venv`. Jeder Arbeitsschritt hat zusätzlich `--help`. Die Suite
-verwendet den vorhandenen kompatiblen Script Extender. Inventar, Export und
-Build lesen die Spielinstallation. Im normalen Ablauf wird das fertige Paket
-bei Bedarf von Hand ins Spiel kopiert.
+**Stand: neuer Main-Quellstand, 8. November 2026.** Die neuen PNG/XAML- und
+Startseiten-Chat-Funktionen beziehen sich auf diesen Quellstand; ältere
+RC4-Downloadpakete enthalten sie noch nicht. Die folgenden Wege
+beziehen sich auf die deutsche Oberfläche. Einrichtung und Erststart stehen
+in der [Kurzanleitung](KURZANLEITUNG.md). Die frühere CLI- und
+Produktionsanleitung bleibt vollständig im
+[historischen Archiv bis 7. November 2026](WORKFLOWS_HISTORISCH_BIS_20261107.md).
 
-In der Oberfläche: **Einrichten → Spiele einlesen**, dann **Sprites bearbeiten**
-und **Paket bauen**. **Paket bauen (mit Vorprüfung)** kontrolliert zuerst
-die tatsächlichen gespeicherten Voraussetzungen, verlangt bei einem möglichen
-Bauversuch eine ausdrückliche Bestätigung und startet erst dann Build und
-verbindliche Validierung. Schlägt die Validierung fehl, gilt der Bau als
-fehlgeschlagen – auch im Nachsichtmodus.
-Die folgenden Einzelbefehle und Zusatzfunktionen bleiben für gezielte Arbeiten
-erhalten; die zusätzlichen GUI-Seiten erscheinen über **Erweiterte Werkzeuge anzeigen**.
+## Den passenden Bereich öffnen
 
-### Vor dem Paketbau: Voraussetzungen separat prüfen
+`Suite starten.cmd` öffnet die Suite. Mit **Strg+K** beziehungsweise
+**Suche (Strg+K)** nach einem Bereich suchen und den passenden Treffer
+öffnen. Das ist besonders bei Fachseiten hilfreich, die nicht als eigener
+Reiter in der kompakten Seitenleiste sichtbar sind. Die Suche navigiert;
+sie startet keinen Export oder Build.
 
-Der nachsichtige Standard-Einrichtungscheck kann Warnungen melden,
-während der tatsächliche Neubau weiterhin feste Voraussetzungen hat.
-Unter **Paket bauen → Bauvoraussetzungen prüfen** wird deshalb
-für das aktuell ausgewählte Profil eine **nicht schreibende**
-Prüfung von Originalspielpfaden, Mapping, exakt gepinntem Unity
-2021.3.45f2, .NET SDK und bestehenden Ausgabedateien angeboten.
-Der Ergebnisdialog zeigt Blockaden und direkte Einrichtungsschritte:
+| Aufgabe | Einstieg und nächster Schritt |
+| --- | --- |
+| Eigene Bilder und Mod-Dateien als gemeinsames Projekt bearbeiten | **Mein Mod-Projekt**. Dateien hinzufügen, bearbeiten, prüfen und ein Modpaket oder eine bearbeitbare Projektsicherung erzeugen. [Kurzanleitung](KURZANLEITUNG.md) |
+| Eigenen Masteratlas mit XAML öffnen, Ausschnitte ersetzen oder SH1-Grafik übertragen | **UI-Atlas · PNG + XAML**. Ziel-PNG und zugehöriges XAML wählen, dann eine Ersatz-PNG oder einen Ausschnitt aus einem zweiten Atlas zuordnen. [Atlas-Anleitung](UI_ATLAS_PNG_XAML.md) |
+| Originale Noesis-UI-Ausschnitte aus einer eigenen Spielinstallation exportieren | **Oberfläche**. Das zum Spiel passende Unterregister wählen; dieser alternative Exportweg folgt unten. |
+| Eigene Menügrafik gestalten oder mehrere Bilder frei anordnen | **HUD & Menüs**. Arbeitskopien importieren und im Layout-Designer zusammensetzen. [HUD-/Menüwerkstatt](HUD_MENU_WERKSTATT_2026-10-28.md), [Layout-Designer](HUD_MENU_LAYOUT_DESIGNER_2026-10-28.md) |
+| Vorhandene Spiel-Spritegruppen exportieren und prüfen | **Sprites bearbeiten**. Die gewünschte Gruppe und Quelle bestimmen; Metadaten und gegebenenfalls Farbmaske zusammen mit den Bildern erhalten. |
+| Sprites, Pivot, Messdaten, Animationen, Schnittbild oder Atlas bearbeiten | **Editor & Austausch**. **Editor oeffnen** startet den gemeinsamen Sprite-Editor; **Gemeinsamen Geometrie-Editor öffnen** öffnet dessen Geometriebereich. [Editor-Anleitung](../extras/sprite-editor/dokumentation/ANLEITUNG.md) |
+| Grafikvarianten oder Gebäudeschäden mit Bildreferenz erstellen | **Editor & Austausch → KI-Werkstatt**. Im gemeinsamen Editor Original und Aufgabe wählen, Kandidaten laden und die gewünschte Version übernehmen. [KI-Ablauf](SPRITESUITE_KI_CHATGPT_KONSOLIDIERUNG_20261108.md) |
+| Fragen stellen, Suite-Aufträge erledigen oder eigene Projektdateien programmieren | Den Chat auf der **Startseite** oder über **KI-Assistent** öffnen und **Mit ChatGPT anmelden**. **Aufträge (alle Werkzeuge)** ist direkt nutzbar, einschließlich eigener Programmierung; **Optionen ▸** bietet freiwillige Anpassungen. [Chat-Anleitung](KI_CHAT_STARTSEITE.md) |
+| Missionen, AIV, Balancing, Audio oder SDK-/Native-Entwürfe bearbeiten | Oben **Modding Studio** öffnen; die zwölf Bereiche arbeiten mit dem aktuellen Projekt. Weitere SHCDE-Fachwerkzeuge stehen unter **Alle Werkzeuge**. [Modding Studio](MODDING_STUDIO_3.md), [SHCDE-Fachwerkzeuge](SHCDE_TOOLS_ANLEITUNG_20261108.md) |
+| Eine Szene, Karte oder Animation in der eingebetteten Arbeitsumgebung ansehen | **Sandkasten**. Benötigte eigene Quellen laden; die Sandbox-Vorschau ist eine eigene Prüfung und keine Abnahme im laufenden Spiel. |
+| Spielpfade, Werkzeuge oder Kompatibilitätsbefunde prüfen | **Einrichten** beziehungsweise **Diagnose & Reparatur**. Erst die tatsächlich verwendete Installation und verfügbare Werkzeuge klären. |
 
-~~~powershell
-python tools/qa_suite_build_readiness.py --profile sprite-suite-world-bc7-v2
-~~~
+Die Fachseiten haben unterschiedliche Eingabeformate. Für ein vorhandenes
+Atlas-PNG mit passendem XAML den freien Atlas-Arbeitsbereich verwenden. Ein
+allgemeiner Bildimport oder ein Sprite-Atlas im HTML-Editor erzeugt noch keine
+Zuordnung zu den Noesis-Ressourcenschlüsseln.
 
-Mit ausdrücklicher Ersetzen-Wahl kann der Ausgabeordner als
-potenzieller Überschreibkonflikt bewusst geprüft werden, aber der
-separate Check startet niemals einen Build. Der eigentliche
-**Paket bauen (mit Vorprüfung)**-Knopf führt dieselbe frische Prüfung
-erneut aus und verlangt anschließend eine gesonderte Bestätigung
-(Standardantwort **Nein**). Veränderte Quelldateien oder ein neu
-aufgetauchter Ausgabeordner stoppen den Start. Nicht gespeicherte
-Spiel-/Unity-/SDK-Pfade sind keine gültigen Builder-Eingaben. **Bereit für einen Bauversuch**
-ist nicht gleichbedeutend mit einer BC7-/Spiel-Releasefreigabe.
-[Prüfumfang und Grenzen](BUILD_READINESS.md).
+<a id="6-ui-atlanten-und-ui-bc7"></a>
+## UI-Masteratlas aus PNG und XAML bearbeiten
 
-### Nach dem Bau: Ergebnis statt bloßem CLI-Erfolg anzeigen
+Der direkte Weg ist **Strg+K → UI-Atlas · PNG + XAML**. Alternativ unter
+**Projekt & Dateien → Mehr → UI-Atlas (PNG + XAML)…** oder auf der älteren
+Seite **Oberfläche → PNG + XAML öffnen…** öffnen. Dafür sind keine
+eingerichtete Spielinstallation und kein vorheriger Suite-Export nötig.
 
-Ein in der Suite tatsächlich gestarteter Build wird nach dem
-verpflichtenden Validator zusätzlich **asynchron und unabhängig**
-über seinen aktuellen SHA-256-Dateibestand überprüft.
-Unter **Paket bauen → Bauergebnis anzeigen** sind Exitcode,
-bestätigte Ausgabedateien, Warnungen und der Vergleich zur
-bereits vorher vorhandenen Manifestversion sichtbar.
-Ein Fehler/Abbruch darf keine positive Nachricht vom
-älteren Produktionspaket erben. Selbst bei Offline-Erfolg bleibt
-die **Ingame- und Releasefreigabe ausstehend**.
-[Prüfergebnis und Statusgrenzen](BUILD_COMPLETION.md).
+1. Unter **1 · Zielatlas** die eigene **Atlas-PNG** und die dazugehörige
+   **Atlas-XAML** auswählen, dann **PNG + XAML als Arbeitsstand öffnen**.
+   Der Arbeitsstand erhält unveränderte Quellkopien und eine Liste der
+   `ResourceKey`-Einträge mit ihren Rechtecken. Bei abweichendem PNG-Dateinamen
+   oder mehrdeutiger Zuordnung vorher den tatsächlichen
+   **BitmapImage-Key (optional)** aus dem XAML angeben.
+2. Den zu ersetzenden Zieleintrag wählen. Für einen Transfer unter
+   **2 · Quellatlas oder Ersatz-PNG** ein zweites PNG/XAML-Paar öffnen,
+   etwa den SH1-Atlas, und dort den gewünschten Quellausschnitt wählen.
+   Alternativ **Aus einzelner Ersatz-PNG** verwenden.
+3. **Größenanpassung** prüfen. `exact` verlangt gleiche Abmessungen;
+   `contain` passt mit transparentem Rand ein; `stretch` streckt auf das
+   Zielrechteck. **Auswahl ersetzen** schreibt die Änderung in den
+   Arbeitsstand. **Rückgängig**, **Wiederholen** und **Original
+   wiederherstellen** stehen für die gespeicherten Bearbeitungsschritte bereit.
+4. **Aktuellen Ausschnitt als PNG exportieren …** erzeugt eine einzelne
+   Arbeitsgrafik, **Aktuellen Atlas als PNG exportieren …** das vollständige
+   Blatt in Originalgröße. Der Export benötigt einen neuen Dateinamen.
+5. Für die Verwendung im aktuellen Mod-Projekt **Ins Mod-Projekt übernehmen**
+   wählen. PNG und unverändertes Ziel-XAML gelangen gemeinsam unter
+   `Override/Assets/GUI/Sprites` in das Projekt. Anschließend dort
+   **Geprüftes Mod-ZIP bauen** oder **Mod-ZIP speichern unter…** verwenden.
+   Die Spielinstallation wird dadurch nicht ersetzt.
 
-### Nach dem Neustart: Bau- und Prüfverlauf anzeigen
+Die Zuordnung stammt aus `BitmapImage` und `CroppedBitmap`/`SourceRect` im
+passenden XAML; beliebiger XAML-Oberflächencode genügt nicht. Der Transfer
+ersetzt Pixel im gewählten Zielrechteck und erhält dessen Koordinaten und
+Ressourcenschlüssel. Er überträgt keine SH1-Menülogik nach Crusader.
+Die Vorschau ist verkleinert, die exportierten Pixel bleiben in Atlasgröße.
+Ein vollständiger 8192-×-8192-Master liegt im eigenen Pixelbudget dieses
+Werkzeugs. Die niedrigeren Importgrenzen anderer Editoren sind dafür nicht
+maßgeblich. Größen, Transparenz, Arbeitsstände und Wiederöffnen erläutert die
+[PNG/XAML-Atlas-Anleitung](UI_ATLAS_PNG_XAML.md).
 
-Im selben Reiter **Paket bauen → Bauverlauf anzeigen** wird bei
-jedem Aufruf die lokale, vollständige SHA-256-Ereigniskette
-überprüft. Sie zeigt Profil, damalige UTC-Startzeit, CLI-
-Abschlussstatus und die seinerzeit bestätigten Prüfdaten.
-Nach einem Absturz ohne Endeintrag lautet der Status ausdrücklich
-**unbestätigt**. Der Verlauf kann weder Builds noch Installationen
-starten und ersetzt keine **erneute** Prüfung der jetzigen
-Paketbytes. Kommandozeile:
+### Alternative: UI-Ressourcen aus der Spielinstallation exportieren
 
-~~~powershell
-python tools/qa_suite_build_history.py --limit 20
-~~~
+Die ältere Seite **Oberfläche** bleibt für die quellgebundenen Spiel-Exporte
+verfügbar. Ihr Knopf **Bilder laden** lädt einen **Exportordner mit
+`index.json` und den zugehörigen Einzel-PNGs**. Für ein selbst vorliegendes
+PNG/XAML-Paar stattdessen den neuen Atlas-Arbeitsbereich oben verwenden.
 
-[Dokumentation und Manipulationsgrenzen](BUILD_HISTORY.md).
+| Spiel | Quelle des passenden Exports | Standard-Arbeitsordner |
+| --- | --- | --- |
+| **Stronghold Crusader: Definitive Edition (SHCDE)** | Die in der Suite konfigurierte, fingerprint-geprüfte Spielinstallation: deren `globalgamemanagers.assets` und die installierten Script-Extender-XAML-Wörterbücher unter `BepInEx/plugins/000shcdese/Override/Assets/GUI/Sprites` | `work/ui` |
+| **Stronghold: Definitive Edition (SH1DE)** | Die ausdrücklich ausgewählte eigene `Stronghold 1 Definitive Edition_Data/globalgamemanagers.assets`; Original-XAML und Texturen werden aus dieser Datei gelesen | `work/sh1-hud-editierbar` |
+| **Klassisches Stronghold 1** | Kein Unity-DE-Asset und kein Export dieses SH1DE-HUD-Wegs | Dafür die passenden älteren Formatwerkzeuge verwenden; klassische Ressourcen nicht als SH1DE-Quelle auswählen. |
 
-## 1. Inventar und Zuordnung
+### Spiel-Export für Crusader DE: UI-MasterAtlas
 
-```powershell
-python suite.py verify
-python suite.py inventory --side both
-python suite.py map propose
-python suite.py map audit
-python suite.py map manifest --groups body_woodcutter tree_apple anim_castle
-```
+1. **Strg+K → Oberfläche** öffnen. Im Unterregister
+   **Crusader DE · UI-Atlas** bei **Blatt:** `UI-MasterAtlas` wählen.
+   **Blätter auflisten** kann die verfügbaren Dictionaries auflisten.
+2. **Exportieren** anklicken. Der Knopf verwendet die konfigurierte
+   SHCDE-Installation und erzeugt in dieser Oberfläche den Arbeitsordner
+   **`work/ui`**. Die Rechtecke und Ressourcennamen stammen aus dem
+   passenden SE-XAML; die Pixel aus dem zugehörigen Spielatlas.
+   Ein fehlender SE-XAML-Ordner oder eine nicht passende Quelle muss
+   zuerst behoben werden. Dieser Spiel-Export verwendet weiterhin seine
+   geprüften Originalquellen.
+3. Nach erfolgreichem Export wird dieser Ordner automatisch geladen.
+   Zum späteren Wiederöffnen **Arbeitsordner:** auf den Exportordner
+   setzen oder mit **…** auswählen, dann **Bilder laden**.
+   Gemeint ist der Ordner, der `index.json` enthält, nicht nur sein
+   Unterordner `UI-MasterAtlas` und nicht das ganze Atlas-PNG.
+4. Links unter **Filter:** nach dem Ressourcenschlüssel suchen und einen
+   Ausschnitt auswählen. **Crusader-PNG extern bearbeiten** öffnet
+   dessen Arbeits-PNG über die Windows-Dateizuordnung. Startet dadurch
+   nur ein Bildbetrachter, dieselbe Arbeits-PNG gezielt im gewünschten
+   Malprogramm öffnen. Die Suite wählt hier keinen bestimmten externen
+   Editor. Dateiname, Pixelabmessungen und Exportindex erhalten.
+5. Die Änderung in dieser PNG speichern. Anschließend **Bilder laden**
+   und **Alles prüfen** verwenden. Der Prüfer vergleicht auch die
+   Original-Unity-/XAML-Nachweise; eine angezeigte Vorschau allein ist
+   noch kein bestandener Rückbaucheck.
+6. Für eine separate lokale Atlasausgabe **Lose Testausgabe** verwenden.
+   Sie baut nach Prüfung nach `dist/ui-override` zurück. Die installierte
+   Spieldatei wird dadurch nicht ersetzt. Die Übernahme ins Spiel und
+   die sichtbare Darstellung dort sind eigene Schritte.
 
-Das Inventar enthält Sprite-Namen, PathIDs, Texturzuordnung, Geometrie und
-Maskenmetadaten. Das Mapping unterscheidet exakte Übernahme, abgeleitete
-Übernahme, unverändertes Crusader und offene manuelle Zuordnung. Gleiche Namen
-allein sind keine Freigabe. Ergebnisse liegen unter `work/inventory`,
-`work/mapping` und `work/reports`.
+**Arbeitsstand behalten:** Ein erneuter Export nach `work/ui` kann dortige
+Bildbearbeitungen ersetzen und fragt deshalb bei vorhandenem Inhalt nach.
+Vor einem erneuten Export den bisherigen Arbeitsordner sichern. Das Feld
+**Arbeitsordner:** bestimmt den geladenen Export; es ändert das feste
+Ausgabeziel dieses **Exportieren**-Knopfs nicht.
 
-## 2. Bestehende Sprites bearbeiten
+**Produktionsweg für erfahrene Nutzer:** **1. Geprüft übernehmen** schreibt
+in die bezeichnete lokale Ablage unter `assets/ui/derived`. **2. Ins
+Produktionsprofil** trägt diese Ablage ausdrücklich in
+`profiles/europe-production.json` ein. **Profilabschnitt nur zeigen**
+zeigt den Eintrag zunächst an. Diese Aktionen sind kein beliebiger
+Projekt-PNG-Import und keine automatische Installation. Die aus dem Spiel
+abgeleiteten Atlasblätter bleiben lokale Arbeitsdaten.
 
-```powershell
-python suite.py tool sprites.py list
-python suite.py tool sprites.py export body_gate --game stronghold1 --out work/art
-python suite.py tool sprites.py sheet work/art/body_gate
-python suite.py tool sprites.py check work/art/body_gate
-# PNGs bearbeiten; Namen und index.json erhalten.
-python suite.py tool sprites.py import work/art/body_gate --set <freigegebene-ablage> --origin derived --check-only
-python suite.py tool sprites.py import work/art/body_gate --set <freigegebene-ablage> --origin derived
-python suite.py tool sprites.py profile-add <freigegebene-ablage> --origin derived --profile profiles/sprite-suite-world-bc7-v2.json
-python suite.py tool sprites.py profile-add <freigegebene-ablage> --origin derived --profile profiles/sprite-suite-world-bc7-v2.json --write
-```
+### Spiel-Export für Stronghold 1 DE: eigene Original-HUD-Basis
 
-`--game crusader` liefert die Zielgeometrie. Ohne `--game` liest `export` die
-**tatsächlich installierte**, manifestgeprüfte Grafik: Atlas, danach Einzel-PNG,
-sonst Crusader. Dafür muss eine konsistente Installation vorhanden sein.
-Bei Teamfarben gehört zu jedem Farbbild ein `_m.png`.
+1. Unter **Oberfläche** das Unterregister **Stronghold 1 DE · HUD**
+   auswählen. **1. Original-HUD exportieren** öffnen und die originale
+   `globalgamemanagers.assets` der eigenen **Definitive Edition** wählen.
+2. Der Export erzeugt `work/sh1-hud-editierbar` mit `index.json`,
+   `sh1_hud_source.json`, den benannten Einzel-PNGs und einer
+   **`baseline` mit Originalatlanten und Original-XAML**. Diese XAML-Daten
+   werden aus SH1DE selbst extrahiert; hier wird kein Crusader-SE-XAML
+   als Ersatz gewählt. Baseline und Herkunftsdateien zusammen erhalten.
+3. Nach erfolgreichem Export wird das Projekt geladen. Später
+   **2. SH1-HUD laden** verwenden. Eine vollständige exportierte
+   Ordnerkopie lässt sich auch über **Arbeitsordner:** und **Bilder laden**
+   ansehen; für den Editorweg dieser Seite den vorgesehenen
+   Arbeitsordner `work/sh1-hud-editierbar` benutzen.
+4. Einen benannten Ausschnitt auswählen und **3. Gewähltes Bild
+   bearbeiten** öffnen. Der SH1-HUD-Pixeleditor bearbeitet die ausgewählte
+   Arbeitskopie, nicht den vollständigen Masteratlas. Die Größe bleibt
+   fest; **Speichern (Strg+S)** sichert diese PNG. Sehr große
+   Einzelelemente über zwei Millionen Pixel werden vom Editor abgelehnt.
+5. **4. SH1-HUD prüfen**, anschließend **5. SH1-HUD-Atlanten bauen**.
+   Die Atlasausgabe liegt unter `dist/sh1-hud-editierte-atlanten`.
+   Das erzeugt PNG-Blätter und Prüfdaten, aber noch keinen Einbau ins Spiel.
+6. Optional erzeugt **6. Geprüfte Unity-Kopie erzeugen** einen getrennten,
+   gegen die Originalquelle geprüften Unity-Kandidaten unter `dist`.
+   Die installierte Quelle wird nicht überschrieben. Dieser Kandidat
+   ist keine bestätigte Ingame-Abnahme.
 
-In der Hauptoberfläche zunächst unter **Paket bauen** das Zielprofil wählen.
-**Sprites bearbeiten** trägt die importierte Ablage in dieses Profil ein.
-Enthält das Profil die Gruppe bereits als Atlas, beim Profileintrag
-**Einzel-PNGs dürfen Gruppenatlas überstimmen** auswählen; auf der Kommandozeile
-entspricht das `--allow-atlas-shadow`. Die bearbeiteten Bilder werden als
-PNG-Überlagerungen geliefert. Die darunterliegenden `gm_atlases` bleiben BC7;
-die Einzelbilder werden durch den Import nicht automatisch BC7-komprimiert.
-Die separat gestartete alte Werkstatt und `profile-add` ohne `--profile`
-verwenden weiterhin `europe-production.json`.
+Die ursprüngliche SH1DE-Basis hat `UI-MasterAtlas` mit **8192 × 4096**,
+`UI-ROL` mit **4096 × 4096** und `UI-CandleAtlas` mit **2048 × 4096** Pixeln.
+Ein SH1DE-Export mit geändertem oder fehlendem Baseline-XAML lässt sich
+nicht durch Umbenennen in einen Crusader-Export verwandeln.
 
-`<freigegebene-ablage>` ist kein frei erfundener Ordnername: vorhandene Ablagen
-sind in `_PROJECT_AUTHORED_SPRITE_SETS` in `mod_builder.py` an Gruppen gebunden.
-Neue Ablagen dort ausdrücklich zuordnen. Der Einzel-Sprite-Import verlangt die
-Ziel-Leinwand; die Atlaspipeline unterstützt zusätzlich die geprüfte native
-Quellgeometrie. Diese beiden Wege haben unterschiedliche Geometrieverträge.
+Als weitere Oberfläche steht **SH1 HUD-Studio** über Strg+K bereit:
+**Aus Spiel exportieren ...** beziehungsweise **Laden**, dann
+**Bild bearbeiten**. Auch dieses Studio verwendet den quellgebundenen
+SH1DE-Export. [SH1DE-HUD-Vertrag](STRONGHOLD1_HUD_SPRITESUITE.md),
+[Unity-Kandidat und Grenzen](STRONGHOLD1_UNITY_HUD_KANDIDAT.md).
 
-## 3. Mehrteilige Bauwerke
+### Vorhandene SH1- und Crusader-Exportordner direkt verbinden
 
-```powershell
-python suite.py tool sprites.py export tile_castle --game crusader --out work/tile-source
-python suite.py tool tile_objects.py compose work/tile-source/tile_castle --preset tile-castle-keep-1193 --out work/objects/keep-1193
-python suite.py tool tile_objects.py check work/objects/keep-1193
-python suite.py tool tile_objects.py split work/objects/keep-1193 --out work/art-return/keep-1193
-```
+Im SH1-Unterregister der Seite **Oberfläche** lässt sich das Fenster für die
+SH1→Crusader-Übertragung öffnen. Dort **SH1-HUD-Exportordner** und
+**Crusader-UI-Zielexport** wählen, einen neuen **Mapping-Plan** angeben und
+**Mapping vorschlagen** verwenden. Einen vorhandenen Plan mit **Plan
+öffnen/neu lesen** laden.
 
-Die ORA-Datei enthält getrennte Ebenen. Nach der Bearbeitung wird wieder in die
-ursprünglichen Frames zerlegt. Die Presets und die CLI-Hilfe bestimmen zulässige
-Layouts; der Weg gilt für eigenständig ladbare, maskenfreie `tile_*`-Gruppen.
+In der Zuordnungsliste mehrere Zeilen mit Strg/Shift oder **Alle sichtbaren
+auswählen** markieren. Unter **Maßregel für die Auswahl** `exact`, `contain`
+oder `stretch` wählen und **Auswahl übertragen** anklicken. Eine andere
+Verbindung lässt sich mit **SH1-Quelle**, **Crusader-Ziel** und **Zuordnung
+übernehmen** anlegen und anschließend in der Liste auswählen. Der Transfer
+benötigt weder eine Mindestbegründung noch eine Qualitätsfreigabe.
 
-## 4. Gruppen aufnehmen und Anker bestimmen
+Die Ausgabe ist ein neuer SHCDE-Exportordner. Ursprüngliche Quell-/Zielordner
+und nicht übertragene Zielbilder bleiben erhalten; das Zielraster stammt
+weiter aus seinem Index. **Originalquellen zusätzlich prüfen** ist eine
+standardmäßig ausgeschaltete Zusatzoption. Nur für diese gewünschte Prüfung
+werden die drei Originalpfade gebraucht. Zum normalen Kopieren reichen die
+vollständigen Exportordner. Für ein freies PNG/XAML-Paar ohne solche
+Exportordner den primären Atlasweg oben verwenden.
 
-```powershell
-python suite.py tool groups.py status
-python suite.py tool groups.py list --missing
-python suite.py tool groups.py add body_archer body_baker
-python suite.py tool groups.py policy tile_castle --upright
-python suite.py tool pin_digests.py
-```
+### Ganze Masterblätter und andere Editoren
 
-Aufrechte Motive behalten ihren Quellfußpunkt; flache Bodenkacheln ihren
-Zielrasteranker. `pin_digests.py` vermisst nur fehlende Nachweise. Andere Fehler
-brechen ab. Vor Freigabe Geometrie und Bildinhalt prüfen; ein Digest bestätigt
-Identität, keine gestalterische Richtigkeit. Die historischen Werkzeuge ändern
-`europe-production.json`, nicht automatisch die BC7-Suite-Profile.
+Ein PNG/XAML-Paar kann direkt im oben beschriebenen Atlas-Arbeitsbereich
+geöffnet werden. Ein PNG ohne passende Rechteckbeschreibung lässt sich
+dadurch noch nicht in benannte UI-Einträge zerlegen. Kleinere freie PNGs
+können weiterhin unter **HUD & Menüs** bearbeitet werden. Die Formate und
+Einzelbildgrenzen der verschiedenen Werkzeuge bleiben unterschiedlich:
 
-## 5. BC7 bauen und ins Spiel kopieren
+| Weg | Grenze beziehungsweise Mastergröße |
+| --- | --- |
+| PNG/XAML-Atlas-Arbeitsbereich | höchstens **134.217.728 Pixel** pro PNG; Änderungen als Ausschnitt-Ersetzungen |
+| Allgemeiner Bildimport der HUD-/Menüwerkstatt | höchstens **30.000.000 Pixel** pro Bild |
+| Gemeinsamer HTML-Sprite-Editor | höchstens **16.777.216 Pixel** pro Einzelbild; zusätzlich ein gesamtes Bildbudget |
+| SHCDE `UI-MasterAtlas` | **8192 × 8192 = 67.108.864 Pixel**, im Atlas-Arbeitsbereich unterstützt, über den HUD-/HTML-Einzelbildgrenzen |
+| SH1DE `UI-MasterAtlas` | **8192 × 4096 = 33.554.432 Pixel**, im Atlas-Arbeitsbereich unterstützt, ebenfalls über den HUD-/HTML-Grenzen |
 
-```powershell
-python suite.py build --profile profiles/sprite-suite-canary-bc7-v2.json
-python suite.py validate --profile-id sprite-suite-canary-bc7-v2
-# Modordner von Hand ins Spiel kopieren; siehe unten.
-# Nach dem Spieltest:
-python suite.py runtime-validate --profile-id sprite-suite-canary-bc7-v2
-```
+Der neue Atlasweg verarbeitet die genannten Mastergrößen, bietet aber keinen
+Ganzblatt-Malpinsel. Einen Ausschnitt exportieren, im Bildeditor bearbeiten
+und wieder zuordnen, oder direkt aus einem zweiten Atlas übertragen.
+Den Master zur Umgehung einer fremden Editorgrenze zu verkleinern würde
+seine Pixelkoordinaten und damit den ursprünglichen XAML-Vertrag verändern.
 
-Der Canary enthält `tree_apple`, `body_woodcutter` und `anim_castle`: Foliage,
-Teammaske und maskenfreie Geometrie. Der große Sprite-Satz liegt in
-`sprite-suite-world-bc7-v2.json`. Ein wiederholter Build braucht `--replace`.
-Unveränderte Gruppen werden über den inhaltsadressierten Cache wiederverwendet.
+## Weitere Arbeitsabläufe und ihre Grenzen
 
-Bei geschlossenem Spiel den fertigen Ordner
-`dist/<Profil-ID>/StrongholdEuropeDE` nach `BepInEx/plugins` im Spiel kopieren.
-In der Oberfläche öffnen **Ausgabe öffnen** und **Spiel-Modordner öffnen**
-die beiden Verzeichnisse. Einen vorhandenen Ordner `StrongholdEuropeDE`
-zuerst außerhalb von `plugins` aufbewahren, dann den neuen vollständig kopieren.
-So bleiben keine veralteten Dateien im Mod zurück. Das Paket enthält seine
-eigene Runtime-DLL; Script Extender und dessen Konfiguration werden nicht ersetzt.
+**Freie Grafik und Layout:** Unter **HUD & Menüs** eigene Bilder als
+Arbeitskopien importieren, bearbeiten und im Layout-Designer positionieren.
+Der Layout-Export erzeugt eine zusammengesetzte PNG und Positionsdaten.
+Ein tatsächliches Spielmenü benötigt weiterhin seine passende
+Noesis-/XAML-Anbindung. [Spieloberfläche anbinden](NOESIS_HUD_MENU_SPIELANBINDUNG_2026-10-28.md).
 
-Der ursprüngliche verwaltete Installationsweg bleibt unter den erweiterten
-Werkzeugen und in der CLI erhalten. Er setzt voraus, dass Suite und Spiel auf
-**demselben Laufwerk** liegen:
+**Sprites und mehrteilige Gebäude:** Den passenden Original-/Arbeitsbestand
+unter **Sprites bearbeiten** auswählen. Unter **Editor & Austausch**
+verbindet **Fuer Editor verpacken** die gewählte Gruppe beziehungsweise
+den Bereich mit dem HTML-Editor; **Ergebnis zurueckholen ...** führt zum
+Rückweg. Für vorhandene Kachelobjekte gibt es dort **Als ORA zusammensetzen**
+und **ORA zuruecknehmen ...**. Quellraster, Masken, Pivots und Zielnamen
+müssen zum gewählten Verfahren passen; ein Bild allein ersetzt diese
+Metadaten nicht.
 
-```powershell
-python suite.py install --profile-id sprite-suite-canary-bc7-v2 --replace
-python suite.py tool show_installed.py --expect sprite-suite-canary-bc7-v2
-```
+**KI und Varianten:** Die **KI-Werkstatt** verwendet Originalreferenz und
+Prompt. Kontoanmeldung erfolgt über die lokale Codex-/ChatGPT-Sitzung,
+ohne API-Schlüssel. Rohbilder und registrierte Kandidaten sind von der
+manuellen Übernahme getrennt. Bei Gebäudeschäden bleiben Art, Stufen,
+Geometrie und gewünschte Änderungen Teil des Auftrags. Ein erzeugter
+Kandidat ist noch kein bestätigter Spritewechsel im Spiel.
 
-Dieser Weg prüft Prozesszustand und Manifeste und tauscht den verwalteten Ordner
-transaktional. `suite.py uninstall` entfernt nur unveränderte, manifestgebundene
-Dateien. Beide Wege verwenden denselben Modordner; sie erzeugen keinen zweiten
-parallel aktiven Sprite-Mod.
+**Assistent und Fachmodule:** Der Startseiten-Chat startet mit
+**Aufträge (alle Werkzeuge)**. Dieser Modus umfasst die vorhandenen
+Projekt-, GUI-, Fach- und Codewerkzeuge einschließlich eigener Programmierung.
+**Programmieren (Projektdateien)** ist eine optionale Arbeitsausrichtung;
+**Fragen (nur lesen)** beschränkt auf lesende Funktionen. **Lokalen
+Pythonlauf erlauben** ist zunächst eingeschaltet und kann zum Begrenzen
+solcher Läufe ausgeschaltet werden. Ein Python-Prozess besitzt normale
+Benutzerrechte, keine Betriebssystem-Sandbox. Modelle und Denkstufen stammen aus dem Konto,
+Gespräche werden begrenzt und projektgebunden lokal gespeichert.
+Für den lokalen Browsereditor wird der gewünschte Tab ausdrücklich verbunden.
+[Chat, Optionen und Verlauf](KI_CHAT_STARTSEITE.md),
+[neun native Werkzeuge](SPRITESUITE_NATIVE_ASSISTANT_TOOLS.md).
+**Modding Studio** bietet zwölf
+Offline-Arbeitsbereiche. **Alle Werkzeuge** bietet die vorhandenen
+Fachformulare und ihre Hilfe; erst eine konkrete Ausführung startet das
+Werkzeug. Diese Wege ersetzen nicht die benötigten eigenen Quellen,
+SDK-Bibliotheken oder eine native ABI-Prüfung.
 
-### Vor dem manuellen Kopieren: projektweiten Release-Abgleich ausführen
-
-Der vorhandene Produktionsbau lässt sich **ohne Build, Installation oder
-Spielprozess** über alle Manifestdateien mit SHA-256 verifizieren:
-
-```powershell
-python tools/qa_release_preflight.py --profile sprite-suite-world-bc7-v2 --check-only
-python tools/qa_release_preflight.py --profile sprite-suite-world-bc7-v2
-```
-
-Dies vergleicht die tatsächlich ausgelieferten Bundle-Dateien gegen Manifest,
-Profil und BC7-Index. Ein bisheriger Validierungsbericht wird ausdrücklich
-nur als historischer Nachweis gelesen. Optional kann eine einzelne,
-ausdrücklich gewählte Pivot-Freigabedatei gegen aktuelle Quellhashes
-geprüft werden (Schalter `--approval`). **Offline-Integrität ist kein
-Spiel-/Kartenwechseltest und keine Pivot-Installationsfreigabe.**
-Ausführliche Sicherheitsgrenzen: [Release-Preflight](RELEASE_PREFLIGHT.md).
-
-### Freigegebene Pivot-Messung auf die BC7-Pipeline vorbereiten
-
-Noch **vor** einer möglichen Freigabe kann man unter **Editor & Austausch →
-Pivot-Messungen prüfen** den gewählten Frame mit **Pivot im BC7-Atlas
-prüfen** gegen den **tatsächlich veröffentlichten Bundlecache** halten.
-Derselbe Nur-Lesen-Abgleich ist ohne Freigabe möglich:
-
-~~~powershell
-python tools/qa_bc7_pivot_audit.py --profile sprite-suite-world-bc7-v2 --measurement "work/pivot-review-test-echt/zinnen-versatz.beispiel.json"
-~~~
-
-Die genannte Beispielmessung ist synthetisch und kein Spiel-Messlauf;
-sie bestätigt am lokalen Build anim_castle 002 mit Pivot (0,1)
-**bereits im BC7**.
-
-Unter **Editor & Austausch** eine tatsächlich noch notwendige Abweichung
-kontrolliert freigeben, danach unter **Diagnose & Reparatur** das
-BC7-Profil wählen, das Freigabeprotokoll hinzufügen und
-**Pivot-BC7-Stufenplan** ausführen.
-Die ursprüngliche Messdatei muss ausdrücklich nochmals gewählt werden.
-Der Stufenplan ordnet exakt passende V2-Cacheobjekte nach Bundle- und
-Atlas-SHA zu und berechnet nur für geänderte Frames einen theoretischen
-Metadaten-Hash-/Cache-Key-Wechsel.
-
-CLI für zwei **explizit vorliegende** Quellen:
-
-~~~powershell
-python tools/pivot_bc7_stage.py --profile sprite-suite-world-bc7-v2 --approval "work/reports/pivot-approval/FREIGABEBERICHT.json" --measurement "C:/Pfad/zinnen-versatz.json" --check-only
-~~~
-
-Der Bericht liegt ausschließlich unter work/reports/pivot-bc7-stage und
-enthält Änderungen mit aktuellem Index-/Bild-/Bundlehash sowie den
-festgeschriebenen Geometrie-/Review-Verträgen. **Er kann noch nicht in
-einen BC7-Bau übernommen werden**; hierfür sind zusätzliche abgestimmte
-Nachweise, neue Geometrieprüfsummen und ein geprüfter Test-Neubau nötig.
-[Siehe Sicherheits- und Prüfvertrag](PIVOT_BC7_STUFENPLAN.md).
-
-### Synthetische BC7-V2-Projektvorbereitung prüfen
-
-Zur sicheren technischen Gegenprobe der Metadaten-/Cache-Logik kann unter
-**Diagnose & Reparatur → Synthetische BC7-Pivot-Probe vorbereiten**
-der unveränderte bestehende V2-Unity-Projekt-Vorbereiter benutzt werden.
-Der Ablauf erzeugt zwei ausdrücklich **synthetische** RGBA-Spritegruppen,
-validiert beide separaten Unity-Inputs und beweist, dass nur die
-betroffene Gruppe einen neuen Gruppencache-Key erhält:
-
-~~~powershell
-python tools/qa_pivot_bc7_rehearsal.py
-~~~
-
-Der SHA-gebundene Bericht liegt ausschließlich unter
-work/pivot-bc7-rehearsals/. **Kein** Unity-Lauf, keine reale BC7-Encodierung,
-kein neues Bundle, keine echte Gruppen-/Spiel-Freigabe. Der gepinnte
-Unity-Editor 2021.3.45f2 ist derzeit am Projektwerkzeugpfad nicht vorhanden.
-Weitere Prüfverträge: [BC7-V2-Projektprobe](PIVOT_BC7_REHEARSAL.md).
-
-### Originales Mapping und native Zinnen-Geometrie verifizieren
-
-Mit **Diagnose & Reparatur → Nativen Zinnen-Geometriebeweis prüfen**
-kann die Suite den bereits publizierten anim_castle-Atlas
-aus dem SH1DE-/Crusader-Originalmapping und dem SHA-256-
-identifizierten Cacheobjekt rekonstruieren. 95 native
-Quell- und 11 beibehaltene Ziel-Frames müssen die
-existierenden, eingefrorenen Geometrie-, Herkunfts-, RGBA-
-und Review-Digests **exakt** reproduzieren. Das geschieht
-zunächst komplett nur lesend:
-
-~~~powershell
-python tools/qa_native_pivot_provenance.py
-~~~
-
-Nur mit --save-report wird ein zusätzlicher inhaltsadressierter
-Prüfbericht unter work/reports/pivot-native-provenance erzeugt.
-Kein Quell-/Spielatlas, Bundle, Index oder Profil wird verändert.
-Originale Game-Assets wurden dabei nicht erneut dekodiert.
-[Prüfgrenzen und Reproduktionsbeweise](PIVOT_NATIVE_PROVENANCE.md).
-
-## 6. UI-Atlanten und UI-BC7
-
-```powershell
-python suite.py tool ui_atlas.py list
-python suite.py tool ui_atlas.py export --atlas UI-MasterAtlas --out work/ui
-python suite.py tool ui_atlas.py check --from work/ui
-python suite.py tool ui_atlas.py import --from work/ui --store europa-ui
-python suite.py tool ui_atlas.py profile-add europa-ui --write
-```
-
-Die Zielrechtecke der Noesis-UI bleiben fest. Ein SH1DE-UI-Atlas wird daher über
-die vorhandenen Extraktions-/Layoutwerkzeuge umgesetzt, nicht als ganzes Blatt
-blind ausgetauscht. Der aktuelle Namensweg liest die XAML-Wörterbücher aus den
-MonoBehaviour-Objekten des Quellspiels:
-
-```powershell
-python suite.py tool ui_atlas.py export --out work/ui-cru-voll
-python suite.py tool ui_sh1_dict.py --out work/ui-sh1-dict
-python suite.py tool ui_sh1_umstellung.py zuordnen --sh1 work/ui-sh1-dict --crusader work/ui-cru-voll --out work/ui-sh1-zuordnung
-python suite.py tool ui_sh1_umstellung.py boegen --aus work/ui-sh1-zuordnung
-```
-
-Das Unterkommando `anwenden` schreibt nach Sichtprüfung mit `--schreiben` in
-den über `--baum` gewählten Exportbaum. `ui_sh1_extract.py` bleibt als bildbasierte
-Gegenprobe erhalten. Anschließend:
-
-```powershell
-python suite.py tool build_ui_bc7_cache.py --source-mod-root dist/europe-production/StrongholdEuropeDE --output-root work/ui-bc7-standalone/run-01
-python suite.py tool compose_ui_bc7_candidate.py --replace
-```
-
-Die letzten beiden Befehle gehören zum **vollständigen Produktionsprofil** und
-setzen dessen passende PNG-Basis und gebundene UI-Quellen voraus. Der Composer
-verwendet vorhandene GM-Bundles und baut sie nicht erneut. Ein reiner
-Runtime-Refresh erfolgt separat über `compose_runtime_refresh.py`.
-
-Das mitgelieferte `generate_ui_texture_source_manifest.py` ist der historische
-Generator für 114 Einträge. Das aktuelle, geprüfte Manifest enthält 128
-Einträge (23 Profilbilder und 105 Arbeitsbilder). Den alten Generator nicht
-unverändert über dieses Manifest schreiben.
-
-## 7. Laufzeitabnahme
-
-Laden einer Karte, gemischte Teameinheiten, Vegetation, Türme/Torhäuser,
-Speichern/Laden, Rückkehr ins Menü und eine zweite Karte prüfen. Installation
-und Buildmanifest vor dem Start abgleichen. `ram_acceptance.py` und
-`full152_ingame_acceptance.py` liefern die bisherigen PID-gebundenen Messwege;
-letzterer ist ausdrücklich an das historische Produktionsprofil gebunden.
-Ein bestandener Offline-Test ersetzt keinen Kartenwechseltest.
+**Export, Paketbau und Spieltest:** Ein bearbeitbares Projektarchiv erhält
+Arbeitsdaten, ein Modpaket ist eine Auslieferungsform, ein BC7-/Unity-Bau
+hat zusätzliche Werkzeug- und Quellenanforderungen. Unter **Paket bauen**
+bleibt deshalb der spezialisierte Profilbau mit seinen Prüfungen erhalten.
+Die alten Produktionsbefehle stehen im [historischen Ablaufarchiv](WORKFLOWS_HISTORISCH_BIS_20261107.md),
+die fachlichen Verträge in [Bauvoraussetzungen](BUILD_READINESS.md),
+[Bauergebnis](BUILD_COMPLETION.md) und [Release-Preflight](RELEASE_PREFLIGHT.md).
+Dateiintegrität, Sandbox-Vorschau und Darstellung im laufenden Spiel sind
+getrennte Nachweise. Der [RC4-Prüfstand](SPRITESUITE_RC4_QA_20261108.md)
+nennt die tatsächlich geprüften Abläufe und die weiterhin offene
+HP-/Feuer-Spielabnahme.

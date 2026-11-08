@@ -1,5 +1,7 @@
 # SpriteSuite – Konsolidierung und Release vom 8. November 2026
 
+**Fortsetzung auf `main`:** RC4 wurde nach `main` zusammengeführt; anschließend wurden die gemeinsamen Tk-Root-/Layoutfehler korrigiert. Der folgende Bericht beschreibt die ursprüngliche Konsolidierung. Für die anschließende Entwicklung mit freiem Atlas-Transfer, PNG/XAML-Arbeitsbereich und Startseiten-Chat gilt der [RC5-Bericht](SPRITESUITE_RC5_20261108.md).
+
 [RC4-Prüfstand mit Ergebnissen und offenen Grenzen](SPRITESUITE_RC4_QA_20261108.md).
 
 ## Kanonische Basis und Herkunft
