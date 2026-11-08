@@ -76,6 +76,19 @@ class UnifiedWorkflowTab(ttk.Frame):
         """Translate UI statuses without changing project data or a saved receipt."""
         for variable in self._localized_vars:
             variable.refresh_language()
+        english = self.app.language.get().upper() == "EN"
+        # Translate the real persistent buttons, not just transient statuses.
+        self.source_button.configure(text=(
+            "+  Add files" if english else "+  Dateien hinzufügen"))
+        self.export_button.configure(text=(
+            "Build verified mod ZIP" if english else "Geprüftes Mod-ZIP bauen"))
+        self.more_actions_button.configure(text=(
+            "More ▾" if english else "Mehr ▾"))
+        self.actions_menu.entryconfigure(self.inspect_asset_menu_index,
+            label=("Inspect asset source" if english else "Assetquelle prüfen"))
+        self.tree.heading('state',text=('Status' if english else 'Stand'))
+        self.tree.heading('typ',text=('Type' if english else 'Typ'))
+        self.tree.heading('#0',text=('File' if english else 'Datei'))
         self.actions_menu.entryconfigure(self.mod_files_menu_index,
             label=self._localize("Mod-Dateien unverändert hinzufügen…"))
         self.actions_menu.entryconfigure(self.custom_export_menu_index,
@@ -117,6 +130,10 @@ class UnifiedWorkflowTab(ttk.Frame):
             if not isinstance(widget,tk.Toplevel) or not widget.winfo_exists():
                 continue
             if getattr(widget,"project",None)!=self.pipeline.project:
+                continue
+            studio=getattr(widget,"_studio_controller",None)
+            if studio is not None:
+                if studio.is_dirty():found.append(studio)
                 continue
             dirty=False
             if isinstance(widget,HudMenuPixelEditor):
@@ -167,7 +184,11 @@ class UnifiedWorkflowTab(ttk.Frame):
             node=stack.pop()
             try:stack.extend(node.winfo_children())
             except tk.TclError:continue
-            if (isinstance(node,allowed) and node.winfo_exists() and
+            if (not only_noesis and isinstance(node,tk.Toplevel) and
+                    getattr(node,"_studio_controller",None) is not None and
+                    node.winfo_exists() and getattr(node,"project",None)==project):
+                to_close.append(node)
+            elif (isinstance(node,allowed) and node.winfo_exists() and
                     getattr(node,"project",None)==project):
                 to_close.append(node)
         for node in to_close:
@@ -511,8 +532,11 @@ class UnifiedWorkflowTab(ttk.Frame):
                 if image.width*image.height>30_000_000:
                     raise ValueError("Bild zu groß")
                 bitmap=image.convert("RGBA")
-                width=max(160,self.preview.winfo_width()-30)
-                height=max(110,self.preview.winfo_height()-30)
+                viewport=getattr(self,"workarea",None)
+                available_width=(viewport.canvas.winfo_width() if viewport else self.winfo_width())
+                available_height=(viewport.canvas.winfo_height() if viewport else self.winfo_height())
+                width=max(1,min(self.preview.winfo_width()-30,int(available_width*0.75)))
+                height=max(1,min(self.preview.winfo_height()-30,int(available_height*0.60)))
                 bitmap.thumbnail((width,height),Image.Resampling.LANCZOS)
             self._photo=ImageTk.PhotoImage(bitmap,master=self.preview)
             self.preview.configure(image=self._photo,text="")
@@ -638,6 +662,41 @@ class UnifiedWorkflowTab(ttk.Frame):
                 "Keine Modinstallation oder native ABI-Freigabe.")
         return started
 
+    def inspect_selected_asset(self):
+        """Use the central project's existing selected source, no new editor."""
+        chosen = self.selected_asset()
+        if chosen is None:
+            self._set_message("Für die gemeinsame Asset-Inspektion eine Datei auswählen.")
+            return None
+        try:
+            result = self.pipeline.inspect_asset(chosen.relative_path)
+        except (OSError, ValueError) as exc:
+            messagebox.showerror("Gemeinsamer Asset-Inspector", str(exc), parent=self)
+            return None
+        details = result["details"]
+        rows = [
+            "Quelle: " + result["path"],
+            "Format: " + details["format"],
+            "SHA-256: " + result["sha256"],
+            "Größe: " + str(result["bytes"]) + " Bytes",
+        ]
+        for key in ("width", "height", "source_mode", "compression", "visible_pixels",
+                    "partial_alpha_pixels", "hidden_rgb_pixels", "alpha_bbox",
+                    "base_level_bytes", "rgba_sha256"):
+            if key in details:
+                rows.append(key + ": " + str(details[key]))
+        rows.extend(
+            item["level"] + " " + item["code"] + ": " + item["detail"]
+            for item in result["checks"]
+        )
+        rows.append("Keine automatische Unity-/BC7-/Noesis-Ingame-Freigabe.")
+        self._set_message("Assetquelle schreibgeschützt geprüft: " +
+                          chosen.relative_path + " · SHA " + result["sha256"][:16])
+        messagebox.showinfo("Gemeinsamer Asset-Inspector (nur Quellen)",
+                            "\n".join(rows), parent=self)
+        return result
+
+
     def check_project(self):
         if not self._save_pending("der Prüfung"):
             return None
@@ -666,7 +725,11 @@ class UnifiedWorkflowTab(ttk.Frame):
             filetypes=[("ZIP","*.zip")])
         if selected:
             path=Path(selected)
-            self.build_package(output=path.with_suffix("") if path.suffix.lower()==".zip" else path)
+            if path.suffix.lower() != '.zip':
+                path=path.with_name(path.name+'.zip')
+            # User-selected ZIP is copied out only AFTER internal validation.
+            # Project source and generated staging always stay under work/.
+            self.build_package(output=path)
 
     def build_package(self, *, output=None):
         if not self._save_pending("dem Mod-Paketbau"):
@@ -682,12 +745,22 @@ class UnifiedWorkflowTab(ttk.Frame):
                 name=self.mod_name.get().strip(),author=self.mod_author.get().strip(),
                 version=self.mod_version.get().strip(),output=output)
             self._last_export=outcome
-            self.result_text.set(
-                f"FERTIG: {outcome['asset_count']} geprüfte Dateien · "+
-                "ZIP "+str(outcome["zip"])+" · SHA-256 "+
-                outcome["zip_sha256"][:16]+"…")
+            if outcome.get("unverified_runtime_archive"):
+                self.result_text.set(
+                    "ENTWURF: ZIP-Dateien geprüft, native DLL/Spiel-Laufzeit "
+                    "NICHT freigegeben · "+str(outcome["zip"]))
+                self._set_message(
+                    "Nur Archivprüfung bestanden. Vor einer Installation "
+                    "ist ein eigenes gültiges info.json und Ingame-QA nötig.")
+            else:
+                self.result_text.set(
+                    f"FERTIG: {outcome['asset_count']} geprüfte Dateien · "+
+                    "ZIP "+str(outcome["zip"])+" · SHA-256 "+
+                    outcome["zip_sha256"][:16]+"…")
+                self._set_message(
+                    "Mod-ZIP erstellt und mit den Projektdateien abgeglichen.")
             self.check_text.set(
-                "Unabhängiger ZIP-/Assetvergleich bestanden · "+
+                "ZIP-/Assetvergleich bestanden; keine native Ingame-Abnahme · "+
                 str(len(outcome["warnings"]))+" Hinweise")
             self._set_message("Mod-ZIP erstellt und mit den Projektdateien abgeglichen.")
             return outcome

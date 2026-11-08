@@ -215,7 +215,9 @@ label {
     box-shadow:0 6px 22px #18222e1c;
     padding:5px;
     min-width:248px;
-    border-radius:6px
+    border-radius:6px;
+    max-height:calc(100dvh - 100px);
+    overflow:auto
 }
 .menu-popup button {
     width:100%;
@@ -353,7 +355,8 @@ label {
     display:flex;
     flex-direction:column;
     min-height:0;
-    min-width:0
+    min-width:0;
+    overflow:auto
 }
 .view-tabs {
     height:44px;
@@ -363,7 +366,8 @@ label {
     border-bottom:1px solid var(--border);
     background:var(--panel);
     padding:0 15px;
-    flex-shrink:0
+    flex-shrink:0;
+    overflow-x:auto
 }
 .view-tabs button {
     border:0;
@@ -502,6 +506,7 @@ label {
     color:var(--accent)
 }
 .context-bar {
+    flex-shrink:0;
     display:flex;
     align-items:center;
     gap:9px;
@@ -598,8 +603,17 @@ label {
 }
 .inspector-content {
     overflow:auto;
+    min-height:0;
     flex:1;
     padding-bottom:12px
+}
+.inspector-content button {
+    max-width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere
+}
+.inspector-content .check {
+    white-space:normal
 }
 .inspector-section {
     padding:15px 14px;
@@ -757,6 +771,7 @@ label {
     max-height:calc(100dvh - 74px)
 }
 .modal header {
+    flex-shrink:0;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -769,11 +784,13 @@ label {
     line-height:24px
 }
 .modal-content {
+    flex:1;
     padding:20px;
     overflow:auto;
     min-height:0
 }
 .modal footer {
+    flex-shrink:0;
     padding:13px 20px;
     border-top:1px solid var(--border);
     display:flex;

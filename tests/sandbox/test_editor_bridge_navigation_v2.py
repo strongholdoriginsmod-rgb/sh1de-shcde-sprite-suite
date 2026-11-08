@@ -17,7 +17,7 @@ def test_open_geometry_deep_link_does_not_modify_files(tmp_path, monkeypatch):
     monkeypatch.setattr(module, "EDITOR_HTML", html)
     opened = []
     monkeypatch.setattr(module.webbrowser, "open", opened.append)
-    assert module.cmd_oeffnen(SimpleNamespace(sprache="de", bereich="geometry")) == 0
+    assert module.cmd_oeffnen(SimpleNamespace(sprache="de", bereich="geometry", offline=True)) == 0
     assert opened == [html.as_uri() + "#geometry"]
     assert html.read_text(encoding="utf-8") == "<title>fake fixture</title>"
 
@@ -31,7 +31,7 @@ def test_ai_shortcut_english_and_invalid_route_fail_closed(tmp_path, monkeypatch
     monkeypatch.delenv("SEDE_SPRACHE", raising=False)
     opened = []
     monkeypatch.setattr(module.webbrowser, "open", opened.append)
-    assert module.cmd_oeffnen(SimpleNamespace(sprache="en", bereich="ai")) == 0
+    assert module.cmd_oeffnen(SimpleNamespace(sprache="en", bereich="ai", offline=True)) == 0
     assert opened == [english.as_uri() + "#ai"]
     import pytest
     with pytest.raises(ValueError, match="Unbekannter Editorbereich"):
@@ -46,5 +46,5 @@ def test_legacy_bridge_api_keeps_default_without_fragment(tmp_path, monkeypatch)
     monkeypatch.delenv("SEDE_SPRACHE", raising=False)
     urls = []
     monkeypatch.setattr(module.webbrowser, "open", urls.append)
-    assert module.cmd_oeffnen(SimpleNamespace(sprache="de")) == 0
+    assert module.cmd_oeffnen(SimpleNamespace(sprache="de", offline=True)) == 0
     assert urls == [html.as_uri()]

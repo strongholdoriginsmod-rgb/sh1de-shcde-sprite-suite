@@ -20,8 +20,11 @@ from suite_tool_registry import SPECIALISTS
 
 SCHEMA = "stronghold.spritesuite.tool-matrix.v1"
 ROOT = Path(__file__).resolve().parents[1]
-SUFFIXES = frozenset({".py", ".pyw", ".ps1", ".cmd", ".bat",
-                      ".cs", ".js", ".cjs", ".mjs"})
+SUFFIXES = frozenset({
+    ".py", ".pyw", ".ps1", ".psm1", ".psd1", ".cmd", ".bat",
+    ".cs", ".csproj", ".sln", ".js", ".cjs", ".mjs", ".ts", ".tsx",
+    ".lua", ".tcl", ".sh", ".cpp", ".h", ".hpp",
+})
 MAX_SOURCE_BYTES = 16 * 1024 * 1024
 INDEX = {item.filename: item for item in SPECIALISTS}
 
@@ -83,15 +86,52 @@ def _main_entrypoint(path: Path) -> bool | None:
     return False
 
 
-def scan(project_root: str | Path) -> dict:
+# Recursive mode is opt-in. Generated/third-party folders are not our tools.
+_SKIP_RECURSIVE = frozenset({
+    ".git", ".venv", "venv", "__pycache__", "node_modules", "vendor",
+    "bin", "obj", "dist", "cache", "work", ".pytest_cache", "packages",
+})
+MAX_SCAN_FILES = 8000
+MAX_SCAN_DEPTH = 8
+
+
+def _source_paths(tools: Path, *, recursive: bool) -> list[Path]:
+    """Enumerate without following a symlink/junction into any other tree."""
+    if not recursive:
+        return sorted(tools.iterdir(), key=lambda p: p.name.casefold())
+    pending = [(tools, 0)]
+    files: list[Path] = []
+    while pending:
+        folder, depth = pending.pop()
+        for path in sorted(folder.iterdir(), key=lambda p: p.name.casefold()):
+            if _is_link(path):
+                # Include the unsafe source-file name as an untrusted entry.
+                if path.suffix.lower() in SUFFIXES:
+                    files.append(path)
+                continue
+            if path.is_dir():
+                if path.name.casefold() in _SKIP_RECURSIVE:
+                    continue
+                if depth >= MAX_SCAN_DEPTH:
+                    raise InventoryError("Tool-Unterverzeichnisse sind zu tief verschachtelt")
+                pending.append((path, depth + 1))
+            else:
+                files.append(path)
+            if len(files) + len(pending) > MAX_SCAN_FILES:
+                raise InventoryError("Zu viele Tool-Dateien für sicheren Scan")
+    return sorted(files, key=lambda p: p.relative_to(tools).as_posix().casefold())
+
+
+def scan(project_root: str | Path, *, recursive: bool = False) -> dict:
     root, tools = _tools_dir(project_root)
     found = {}
-    for path in sorted(tools.iterdir(), key=lambda item: item.name.casefold()):
+    for path in _source_paths(tools, recursive=recursive):
+        relative = path.relative_to(tools).as_posix()
         if path.suffix.lower() not in SUFFIXES:
             continue
         # Links (including broken links) are reported, never followed.
         if _is_link(path):
-            found[path.name] = {"status": "unsicherer_link", "sha256": None,
+            found[relative] = {"status": "unsicherer_link", "sha256": None,
                                 "bytes": None, "entrypoint": None,
                                 "risk": "unknown", "specialist": False}
             continue
@@ -100,23 +140,23 @@ def scan(project_root: str | Path) -> dict:
         try:
             size = path.stat().st_size
             if not 0 < size <= MAX_SOURCE_BYTES:
-                found[path.name] = {"status": "ungültige_größe", "sha256": None,
+                found[relative] = {"status": "ungültige_größe", "sha256": None,
                                     "bytes": size, "entrypoint": None,
                                     "risk": "unknown", "specialist": False}
                 continue
             digest = _hash(path)
         except OSError as exc:
             raise InventoryError(f"Quelldatei kann nicht gelesen werden: {path.name}") from exc
-        policy = classify(path.name, ()).category if path.suffix.lower() in (
-            ".py", ".pyw") else "unknown"
-        found[path.name] = {
+        direct_tool = path.parent == tools
+        policy = (classify(path.name, ()).category if direct_tool and
+                  path.suffix.lower() in (".py", ".pyw") else "unknown")
+        specialist = direct_tool and path.name in INDEX
+        found[relative] = {
             "status": "regulär", "sha256": digest, "bytes": size,
             "entrypoint": _main_entrypoint(path),
             "risk": policy,
-            "specialist": path.name in INDEX,
-            "workstream": (
-                INDEX[path.name].category_en if path.name in INDEX else None
-            ),
+            "specialist": specialist,
+            "workstream": INDEX[path.name].category_en if specialist else None,
         }
     return {"root": str(root), "tools": found, "count": len(found)}
 
@@ -152,12 +192,13 @@ def compare(base: dict, other: dict) -> dict:
     return {"source": other["root"], "counts": counts, "tools": rows}
 
 
-def build_matrix(current: str | Path, historical: list[str | Path]) -> dict:
-    base = scan(current)
+def build_matrix(current: str | Path, historical: list[str | Path],
+                 *, recursive: bool = False) -> dict:
+    base = scan(current, recursive=recursive)
     comparisons = []
     seen = {Path(base["root"])}
     for source in historical:
-        other = scan(source)
+        other = scan(source, recursive=recursive)
         key = Path(other["root"])
         if key in seen:
             raise InventoryError("Doppelte oder identische Vergleichswurzel")
@@ -165,6 +206,7 @@ def build_matrix(current: str | Path, historical: list[str | Path]) -> dict:
         comparisons.append(compare(base, other))
     return {
         "schema": SCHEMA,
+        "recursive": recursive,
         "current": base,
         "comparisons": comparisons,
         "operation": "Dateivergleich ausschließlich lesend; keine Toolausführung",
@@ -208,9 +250,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--compare", type=Path, action="append", default=[],
                         help="Historische Stronghold-Projektwurzel, wiederholbar")
     parser.add_argument("--format", choices=("json", "markdown"), default="json")
+    parser.add_argument("--recursive", action="store_true",
+                        help="Auch eigene verschachtelte tools/-Quellen ohne Links lesen")
     args = parser.parse_args(argv)
     try:
-        result = build_matrix(args.root, args.compare)
+        result = build_matrix(args.root, args.compare, recursive=args.recursive)
     except (InventoryError, OSError, ValueError) as exc:
         print(f"TOOL_INVENTORY_ERROR: {exc}", file=sys.stderr)
         return 2

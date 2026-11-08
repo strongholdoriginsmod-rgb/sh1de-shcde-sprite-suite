@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "checks": [
+    "API installation does not perform an action",
+    "native selection helper reaches virtualized frame IDs and Ctrl-style multi-selection",
+    "stale mutation is rejected without changing source",
+    "native DOM edit shares existing Undo",
+    "animation drawing does not rotate native revision tokens",
+    "provided replacement PNG reaches original file-button callback and Undo",
+    "existing form fill/submit commits its normal history",
+    "native save uses existing project download",
+    "in-flight native cancellation prevents late download and preserves project source",
+    "file-dialog-free project.open uses existing project reader",
+    "provided PNG files import through native form and Undo",
+    "native file picker actions return input_required without hanging",
+    "1280x480: native toolbar/views/menu, six inspector panels and modal footer reachable",
+    "1024x540: native toolbar/views/menu, six inspector panels and modal footer reachable",
+    "800x500: native toolbar/views/menu, six inspector panels and modal footer reachable",
+    "640x360: native toolbar/views/menu, six inspector panels and modal footer reachable"
+  ],
+  "htmlSHA256": "3de83e1be406cafb57e4f2b6618e6bef88d8ce5c94932e132abae8241a77b7db",
+  "pageErrors": [],
+  "networkRequests": [],
+  "liveCodexCalled": false,
+  "source": "synthetic built-in demo in fresh browser profile"
+}

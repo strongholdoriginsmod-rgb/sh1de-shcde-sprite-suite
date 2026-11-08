@@ -221,5 +221,5 @@ with sync_playwright() as pw:
   page.screenshot(path=str(OUT/'failure.png'));(OUT/'failure.txt').write_text(traceback.format_exc());raise
  finally:
   report={'htmlSHA256':hashlib.sha256(html.encode('utf-8')).hexdigest(),'browser':browser.version,'load':'unmodified HTML via page.set_content; opaque origin','nativeIndexedDBTested':False,'directFileNavigationTested':False,'gameTested':False,'passed':len(results),'checks':results,'pageErrors':errors,'networkRequests':requests}
-  (OUT/'browser-report.json').write_text(json.dumps(report,indent=2,ensure_ascii=False));browser.close()
+  (OUT/'browser-report.json').write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n',encoding='utf-8',newline='\n');browser.close()
 print('BROWSER CHECKS:',len(results))

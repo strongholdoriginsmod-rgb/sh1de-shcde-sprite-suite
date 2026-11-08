@@ -10,7 +10,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
-from suite_usability import ScrollableColumn
+from suite_workarea import ScrollableWorkarea
 
 RAIL = "#252b34"
 RAIL_ACTIVE = "#364650"
@@ -125,15 +125,16 @@ class ModernShell:
             elif label in ("Python-Arbeitsmodus", "EXE"):
                 widget.configure(text="Grafikwerkstatt für Stronghold",
                                  style="Muted.TLabel")
+                self.subtitle_label = widget
 
     def _make_sidebar(self):
         """Five clear destinations; tools and settings only when requested."""
         app = self.app
         self.rail = ttk.Frame(app, style="Rail.TFrame", width=194)
-        self.rail.pack(before=app.notebook, side="left", fill="y",
+        self.rail.pack(before=app.notebook_viewport, side="left", fill="y",
                        padx=(12, 6), pady=(0, 6))
         self.rail.pack_propagate(False)
-        self.scroll = ScrollableColumn(self.rail, background=RAIL)
+        self.scroll = ScrollableWorkarea(self.rail, background=RAIL, horizontal=False)
         self.scroll.pack(fill="both", expand=True)
         body = self.scroll.body
         body.configure(style="Rail.TFrame")
@@ -148,6 +149,9 @@ class ModernShell:
             body, text="Suche (Strg+K)", style="Rail.TButton",
             command=app.show_command_search)
         self.search_button.pack(fill="x", padx=5, pady=(1, 3))
+        self.ai_button = ttk.Button(body, text="KI-Assistent", style="Rail.TButton",
+                                    command=app.open_ai_assistant)
+        self.ai_button.pack(fill="x", padx=5, pady=(1,3))
         # A first-time user should not need to discover an advanced menu
         # before reaching the illustrated, contextual tutorial.
         self.tutorial_button=ttk.Button(
@@ -227,6 +231,7 @@ class ModernShell:
                                  padx=0, pady=(0, 4))
         else:
             self.more_panel.pack_forget()
+        self.scroll.refresh()
         english = self.app.language.get().upper() == "EN"
         self.more_toggle.configure(text=(
             ("Tools ▾" if english else "Werkzeuge ▾")
@@ -282,6 +287,7 @@ class ModernShell:
         # Side text must wrap inside the scrollable rail, not be clipped at
         # the right edge when the main window shrinks below 1200 px.
         self.rail_hint.configure(wraplength=max(100,width-42))
+        self.scroll.refresh()
         # Der alte, sehr lange Zusatztext darf die Knöpfe rechts oben nicht
         # aus dem Fenster drücken. In schmalen Ansichten erklärt die
         # Werkstatt selbst die nächsten Schritte.
@@ -306,6 +312,10 @@ class ModernShell:
         english = getattr(self.app.language, "get", lambda:"DE")().upper()=="EN"
         self.app.title("SpriteSuite – Graphics and mod packages" if english
                        else "SpriteSuite – Grafiken und Modpakete")
+        if hasattr(self, "subtitle_label"):
+            self.subtitle_label.configure(text=(
+                "Graphics workshop for Stronghold" if english
+                else "Grafikwerkstatt für Stronghold"))
         position = 2 if english else 1
         for key, de, en, _ in self.PRIMARY:
             self.buttons[key].configure(text=en if english else de)
@@ -330,6 +340,7 @@ class ModernShell:
             if self.more_expanded else
             ("Tools ▸" if english else "Werkzeuge ▸")
         ))
+        self.ai_button.configure(text="AI assistant" if english else "KI-Assistent")
         self.tutorial_button.configure(
             text="Tutorial (Ctrl+F1)" if english else "Anleitung (Strg+F1)")
         self.manual_button.configure(text="PDF manual" if english

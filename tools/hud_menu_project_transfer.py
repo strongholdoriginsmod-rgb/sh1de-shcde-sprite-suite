@@ -29,7 +29,7 @@ MAX_ONE_FILE = 512 * 1024 ** 2
 MAX_MANIFEST = 2 * 1024 ** 2
 METADATA_SECTIONS = frozenset(
     {"layouts", "import-baselines", "exports", "revisions",
-     "origins-sources", "origins-revisions"}
+     "origins-sources", "origins-revisions", "modding-studio"}
 )
 
 
@@ -50,6 +50,16 @@ def _valid_metadata_member(relative: str) -> bool:
         return (len(name) <= 130 and name.lower().endswith(".xaml")
                 and len(name) > 5 and not name.startswith(".")
                 and all(c not in "\\\\/:*?\\\"<>|" and ord(c) >= 32 for c in name))
+    if parts in (["modding-studio", "project.json"],
+                 ["modding-studio", "current.json"]):
+        return True
+    if len(parts) >= 3 and parts[:2] == ["modding-studio", "exports"]:
+        # These are source/diagnostic exports produced by the project-bound
+        # authoring studio. The outer archive validator still checks every
+        # component, traversal, symlinks, duplicate names and size budgets.
+        return True
+    if (len(parts) == 3 and parts[:2] == ["modding-studio", "revisions"]):
+        return re.fullmatch(r"[0-9]{6}-[a-f0-9]{16}\.json", parts[2]) is not None
     if parts == ["origins-sources","current.json"]:
         return True
     if (len(parts)==3 and parts[0]=="origins-sources" and

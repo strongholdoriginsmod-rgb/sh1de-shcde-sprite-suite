@@ -45,7 +45,12 @@ def synthetic_log(root: Path) -> str:
         fire_ticks = 1500 if burning else 0
         if stage != "original" and phase != "Extinguished":
             runtime("stage_applied", building_id=building_id, global_id=global_id,
-                    stage=stage.split(":")[1], renderer_modified="true",
+                    x=315, y=133, stage=stage.split(":")[1],
+                    sprite_field_written="true", renderer_modified="false",
+                    preview="False", live_hp=hp, live_max=100, live_fire_ticks=fire_ticks)
+            runtime("stage_tilemap_verified", building_id=building_id,
+                    global_id=global_id, x=315, y=133, stage=stage.split(":")[1],
+                    tilemap_readback_matches="true", renderer_modified="true",
                     preview="False", live_hp=hp, live_max=100, live_fire_ticks=fire_ticks)
         qa("observed", phase, type=104, building_id=building_id, global_id=global_id,
            hp=hp, max=100, fire_ticks=fire_ticks, baseline_tiles=64,
@@ -86,3 +91,46 @@ def test_truncated_screenshot_prevents_completed_proof(tmp_path):
     result = evidence.evaluate(log, tmp_path, SAVE_SHA)
     assert not result["canarySequenceProved"]
     assert "Mechanical: Screenshot is not a complete PNG" in result["errors"]
+
+
+def test_report_refuses_legacy_field_writes_without_native_tilemap_readback(tmp_path):
+    log = synthetic_log(tmp_path)
+    legacy = "\n".join(
+        line for line in log.splitlines()
+        if "event=stage_tilemap_verified" not in line
+    ).replace("sprite_field_written=true|renderer_modified=false",
+              "renderer_modified=true")
+    result = evidence.evaluate(legacy, tmp_path, SAVE_SHA)
+    assert not result["canarySequenceProved"]
+    assert any("field write and native tilemap readback" in e for e in result["errors"])
+
+
+@pytest.mark.parametrize("mutation", [
+    "tilemap_readback_matches=false",
+    "x=999",
+    "renderer_modified=false",
+])
+def test_report_rejects_falsified_tilemap_readback_events(tmp_path, mutation):
+    log = synthetic_log(tmp_path)
+    lines = log.splitlines()
+    target = next(i for i, line in enumerate(lines)
+                  if "event=stage_tilemap_verified" in line)
+    lines[target] = lines[target].replace(
+        "tilemap_readback_matches=true", "tilemap_readback_matches=false"
+    ) if mutation.endswith("false") and mutation.startswith("tilemap") else (
+        lines[target].replace("x=315", "x=999")
+        if mutation == "x=999" else
+        lines[target].replace("renderer_modified=true", "renderer_modified=false")
+    )
+    result = evidence.evaluate("\n".join(lines), tmp_path, SAVE_SHA)
+    assert not result["canarySequenceProved"]
+    assert any("Mechanical: no matching non-preview field write and native tilemap readback" in e
+               for e in result["errors"])
+
+
+
+def test_readback_without_coordinates_cannot_confirm_the_field_write(tmp_path):
+    log = synthetic_log(tmp_path).replace("|x=315|y=133", "")
+    result = evidence.evaluate(log, tmp_path, SAVE_SHA)
+    assert not result["canarySequenceProved"]
+    assert any("field write and native tilemap readback" in e for e in result["errors"])

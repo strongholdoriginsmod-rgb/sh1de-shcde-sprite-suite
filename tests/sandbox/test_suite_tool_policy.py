@@ -34,8 +34,8 @@ def test_risk_classification_for_known_important_paths():
     assert classify("qa_workstream_census.py",["--out","new.json"]).category=="workspace"
 
 
-def test_dynamic_gui_catalogue_runs_user_selected_action_without_confirmation(monkeypatch):
-    from pathlib import Path
+def test_dynamic_gui_catalogue_requires_explicit_confirmation_for_game_writes(monkeypatch):
+    # 08.11.2026: A single click must not silently install game/SE changes.
     root=Path(__file__).resolve().parents[2]
     loader=importlib.machinery.SourceFileLoader(
         "suite_center_risk_test",str(root/"tools"/"suite_center.pyw"))
@@ -45,7 +45,7 @@ def test_dynamic_gui_catalogue_runs_user_selected_action_without_confirmation(mo
     shown=[]
     launched=[]
     monkeypatch.setattr(module.messagebox,"askyesno",
-                        lambda title,body,**kwargs:shown.append(body) or False)
+                        lambda title,body,**kwargs:shown.append((body,kwargs)) or False)
     fake=SimpleNamespace(
         catalog_tool=SimpleNamespace(get=lambda:"ziel_se211.py"),
         active_command=("installieren",),
@@ -55,5 +55,10 @@ def test_dynamic_gui_catalogue_runs_user_selected_action_without_confirmation(mo
         run_catalog=lambda args:launched.append(args)
     )
     module.Center.catalog_run(fake)
-    assert not shown
+    assert len(shown)==1
+    assert "Spiel" in shown[0][0]
+    assert shown[0][1]["default"] == "no"
+    assert not launched
+    monkeypatch.setattr(module.messagebox,"askyesno",lambda *a,**kw: True)
+    module.Center.catalog_run(fake)
     assert launched == [["installieren"]]

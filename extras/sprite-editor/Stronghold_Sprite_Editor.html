@@ -223,7 +223,9 @@ label {
     box-shadow:0 6px 22px #18222e1c;
     padding:5px;
     min-width:248px;
-    border-radius:6px
+    border-radius:6px;
+    max-height:calc(100dvh - 100px);
+    overflow:auto
 }
 .menu-popup button {
     width:100%;
@@ -361,7 +363,8 @@ label {
     display:flex;
     flex-direction:column;
     min-height:0;
-    min-width:0
+    min-width:0;
+    overflow:auto
 }
 .view-tabs {
     height:44px;
@@ -371,7 +374,8 @@ label {
     border-bottom:1px solid var(--border);
     background:var(--panel);
     padding:0 15px;
-    flex-shrink:0
+    flex-shrink:0;
+    overflow-x:auto
 }
 .view-tabs button {
     border:0;
@@ -510,6 +514,7 @@ label {
     color:var(--accent)
 }
 .context-bar {
+    flex-shrink:0;
     display:flex;
     align-items:center;
     gap:9px;
@@ -606,8 +611,17 @@ label {
 }
 .inspector-content {
     overflow:auto;
+    min-height:0;
     flex:1;
     padding-bottom:12px
+}
+.inspector-content button {
+    max-width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere
+}
+.inspector-content .check {
+    white-space:normal
 }
 .inspector-section {
     padding:15px 14px;
@@ -765,6 +779,7 @@ label {
     max-height:calc(100dvh - 74px)
 }
 .modal header {
+    flex-shrink:0;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -777,11 +792,13 @@ label {
     line-height:24px
 }
 .modal-content {
+    flex:1;
     padding:20px;
     overflow:auto;
     min-height:0
 }
 .modal footer {
+    flex-shrink:0;
     padding:13px 20px;
     border-top:1px solid var(--border);
     display:flex;
@@ -1174,6 +1191,7 @@ label {
     <hr><button data-action="undo">Rückgängig <kbd>Strg Z</kbd></button><button data-action="redo">Wiederholen <kbd>Strg Umschalt Z</kbd></button><hr><button data-action="project">Projekteinstellungen…</button>
     <button data-action="demo">Beispiel öffnen</button><button data-action="clear-history">Historie leeren…</button>
     <hr><button data-action="help">Hilfe und Dateiformate</button>
+    <button id="native-connect" type="button" hidden>Assistent verbinden</button>
   </div></details>
   <button class="header-import" data-action="import">Importieren…</button>
   <span class="header-separator"></span>
@@ -4186,7 +4204,7 @@ label {
         qualityReport, approvalSignature, approveStage, makeRequestBundle, makeVersionBundle, withBuildingVersion, exportPackage };
 });
 </script><script>/* Pure, offline SpriteSuite AI request, comparison and review contracts.
-   Images are never sent over the network by the browser editor. */
+   Reference bundles and candidate receipts are shared by offline and local Codex flows. */
 (function (root, factory) {
     'use strict';
     const C = typeof module === 'object' && module.exports ? require('./core.js') : root.SpriteCore;
@@ -4197,10 +4215,12 @@ label {
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (C, K) {
     'use strict';
     const MODELS = Object.freeze(['gpt-image-2.6-flare', 'gpt-image-2.6-sunburst']);
-    const ASSET_CLASSES = Object.freeze(['building', 'unit', 'vegetation', 'hud', 'ui', 'other']);
+    const ASSET_CLASSES = Object.freeze(['building', 'unit', 'animation', 'texture', 'vegetation', 'hud', 'ui', 'other']);
     const CLASS_PROMPTS = Object.freeze({
         building: 'Maintain the isometric game camera, building silhouette, ground contact, recognizable construction and tiered tiles.',
         unit: 'Preserve the complete subject pose, direction, frame registration and character size used in the game.',
+        animation: 'Preserve the frame pose, direction, ground anchor and character size. Generate one directional frame, never a contact sheet.',
+        texture: 'Preserve material scale, texture bounds, tile alignment and readable original pixel structure.',
         vegetation: 'Maintain tree or vegetation ground anchor, scale, silhouette and correct alpha fringe.',
         hud: 'Preserve interface shape, alignment, pixel margins, state-specific contrast and icon legibility.',
         ui: 'Preserve icon bounds, pixel alignment, readability and independent transparent edges.',
@@ -4257,7 +4277,7 @@ label {
             fail('PNG-Quellabmessungen passen nicht zur Arbeitskopie.');
         const registered = await K.encodePNG(registeredImage(img, plan));
         const request = {
-            format: 'sprite-suite.ai-image-edit', version: 1,
+            format: 'sprite-suite.ai-image-edit', version: 1, provider: 'codex-chatgpt',
             assetClass: settings.assetClass, goal: settings.goal,
             restrictions: settings.restrictions, model: settings.model,
             variants: settings.variants, quality: 'high', complexity: 'high',
@@ -4273,8 +4293,8 @@ label {
         const guide = [
             'SpriteSuite KI-Werkstatt – Kandidatenauftrag',
             'Erst validieren (kostenfrei): python tools/suite_ai_codex.py --bundle request.zip --output neuer_ordner --dry-run',
-            'Bezahlte Generierung nur mit ausdruecklichem --execute UND --confirm-paid-requests.',
-            'OPENAI_API_KEY ausschliesslich aus der Umgebung lesen; keine Schluessel in der Projektdatei.',
+            'Generierung nach ChatGPT-Anmeldung: python tools/suite_ai_codex.py --bundle request.zip --output neuer_ordner --execute',
+            'Die lokale Codex-Sitzung verwendet das angemeldete ChatGPT-Konto und dessen aktuelle Limits.',
             'PNG-Kandidaten im Sprite Editor unter KI-Werkstatt importieren.',
             'Abmessung, Alpha, Geometrie und Originaltreue visuell pruefen; danach manuell uebernehmen.',
             'Keine automatische Mod-Installation oder Ingame-Freigabe.',
@@ -4315,6 +4335,127 @@ label {
             assetClass: raw.assetClass, variant: raw.variant,
             requestSHA256: raw.requestSHA256 };
     }
+    /** Deterministic pixel-risk metrics; NEVER a game-compatibility or copyright score. */
+    function visualRisk(original, candidate) {
+        C.dimensions(original.width, original.height);
+        C.dimensions(candidate.width, candidate.height);
+        if (original.width !== candidate.width || original.height !== candidate.height)
+            fail('Qualitätsvergleich benötigt identische Sprite-Abmessungen.');
+        const a = original.data, b = candidate.data, width = original.width;
+        let changedPixels = 0, changedAlpha = 0, added = 0, removed = 0;
+        let hiddenRGBChanges = 0, sourceVisible = 0, targetVisible = 0;
+        let sourceBaseline = -1, candidateBaseline = -1, sourcePartial = 0, targetPartial = 0;
+        let sourceX = 0, sourceY = 0, targetX = 0, targetY = 0;
+        for (let index = 0; index < a.length; index += 4) {
+            const ordinal = index / 4, x = ordinal % width, y = Math.floor(ordinal / width);
+            const oa = a[index + 3], ca = b[index + 3];
+            const rgbChanged = a[index] !== b[index] ||
+                a[index + 1] !== b[index + 1] || a[index + 2] !== b[index + 2];
+            if (oa !== ca) changedAlpha++;
+            if (rgbChanged || oa !== ca) changedPixels++;
+            if (!oa && ca) added++;
+            if (oa && !ca) removed++;
+            if (!oa && !ca && rgbChanged) hiddenRGBChanges++;
+            if (oa) {
+                sourceVisible++;
+                sourceX += x; sourceY += y;
+                sourceBaseline = Math.max(sourceBaseline, y);
+            }
+            if (ca) {
+                targetVisible++;
+                targetX += x; targetY += y;
+                candidateBaseline = Math.max(candidateBaseline, y);
+            }
+            if (oa > 0 && oa < 255) sourcePartial++;
+            if (ca > 0 && ca < 255) targetPartial++;
+        }
+        const groundShift = sourceBaseline < 0 || candidateBaseline < 0 ?
+            null : candidateBaseline - sourceBaseline;
+        const centroidShift = !sourceVisible || !targetVisible ? null : {
+            dx: (targetX / targetVisible) - (sourceX / sourceVisible),
+            dy: (targetY / targetVisible) - (sourceY / sourceVisible)
+        };
+        const originalPixels = Math.max(sourceVisible, 1);
+        const points = Math.min(100, Math.round(
+            16 * Math.min(1, changedAlpha / originalPixels) +
+            24 * Math.min(1, added / originalPixels) +
+            24 * Math.min(1, removed / originalPixels) +
+            12 * Math.min(1, hiddenRGBChanges / originalPixels) +
+            14 * Math.min(1, Math.abs(groundShift ?? 0) / 4) +
+            10 * Math.min(1, Math.hypot(centroidShift?.dx || 0, centroidShift?.dy || 0) /
+                Math.max(1, Math.min(original.width, original.height) / 4))
+        ));
+        const warnings = [];
+        if (groundShift !== null && Math.abs(groundShift) > 2)
+            warnings.push('Bodenlinie um ' + groundShift + ' px verschoben: Pivot prüfen.');
+        if (hiddenRGBChanges)
+            warnings.push('Verdeckte RGB-Werte im volltransparenten Bereich geändert: Atlas/BC7-Ränder prüfen.');
+        if (added)
+            warnings.push('Neue sichtbare Pixel außerhalb der ursprünglichen Silhouette: Rand und Maske prüfen.');
+        if (centroidShift && Math.hypot(centroidShift.dx, centroidShift.dy) >
+                Math.max(2, Math.min(original.width, original.height) / 8))
+            warnings.push('Sichtbarer Bildschwerpunkt deutlich verschoben: Pose/Ausrichtung prüfen.');
+        if (sourcePartial !== targetPartial)
+            warnings.push('Anzahl halbtransparenter Pixel geändert: Alpha-Fransen prüfen.');
+        return { changedPixels, changedAlpha, addedVisible: added,
+            removedVisible: removed, hiddenRGBChanges, sourceVisible, targetVisible,
+            sourcePartial, targetPartial, groundShift,
+            centroidShift, reviewRiskPoints: points,
+            riskBand: points >= 50 ? 'high_review_risk' :
+                points >= 15 ? 'moderate_review_risk' : 'low_observed_pixel_risk',
+            warnings, approved: false, inGameTested: false };
+    }
+    /** Compare 1–4 alternatives without choosing or accepting any of them. */
+    function rankCandidates(original, candidates) {
+        if (!Array.isArray(candidates) || !candidates.length || candidates.length > 4)
+            fail('Ranking benötigt ein bis vier Bildkandidaten.');
+        const ranked = candidates.map((row, index) => {
+            const image = row?.image || row;
+            const report = reviewCandidate(original, image);
+            return { index, name: row?.name || ('Variante ' + (index + 1)),
+                reviewRiskPoints: report.quality?.reviewRiskPoints ?? 100,
+                errors: report.errors.slice(), warnings: report.warnings.slice(),
+                approved: false };
+        });
+        return ranked.sort((a, b) => (a.errors.length > 0) - (b.errors.length > 0) ||
+            a.reviewRiskPoints - b.reviewRiskPoints || a.index - b.index);
+    }
+    /** One common frame-animation QA: anchor/baseline consistency, not motion synthesis. */
+    function analyzeSequence(frames) {
+        if (!Array.isArray(frames) || frames.length < 2 || frames.length > 256)
+            fail('Animationsprüfung benötigt 2 bis 256 Frames.');
+        const rows = frames.map((item, index) => {
+            if (!item || !item.image) fail('Animationsframe ohne Bilddaten.');
+            const img = item.image;
+            C.dimensions(img.width, img.height);
+            const anchor = C.pivot(item.pivot ?? { x:.5, y:0 });
+            let visible = 0, right = -1, bottom = -1, left = img.width, top = img.height;
+            for (let i = 3; i < img.data.length; i += 4) {
+                if (!img.data[i]) continue;
+                const ordinal = (i - 3) / 4, x = ordinal % img.width, y = Math.floor(ordinal / img.width);
+                visible++; left = Math.min(left, x); right = Math.max(right, x);
+                top = Math.min(top, y); bottom = Math.max(bottom, y);
+            }
+            return { index, name: String(item.name || index).slice(0, 150),
+                width: img.width, height: img.height, visiblePixels: visible,
+                anchor: { x: img.width * anchor.x, y: img.height * (1 - anchor.y) },
+                bounds: visible ? { left, top, right, bottom } : null,
+                relativeGroundY: visible ? bottom - img.height * (1 - anchor.y) : null };
+        });
+        const warnings = [];
+        for (const row of rows)
+            if (!row.visiblePixels) warnings.push({ frame:row.index, code:'empty_alpha', detail:'Transparentes Bild' });
+        for (let i = 1; i < rows.length; i++) {
+            const prev = rows[i - 1], row = rows[i];
+            if (row.width !== prev.width || row.height !== prev.height)
+                warnings.push({frame:i, code:'canvas_size_changed', detail:'Frame-Abmessungen weichen ab'});
+            if (row.relativeGroundY !== null && prev.relativeGroundY !== null &&
+                    Math.abs(row.relativeGroundY - prev.relativeGroundY) > 2)
+                warnings.push({frame:i, code:'ground_jitter', detail:'Bodenanker variiert >2 px; möglicherweise beabsichtigte Bewegung'});
+        }
+        return { schema:'sprite-suite.animation-qa.v1', frames:rows, warnings,
+            automatedReleaseApproval:false, nativeAnimationTested:false };
+    }
     function reviewCandidate(original, candidate) {
         C.dimensions(original.width, original.height);
         C.dimensions(candidate.width, candidate.height);
@@ -4336,12 +4477,109 @@ label {
         if (!errors.length && alphaChanged) warnings.push('Transparenz/Silhouette verändert: manuell prüfen.');
         if (!errors.length && changedPixels > original.width * original.height * .8)
             warnings.push('Mehr als 80 % der Pixel verändert: Stil und Originaltreue prüfen.');
-        return { errors, warnings,
+        const quality = original.width === candidate.width && original.height === candidate.height ?
+            visualRisk(original, candidate) : null;
+        if (quality) warnings.push(...quality.warnings);
+        return { errors, warnings, quality,
             stats: { changedPixels, alphaChanged, visible, originalVisible },
             needsManualReview: true, approved: false };
     }
     return Object.freeze({ MODELS, ASSET_CLASSES, options, canvasPlan, registeredImage,
-        prompt, makeRequestBundle, verifyCandidateMetadata, reviewCandidate });
+        prompt, makeRequestBundle, verifyCandidateMetadata, reviewCandidate, visualRisk, rankCandidates, analyzeSequence });
+});
+</script><script>/* Read-only adapter for the actual in-game Zinnenlineal displacement file.
+ * No game or source image changes. The old tool may remain installed, but its
+ * measurements can now be reviewed in the common geometry inspector. */
+(function (root, factory) {
+    'use strict';
+    const C = typeof module === 'object' && module.exports ? require('./core.js') : root.SpriteCore;
+    const api = factory(C);
+    if (typeof module === 'object' && module.exports) module.exports = api;
+    else root.SpriteLegacyMeasurements = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (C) {
+    'use strict';
+    const SCHEMA = 'zinnenlineal.versatz.v1';
+    const MAX_BYTES = 2 * 1024 * 1024, MAX_RECORDS = 4096, EPSILON = 2e-5;
+    const NAME = /^([A-Za-z][A-Za-z0-9_]{0,90})[ -]([0-9]{1,7})(x?)$/;
+    function fail(reason) { throw new Error('Zinnenlineal-Import: ' + reason); }
+    function integer(value, key, min, max) {
+        if (typeof value !== 'number' || !Number.isInteger(value) ||
+                value < min || value > max) fail(key + ' ist keine zulässige Ganzzahl.');
+        return value;
+    }
+    function finite(value, key, max = 100) {
+        if (typeof value !== 'number' || !Number.isFinite(value) ||
+                Math.abs(value) > max) fail(key + ' ist keine zulässige Zahl.');
+        return value;
+    }
+    function parseDocument(raw) {
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw) ||
+                raw.schema !== SCHEMA || !Array.isArray(raw.frames) ||
+                raw.frames.length > MAX_RECORDS)
+            fail('Unbekanntes Format oder mehr als 4096 Einträge.');
+        const seen = new Set();
+        const rows = raw.frames.map((entry, index) => {
+            if (!entry || typeof entry !== 'object' || Array.isArray(entry))
+                fail('Eintrag ' + (index + 1) + ' ist kein Objekt.');
+            const match = typeof entry.name === 'string' ? NAME.exec(entry.name) : null;
+            if (!match || entry.gruppe !== match[1])
+                fail('Sprite-Name und Gruppe stimmen nicht überein.');
+            const number = integer(entry.nummer, 'nummer', 0, 1000000);
+            if (Number(match[2]) !== number) fail('Sprite-Nummer stimmt nicht überein.');
+            if (seen.has(entry.name)) fail('Doppelter Frame/Sprite-Eintrag: ' + entry.name);
+            seen.add(entry.name);
+            const width = integer(entry.breite, 'breite', 1, 8192);
+            const height = integer(entry.hoehe, 'hoehe', 1, 8192);
+            const right = integer(entry.rechts, 'rechts', -4096, 4096);
+            const up = integer(entry.hoch, 'hoch', -4096, 4096);
+            const original = { x: finite(entry.pivot_x, 'pivot_x', 4),
+                y: finite(entry.pivot_y, 'pivot_y', 4) };
+            const candidate = { x: finite(entry.neu_pivot_x, 'neu_pivot_x', 4),
+                y: finite(entry.neu_pivot_y, 'neu_pivot_y', 4) };
+            if (Math.abs(candidate.x - (original.x - right / width)) > EPSILON ||
+                    Math.abs(candidate.y - (original.y - up / height)) > EPSILON)
+                fail('Kandidat widerspricht gemessenem Versatz: ' + entry.name);
+            if (Object.prototype.hasOwnProperty.call(entry, 'pixel_je_einheit') &&
+                    finite(entry.pixel_je_einheit, 'pixel_je_einheit', 2048) <= 0)
+                fail('Pixel pro Einheit müssen positiv sein.');
+            return Object.freeze({ name: entry.name, group: entry.gruppe, number,
+                width, height, right, up,
+                original: Object.freeze(original), candidate: Object.freeze(candidate) });
+        });
+        return Object.freeze({ schema: SCHEMA, rows: Object.freeze(rows) });
+    }
+    function forFrame(parsed, frame, img) {
+        if (!parsed || parsed.schema !== SCHEMA || !Array.isArray(parsed.rows) ||
+                !frame || !img) fail('Unvollständiger Mess-/Frame-Kontext.');
+        // Sprite Editor stores .png and may use '-' where old Unity wrote ' '.
+        // Match by verified group/index/alt suffix; conflicting historical
+        // aliases are ambiguous and must never silently select one proposal.
+        const stem = typeof frame.name === 'string' ? frame.name.replace(/\.png$/i, '') : '';
+        const parts = NAME.exec(stem);
+        const matches = parsed.rows.filter(r => r.name === stem || (parts &&
+            r.group === parts[1] && r.number === Number(parts[2]) &&
+            r.name.endsWith('x') === !!parts[3]));
+        if (matches.length !== 1)
+            return { status: matches.length ? 'ambiguous' : 'missing', row: null, measure: null };
+        const row = matches[0];
+        if (row.width !== img.width || row.height !== img.height)
+            return { status: 'size_mismatch', row, measure: null };
+        const actual = frame.pivot || {};
+        const same = target => ['x', 'y'].every(key =>
+            typeof actual[key] === 'number' && Number.isFinite(actual[key]) &&
+            Math.abs(actual[key] - target[key]) <= EPSILON);
+        const status = same(row.candidate) ? 'already_applied' :
+            same(row.original) ? 'review' : 'different_reference';
+        // Browser Y increases DOWN; Unity/Zinnenlineal "hoch" increases UP.
+        // This is a review line, never an implicit new pivot or sprite move.
+        const start = { x: Math.max(0, -row.right), y: Math.max(0, row.up) };
+        const end = { x: start.x + row.right, y: start.y - row.up };
+        const inside = [start, end].every(p =>
+            p.x >= 0 && p.y >= 0 && p.x <= img.width && p.y <= img.height);
+        return { status, row, measure: C.measurePoints(start, end),
+            mayVisualize: inside };
+    }
+    return Object.freeze({ SCHEMA, MAX_BYTES, MAX_RECORDS, EPSILON, parseDocument, forFrame });
 });
 </script><script>/* Legacy Zinnenlineal measurements inside the shared SpriteSuite canvas.
  * Pure data adapter: no filesystem, installed-game calls or atlas patches. */
@@ -4349,71 +4587,38 @@ label {
     'use strict';
     const C = typeof module === 'object' && module.exports ?
         require('./core.js') : root.SpriteCore;
-    const api = factory(C);
+    const L = typeof module === 'object' && module.exports ?
+        require('./legacy_measurements.js') : root.SpriteLegacyMeasurements;
+    const api = factory(C, L);
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.SpritePivotEvidence = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (C) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (C, L) {
     'use strict';
     const SCHEMA = 'zinnenlineal.versatz.v1';
-    const NAME = /^([A-Za-z][A-Za-z0-9_]{0,90})[ -]([0-9]{1,7})(x?)$/;
-    const EPSILON = 2e-5;
-    const LIMIT = 4096;
-    const fail = detail => C.fail('Zinnenlineal: ' + detail);
-    const finite = (value, label, max = 4) => {
-        if (typeof value !== 'number' || !Number.isFinite(value) ||
-                Math.abs(value) > max) fail(label + ': ungültige Zahl.');
-        return value;
-    };
-    const integer = (value, label, min, max) => {
-        if (typeof value !== 'number' || !Number.isSafeInteger(value) ||
-                value < min || value > max) fail(label + ': ungültige Ganzzahl.');
-        return value;
-    };
+    const EPSILON = L.EPSILON;
     const near = (a, b) => Math.abs(a - b) <= EPSILON;
-
     function parseMeasurements(jsonText) {
-        if (typeof jsonText !== 'string' || jsonText.length > 2 * 1024 * 1024)
-            fail('Messdatei ist zu groß.');
-        const raw = C.json(jsonText);
-        if (!raw || Array.isArray(raw) || raw.schema !== SCHEMA ||
-                !Array.isArray(raw.frames) || raw.frames.length > LIMIT)
-            fail('Unbekanntes Messformat oder zu viele Einträge.');
-        const names = new Set();
-        return raw.frames.map((entry, index) => {
-            if (!entry || Array.isArray(entry) || typeof entry !== 'object')
-                fail('Eintrag ' + index + ' ist kein Objekt.');
-            const match = typeof entry.name === 'string' ?
-                NAME.exec(entry.name) : null;
-            if (!match || entry.gruppe !== match[1])
-                fail('Gruppen- oder Spritename ungültig.');
-            const number = integer(entry.nummer, 'nummer', 0, 1000000);
-            if (Number(match[2]) !== number) fail('Nummer widerspricht Dateinamen.');
-            if (names.has(entry.name)) fail('Doppelter Frame: ' + entry.name);
-            names.add(entry.name);
-            const width = integer(entry.breite, 'breite', 1, 8192);
-            const height = integer(entry.hoehe, 'hoehe', 1, 8192);
-            const right = integer(entry.rechts, 'rechts', -4096, 4096);
-            const up = integer(entry.hoch, 'hoch', -4096, 4096);
-            const oldX = finite(entry.pivot_x, 'pivot_x');
-            const oldY = finite(entry.pivot_y, 'pivot_y');
-            const newX = finite(entry.neu_pivot_x, 'neu_pivot_x');
-            const newY = finite(entry.neu_pivot_y, 'neu_pivot_y');
-            if (!near(newX, oldX - right / width) ||
-                    !near(newY, oldY - up / height))
-                fail(entry.name + ': Korrektur widerspricht dem Messversatz.');
-            if (Object.hasOwn(entry, 'pixel_je_einheit') &&
-                    finite(entry.pixel_je_einheit, 'pixel_je_einheit', 2048) <= 0)
-                fail('Pixel pro Einheit müssen positiv sein.');
-            return Object.freeze({ name: entry.name, group: match[1], number,
-                width, height, right, up,
-                oldPivot: Object.freeze({ x: oldX, y: oldY }),
-                newPivot: Object.freeze({ x: newX, y: newY }) });
-        });
+        if (typeof jsonText !== 'string' || jsonText.length > L.MAX_BYTES)
+            C.fail('Zinnenlineal: Messdatei ist zu groß.');
+        return L.parseDocument(C.json(jsonText)).rows.map(row => Object.freeze({
+            name: row.name, group: row.group, number: row.number,
+            width: row.width, height: row.height, right: row.right, up: row.up,
+            oldPivot: row.original, newPivot: row.candidate
+        }));
+    }
+    function matchesFrame(row, frame) {
+        const name = /^([A-Za-z][A-Za-z0-9_]{0,90})[ -]([0-9]{1,7})(x?)$/;
+        const measured = name.exec(row.name);
+        const current = name.exec(String(frame.name).replace(/\.png$/i, ''));
+        const parsedName = C.parseName(frame.name);
+        const metadataMatches = frame.group === row.group && frame.index === row.number ||
+            frame.index === null && parsedName.index === null && frame.group === parsedName.group;
+        return !!(metadataMatches && measured && current && measured[1] === current[1] &&
+            Number(measured[2]) === Number(current[2]) && measured[3] === current[3]);
     }
 
     function review(row, frames, store) {
-        const matches = frames.filter(frame => frame.group === row.group &&
-            frame.index === row.number);
+        const matches = frames.filter(frame => matchesFrame(row, frame));
         if (!matches.length)
             return { row, status: 'not_found', frameId: null, reason:
                 'Kein exakt passender Gruppen-/Frame-Index im aktuellen Projekt.' };
@@ -4458,8 +4663,301 @@ label {
     function reviewAll(rows, state, store) {
         return rows.map(row => review(row, state.frames, store));
     }
-    return Object.freeze({ SCHEMA, EPSILON, parseMeasurements, review, reviewAll });
+    return Object.freeze({ SCHEMA, EPSILON, parseMeasurements, matchesFrame, review, reviewAll });
 });
+</script><script>/* Native editor controls: no model, image logic, script evaluation or network. */
+(function (root, factory) {
+    const api = factory();
+    if (typeof module === 'object' && module.exports) module.exports = api;
+    else root.SpriteNativeAPI = api;
+})(typeof globalThis === 'object' ? globalThis : this, function () {
+    'use strict';
+    const SCHEMA = 'spritesuite.editor.native.v1';
+    const operations = {
+        'project.open': { files: { type: 'array', items: { type: 'object', required: ['name', 'base64'],
+            additionalProperties: false, properties: { name: { type: 'string' }, base64: { type: 'string' } } } } },
+        'files.import': { files: { type: 'array', items: { type: 'object', required: ['name', 'base64'],
+            additionalProperties: false, properties: { name: { type: 'string' }, base64: { type: 'string' } } } } },
+        'selection.set': { frameIds: { type: 'array', minItems: 1, maxItems: 4096,
+            uniqueItems: true, items: { type: 'string' } } },
+        'canvas.gesture': {
+            points: { type: 'array', minItems: 1, maxItems: 256, items: { type: 'object',
+                additionalProperties: false, required: ['x', 'y'], properties: {
+                    x: { type: 'number', minimum: -131072, maximum: 131072 },
+                    y: { type: 'number', minimum: -131072, maximum: 131072 } } } },
+            button: { type: 'number', enum: [0, 1] },
+            ctrlKey: { type: 'boolean', default: false }, shiftKey: { type: 'boolean', default: false }
+        },
+        'action.invoke': { actionId: { type: 'string' } },
+        'view.set': { viewId: { type: 'string' } },
+        'panel.set': { panelId: { type: 'string' } },
+        'field.set': { fieldId: { type: 'string' }, value: {} },
+        'control.invoke': { controlId: { type: 'string' } },
+        'control.files': { controlId: { type: 'string' }, files: { type: 'array', items: {
+            type: 'object', required: ['name', 'base64'], additionalProperties: false,
+            properties: { name: { type: 'string' }, base64: { type: 'string' } } } } },
+        'form.read': { formId: { type: 'string' } },
+        'form.fill': { formId: { type: 'string' }, values: { type: 'object' } },
+        'form.submit': { formId: { type: 'string' } }
+    };
+    const optional = (operation, key) => operation === 'canvas.gesture' && ['ctrlKey', 'shiftKey'].includes(key);
+    function create(adapter) {
+        const doc = adapter.document, ids = new WeakMap();
+        let generation = 0, serial = 0, executing = false;
+        const invalidate = () => { generation++; };
+        const revision = () => adapter.sessionId + ':' + adapter.historyRevision() + ':' + generation;
+        const fail = (code, message) => { const error = new Error(message); error.code = code; throw error; };
+        const visible = node => !node.hidden && !!node.getClientRects().length;
+        const idFor = node => {
+            if (!ids.has(node)) ids.set(node, node.id || ('native-control-' + (++serial)));
+            return ids.get(node);
+        };
+        const label = node => [...(node.labels || [])].map(n => n.textContent.trim()).join(' ') ||
+            node.getAttribute('aria-label') || node.title || node.name || node.textContent.trim().slice(0, 160);
+        const blocked = node => !!node.disabled || !visible(node) ||
+            (adapter.modalOpen() && !node.closest('#modal'));
+        const controls = () => [...doc.querySelectorAll('input,select,textarea,button')]
+            .filter(n => n.id !== 'native-connect' && !['file', 'password', 'hidden'].includes(n.type));
+        const find = id => {
+            const node = controls().find(n => idFor(n) === id);
+            if (!node) fail('unknown', 'Unknown or replaced native control: ' + id);
+            if (blocked(node)) fail('disabled', 'Native control is disabled or hidden: ' + id);
+            return node;
+        };
+        const valueOf = node => node.type === 'checkbox' ? !!node.checked :
+            ['number', 'range'].includes(node.type) && node.value !== '' ? Number(node.value) : node.value;
+        function describe(node) {
+            const schema = { type: node.type === 'checkbox' ? 'boolean' :
+                ['number', 'range'].includes(node.type) ? 'number' : 'string' };
+            if (node.tagName === 'SELECT') schema.enum = [...node.options].map(o => o.value);
+            if (schema.type === 'number') {
+                if (node.min !== '') schema.minimum = Number(node.min);
+                if (node.max !== '') schema.maximum = Number(node.max);
+            }
+            return { id: idFor(node), label: label(node), type: node.type || node.tagName.toLowerCase(),
+                name: node.name || null, formId: node.form?.id || null,
+                enabled: !blocked(node), visible: visible(node), readOnly: !!node.readOnly,
+                value: node.tagName === 'BUTTON' ? undefined : valueOf(node), valueSchema: schema };
+        }
+        function inspect() {
+            return { ...adapter.inspect(), schema: SCHEMA, revision: revision(), historyRevision: adapter.historyRevision(),
+                busy: !!adapter.busy() || executing,
+                controls: controls().map(describe), modal: adapter.modalState() };
+        }
+        function discover() {
+            const actions = Object.keys(adapter.actions).map(id => {
+                const nodes = [...doc.querySelectorAll('[data-action]')].filter(n => n.dataset.action === id);
+                return { id, label: nodes.map(label).find(Boolean) || id,
+                    enabled: !adapter.busy() && (!nodes.length || nodes.some(n => !n.disabled)) };
+            });
+            const navigation = kind => [...doc.querySelectorAll('[data-' + kind + ']')]
+                .map(n => ({ id: n.dataset[kind], label: label(n), enabled: !n.disabled }));
+            return { schema: SCHEMA, revision: revision(), actions,
+                views: navigation('view'), panels: navigation('panel'),
+                coverage: { nativeHistory: true, fileImports: ['project.open', 'files.import'],
+                    selection: 'selection.set uses the existing frame selection helper',
+                    fields: 'Current visible native fields and buttons are discovered by ID; edits use their original callbacks.',
+                    canvas: 'canvas.gesture invokes existing pointer handlers in model coordinates; one point is a tap, multiple points one stroke. Measurement uses two separate taps.',
+                    pointerOnly: [] },
+                operations: Object.entries(operations).map(([id, properties]) => ({ id, inputSchema: {
+                    type: 'object', additionalProperties: false,
+                    required: ['operation', ...Object.keys(properties).filter(key => !optional(id, key)), ...(id === 'form.read' ? [] : ['expectedRevision'])],
+                    properties: { operation: { const: id }, expectedRevision: { type: 'string' }, ...properties }
+                } })) };
+        }
+        function validateValue(node, value) {
+            if (node.tagName === 'BUTTON' || node.readOnly) fail('disabled', 'Control is not editable.');
+            const schema = describe(node).valueSchema;
+            if (typeof value !== schema.type || (schema.type === 'number' && !Number.isFinite(value)))
+                fail('invalid', 'Value does not match the native field type.');
+            if (schema.enum && !schema.enum.includes(value)) fail('invalid', 'Unknown select option.');
+            if (typeof value === 'number' && (value < (schema.minimum ?? -Infinity) || value > (schema.maximum ?? Infinity)))
+                fail('invalid', 'Value is outside the native field limits.');
+            if (typeof value === 'string' && node.maxLength >= 0 && value.length > node.maxLength)
+                fail('invalid', 'Value exceeds the native field length.');
+        }
+        function fill(node, value) {
+            validateValue(node, value);
+            if (!node.isConnected) fail('stale', 'Native field was replaced. Inspect the editor again.');
+            if (node.type === 'checkbox') node.checked = value;
+            else node.value = String(value);
+            node.dispatchEvent(new doc.defaultView.Event('input', { bubbles: true }));
+            node.dispatchEvent(new doc.defaultView.Event('change', { bubbles: true }));
+        }
+        function form(id) {
+            if (id !== 'modal-form' || !adapter.modalOpen()) fail('unknown', 'No active native form: ' + id);
+            return doc.getElementById(id);
+        }
+        async function execute(request, options = {}) {
+            let entered = false;
+            const initialHistoryRevision = adapter.historyRevision();
+            try {
+                if (options.signal?.aborted) fail('canceled', 'Native command was canceled before dispatch.');
+                if (!request || typeof request !== 'object' || Array.isArray(request)) fail('invalid', 'Expected a command object.');
+                if (!Object.hasOwn(operations, request.operation)) fail('unknown', 'Unknown native operation.');
+                const keys = operations[request.operation];
+                if (Object.keys(request).some(k => !['operation', 'expectedRevision', ...Object.keys(keys)].includes(k)) ||
+                    Object.keys(keys).some(k => !optional(request.operation, k) && !Object.hasOwn(request, k))) fail('invalid', 'Unexpected or missing command fields.');
+                for (const [key, schema] of Object.entries(keys))
+                    if (Object.hasOwn(request, key) && schema.type && (schema.type === 'array' ? !Array.isArray(request[key]) :
+                        (request[key] === null || typeof request[key] !== schema.type || Array.isArray(request[key]))))
+                        fail('invalid', 'Invalid command field: ' + key);
+                if (request.operation !== 'form.read' && request.expectedRevision !== revision())
+                    fail('stale', 'The editor changed. Inspect again before editing.');
+                if (executing || adapter.busy()) fail('busy', 'A native editor operation is running.');
+                if (request.operation === 'form.read') {
+                    const nativeForm = form(request.formId);
+                    return { ok: true, revision: revision(), result: { formId: request.formId,
+                        fields: controls().filter(n => n.form === nativeForm && n.tagName !== 'BUTTON').map(describe) } };
+                }
+                executing = true;
+                entered = true;
+                adapter.begin?.(options.signal);
+                adapter.clearError();
+                const op = request.operation;
+                if (op === 'canvas.gesture') {
+                    if (adapter.modalOpen()) fail('disabled', 'Finish the open native dialog first.');
+                    await adapter.canvasGesture(request);
+                } else if (op === 'selection.set') {
+                    if (adapter.modalOpen()) fail('disabled', 'Finish the open native dialog first.');
+                    await adapter.setSelection(request.frameIds);
+                } else if (op === 'project.open' || op === 'files.import') {
+                    if (adapter.modalOpen()) fail('disabled', 'Finish the open native dialog first.');
+                    await (op === 'project.open' ? adapter.openFiles : adapter.importFiles)(request.files);
+                } else if (op === 'action.invoke') {
+                    const action = adapter.actions[request.actionId];
+                    if (!Object.hasOwn(adapter.actions, request.actionId)) fail('unknown', 'Unknown native action.');
+                    if (adapter.modalOpen() && !['close-modal', 'close-toast'].includes(request.actionId))
+                        fail('disabled', 'Finish the open native dialog first.');
+                    if (!discover().actions.find(a => a.id === request.actionId)?.enabled) fail('disabled', 'Native action is disabled.');
+                    await action();
+                } else if (op === 'view.set' || op === 'panel.set') {
+                    if (adapter.modalOpen()) fail('disabled', 'Finish the open native dialog first.');
+                    const kind = op === 'view.set' ? 'views' : 'panels', id = request.viewId ?? request.panelId;
+                    const target = discover()[kind].find(n => n.id === id);
+                    if (!target) fail('unknown', 'Unknown native navigation target.');
+                    if (!target.enabled) fail('disabled', 'Native navigation is disabled.');
+                    await (op === 'view.set' ? adapter.setView : adapter.setPanel)(id);
+                } else if (op === 'field.set') fill(find(request.fieldId), request.value);
+                else if (op === 'control.invoke' || op === 'control.files') {
+                    const node = find(request.controlId);
+                    if (node.tagName !== 'BUTTON') fail('invalid', 'Expected a native button.');
+                    if (op === 'control.files') await adapter.invokeFiles(node, request.files);
+                    else if (node.type === 'submit' && node.form?.id === 'modal-form') await adapter.submitForm();
+                    else await adapter.invokeControl(node);
+                } else if (op === 'form.fill') {
+                    const target = form(request.formId), nodes = Object.entries(request.values).map(([id, value]) => {
+                        const node = find(id);
+                        if (node.form !== target) fail('invalid', 'Field does not belong to the active form.');
+                        validateValue(node, value);
+                        return [node, value];
+                    });
+                    for (const [node, value] of nodes) fill(node, value);
+                } else if (op === 'form.submit') {
+                    const target = form(request.formId);
+                    if (adapter.modalState().submitEnabled === false) fail('disabled', 'Native form submit is disabled.');
+                    if (!target.checkValidity()) fail('invalid', 'Native form validation failed.');
+                    await adapter.submitForm();
+                }
+                if (adapter.lastError()) fail('native_error', adapter.lastError());
+                if (options.signal?.aborted) fail('canceled', 'Native command was canceled; completed changes are not rolled back.');
+                invalidate();
+                executing = false;
+                return { ok: true, revision: revision(), result: inspect() };
+            } catch (error) {
+                return { ok: false, revision: revision(), error: {
+                    code: options.signal?.aborted ? 'canceled' :
+                        typeof error.code === 'string' ? error.code : 'native_error',
+                    ...(options.signal?.aborted ? { completedChanges: adapter.historyRevision() !== initialHistoryRevision } : {}),
+                    message: String(error.message || error).slice(0, 2000) } };
+            } finally { if (entered) { executing = false; adapter.end?.(); } }
+        }
+        // Observe only user/native UI events. No action is invoked by installation.
+        doc.addEventListener('input', invalidate, true);
+        doc.addEventListener('change', invalidate, true);
+        return Object.freeze({ discover, inspect, execute, invalidate });
+    }
+    return Object.freeze({ SCHEMA, create });
+});
+</script><script>/* Authenticated loopback transport. Heartbeats never choose an editor tab. */
+(function (root) {
+    'use strict';
+    function install(api, doc = document) {
+        const meta = doc.querySelector('meta[name="spritesuite-local"]');
+        if (!meta || root.location.protocol !== 'http:' || root.location.hostname !== '127.0.0.1') return null;
+        const token = meta.content, pageId = root.crypto.randomUUID(), running = new Map();
+        let polling = false, activateNext = false, activated = false, stopped = false;
+        const button = doc.getElementById('native-connect');
+        const snapshot = () => ({ state: api.inspect(), discovery: api.discover() });
+        async function post(path, data) {
+            const response = await root.fetch(path, { method: 'POST', cache: 'no-store',
+                credentials: 'same-origin', headers: { 'Content-Type': 'application/json',
+                    'X-SpriteSuite-Session': token }, body: JSON.stringify(data),
+                signal: AbortSignal.timeout(10000) });
+            if (!response.ok) throw Error('Native loopback connection unavailable.');
+            return response.json();
+        }
+        async function perform(command) {
+            if (running.has(command.id) || command.deadline <= Date.now()) return;
+            const controller = new AbortController();
+            running.set(command.id, controller);
+            let timer;
+            try {
+                const lease = await post('/native/result', { pageId, id: command.id, phase: 'started' });
+                if (!lease.execute || stopped || command.deadline <= Date.now()) return;
+                timer = setTimeout(() => controller.abort(), Math.max(0, command.deadline - Date.now()));
+                const result = await api.execute(command.request, { signal: controller.signal });
+                await post('/native/result', { pageId, id: command.id, result, snapshot: snapshot() });
+            } catch (_) {
+                controller.abort();
+            } finally {
+                clearTimeout(timer);
+                running.delete(command.id);
+            }
+        }
+        async function poll() {
+            if (stopped || polling) return;
+            polling = true;
+            try {
+                const claim = activateNext;
+                activateNext = false;
+                const response = await post('/native/poll', { pageId, title: doc.title,
+                    activate: claim, snapshot: snapshot() });
+                activated = activated || response.active;
+                if (button) {
+                    button.hidden = false;
+                    button.textContent = response.active ? 'Mit Suite-Assistent verbunden' : 'Assistent verbinden';
+                }
+                for (const id of response.canceledIds || []) running.get(id)?.abort();
+                for (const command of response.commands || []) void perform(command);
+            } catch (_) {
+                if (button) { button.hidden = false; button.textContent = 'Assistent verbinden'; }
+            } finally { polling = false; }
+        }
+        function connect(event) {
+            if (!event.isTrusted) return;
+            activateNext = true;
+            void poll();
+        }
+        function focus(event) {
+            if (activated && event.isTrusted && doc.hasFocus()) connect(event);
+        }
+        function dispose() {
+            stopped = true;
+            clearInterval(timer);
+            for (const controller of running.values()) controller.abort();
+            button?.removeEventListener('click', connect);
+            root.removeEventListener('focus', focus);
+        }
+        button?.addEventListener('click', connect);
+        root.addEventListener('focus', focus);
+        root.addEventListener('pagehide', dispose, { once: true });
+        const timer = setInterval(poll, 700);
+        void poll();
+        return Object.freeze({ dispose });
+    }
+    root.SpriteNativeBridge = Object.freeze({ install });
+})(typeof window === 'object' ? window : globalThis);
 </script><script>/* Stronghold Sprite Editor. DOM and canvas view; all exports use the independent RGBA codec. */
 (function () {
     'use strict';
@@ -4467,6 +4965,12 @@ label {
     if (!window.crypto?.getRandomValues || !window.CompressionStream || !window.DecompressionStream || !window.structuredClone) {
         document.body.textContent = 'Dieser Browser unterstützt die benötigten lokalen Datei- und Kompressionsfunktionen nicht. Die HTML-Datei in einer aktuellen Chromium-basierten Desktop-Version öffnen.';
         return;
+    }
+    const nativeCallbacks = new WeakMap();
+    let nativeApi = null, nativeLastError = null, nativeDispatch = false, nativeAbortSignal = null, nativePickedFiles = null;
+    function nativeCheckpoint() {
+        if (nativeDispatch && nativeAbortSignal?.aborted)
+            throw Object.assign(new Error('Native command was canceled. Completed history entries remain undoable.'), { code: 'canceled' });
     }
     const el = (tag, props = {}, children = []) => {
         const n = document.createElement(tag);
@@ -4517,6 +5021,7 @@ label {
         toastTimer = setTimeout(() => $('toast').hidden = true, error ? 14000 : 5000);
     }
     function report(e) {
+        nativeLastError = e.message || String(e);
         console.error(e);
         if (e.name === 'AbortError')
             message('Vorgang abgebrochen.');
@@ -4544,6 +5049,7 @@ label {
         render();
     }
     function commit(next, label = 'Bearbeitung', nextStore = store(), options = {}) {
+        nativeCheckpoint();
         if (!options.keepDamageApproval)
             D.invalidateApprovals(state(), next);
         if (history.commit(next, nextStore, label))
@@ -4555,11 +5061,14 @@ label {
         commit(next, label, store(), options);
     }
     async function task(title, fn) {
+        nativeCheckpoint();
         if (busy)
             throw new Error('Ein anderer Vorgang läuft bereits.');
         busy = true;
         playing = false;
         aborter = new AbortController();
+        const nativeSignal = nativeAbortSignal, cancelNative = () => aborter?.abort();
+        nativeSignal?.addEventListener('abort', cancelNative, { once: true });
         $('busy-title').textContent = title;
         $('busy-detail').textContent = '';
         $('busy-progress').removeAttribute('value');
@@ -4576,6 +5085,7 @@ label {
             return await fn(opts);
         }
         finally {
+            nativeSignal?.removeEventListener('abort', cancelNative);
             busy = false;
             aborter = null;
             $('busy-dialog').close();
@@ -4588,6 +5098,7 @@ label {
         aborter?.abort();
     });
     function download(data, name, type = 'application/octet-stream') {
+        nativeCheckpoint();
         const blob = data instanceof Blob ? data : new Blob([data], { type });
         const url = URL.createObjectURL(blob), a = el('a', { href: url, download: C.safeName(name) });
         document.body.append(a);
@@ -4596,6 +5107,18 @@ label {
         setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
     function askFiles(accept, multiple = true, directory = false) {
+        if (nativeDispatch) {
+            if (nativePickedFiles) {
+                const files = nativePickedFiles;
+                nativePickedFiles = null;
+                if (directory || (!multiple && files.length !== 1))
+                    throw Object.assign(new Error('Native file selection needs the expected count and cannot impersonate a directory.'), { code: 'invalid' });
+                return Promise.resolve(files);
+            }
+            const error = new Error('Files are required. Use project.open or files.import with explicit file data.');
+            error.code = 'input_required';
+            throw error;
+        }
         return new Promise(resolve => {
             const input = $('file-input');
             input.value = '';
@@ -4658,12 +5181,17 @@ label {
             };
         return lab;
     }
-    const fields = (...children) => el('div', { class: 'fields' }, children), buttons = (...children) => el('div', { class: 'field-inline' }, children), button = (label, fn, props = {}) => el('button', { type: 'button', text: label, onclick: () => Promise.resolve().then(fn).catch(report), ...props }), note = text => el('p', { class: 'inspector-note', text });
+    const fields = (...children) => el('div', { class: 'fields' }, children), buttons = (...children) => el('div', { class: 'field-inline' }, children), button = (label, fn, props = {}) => {
+        const control = el('button', { type: 'button', text: label, onclick: () => Promise.resolve().then(fn).catch(report), ...props });
+        nativeCallbacks.set(control, fn);
+        return control;
+    }, note = text => el('p', { class: 'inspector-note', text });
     function section(title, children = []) {
         return el('section', { class: 'inspector-section' }, [el('h3', { text: title }), ...children]);
     }
     const line = (label, value) => el('div', { class: 'info-line' }, [el('span', { text: label }), el('span', { text: String(value) })]);
     function modal(title, content, submit, handler) {
+        nativeApi?.invalidate();
         $('modal-form').querySelector('footer button').textContent = 'Abbrechen';
         $('modal-title').textContent = title;
         $('modal-content').replaceChildren(...(Array.isArray(content) ? content : [content]));
@@ -4675,6 +5203,7 @@ label {
             $('modal').showModal();
     }
     function closeModal() {
+        nativeApi?.invalidate();
         $('modal').close();
         modalHandler = null;
     }
@@ -4707,6 +5236,7 @@ label {
         });
     }
     function setProject(result, name) {
+        nativeCheckpoint();
         playing = false;
         aiCandidates = [];
         aiLastRequest = null;
@@ -5652,7 +6182,7 @@ label {
     function legacyPivotReview(frame = primary()) {
         if (!legacyPivotFile || !frame) return null;
         const found = legacyPivotFile.rows.filter(row =>
-            frame.group === row.group && frame.index === row.number);
+            PE.matchesFrame(row, frame));
         if (found.length !== 1) return null;
         return PE.review(found[0], state().frames, store());
     }
@@ -5789,12 +6319,13 @@ label {
         return frame ? aiCandidates.filter(row => row.frameId === frame.id &&
             row.sourceImageId === frame.imageId) : [];
     }
-    async function aiExportRequest() {
+    async function aiExportRequest(generate = false) {
         const frame = primary();
         if (!frame) throw new Error('Zuerst einen Sprite auswählen.');
         const sourceImageId = frame.imageId;
         const settings = AI.options({ assetClass: aiAssetClass, goal: aiGoal,
             restrictions: aiRestrictions, model: aiModel, variants: aiVariants });
+        let generatedFiles = null;
         await task('KI-Anfrage mit unveränderter Bildreferenz vorbereiten', async opts => {
             const sourcePNG = await store().bytes(sourceImageId, opts.signal);
             const payload = await AI.makeRequestBundle(store().get(sourceImageId), sourcePNG, settings);
@@ -5802,14 +6333,28 @@ label {
                 throw new Error('Sprite wurde während der Anfragevorbereitung geändert.');
             aiLastRequest = { frameId: frame.id, sourceImageId,
                 request: payload.request, requestSHA256: payload.requestSHA256 };
-            download(payload.bytes, C.safeName(frame.name) + '_ki_auftrag.zip');
-            message('KI-Auftragsbundle exportiert. Keine API-Anfrage gesendet.');
+            if (generate) {
+                const response = await codexCall('generate', payload.bytes);
+                const bytes = new Uint8Array(await response.arrayBuffer());
+                const entries = await K.unzip(bytes);
+                const candidates = entries.filter(entry => /^variant_0[1-4]\.png$/.test(entry.name));
+                const names = new Set(candidates.map(entry => entry.name.replace(/\.png$/, '_meta.json')));
+                download(bytes, C.safeName(frame.name) + '_codex_ergebnisse.zip', 'application/zip');
+                if (!candidates.length)
+                    throw new Error('Modellausgabe benötigt eine erneute Ausrichtungsprüfung. Rohbilder und Belege wurden gesichert.');
+                generatedFiles = entries.filter(entry => candidates.includes(entry) || names.has(entry.name))
+                    .map(entry => new File([entry.data], entry.name));
+            } else {
+                download(payload.bytes, C.safeName(frame.name) + '_ki_auftrag.zip');
+                message('KI-Auftragsbundle exportiert.');
+            }
         });
+        if (generatedFiles) await aiImportCandidates(generatedFiles);
     }
-    async function aiImportCandidates() {
+    async function aiImportCandidates(generatedFiles = null) {
         const frame = primary();
         if (!frame) throw new Error('Zuerst einen Sprite auswählen.');
-        const files = await askFiles('.png,.json', true);
+        const files = generatedFiles || await askFiles('.png,.json', true);
         if (!files.length) return;
         const pngs = files.filter(file => /\.png$/i.test(file.name));
         const metas = files.filter(file => /_meta\.json$/i.test(file.name));
@@ -5940,10 +6485,35 @@ label {
             });
         });
     }
+    async function aiAnimationAudit() {
+        const frames = groupFrames();
+        if (frames.length < 2) throw new Error('Mindestens zwei Animationsframes in der Gruppe benötigt.');
+        if (frames.length > 256) throw new Error('Animationsprüfung auf 256 Frames begrenzt.');
+        await task('Animation, Bodenanker und Alpha prüfen', async opts => {
+            const copied = frames.map(f => ({
+                name: f.name, image: store().get(f.imageId), pivot: { ...f.pivot }
+            }));
+            const audited = AI.analyzeSequence(copied);
+            const hashes = [];
+            for (const f of frames) {
+                K.aborted(opts.signal);
+                hashes.push({ name: f.name, pngSHA256: await K.sha256(
+                    await store().bytes(f.imageId, opts.signal)) });
+            }
+            download(JSON.stringify({ ...audited,
+                project: state().project.id, sourcePNG: hashes,
+                sourceOnly: true, requireHumanReview: true,
+                inGameTested: false, nativeAnimationTimingVerified: false
+            }, null, 2) + '\n', C.safeName(groupId) + '_animation_qa.json',
+            'application/json');
+            message('Animierte Framefolge geprüft: ' + audited.warnings.length +
+                ' Hinweise. Ergebnisse sind kein Ingame-Nachweis.');
+        });
+    }
     function aiSection() {
         const frame = primary();
         if (!frame) return [section('KI-Werkstatt', [
-            note('Zuerst einen Sprite auswählen. Der Editor selbst verbindet sich nicht mit der KI-API.')
+            note('Zuerst einen Sprite auswählen. Für die Generierung SpriteSuite mit dem lokalen Codex-Client öffnen.')
         ])];
         const candidates = aiActiveCandidates();
         const candidate = candidates[Math.min(aiCandidateIndex, candidates.length - 1)];
@@ -5955,6 +6525,7 @@ label {
                 fields(field('Assetklasse', aiAssetClass, {
                     wide: true, options: [
                         ['building', 'Gebäude'], ['unit', 'Einheiten / Frames'],
+                        ['animation', 'Animationen / Richtungsframes'], ['texture', 'Texturen / Materialien'],
                         ['vegetation', 'Vegetation'], ['hud', 'HUD'],
                         ['ui', 'UI-Sprite / Icon'], ['other', 'Sonstige']
                     ], onchange: v => { aiAssetClass = v; }
@@ -5971,7 +6542,14 @@ label {
                     options: ['1', '2', '3', '4'],
                     onchange: v => { aiVariants = C.integer(v, 'Varianten', 1, 4); }
                 })),
-                buttons(button('KI-Auftragsbundle exportieren…', aiExportRequest)),
+                ...(localCodex ? [
+                    line('ChatGPT-Konto', codexStatus || 'Lokaler Codex-Client'),
+                    buttons(button('Bei ChatGPT anmelden…', () => codexAccount('login')),
+                        button('Anmeldung prüfen', () => codexAccount('status'))),
+                    buttons(button('Varianten mit Codex erstellen…', () => aiExportRequest(true))),
+                    note('Die Generierung nutzt die angemeldete ChatGPT-Sitzung. Verfügbarkeit und Kontolimits werden von Codex geprüft.')
+                ] : [note('Für die direkte Generierung den Sprite-Editor über SpriteSuite öffnen.')]),
+                buttons(button('KI-Auftragsbundle exportieren…', () => aiExportRequest())),
                 note('Enthält unverändertes Referenz-PNG, registrierte Arbeitsvorlage, ' +
                     'Prompt, Prüfsummen und die Anleitung für Codex. Offline und ohne API-Kosten. ' +
                     'Jede Variante benötigt einen eigenständigen Kandidaten und eine eigene Freigabe.'),
@@ -5981,7 +6559,7 @@ label {
                         ' · ' + aiLastRequest.request.variants + ' Variante(n)')] : [])
             ]),
             section('2 · Kandidaten vergleichen', [
-                buttons(button('Kandidaten-PNGs importieren…', aiImportCandidates)),
+                buttons(button('Kandidaten-PNGs importieren…', () => aiImportCandidates())),
                 note('Optional die gleichnamigen *_meta.json-Dateien mit auswählen. ' +
                     'Die Prüfsummen werden mit Quelle und exportiertem Auftrag abgeglichen.'),
                 ...(candidate ? [
@@ -5993,6 +6571,17 @@ label {
                     damagePreview(candidate.image, 'Ungeprüfte Variante'),
                     line('Pixel verändert', candidate.review.stats.changedPixels),
                     line('Alpha verändert', candidate.review.stats.alphaChanged),
+                    line('Pixelrisikoindikator (0–100; keine Freigabe)',
+                        candidate.review.quality?.reviewRiskPoints ?? 'nicht vergleichbar'),
+                    ...(candidate.review.quality ? [
+                        line('Bodenlinienabweichung', candidate.review.quality.groundShift === null ?
+                            'nicht vergleichbar' : candidate.review.quality.groundShift + ' px'),
+                        line('Neue Pixel außerhalb Silhouette', candidate.review.quality.addedVisible),
+                        line('Verdeckte RGB-Änderungen', candidate.review.quality.hiddenRGBChanges)
+                    ] : []),
+                    line('Manuelle Prüfreihenfolge nach Pixelrisiko', AI.rankCandidates(
+                        store().get(frame.imageId), candidates).map(row =>
+                            (row.index + 1) + ' (' + row.reviewRiskPoints + ')').join(' → ')),
                     line('Generatorbeleg', candidate.receipt ?
                         (candidate.receipt.requestMatched ?
                             'Quell- und Auftrags-SHA passen' :
@@ -6017,12 +6606,15 @@ label {
                 ...(frame.aiGeneration ?
                     [line('Letzte manuelle KI-Abnahme', frame.aiGeneration.reviewNotes),
                      line('Quellnachweis', frame.aiGeneration.sourceSHA256.slice(0, 16) + '…')] : []),
+                ...(groupFrames().length >= 2 ? [buttons(button(
+                    'Animationsfolge auf Anker-/Alpha-Sprünge prüfen…', aiAnimationAudit))] : []),
                 note('Kein automatischer Qualitäts- oder Rechte-Nachweis. Nach der Übernahme ' +
                     'sind Masken, Atlas, Animationsverlauf und die Darstellung im QA-Spiel zu testen.')
             ])
         ];
     }
     function renderInspector() {
+        nativeApi?.invalidate();
         const root = $('inspector-content');
         root.replaceChildren();
         for (const b of document.querySelectorAll('[data-panel]'))
@@ -6814,6 +7406,10 @@ label {
         fitNext = !transforms.has(view);
         render();
     }
+    function setPanel(next) {
+        panel = next;
+        renderInspector();
+    }
     function zoom(factor, event = null) {
         if (!model)
             return;
@@ -6858,12 +7454,12 @@ label {
             brushOverlay.getContext('2d').putImageData(new ImageData(data, x1 - x0, y1 - y0), x0, y0);
         }
     }
-    $('viewport').addEventListener('pointerdown', e => {
-        if (busy || !model || ![0, 1].includes(e.button))
+    function pointerDown(e) {
+        if ((busy && !e.nativeGesture) || !model || ![0, 1].includes(e.button))
             return;
         e.preventDefault();
         $('viewport').focus();
-        $('viewport').setPointerCapture(e.pointerId);
+        if (e.isTrusted) $('viewport').setPointerCapture(e.pointerId);
         const point = screenToImage(e), tr = getTransform();
         try {
             if (e.button === 1 || spaceDown) {
@@ -6940,8 +7536,8 @@ label {
             brushMap = brushOverlay = null;
             report(err);
         }
-    });
-    $('viewport').addEventListener('pointermove', e => {
+    }
+    function pointerMove(e) {
         if (!drag)
             return;
         try {
@@ -6966,7 +7562,9 @@ label {
             brushMap = brushOverlay = null;
             report(err);
         }
-    });
+    }
+    $('viewport').addEventListener('pointerdown', pointerDown);
+    $('viewport').addEventListener('pointermove', pointerMove);
     function endPointer(cancelled = false) {
         const d = drag;
         drag = null;
@@ -7001,6 +7599,65 @@ label {
         e.preventDefault();
         zoom(Math.exp(-e.deltaY * .0015), e);
     }, { passive: false });
+    async function nativeCanvasGesture(request) {
+        const { points, button, ctrlKey = false, shiftKey = false } = request;
+        if (![0, 1].includes(button) || typeof ctrlKey !== 'boolean' || typeof shiftKey !== 'boolean' ||
+            !Array.isArray(points) || !points.length || points.length > 256 || points.some(point =>
+                !point || typeof point !== 'object' || Array.isArray(point) ||
+                Object.keys(point).length !== 2 || !Object.hasOwn(point, 'x') || !Object.hasOwn(point, 'y') ||
+                typeof point.x !== 'number' || typeof point.y !== 'number' ||
+                !Number.isFinite(point.x) || !Number.isFinite(point.y) ||
+                Math.abs(point.x) > 131072 || Math.abs(point.y) > 131072))
+            throw Object.assign(new Error('Expected 1–256 finite model points, button 0/1 and boolean modifiers.'), { code: 'invalid' });
+        let length = 0;
+        for (let i = 1; i < points.length; i++) length += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+        if (length > 131072) throw Object.assign(new Error('Native gesture exceeds the path budget.'), { code: 'invalid' });
+        if (busy || drag || brushMap || spaceDown)
+            throw Object.assign(new Error('An existing user or editor operation is active.'), { code: 'busy' });
+        await task('Canvas-Geste', async () => {
+            nativeCheckpoint();
+            draw();
+            if (!model) throw Object.assign(new Error(layoutError || 'No native canvas model is available.'), { code: 'disabled' });
+            // Bound native work before touching the original brush callbacks.
+            if (view === 'split' && brushTool && button === 0) {
+                const radius = C.integer($('brush-radius').value, 'Radius', 1, 128);
+                if (points.some(p => p.x < 0 || p.y < 0 || p.x > model.width || p.y > model.height))
+                    throw Object.assign(new Error('Brush points must be inside the split model.'), { code: 'invalid' });
+                let work = 0;
+                for (let i = 0; i < points.length; i++) {
+                    const a = points[Math.max(0, i - 1)], b = points[i];
+                    work += Math.min(model.width, Math.abs(b.x - a.x) + 2 * radius + 2) *
+                        Math.min(model.height, Math.abs(b.y - a.y) + 2 * radius + 2) +
+                        Math.hypot(b.x - a.x, b.y - a.y) * radius * 8;
+                }
+                if (work > C.LIMITS.pixels * 8)
+                    throw Object.assign(new Error('Split brush gesture exceeds the native work budget.'), { code: 'invalid' });
+            }
+            const transform = screenTransform(), rect = $('viewport').getBoundingClientRect();
+            const event = point => ({ clientX: rect.left + transform.x + point.x * transform.zoom,
+                clientY: rect.top + transform.y + point.y * transform.zoom,
+                button, ctrlKey, shiftKey, isTrusted: false, nativeGesture: true,
+                preventDefault() {} });
+            let started = false, completed = false;
+            try {
+                nativeCheckpoint();
+                started = true;
+                pointerDown(event(points[0]));
+                for (let i = 1; i < points.length; i++) {
+                    if (i % 8 === 0) await I.tick();
+                    nativeCheckpoint();
+                    if (nativeLastError) throw new Error(nativeLastError);
+                    pointerMove(event(points[i]));
+                }
+                await I.tick();
+                nativeCheckpoint();
+                endPointer();
+                completed = true;
+            } finally {
+                if (started && !completed) endPointer(true);
+            }
+        });
+    }
     async function dbOpen() {
         if (!globalThis.indexedDB)
             throw new Error('IndexedDB nicht verfügbar.');
@@ -7266,8 +7923,7 @@ label {
         else if (viewButton && !busy)
             setView(viewButton.dataset.view);
         else if (panelButton && !busy) {
-            panel = panelButton.dataset.panel;
-            renderInspector();
+            setPanel(panelButton.dataset.panel);
         }
         if (!e.target.closest('.menu'))
             document.querySelectorAll('details.menu').forEach(d => d.open = false);
@@ -7434,8 +8090,85 @@ label {
             state: I.clone(state()), selected: [...selected], groupId, view, panel, dirty, revision: history.revision, undo: history.past.length, redo: history.future.length, assetCount: store().items.size, pixels: store().pixels, playing, animIndex, model: model ? { width: model.width, height: model.height } : null
         })
     });
+    function nativeFiles(files) {
+        if (!Array.isArray(files) || !files.length || files.length > C.LIMITS.entries)
+            throw Object.assign(new Error('Invalid native file count.'), { code: 'invalid' });
+        let total = 0;
+        return files.map(file => {
+            if (!file || typeof file.name !== 'string' || typeof file.base64 !== 'string' ||
+                Object.keys(file).some(k => !['name', 'base64'].includes(k)) ||
+                !file.name || file.name.length > 255 || /[\\/\x00-\x1f]/.test(file.name) ||
+                !/\.(png|json|zip|csv|shsprite)$/i.test(file.name) ||
+                file.base64.length > Math.ceil(C.LIMITS.fileBytes / 3) * 4 ||
+                file.base64.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(file.base64))
+                throw Object.assign(new Error('Invalid native file name, type or byte budget.'), { code: 'invalid' });
+            const raw = atob(file.base64);
+            total += raw.length;
+            if (!raw.length || raw.length > C.LIMITS.fileBytes || total > C.LIMITS.importBytes)
+                throw Object.assign(new Error('Native file data exceeds the existing import budget.'), { code: 'invalid' });
+            return new File([Uint8Array.from(raw, c => c.charCodeAt(0))], file.name);
+        });
+    }
+    nativeApi = window.SpriteNativeAPI.create({
+        document, sessionId: I.uid('native'), actions,
+        historyRevision: () => history.revision, busy: () => busy || !!drag || !!brushMap || spaceDown,
+        inspect: () => {
+            if (renderQueued) draw();
+            return { ...window.SpriteEditor.inspect(),
+                model: model ? { width: model.width, height: model.height,
+                    transform: screenTransform(), items: model.items.map((item, index) => ({
+                        id: item.id || (item.frame ? item.frame.id + ':' + index : 'model-item-' + index), frameId: item.frame?.id || null,
+                        x: item.x, y: item.y, width: item.width, height: item.height })) } : null,
+                canvas: { drag: drag ? { kind: drag.kind } : null, brushActive: !!brushMap,
+                    measurement: activeMeasurement() ? I.clone(activeMeasurement()) : null,
+                    measureStart: measureStart ? I.clone(measureStart) : null,
+                    pivotTool, measureTool, brushTool }
+            };
+        }, setView, setPanel, canvasGesture: nativeCanvasGesture,
+        begin: signal => { nativeDispatch = true; nativeAbortSignal = signal; },
+        end: () => { nativeDispatch = false; nativeAbortSignal = null; nativePickedFiles = null; },
+        openFiles: files => openProject(nativeFiles(files)),
+        importFiles: files => importDialog(nativeFiles(files), view === 'split' ? 'split' : 'png'),
+        setSelection: frameIds => {
+            if (!frameIds.length || frameIds.length > C.LIMITS.frames ||
+                frameIds.some(id => typeof id !== 'string' || !id || id.length > 1024) ||
+                new Set(frameIds).size !== frameIds.length)
+                throw Object.assign(new Error('Select existing, distinct native frame IDs.'), { code: 'invalid' });
+            const frames = frameIds.map(id => state().frames.find(frame => frame.id === id));
+            if (frames.some(frame => !frame))
+                throw Object.assign(new Error('Unknown native frame identity.'), { code: 'unknown' });
+            if (frames.some(frame => frame.groupId !== frames[0].groupId))
+                throw Object.assign(new Error('Native multi-selection belongs to one asset group.'), { code: 'invalid' });
+            if (groupId !== frames[0].groupId) {
+                $('group-select').value = frames[0].groupId;
+                $('group-select').dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            if ($('search').value) {
+                $('search').value = '';
+                $('search').dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            frameIds.forEach((id, index) => selectFrame(id, { ctrlKey: index > 0 }));
+        },
+        modalOpen: () => $('modal').open,
+        modalState: () => ({ open: $('modal').open, formId: $('modal').open ? 'modal-form' : null,
+            title: $('modal-title').textContent,
+            error: $('modal-error').hidden ? null : $('modal-error').textContent,
+            submitEnabled: !$('modal-submit').hidden && !$('modal-submit').disabled }),
+        clearError: () => { nativeLastError = null; },
+        lastError: () => nativeLastError || ($('modal').open && !$('modal-error').hidden ? $('modal-error').textContent : null),
+        submitForm: () => $('modal-form').onsubmit({ preventDefault() {} }),
+        invokeControl: control => nativeCallbacks.has(control) ? nativeCallbacks.get(control)() : control.click(),
+        invokeFiles: (control, files) => {
+            if (!nativeCallbacks.has(control))
+                throw Object.assign(new Error('This control has no native file callback; use project.open/files.import.'), { code: 'unknown' });
+            nativePickedFiles = nativeFiles(files);
+            return nativeCallbacks.get(control)();
+        }
+    });
+    window.SuiteEditorAPI = nativeApi;
     render();
     findRecovery();
+    window.SpriteNativeBridge.install(nativeApi);
 })();
 </script>
 </body></html>

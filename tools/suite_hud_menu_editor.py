@@ -350,7 +350,7 @@ class HudMenuTextEditor(tk.Toplevel):
         if self.path.suffix.lower() not in (".xaml",".json",".txt"):
             raise WorkshopError("Only XAML, JSON or verified locale text can be edited")
         if self.path.stat().st_size>2_000_000:raise WorkshopError("Text file too large")
-        initial=self.path.read_text("utf8-sig")
+        initial=self.path.read_text("utf-8-sig")
         self.expected=sha256(self.path.read_bytes()).hexdigest()
         self.after_save=after_save
         super().__init__(parent)

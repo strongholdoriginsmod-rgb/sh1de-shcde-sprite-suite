@@ -394,3 +394,27 @@ def test_windows_junction_is_rejected_without_new_pathlib_api(monkeypatch, tmp_p
         # rmdir removes only the junction itself, never its target.
         junction.rmdir()
     assert real.is_dir()
+
+
+def test_studio_saved_revision_pointer_and_exports_survive_project_transfer(sample, tmp_path):
+    suite, project, *_ = sample
+    metadata = transfer.assets._metadata_dir(project)
+    studio = metadata / "modding-studio"
+    (studio / "exports" / "draft" / "Sources").mkdir(parents=True)
+    files = {
+        "project.json": b'{"schema":"studio-test"}',
+        "current.json": b'{"path":"project.json"}',
+        "exports/draft/Sources/Rules.cs": b"// authored C# source, not executed",
+        "exports/draft/receipt.json": b'{"native_game_verified":false}',
+    }
+    for name, data in files.items():
+        (studio / name).write_bytes(data)
+    output = tmp_path / "studio-export-backup.zip"
+    transfer.create_archive(project, output)
+    with ZipFile(output) as archive:
+        for name, data in files.items():
+            assert archive.read("metadata/modding-studio/" + name) == data
+    restored = transfer.restore_archive(output, project_name="StudioExportRestored")
+    restored_metadata = transfer.assets._metadata_dir(Path(restored["project"]))
+    for name, data in files.items():
+        assert (restored_metadata / "modding-studio" / name).read_bytes() == data

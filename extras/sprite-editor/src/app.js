@@ -6,6 +6,12 @@
         document.body.textContent = 'Dieser Browser unterstützt die benötigten lokalen Datei- und Kompressionsfunktionen nicht. Die HTML-Datei in einer aktuellen Chromium-basierten Desktop-Version öffnen.';
         return;
     }
+    const nativeCallbacks = new WeakMap();
+    let nativeApi = null, nativeLastError = null, nativeDispatch = false, nativeAbortSignal = null, nativePickedFiles = null;
+    function nativeCheckpoint() {
+        if (nativeDispatch && nativeAbortSignal?.aborted)
+            throw Object.assign(new Error('Native command was canceled. Completed history entries remain undoable.'), { code: 'canceled' });
+    }
     const el = (tag, props = {}, children = []) => {
         const n = document.createElement(tag);
         for (const [k, v] of Object.entries(props)) {
@@ -55,6 +61,7 @@
         toastTimer = setTimeout(() => $('toast').hidden = true, error ? 14000 : 5000);
     }
     function report(e) {
+        nativeLastError = e.message || String(e);
         console.error(e);
         if (e.name === 'AbortError')
             message('Vorgang abgebrochen.');
@@ -82,6 +89,7 @@
         render();
     }
     function commit(next, label = 'Bearbeitung', nextStore = store(), options = {}) {
+        nativeCheckpoint();
         if (!options.keepDamageApproval)
             D.invalidateApprovals(state(), next);
         if (history.commit(next, nextStore, label))
@@ -93,11 +101,14 @@
         commit(next, label, store(), options);
     }
     async function task(title, fn) {
+        nativeCheckpoint();
         if (busy)
             throw new Error('Ein anderer Vorgang läuft bereits.');
         busy = true;
         playing = false;
         aborter = new AbortController();
+        const nativeSignal = nativeAbortSignal, cancelNative = () => aborter?.abort();
+        nativeSignal?.addEventListener('abort', cancelNative, { once: true });
         $('busy-title').textContent = title;
         $('busy-detail').textContent = '';
         $('busy-progress').removeAttribute('value');
@@ -114,6 +125,7 @@
             return await fn(opts);
         }
         finally {
+            nativeSignal?.removeEventListener('abort', cancelNative);
             busy = false;
             aborter = null;
             $('busy-dialog').close();
@@ -126,6 +138,7 @@
         aborter?.abort();
     });
     function download(data, name, type = 'application/octet-stream') {
+        nativeCheckpoint();
         const blob = data instanceof Blob ? data : new Blob([data], { type });
         const url = URL.createObjectURL(blob), a = el('a', { href: url, download: C.safeName(name) });
         document.body.append(a);
@@ -134,6 +147,18 @@
         setTimeout(() => URL.revokeObjectURL(url), 60000);
     }
     function askFiles(accept, multiple = true, directory = false) {
+        if (nativeDispatch) {
+            if (nativePickedFiles) {
+                const files = nativePickedFiles;
+                nativePickedFiles = null;
+                if (directory || (!multiple && files.length !== 1))
+                    throw Object.assign(new Error('Native file selection needs the expected count and cannot impersonate a directory.'), { code: 'invalid' });
+                return Promise.resolve(files);
+            }
+            const error = new Error('Files are required. Use project.open or files.import with explicit file data.');
+            error.code = 'input_required';
+            throw error;
+        }
         return new Promise(resolve => {
             const input = $('file-input');
             input.value = '';
@@ -196,12 +221,17 @@
             };
         return lab;
     }
-    const fields = (...children) => el('div', { class: 'fields' }, children), buttons = (...children) => el('div', { class: 'field-inline' }, children), button = (label, fn, props = {}) => el('button', { type: 'button', text: label, onclick: () => Promise.resolve().then(fn).catch(report), ...props }), note = text => el('p', { class: 'inspector-note', text });
+    const fields = (...children) => el('div', { class: 'fields' }, children), buttons = (...children) => el('div', { class: 'field-inline' }, children), button = (label, fn, props = {}) => {
+        const control = el('button', { type: 'button', text: label, onclick: () => Promise.resolve().then(fn).catch(report), ...props });
+        nativeCallbacks.set(control, fn);
+        return control;
+    }, note = text => el('p', { class: 'inspector-note', text });
     function section(title, children = []) {
         return el('section', { class: 'inspector-section' }, [el('h3', { text: title }), ...children]);
     }
     const line = (label, value) => el('div', { class: 'info-line' }, [el('span', { text: label }), el('span', { text: String(value) })]);
     function modal(title, content, submit, handler) {
+        nativeApi?.invalidate();
         $('modal-form').querySelector('footer button').textContent = 'Abbrechen';
         $('modal-title').textContent = title;
         $('modal-content').replaceChildren(...(Array.isArray(content) ? content : [content]));
@@ -213,6 +243,7 @@
             $('modal').showModal();
     }
     function closeModal() {
+        nativeApi?.invalidate();
         $('modal').close();
         modalHandler = null;
     }
@@ -245,6 +276,7 @@
         });
     }
     function setProject(result, name) {
+        nativeCheckpoint();
         playing = false;
         aiCandidates = [];
         aiLastRequest = null;
@@ -1190,7 +1222,7 @@
     function legacyPivotReview(frame = primary()) {
         if (!legacyPivotFile || !frame) return null;
         const found = legacyPivotFile.rows.filter(row =>
-            frame.group === row.group && frame.index === row.number);
+            PE.matchesFrame(row, frame));
         if (found.length !== 1) return null;
         return PE.review(found[0], state().frames, store());
     }
@@ -1327,12 +1359,13 @@
         return frame ? aiCandidates.filter(row => row.frameId === frame.id &&
             row.sourceImageId === frame.imageId) : [];
     }
-    async function aiExportRequest() {
+    async function aiExportRequest(generate = false) {
         const frame = primary();
         if (!frame) throw new Error('Zuerst einen Sprite auswählen.');
         const sourceImageId = frame.imageId;
         const settings = AI.options({ assetClass: aiAssetClass, goal: aiGoal,
             restrictions: aiRestrictions, model: aiModel, variants: aiVariants });
+        let generatedFiles = null;
         await task('KI-Anfrage mit unveränderter Bildreferenz vorbereiten', async opts => {
             const sourcePNG = await store().bytes(sourceImageId, opts.signal);
             const payload = await AI.makeRequestBundle(store().get(sourceImageId), sourcePNG, settings);
@@ -1340,14 +1373,28 @@
                 throw new Error('Sprite wurde während der Anfragevorbereitung geändert.');
             aiLastRequest = { frameId: frame.id, sourceImageId,
                 request: payload.request, requestSHA256: payload.requestSHA256 };
-            download(payload.bytes, C.safeName(frame.name) + '_ki_auftrag.zip');
-            message('KI-Auftragsbundle exportiert. Keine API-Anfrage gesendet.');
+            if (generate) {
+                const response = await codexCall('generate', payload.bytes);
+                const bytes = new Uint8Array(await response.arrayBuffer());
+                const entries = await K.unzip(bytes);
+                const candidates = entries.filter(entry => /^variant_0[1-4]\.png$/.test(entry.name));
+                const names = new Set(candidates.map(entry => entry.name.replace(/\.png$/, '_meta.json')));
+                download(bytes, C.safeName(frame.name) + '_codex_ergebnisse.zip', 'application/zip');
+                if (!candidates.length)
+                    throw new Error('Modellausgabe benötigt eine erneute Ausrichtungsprüfung. Rohbilder und Belege wurden gesichert.');
+                generatedFiles = entries.filter(entry => candidates.includes(entry) || names.has(entry.name))
+                    .map(entry => new File([entry.data], entry.name));
+            } else {
+                download(payload.bytes, C.safeName(frame.name) + '_ki_auftrag.zip');
+                message('KI-Auftragsbundle exportiert.');
+            }
         });
+        if (generatedFiles) await aiImportCandidates(generatedFiles);
     }
-    async function aiImportCandidates() {
+    async function aiImportCandidates(generatedFiles = null) {
         const frame = primary();
         if (!frame) throw new Error('Zuerst einen Sprite auswählen.');
-        const files = await askFiles('.png,.json', true);
+        const files = generatedFiles || await askFiles('.png,.json', true);
         if (!files.length) return;
         const pngs = files.filter(file => /\.png$/i.test(file.name));
         const metas = files.filter(file => /_meta\.json$/i.test(file.name));
@@ -1478,10 +1525,35 @@
             });
         });
     }
+    async function aiAnimationAudit() {
+        const frames = groupFrames();
+        if (frames.length < 2) throw new Error('Mindestens zwei Animationsframes in der Gruppe benötigt.');
+        if (frames.length > 256) throw new Error('Animationsprüfung auf 256 Frames begrenzt.');
+        await task('Animation, Bodenanker und Alpha prüfen', async opts => {
+            const copied = frames.map(f => ({
+                name: f.name, image: store().get(f.imageId), pivot: { ...f.pivot }
+            }));
+            const audited = AI.analyzeSequence(copied);
+            const hashes = [];
+            for (const f of frames) {
+                K.aborted(opts.signal);
+                hashes.push({ name: f.name, pngSHA256: await K.sha256(
+                    await store().bytes(f.imageId, opts.signal)) });
+            }
+            download(JSON.stringify({ ...audited,
+                project: state().project.id, sourcePNG: hashes,
+                sourceOnly: true, requireHumanReview: true,
+                inGameTested: false, nativeAnimationTimingVerified: false
+            }, null, 2) + '\n', C.safeName(groupId) + '_animation_qa.json',
+            'application/json');
+            message('Animierte Framefolge geprüft: ' + audited.warnings.length +
+                ' Hinweise. Ergebnisse sind kein Ingame-Nachweis.');
+        });
+    }
     function aiSection() {
         const frame = primary();
         if (!frame) return [section('KI-Werkstatt', [
-            note('Zuerst einen Sprite auswählen. Der Editor selbst verbindet sich nicht mit der KI-API.')
+            note('Zuerst einen Sprite auswählen. Für die Generierung SpriteSuite mit dem lokalen Codex-Client öffnen.')
         ])];
         const candidates = aiActiveCandidates();
         const candidate = candidates[Math.min(aiCandidateIndex, candidates.length - 1)];
@@ -1493,6 +1565,7 @@
                 fields(field('Assetklasse', aiAssetClass, {
                     wide: true, options: [
                         ['building', 'Gebäude'], ['unit', 'Einheiten / Frames'],
+                        ['animation', 'Animationen / Richtungsframes'], ['texture', 'Texturen / Materialien'],
                         ['vegetation', 'Vegetation'], ['hud', 'HUD'],
                         ['ui', 'UI-Sprite / Icon'], ['other', 'Sonstige']
                     ], onchange: v => { aiAssetClass = v; }
@@ -1509,7 +1582,14 @@
                     options: ['1', '2', '3', '4'],
                     onchange: v => { aiVariants = C.integer(v, 'Varianten', 1, 4); }
                 })),
-                buttons(button('KI-Auftragsbundle exportieren…', aiExportRequest)),
+                ...(localCodex ? [
+                    line('ChatGPT-Konto', codexStatus || 'Lokaler Codex-Client'),
+                    buttons(button('Bei ChatGPT anmelden…', () => codexAccount('login')),
+                        button('Anmeldung prüfen', () => codexAccount('status'))),
+                    buttons(button('Varianten mit Codex erstellen…', () => aiExportRequest(true))),
+                    note('Die Generierung nutzt die angemeldete ChatGPT-Sitzung. Verfügbarkeit und Kontolimits werden von Codex geprüft.')
+                ] : [note('Für die direkte Generierung den Sprite-Editor über SpriteSuite öffnen.')]),
+                buttons(button('KI-Auftragsbundle exportieren…', () => aiExportRequest())),
                 note('Enthält unverändertes Referenz-PNG, registrierte Arbeitsvorlage, ' +
                     'Prompt, Prüfsummen und die Anleitung für Codex. Offline und ohne API-Kosten. ' +
                     'Jede Variante benötigt einen eigenständigen Kandidaten und eine eigene Freigabe.'),
@@ -1519,7 +1599,7 @@
                         ' · ' + aiLastRequest.request.variants + ' Variante(n)')] : [])
             ]),
             section('2 · Kandidaten vergleichen', [
-                buttons(button('Kandidaten-PNGs importieren…', aiImportCandidates)),
+                buttons(button('Kandidaten-PNGs importieren…', () => aiImportCandidates())),
                 note('Optional die gleichnamigen *_meta.json-Dateien mit auswählen. ' +
                     'Die Prüfsummen werden mit Quelle und exportiertem Auftrag abgeglichen.'),
                 ...(candidate ? [
@@ -1531,6 +1611,17 @@
                     damagePreview(candidate.image, 'Ungeprüfte Variante'),
                     line('Pixel verändert', candidate.review.stats.changedPixels),
                     line('Alpha verändert', candidate.review.stats.alphaChanged),
+                    line('Pixelrisikoindikator (0–100; keine Freigabe)',
+                        candidate.review.quality?.reviewRiskPoints ?? 'nicht vergleichbar'),
+                    ...(candidate.review.quality ? [
+                        line('Bodenlinienabweichung', candidate.review.quality.groundShift === null ?
+                            'nicht vergleichbar' : candidate.review.quality.groundShift + ' px'),
+                        line('Neue Pixel außerhalb Silhouette', candidate.review.quality.addedVisible),
+                        line('Verdeckte RGB-Änderungen', candidate.review.quality.hiddenRGBChanges)
+                    ] : []),
+                    line('Manuelle Prüfreihenfolge nach Pixelrisiko', AI.rankCandidates(
+                        store().get(frame.imageId), candidates).map(row =>
+                            (row.index + 1) + ' (' + row.reviewRiskPoints + ')').join(' → ')),
                     line('Generatorbeleg', candidate.receipt ?
                         (candidate.receipt.requestMatched ?
                             'Quell- und Auftrags-SHA passen' :
@@ -1555,12 +1646,15 @@
                 ...(frame.aiGeneration ?
                     [line('Letzte manuelle KI-Abnahme', frame.aiGeneration.reviewNotes),
                      line('Quellnachweis', frame.aiGeneration.sourceSHA256.slice(0, 16) + '…')] : []),
+                ...(groupFrames().length >= 2 ? [buttons(button(
+                    'Animationsfolge auf Anker-/Alpha-Sprünge prüfen…', aiAnimationAudit))] : []),
                 note('Kein automatischer Qualitäts- oder Rechte-Nachweis. Nach der Übernahme ' +
                     'sind Masken, Atlas, Animationsverlauf und die Darstellung im QA-Spiel zu testen.')
             ])
         ];
     }
     function renderInspector() {
+        nativeApi?.invalidate();
         const root = $('inspector-content');
         root.replaceChildren();
         for (const b of document.querySelectorAll('[data-panel]'))
@@ -2352,6 +2446,10 @@
         fitNext = !transforms.has(view);
         render();
     }
+    function setPanel(next) {
+        panel = next;
+        renderInspector();
+    }
     function zoom(factor, event = null) {
         if (!model)
             return;
@@ -2396,12 +2494,12 @@
             brushOverlay.getContext('2d').putImageData(new ImageData(data, x1 - x0, y1 - y0), x0, y0);
         }
     }
-    $('viewport').addEventListener('pointerdown', e => {
-        if (busy || !model || ![0, 1].includes(e.button))
+    function pointerDown(e) {
+        if ((busy && !e.nativeGesture) || !model || ![0, 1].includes(e.button))
             return;
         e.preventDefault();
         $('viewport').focus();
-        $('viewport').setPointerCapture(e.pointerId);
+        if (e.isTrusted) $('viewport').setPointerCapture(e.pointerId);
         const point = screenToImage(e), tr = getTransform();
         try {
             if (e.button === 1 || spaceDown) {
@@ -2478,8 +2576,8 @@
             brushMap = brushOverlay = null;
             report(err);
         }
-    });
-    $('viewport').addEventListener('pointermove', e => {
+    }
+    function pointerMove(e) {
         if (!drag)
             return;
         try {
@@ -2504,7 +2602,9 @@
             brushMap = brushOverlay = null;
             report(err);
         }
-    });
+    }
+    $('viewport').addEventListener('pointerdown', pointerDown);
+    $('viewport').addEventListener('pointermove', pointerMove);
     function endPointer(cancelled = false) {
         const d = drag;
         drag = null;
@@ -2539,6 +2639,65 @@
         e.preventDefault();
         zoom(Math.exp(-e.deltaY * .0015), e);
     }, { passive: false });
+    async function nativeCanvasGesture(request) {
+        const { points, button, ctrlKey = false, shiftKey = false } = request;
+        if (![0, 1].includes(button) || typeof ctrlKey !== 'boolean' || typeof shiftKey !== 'boolean' ||
+            !Array.isArray(points) || !points.length || points.length > 256 || points.some(point =>
+                !point || typeof point !== 'object' || Array.isArray(point) ||
+                Object.keys(point).length !== 2 || !Object.hasOwn(point, 'x') || !Object.hasOwn(point, 'y') ||
+                typeof point.x !== 'number' || typeof point.y !== 'number' ||
+                !Number.isFinite(point.x) || !Number.isFinite(point.y) ||
+                Math.abs(point.x) > 131072 || Math.abs(point.y) > 131072))
+            throw Object.assign(new Error('Expected 1–256 finite model points, button 0/1 and boolean modifiers.'), { code: 'invalid' });
+        let length = 0;
+        for (let i = 1; i < points.length; i++) length += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+        if (length > 131072) throw Object.assign(new Error('Native gesture exceeds the path budget.'), { code: 'invalid' });
+        if (busy || drag || brushMap || spaceDown)
+            throw Object.assign(new Error('An existing user or editor operation is active.'), { code: 'busy' });
+        await task('Canvas-Geste', async () => {
+            nativeCheckpoint();
+            draw();
+            if (!model) throw Object.assign(new Error(layoutError || 'No native canvas model is available.'), { code: 'disabled' });
+            // Bound native work before touching the original brush callbacks.
+            if (view === 'split' && brushTool && button === 0) {
+                const radius = C.integer($('brush-radius').value, 'Radius', 1, 128);
+                if (points.some(p => p.x < 0 || p.y < 0 || p.x > model.width || p.y > model.height))
+                    throw Object.assign(new Error('Brush points must be inside the split model.'), { code: 'invalid' });
+                let work = 0;
+                for (let i = 0; i < points.length; i++) {
+                    const a = points[Math.max(0, i - 1)], b = points[i];
+                    work += Math.min(model.width, Math.abs(b.x - a.x) + 2 * radius + 2) *
+                        Math.min(model.height, Math.abs(b.y - a.y) + 2 * radius + 2) +
+                        Math.hypot(b.x - a.x, b.y - a.y) * radius * 8;
+                }
+                if (work > C.LIMITS.pixels * 8)
+                    throw Object.assign(new Error('Split brush gesture exceeds the native work budget.'), { code: 'invalid' });
+            }
+            const transform = screenTransform(), rect = $('viewport').getBoundingClientRect();
+            const event = point => ({ clientX: rect.left + transform.x + point.x * transform.zoom,
+                clientY: rect.top + transform.y + point.y * transform.zoom,
+                button, ctrlKey, shiftKey, isTrusted: false, nativeGesture: true,
+                preventDefault() {} });
+            let started = false, completed = false;
+            try {
+                nativeCheckpoint();
+                started = true;
+                pointerDown(event(points[0]));
+                for (let i = 1; i < points.length; i++) {
+                    if (i % 8 === 0) await I.tick();
+                    nativeCheckpoint();
+                    if (nativeLastError) throw new Error(nativeLastError);
+                    pointerMove(event(points[i]));
+                }
+                await I.tick();
+                nativeCheckpoint();
+                endPointer();
+                completed = true;
+            } finally {
+                if (started && !completed) endPointer(true);
+            }
+        });
+    }
     async function dbOpen() {
         if (!globalThis.indexedDB)
             throw new Error('IndexedDB nicht verfügbar.');
@@ -2804,8 +2963,7 @@
         else if (viewButton && !busy)
             setView(viewButton.dataset.view);
         else if (panelButton && !busy) {
-            panel = panelButton.dataset.panel;
-            renderInspector();
+            setPanel(panelButton.dataset.panel);
         }
         if (!e.target.closest('.menu'))
             document.querySelectorAll('details.menu').forEach(d => d.open = false);
@@ -2972,6 +3130,83 @@
             state: I.clone(state()), selected: [...selected], groupId, view, panel, dirty, revision: history.revision, undo: history.past.length, redo: history.future.length, assetCount: store().items.size, pixels: store().pixels, playing, animIndex, model: model ? { width: model.width, height: model.height } : null
         })
     });
+    function nativeFiles(files) {
+        if (!Array.isArray(files) || !files.length || files.length > C.LIMITS.entries)
+            throw Object.assign(new Error('Invalid native file count.'), { code: 'invalid' });
+        let total = 0;
+        return files.map(file => {
+            if (!file || typeof file.name !== 'string' || typeof file.base64 !== 'string' ||
+                Object.keys(file).some(k => !['name', 'base64'].includes(k)) ||
+                !file.name || file.name.length > 255 || /[\\/\x00-\x1f]/.test(file.name) ||
+                !/\.(png|json|zip|csv|shsprite)$/i.test(file.name) ||
+                file.base64.length > Math.ceil(C.LIMITS.fileBytes / 3) * 4 ||
+                file.base64.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(file.base64))
+                throw Object.assign(new Error('Invalid native file name, type or byte budget.'), { code: 'invalid' });
+            const raw = atob(file.base64);
+            total += raw.length;
+            if (!raw.length || raw.length > C.LIMITS.fileBytes || total > C.LIMITS.importBytes)
+                throw Object.assign(new Error('Native file data exceeds the existing import budget.'), { code: 'invalid' });
+            return new File([Uint8Array.from(raw, c => c.charCodeAt(0))], file.name);
+        });
+    }
+    nativeApi = window.SpriteNativeAPI.create({
+        document, sessionId: I.uid('native'), actions,
+        historyRevision: () => history.revision, busy: () => busy || !!drag || !!brushMap || spaceDown,
+        inspect: () => {
+            if (renderQueued) draw();
+            return { ...window.SpriteEditor.inspect(),
+                model: model ? { width: model.width, height: model.height,
+                    transform: screenTransform(), items: model.items.map((item, index) => ({
+                        id: item.id || (item.frame ? item.frame.id + ':' + index : 'model-item-' + index), frameId: item.frame?.id || null,
+                        x: item.x, y: item.y, width: item.width, height: item.height })) } : null,
+                canvas: { drag: drag ? { kind: drag.kind } : null, brushActive: !!brushMap,
+                    measurement: activeMeasurement() ? I.clone(activeMeasurement()) : null,
+                    measureStart: measureStart ? I.clone(measureStart) : null,
+                    pivotTool, measureTool, brushTool }
+            };
+        }, setView, setPanel, canvasGesture: nativeCanvasGesture,
+        begin: signal => { nativeDispatch = true; nativeAbortSignal = signal; },
+        end: () => { nativeDispatch = false; nativeAbortSignal = null; nativePickedFiles = null; },
+        openFiles: files => openProject(nativeFiles(files)),
+        importFiles: files => importDialog(nativeFiles(files), view === 'split' ? 'split' : 'png'),
+        setSelection: frameIds => {
+            if (!frameIds.length || frameIds.length > C.LIMITS.frames ||
+                frameIds.some(id => typeof id !== 'string' || !id || id.length > 1024) ||
+                new Set(frameIds).size !== frameIds.length)
+                throw Object.assign(new Error('Select existing, distinct native frame IDs.'), { code: 'invalid' });
+            const frames = frameIds.map(id => state().frames.find(frame => frame.id === id));
+            if (frames.some(frame => !frame))
+                throw Object.assign(new Error('Unknown native frame identity.'), { code: 'unknown' });
+            if (frames.some(frame => frame.groupId !== frames[0].groupId))
+                throw Object.assign(new Error('Native multi-selection belongs to one asset group.'), { code: 'invalid' });
+            if (groupId !== frames[0].groupId) {
+                $('group-select').value = frames[0].groupId;
+                $('group-select').dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            if ($('search').value) {
+                $('search').value = '';
+                $('search').dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            frameIds.forEach((id, index) => selectFrame(id, { ctrlKey: index > 0 }));
+        },
+        modalOpen: () => $('modal').open,
+        modalState: () => ({ open: $('modal').open, formId: $('modal').open ? 'modal-form' : null,
+            title: $('modal-title').textContent,
+            error: $('modal-error').hidden ? null : $('modal-error').textContent,
+            submitEnabled: !$('modal-submit').hidden && !$('modal-submit').disabled }),
+        clearError: () => { nativeLastError = null; },
+        lastError: () => nativeLastError || ($('modal').open && !$('modal-error').hidden ? $('modal-error').textContent : null),
+        submitForm: () => $('modal-form').onsubmit({ preventDefault() {} }),
+        invokeControl: control => nativeCallbacks.has(control) ? nativeCallbacks.get(control)() : control.click(),
+        invokeFiles: (control, files) => {
+            if (!nativeCallbacks.has(control))
+                throw Object.assign(new Error('This control has no native file callback; use project.open/files.import.'), { code: 'unknown' });
+            nativePickedFiles = nativeFiles(files);
+            return nativeCallbacks.get(control)();
+        }
+    });
+    window.SuiteEditorAPI = nativeApi;
     render();
     findRecovery();
+    window.SpriteNativeBridge.install(nativeApi);
 })();

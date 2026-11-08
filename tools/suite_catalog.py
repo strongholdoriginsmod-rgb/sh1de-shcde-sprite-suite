@@ -80,6 +80,7 @@ def describe(path: Path):
     bindings = {}
     fields = []
     commands = {()}
+    cli_description = None
     for node in walk_source(tree):
         if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
             call = node.value
@@ -89,6 +90,11 @@ def describe(path: Path):
             owner = call.func.value.id if isinstance(call.func.value, ast.Name) else ''
             if call.func.attr == 'ArgumentParser':
                 bindings[target.id] = ()
+                for kw in call.keywords:
+                    if kw.arg == 'description' and cli_description is None:
+                        candidate = literal(kw.value)
+                        if isinstance(candidate, str) and candidate.strip():
+                            cli_description = candidate
             elif call.func.attr in {'add_subparsers','add_mutually_exclusive_group','add_argument_group'}:
                 bindings[target.id] = bindings.get(owner,())
             elif call.func.attr == 'add_parser' and call.args:
@@ -107,7 +113,60 @@ def describe(path: Path):
         field = {'names':names,'command':bindings.get(node.func.value.id,()),**kw}
         if not any(f['names']==names and f['command']==field['command'] for f in fields):
             fields.append(field)
-    return {'description':ast.get_docstring(tree) or path.name,'commands':sorted(commands),'fields':fields}
+    return {'description':ast.get_docstring(tree) or cli_description or path.name,
+            'commands':sorted(commands),'fields':fields}
+
+
+def format_static_help(metadata: dict, command: tuple[str, ...] = (),
+                       *, limit: int = 6500) -> str:
+    """Describe an already-parsed CLI without importing or executing the tool.
+
+    This is an approximate static source view, NOT argparse's live --help.
+    Runtime-generated options may be missing. It is safe even for a script
+    with malicious top-level statements, because those are never run.
+    """
+    if limit < 250:
+        raise ValueError("Help display limit is too short")
+    title = str(metadata.get("description") or "Undokumentiertes Werkzeug")
+    commands = tuple(tuple(c) for c in metadata.get("commands", ()))
+    lines = [
+        "Statische Werkzeughilfe – kein Skript gestartet",
+        "",
+        title,
+        "",
+        "Quelle: vorhandene Parser-/AST-Deklarationen, ohne Import/Ausführung.",
+        "Dynamisch erzeugte CLI-Optionen können fehlen.",
+    ]
+    if commands and commands != ((),):
+        lines.extend(("", "Erkannte Befehle:"))
+        lines.extend("  " + (" ".join(c) if c else "(Standard)")
+                     for c in commands)
+    if command:
+        lines.extend(("", "Gewählte Aktion: " + " ".join(command)))
+    filtered = [f for f in metadata.get("fields", ())
+                if not command or tuple(f.get("command", ())) == ()
+                or tuple(f.get("command", ())) == tuple(command)]
+    if filtered:
+        lines.extend(("", "Argumente / Optionen dieser Aktion:"))
+        for item in filtered:
+            names = " / ".join(map(str, item.get("names", ())))
+            origin = tuple(item.get("command", ()))
+            scope = ("[" + " ".join(origin) + "] ") if origin and not command else ""
+            required = " [Pflichtfeld]" if item.get("required") else ""
+            choices = item.get("choices")
+            extra = (" {" + ", ".join(map(str, choices)) + "}") if choices else ""
+            help_text = str(item.get("help") or "").strip().replace("\n", " ")
+            lines.append("  " + scope + names + required + extra)
+            if help_text:
+                lines.append("    " + help_text)
+    else:
+        lines.extend(("", "Keine statisch auswertbaren Argumente gefunden.",
+                      "Bitte fachliche Projektdokumentation beachten."))
+    output = "\n".join(lines)
+    if len(output) > limit:
+        output = output[:limit - 85].rstrip() + (
+            "\n\n[Anzeige gekürzt; weitere Details im Quelltext. Kein Tool ausgeführt.]")
+    return output
 
 
 def tokens_for(command, fields, values, extra=''):

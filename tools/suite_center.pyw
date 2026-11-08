@@ -21,7 +21,7 @@ from stronghold_europe_de.suite_setup import (
     inspect_toolchain_hints, normalized_games, read_game_path_hints,
 )
 from stronghold_europe_de.unity_toolchain import standard_unity_editor_paths
-from suite_catalog import describe, describe_parser, tokens_for
+from suite_catalog import describe, describe_parser, tokens_for, format_static_help
 from suite_usability import ScrollableColumn
 
 loader=importlib.machinery.SourceFileLoader('original_sprite_workshop',str(ROOT/'tools/suite.pyw'))
@@ -53,7 +53,7 @@ class Center(workshop.Suite):
         self.geometry(f'{min(1320,self.winfo_screenwidth()-70)}x{min(900,self.winfo_screenheight()-110)}')
         self.minsize(1020,680)
         self.console.configure(height=7)
-        self.console.master.pack_configure(side='bottom',before=self.notebook)
+        self.console.master.pack_configure(side='bottom',before=getattr(self, "notebook_viewport", self.notebook))
         self.setup_page=ttk.Frame(self.notebook,padding=18)
         self.bc7_page=ttk.Frame(self.notebook,padding=18)
         self.catalog_page=ttk.Frame(self.notebook,padding=18)
@@ -61,10 +61,11 @@ class Center(workshop.Suite):
         self.notebook.add(self.bc7_page,text='BC7 & Pakete')
         self.notebook.add(self.catalog_page,text='Alle Werkzeuge')
         self.command_bar=ttk.Frame(self)
-        self.command_bar.pack(before=self.notebook,fill='x',padx=18,pady=(0,6))
+        self.command_bar.pack(before=getattr(self, "notebook_viewport", self.notebook),fill='x',padx=18,pady=(0,6))
         self.build_setup()
         self.build_bc7()
         self.build_catalog()
+        # Bind to THIS Tk interpreter even when another root already exists.
         self.advanced = tk.BooleanVar(master=self, value=False)
         self.basic_tabs = (self.setup_page, self.tab_art, self.bc7_page)
         self.extra_tabs = tuple(tab for tab in self.notebook.tabs() if tab not in {str(t) for t in self.basic_tabs})
@@ -383,6 +384,7 @@ class Center(workshop.Suite):
                                 "\n".join(rows), parent=self)
         except (OSError, ValueError, RuntimeError) as exc:
             messagebox.showerror("Umgebung erkennen", str(exc), parent=self)
+
 
     def show_setup_diagnostics(self):
         """Read-only setup overview; independent of BC7 build readiness."""
@@ -1239,6 +1241,14 @@ class Center(workshop.Suite):
         ttk.Label(page,text='Werkzeugkatalog',font=('Segoe UI',18,'bold')).pack(anchor='w')
         ttk.Label(page,text='Sprite-, Atlas- und Projektwerkzeuge. Felder stammen aus ihren eigenen CLI-Definitionen.\nProjektgebundene Spezialwerkzeuge behalten ihre ursprünglichen Voraussetzungen.',wraplength=950).pack(anchor='w',pady=8)
         self.catalog_tool=tk.StringVar()
+        search_row=ttk.Frame(page)
+        search_row.pack(fill='x',pady=(0,5))
+        ttk.Label(search_row,text='Werkzeug filtern:').pack(side='left',padx=(0,8))
+        self.catalog_search=tk.StringVar()
+        ttk.Entry(search_row,textvariable=self.catalog_search,width=48).pack(
+            side='left',fill='x',expand=True)
+        ttk.Button(search_row,text='Alle anzeigen',
+                   command=lambda:self.catalog_search.set('')).pack(side='left',padx=(7,0))
         names=sorted(p.name for p in (ROOT/'tools').glob('*.py') if p.name not in {'suite_catalog.py','modding_host.py'} and not p.name.startswith('shcdese_'))
         self.catalog_paths={name:ROOT/'tools'/name for name in names}
         self.catalog_paths['Installer bauen']=ROOT/'installer/build_release.py'
@@ -1246,9 +1256,13 @@ class Center(workshop.Suite):
         self.catalog_paths['Atlasvertrag']=ROOT/'extras/atlas-contract/atlas_contract/__main__.py'
         for path in (ROOT/'extras/atlas-contract/werkzeuge').glob('*.py'):
             self.catalog_paths['Atlasmessung / '+path.name]=path
-        names=['Pipeline',*self.catalog_paths]
-        picker=ttk.Combobox(page,textvariable=self.catalog_tool,values=names,state='readonly',width=55)
-        picker.pack(anchor='w');picker.bind('<<ComboboxSelected>>',lambda _:self.load_catalog())
+        self.catalog_all_names=['Pipeline',*self.catalog_paths]
+        self.catalog_picker=ttk.Combobox(
+            page,textvariable=self.catalog_tool,values=self.catalog_all_names,
+            state='readonly',width=55)
+        self.catalog_picker.pack(anchor='w')
+        self.catalog_picker.bind('<<ComboboxSelected>>',lambda _:self.load_catalog())
+        self.catalog_search.trace_add('write',lambda *_:self.filter_catalog())
         self.catalog_action=tk.StringVar()
         self.action_picker=ttk.Combobox(page,textvariable=self.catalog_action,state='readonly',width=55)
         self.action_picker.pack(anchor='w',pady=6)
@@ -1285,6 +1299,28 @@ class Center(workshop.Suite):
         self.catalog_field_scroll.pack(fill='both',expand=True)
         self.field_frame=self.catalog_field_scroll.body
         self.catalog_tool.set('sprites.py');self.load_catalog()
+
+    def filter_catalog(self):
+        """Use the same bilingual specialist metadata as Strg+K, no tool launch."""
+        from suite_command_search import normalize_search
+        from suite_tool_registry import SPECIALISTS
+        words = normalize_search(self.catalog_search.get()).split()
+        if not words:
+            choices = list(self.catalog_all_names)
+        else:
+            metadata = {tool.filename: tool for tool in SPECIALISTS}
+            choices = []
+            for name in self.catalog_all_names:
+                tool = metadata.get(name)
+                labels = (name,) if tool is None else (
+                    name, tool.title_de, tool.title_en,
+                    tool.category_de, tool.category_en, *tool.keywords)
+                haystack = normalize_search(" ".join(labels))
+                if all(word in haystack for word in words):
+                    choices.append(name)
+        self.catalog_picker.configure(values=choices)
+        # Filtering never changes the selected tool or runs it.
+        return choices
 
     def load_catalog(self):
         try:
@@ -1333,23 +1369,43 @@ class Center(workshop.Suite):
         self.catalog_field_scroll.bind_mousewheel()
 
     def catalog_help(self):
-        # Help is only dispatched for argparse tools. Some historical scripts
-        # have unguarded top-level writes, so never invoke them just to inspect.
-        if not self.catalog['fields'] and self.catalog['commands']==[()]:
-            messagebox.showinfo('Projektwerkzeug',self.catalog['description'],parent=self);return
-        self.run_catalog([*self.active_command,'--help'])
+        """Show parser declarations; never launch an unknown tool for --help."""
+        text = format_static_help(self.catalog, tuple(self.active_command))
+        messagebox.showinfo('Statische Werkzeughilfe (ohne Ausführung)',
+                            text, parent=self)
 
     def run_catalog(self,args):
+        # Also guard callers other than the standard GUI button.
+        if any(arg in {'--help','-h'} for arg in args):
+            return self.catalog_help()
         name=self.catalog_tool.get()
-        if name=='Pipeline':self.cli(*args)
-        elif name=='Atlasvertrag':self.tool('atlas_contract_gui.py',args)
-        else:self.run([str(self.catalog_paths[name]),*args],name)
+        if name=='Pipeline':return self.cli(*args)
+        if name=='Atlasvertrag':return self.tool('atlas_contract_gui.py',args)
+        return self.run([str(self.catalog_paths[name]),*args],name)
 
     def catalog_run(self):
-        try:args=tokens_for(self.active_command,self.active_fields,[v.get() for v in self.field_values],self.extra.get())
-        except ValueError as exc:messagebox.showerror('Eingaben',str(exc),parent=self);return
-        # User-selected actions run directly; informational diagnostics never block.
-        self.run_catalog(args)
+        try:
+            args=tokens_for(self.active_command,self.active_fields,
+                            [v.get() for v in self.field_values],
+                            self.extra.get())
+        except ValueError as exc:
+            messagebox.showerror('Eingaben',str(exc),parent=self)
+            return
+        if any(arg in {'--help','-h'} for arg in args):
+            return self.catalog_help()
+        from suite_tool_policy import classify, explain
+        name=self.catalog_tool.get()
+        policy=classify(name,args)
+        if policy.requires_confirmation:
+            prompt=(
+                'Werkzeug: '+name+'\nArgumente: '+(' '.join(args) or '(Standard)')
+                +'\n\n'+explain(name,args)
+                +'\n\nDiese Aktion wirklich ausführen?'
+            )
+            if not messagebox.askyesno('Werkzeugausführung bestätigen',
+                                       prompt, parent=self, default='no'):
+                return
+        return self.run_catalog(args)
 
 
 if __name__=='__main__':

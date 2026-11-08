@@ -1,5 +1,9 @@
 # SH1DE → SHCDE Universal Suite 2.0 (Stronghold Europe / ORIGINS)
 
+## Consolidated release candidate, 8 November 2026
+
+The shared geometry and AI editor, historical measurements, environment discovery, project/asset inspection, twelve authoring workspaces and SHCDE workbench are integrated. The **AI assistant** uses the existing project tools, Suite UI, local sprite editor and opened Qt sandbox through native interfaces. Sign-in and image jobs use the local Codex client with a ChatGPT account, without an API key. Scrollable work areas keep lower controls reachable in small windows. The **Windows start package** includes Python and installs the remaining dependencies locally on first launch; that step needs an internet connection. [Integration and acceptance report](docs/SPRITESUITE_RELEASE_KONSOLIDIERUNG_20261108.md).
+
 Transfer graphics from **Stronghold: Definitive Edition** to **Stronghold Crusader: Definitive Edition**, then view, change, check and ship them as a mod – in one interface. Static GUI/sprite packages use **no fixed SE version and no C# DLL**; optional C# runtimes retain separate ABI safety checks. Interface **German / English** (switchable). Deutsch: [README.md](README.md)
 
 ## Unified Stronghold specialist discovery (development branch, Nov 6, 2026)
@@ -64,9 +68,10 @@ first use, leaving the original untouched.
 
 | Variant | Contents | How |
 |---|---|---|
+| **Windows start package RC4** | Suite and Python; additional packages are downloaded and hash-verified on first launch | [Prerelease v2.0.0-rc.4](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) · no separate Python installation; internet needed for first setup |
 | **Windows Portable 2.0.0 (local release candidate)** | Suite and bundled Python runtime; **no separate Python installation** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – not yet approved as a public stable release; [release review (German)](docs/RELEASE_CANDIDATE_2026-11-04.md) |
 | **Previously published portable release** | Historical safe-project-backup build | [Windows release from October 30, 2026](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) |
-| **Source ZIP** | full application code and tools, but **without** the Python runtime | branch `main` → *Code* → *Download ZIP* |
+| **Source ZIP RC4** | full application code and tools, but **without** the Python runtime | [Source and checksum in the RC4 release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) |
 | Earlier versions 1.x | Sprite Suite 1.0–1.1.3 with installers | tag `v1.1.3` |
 
 Game graphics are **not** distributed. They are created from your own installed games when reading and building.

@@ -92,6 +92,7 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
             }
             throw new Error('Timeout waiting for: ' + expression);
         }
+        await send('Emulation.setDeviceMetricsOverride', {width:1440,height:960,deviceScaleFactor:1,mobile:false});
         await send('Page.enable');
         await send('Runtime.enable');
         await send('Network.enable');
@@ -198,6 +199,7 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         await send('DOM.setFileInputFiles', { files: [candidate, manifest], nodeId: input.nodeId });
         await wait('document.getElementById("inspector-content").innerText.includes("Ungeprüfte Variante")');
         assert.ok(await evaluate('document.getElementById("inspector-content").innerText.includes("Quell- und Auftrags-SHA passen")'));
+        assert.ok(await evaluate('document.getElementById("inspector-content").innerText.includes("Pixelrisikoindikator")'));
         await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
             '.find(b => b.textContent.includes("Original + Variante"))).click()');
         await wait('document.getElementById("modal").open');
@@ -214,6 +216,18 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
         await wait('SpriteEditor.inspect().state.frames[0].imageId === ' + JSON.stringify(before));
         await evaluate('document.getElementById("redo").click()');
         await wait('SpriteEditor.inspect().state.frames[0].aiGeneration.manualReview === true');
+        await evaluate('([...document.querySelectorAll("#inspector-content button")]' +
+            '.find(b => b.textContent.includes("Animationsfolge auf Anker"))).click()');
+        let sequenceFile;
+        for (let i = 0; i < 100; i++) {
+            sequenceFile = fs.readdirSync(downloads).find(name => name.endsWith('_animation_qa.json'));
+            if (sequenceFile) break;
+            await sleep(100);
+        }
+        assert.ok(sequenceFile,'Animation QA report download missing');
+        const sequence = JSON.parse(fs.readFileSync(path.join(downloads,sequenceFile),'utf8'));
+        assert.equal(sequence.frames.length,25);
+        assert.equal(sequence.nativeAnimationTimingVerified,false);
         await send('Page.navigate', {
             url: pathToFileURL(path.join(root, 'Stronghold_Sprite_Editor_EN.html')).href + '#ai'
         });
@@ -227,6 +241,18 @@ const edge = process.env.SPRITESUITE_CHROMIUM ||
             'New AI inspector must be translated in EN standalone HTML');
         assert.deepEqual(errors, [], 'Browser JavaScript runtime errors');
         assert.deepEqual(network, [], 'Browser made unexpected http(s) requests');
+        const reportRoot = path.join(root,'tests/results');
+        const screenshot = await send('Page.captureScreenshot',{format:'png'});
+        fs.writeFileSync(path.join(reportRoot,'ai-geometry-edge.png'),Buffer.from(screenshot.data,'base64'));
+        fs.writeFileSync(path.join(reportRoot,'ai-browser-report.json'),JSON.stringify({
+            passed:true,browser:(await send('Browser.getVersion')).product,
+            htmlSHA256:await K.sha256(new Uint8Array(fs.readFileSync(html))),
+            checks:['historical pivot import','visible overlay','manual pivot receipt','pivot undo and redo',
+                'offline request source SHA','candidate metadata SHA','pixel quality risks',
+                'manual candidate approval','original preserved','candidate undo and redo',
+                'animation sequence QA download','English deep-link'],
+            pageErrors:errors,networkRequests:network,liveCodexCalled:false,inGameTested:false
+        },null,2)+'\n');
         console.log('PASS standalone Edge file:// UI: geometry + AI bundle + candidate review + undo/redo, no network.');
         console.log('PASS source SHA-256, original preserved and content-bound review provenance.');
         console.log('BROWSER_UI_PASS');

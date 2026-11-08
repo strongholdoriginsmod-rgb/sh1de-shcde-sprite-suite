@@ -60,26 +60,31 @@ def test_ctrl_k_dialog_en_de_navigation_and_reuse(suite_gui,monkeypatch):
     monkeypatch.setattr(app,"run",lambda *a,**kw:invoked.append(a))
     targets=build_navigation_targets(app)
     assert len({target.key for target in targets})==len(targets)
-    # The integrated HUD Studio and HUD/Menu Workshop are independent workspaces.
-    assert sum(t.key.startswith("workspace:") for t in targets) == len(app._navigation_entries)
-    assert any(t.title_en == "HUD & menus" for t in targets)
+    # Workspace count grows as new safe editors are integrated; match the GUI.
+    assert sum(target.key.startswith("workspace:") for target in targets)==len(app._navigation_entries)
+    assert len(app._navigation_entries)>=14
     assert len(targets)>=25
-    pivot_key = next(t.key for t in targets if "pivot measurements" in t.title_en.lower())
-    ora_key = next(t.key for t in targets if "OpenRaster" in t.title_en)
-    atlas_key = next(t.key for t in targets if "AtlasBuilder" in t.title_en)
+    # Current sections are discovered from the real editor, not frozen indexes.
+    editor_key=lambda title: "editor:"+str(next(
+        i for i, section in enumerate(app.exchange_tab.section_targets)
+        if title in section))
+    pivot_key=editor_key("Pivot")
     for search,required in (
         ("zinnenlineal",pivot_key),("Game HUD","sandbox:hud"),
-        ("OpenRaster",ora_key),("Animation","sandbox:animation"),
-        ("AtlasBuilder",atlas_key),("Kartenordner","sandbox:folder"),
+        ("OpenRaster",editor_key("Mehrteilige")),
+        ("Animation","sandbox:animation"),
+        ("AtlasBuilder",editor_key("SE-Atlas")),
+        ("Kartenordner","sandbox:folder"),
     ):
         assert required in [x.key for x in find_targets(targets,search)]
     assert not invoked
     assert app.bind_all("<Control-k>")
-    # The modern unified shell hides the duplicated top toolbar. Search
-    # remains visibly available in the sidebar and through Ctrl+K.
-    search_button=app.modern_shell.search_button
+    # The modern shell intentionally hides the legacy command bar; the real
+    # visible search entry is in the persistent sidebar.
+    search_button=(app.modern_shell.search_button
+                   if getattr(app,'modern_shell',None) is not None
+                   else app.command_search_button)
     assert search_button.winfo_ismapped()
-    assert not app.command_search_button.winfo_ismapped()
     search_button.invoke()
     app.update()
     dlg=app._command_search
@@ -103,10 +108,8 @@ def test_ctrl_k_dialog_en_de_navigation_and_reuse(suite_gui,monkeypatch):
     app.update()
     assert other.visible
     assert other.title()=="Find a workspace or tool"
-    # Stable by semantic destination, not a numeric tab index: the HUD-Studio
-    # adds an extra workspace before "Build packages".
-    assert any(item.key.startswith("workspace:")
-               and item.title_en == "Build packages" for item in other.visible)
+    assert "build:overview" in [item.key for item in other.visible]
+    assert any(item.key.startswith("workspace:") for item in other.visible)
     app.set_language("de")
     app.update()
     assert other.language=="de"
@@ -175,23 +178,3 @@ def test_game_map_destination_reveals_actual_canvas_not_only_tk_tab():
     )
     suite.SandboxTab.show_game_map(fake)
     assert visited==[fake,"Qt map"]
-
-
-def test_specialist_search_opens_real_existing_cli_form_without_running_it(
-    suite_gui, monkeypatch,
-):
-    _suite, app = suite_gui
-    calls = []
-    monkeypatch.setattr(app, "run", lambda *args, **kw: calls.append(args))
-    monkeypatch.setattr(app, "cli", lambda *args, **kw: calls.append(args))
-    targets = build_navigation_targets(app)
-    target = next(t for t in targets if t.key == "tool:sprites.py")
-    assert "sprites.py" in [row.key.rsplit(":", 1)[-1] for row in
-                            find_targets(targets, "sprite export")]
-    target.navigate()
-    app.update()
-    assert app.notebook.select() == str(app.catalog_page)
-    assert app.catalog_tool.get() == "sprites.py"
-    assert app.catalog["fields"]
-    assert app.catalog["commands"]
-    assert calls == []

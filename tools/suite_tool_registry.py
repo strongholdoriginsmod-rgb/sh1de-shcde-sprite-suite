@@ -22,12 +22,43 @@ class Specialist:
 # Functional specialists only; internal libraries and historical hard-pinned
 # installers do not become new top-level commands merely because they exist.
 SPECIALISTS: tuple[Specialist, ...] = (
+    Specialist('shcde_workbench.py', 'SHCDE-Fachwerkstatt – 16 Bereiche', 'SHCDE workbench – 16 domains',
+               'Projekt', 'Project', ('apishared', 'serp', 'aic', 'aiv', 'lua', 'runtime', 'mission', 'audio')),
+    Specialist('shcde_mod_project.py', 'SHCDE-Projekt verbinden', 'Link SHCDE project',
+               'Projekt', 'Project', ('projekt', 'gemeinsam', 'assets', 'manifest')),
+    Specialist('shcde_mod_composer.py', 'Modpakete zusammenführen', 'Compose mod packages',
+               'Paket', 'Package', ('modpack', 'konflikte', 'zip', 'sha256')),
+    Specialist('shcde_api_native_index.py', 'API- und Native-Referenzen durchsuchen', 'Search API and native references',
+               'Prüfen', 'Inspection', ('shcdese', 'apishared', 'serp', 'csharp', 'dll', 'signatur')),
+    Specialist('shcde_game_inspector.py', 'Spielinspektor bauen', 'Build game inspector',
+               'Runtime', 'Runtime', ('dll', 'bepinex', 'diagnose', 'game')),
+    Specialist('shcde_gameplay_rules.py', 'Gameplay-Regeln bauen', 'Build gameplay rules',
+               'Runtime', 'Runtime', ('balancing', 'plugin', 'regeln', 'csharp')),
+    Specialist('shcde_aiv_lord_studio.py', 'AIV und eigene Lords', 'AIV and custom lords',
+               'Spielinhalt', 'Game content', ('burg', 'ki', 'lord', 'aiv')),
+    Specialist('shcde_mod_settings.py', 'Mod-Einstellungen bearbeiten', 'Edit mod settings',
+               'Projekt', 'Project', ('apishared', 'settings', 'konfiguration')),
+    Specialist('shcde_scenario_graph.py', 'Szenario- und Missionsgraph', 'Scenario and mission graph',
+               'Spielinhalt', 'Game content', ('lua', 'mission', 'trigger', 'simulation')),
+    Specialist('shcde_pathing_report.py', 'Wegfindungsprotokoll auswerten', 'Analyze pathfinding log',
+               'Prüfen', 'Inspection', ('pathing', 'performance', 'log')),
+    Specialist('shcde_qa_suite.py', 'SHCDE-Projekt und Bau prüfen', 'Check SHCDE project and build',
+               'Prüfen', 'Inspection', ('qa', 'build', 'projekt', 'modpack')),
+    Specialist("modding_studio.py", "Modding Studio – 12 Arbeitsbereiche", "Modding Studio – 12 workspaces",
+               "Projekt", "Project", ("apishared", "serp", "aiv", "mission", "lua", "modding", "studio")),
+    Specialist("building_damage_native_bindings.py", "Native Gebäude-Zuordnungen", "Native building bindings",
+               "Grafik", "Graphics", ("damage", "hp", "feuer", "native", "granary", "raster")),
+
     Specialist("suite_tool_inventory.py", "Historische Werkzeugmatrix", "Historic tool inventory",
                "Prüfen", "Inspection", ("sha256", "versionen", "historisch", "duplikate")),
     Specialist("suite_compatibility_preflight.py", "Kompatibilitätsprüfung", "Compatibility preflight",
                "Prüfen", "Inspection", ("steam", "python", "abi", "runtime")),
     Specialist("suite_environment_discovery.py", "Spiel- und Entwicklungsumgebung erkennen", "Detect game and build environment",
                "Prüfen", "Inspection", ("automatisch", "steam", "unity", "python", "dotnet", "shcdese", "apishared", "serp")),
+    Specialist("suite_runtime_capabilities.py", "Runtime-Capabilities und DLL-Signaturen", "Runtime capability and DLL signature inspection",
+               "Prüfen", "Inspection", ("shcdese", "apishared", "serp", "dll", "pe", "sha256", "abi", "capability")),
+    Specialist("suite_asset_inspector.py", "Gemeinsamer Sprite-, Atlas-, Masken- und XAML-Inspektor", "Shared sprite, atlas, mask and XAML inspector",
+               "Prüfen", "Inspection", ("sprite", "atlas", "dds", "bc7", "mask", "maske", "material", "xaml", "noesis", "assets")),
     Specialist("grafik_analyse.py", "Grafikanalyse", "Graphics analysis",
                "Prüfen", "Inspection", ("bundles", "pixel", "bildvergleich", "atlas")),
     Specialist("grafik_diagnose.py", "Grafikdiagnose", "Graphics diagnosis",
@@ -136,6 +167,10 @@ def open_specialist(app, filename: str) -> None:
     page = app.catalog_page
     choice = app.catalog_tool
     loader = app.load_catalog
+    # A previously entered filter must not hide the selected specialist.
+    search = getattr(app, "catalog_search", None)
+    if search is not None:
+        search.set("")
     app.open_tab(page)
     choice.set(filename)
     loader()

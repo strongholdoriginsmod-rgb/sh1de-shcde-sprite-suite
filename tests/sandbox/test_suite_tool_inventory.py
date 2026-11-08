@@ -239,3 +239,60 @@ def test_building_damage_layer_census_has_distinct_read_and_workspace_risk():
                     ["--log", "qa.log", "--output", "audit.json"]).category == "workspace"
     assert classify("building_damage_layer_audit.py",
                     ["--help"]).category == "read"
+
+
+def test_recursive_tool_inventory_is_opt_in_and_relative_path_safe(tmp_path):
+    """Nested tool sources are read without becoming executable GUI entries."""
+    current, earlier = fixture(tmp_path)
+    internal = current / "tools" / "blender"
+    internal.mkdir()
+    nested = internal / "helper.py"
+    marker = tmp_path / "UNWANTED_EXECUTION.txt"
+    nested.write_text(
+        "from pathlib import Path\n"
+        + f"Path({str(marker)!r}).write_text('executed')\n",
+        encoding="utf-8")
+    (earlier / "tools" / "blender").mkdir()
+    (earlier / "tools" / "blender" / "helper.py").write_bytes(nested.read_bytes())
+    (current / "tools" / "vendor").mkdir()
+    (current / "tools" / "vendor" / "third_party.py").write_text("UNRELATED=1\n")
+
+    assert "blender/helper.py" not in scan(current)["tools"]
+    rows = scan(current, recursive=True)["tools"]
+    assert "blender/helper.py" in rows
+    assert rows["blender/helper.py"]["risk"] == "unknown"
+    assert rows["blender/helper.py"]["specialist"] is False
+    assert "vendor/third_party.py" not in rows
+    assert not marker.exists()
+    summary = build_matrix(current, [earlier], recursive=True)
+    assert summary["recursive"] is True
+    assert next(row for row in summary["comparisons"][0]["tools"]
+                if row["name"] == "blender/helper.py")["status"] == "identisch"
+    assert not marker.exists()
+
+
+def test_recursive_scan_does_not_follow_linked_directories(tmp_path):
+    current, _ = fixture(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "malicious.py").write_text("VALUE=10\n")
+    link = current / "tools" / "unsafe-symlink"
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("Verzeichnis-Symlinks nicht zugelassen")
+    sources = scan(current, recursive=True)["tools"]
+    assert not any("malicious.py" in name for name in sources)
+    assert not (current / "tools" / "unsafe-symlink" / "generated.txt").exists()
+
+
+def test_recursive_cli_works_for_deep_older_source(tmp_path, capsys):
+    current, earlier = fixture(tmp_path)
+    (earlier / "tools" / "native").mkdir()
+    (earlier / "tools" / "native" / "Probe.csproj").write_text(
+        '<Project Sdk="Microsoft.NET.Sdk"></Project>\n', encoding="utf-8")
+    assert main(["--root", str(current), "--compare", str(earlier),
+                 "--recursive", "--format", "markdown"]) == 0
+    output = capsys.readouterr().out
+    assert "native/Probe.csproj" in output
+    assert "nur_historisch" in output

@@ -13,17 +13,25 @@ from pathlib import Path
 class ToolPolicy:
     category: str
     de: str
-    requires_confirmation: bool = False
+    requires_confirmation: bool = True
 
 
-READ=ToolPolicy("read","Nur lesende Diagnose")
-WORK=ToolPolicy("workspace","Erzeugt oder verändert Dateien im Arbeitsbereich")
+READ=ToolPolicy("read","Nur lesende Diagnose", requires_confirmation=False)
+WORK=ToolPolicy("workspace","Erzeugt oder verändert Dateien im Arbeitsbereich", requires_confirmation=False)
 GAME=ToolPolicy("game","Kann eine ausgewählte Spiel-/QA-Installation verändern")
 NETWORK=ToolPolicy("external","Kann externe Ressourcen abrufen")
 UNKNOWN=ToolPolicy("unknown","Seiteneffekte nicht klassifiziert – Eingaben sorgfältig prüfen")
 
 RISK_TOOLS: dict[str,ToolPolicy]={
+    "modding_studio.py":WORK,
+    "building_damage_native_bindings.py":WORK,
+    "qa_hp_fire_live_log.py":READ,
+    "qa_hp_fire_game_evidence.py":READ,
     "suite_tool_inventory.py":READ,
+    "suite_environment_discovery.py":READ,
+    "suite_runtime_capabilities.py":READ,
+    "suite_asset_inspector.py":READ,
+    "suite_ai_codex.py":NETWORK,
     "building_damage_layer_audit.py":READ,
     "qa_building_damage_runtime.py":WORK,
     "qa_building_damage_live.py":GAME,
@@ -74,6 +82,20 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         if "--verify-log" in command:
             return READ
         return WORK  # build-only compiles into isolated temporary workspace
+    if name in {"qa_hp_fire_live_log.py", "qa_hp_fire_game_evidence.py"}:
+        return WORK if "--output" in command else READ
+    if name in {"shcde_game_inspector.py", "shcde_gameplay_rules.py"}:
+        return GAME if {"--install", "--remove", "install", "remove"} & command else WORK
+    if name == "shcde_workbench.py":
+        return READ if {"--catalog", "--self-test"} & command else WORK
+    if name in {"shcde_mod_project.py", "shcde_mod_composer.py"}:
+        return READ if {"inspect", "plan"} & command else WORK
+    if name in {"shcde_api_native_index.py", "shcde_pathing_report.py",
+                "shcde_mod_settings.py", "shcde_aiv_lord_studio.py",
+                "shcde_scenario_graph.py", "shcde_qa_suite.py"}:
+        return WORK if {"--output", "--report", "export", "build", "package", "set", "new"} & command else READ
+    if name=="modding_studio.py":
+        return READ if command & {"modules", "catalog", "check", "native-search", "api-search"} else WORK
     if name=="building_damage_layer_audit.py":
         return WORK if "--output" in command else READ
     if name=="building_damage_runtime_preflight.py":
@@ -84,6 +106,8 @@ def classify(tool: str, args: list[str] | tuple[str,...]) -> ToolPolicy:
         return WORK if "--out" in command else READ
     if name=="origins_native_live_install.py":
         return GAME if {"--install", "--rollback"} & command else WORK
+    if name=="suite_ai_codex.py":
+        return NETWORK if "--execute" in command else WORK
     if name=="building_damage_codex.py":
         return NETWORK if {"--execute", "--login"} & command else READ
     if name=="ziel_se211.py":

@@ -182,12 +182,18 @@ def test_project_menu_imports_binary_and_exports_to_chosen_zip(app_and_tree, tmp
     tab.mod_version.set("preview 2")
     monkeypatch.setattr(flow_ui.filedialog, "asksaveasfilename", lambda **_: str(output))
     tab.actions_menu.invoke(tab.custom_export_menu_index)
+    assert tab._last_export is not None, tab.result_text.get()
     assert Path(tab._last_export["zip"]) == output
     prefix = f"BepInEx/plugins/{tab.guid.get()}/"
     with zipfile.ZipFile(output) as archive:
         assert archive.read(prefix + "Plugins/Modular.dll") == binary.read_bytes()
         manifest = json.loads(archive.read(prefix + "info.json"))
     assert manifest["Author"] == "Mod author" and manifest["Version"] == "preview 2"
+    reopened = ProjectPipeline(tab.pipeline.project).latest_export()
+    assert reopened["project_current"] is True
+    assert reopened["user_selected_output"] is True
+    assert Path(reopened["zip"]) == output
+
 
 
 def test_empty_project_does_not_show_fake_success(app_and_tree):
@@ -726,3 +732,138 @@ def test_minimum_layout_editor_reduces_layer_panel_and_wraps_status(app_and_tree
         assert editor.status_label.winfo_rooty()+editor.status_label.winfo_height()<=bottom
     finally:
         editor.close_editor()
+
+
+def test_modding_studio_uses_current_project_metadata_and_portable_backup(app_and_tree, tmp_path):
+    app, work, monkeypatch = app_and_tree
+    pipeline = app.workflow_tab.pipeline
+    marker = tmp_path / "StudioButton.png"
+    _image(marker)
+    pipeline.import_image(marker)
+    original_theme = __import__("tkinter.ttk", fromlist=["Style"]).Style(app).theme_use()
+    studio = app.open_modding_studio()
+    assert studio is not None
+    studio.root.withdraw()
+    assert studio._suite_project == pipeline.project
+    assert studio.workspace == hud._metadata_dir(pipeline.project) / "modding-studio"
+    assert app.open_modding_studio() is studio
+    assert __import__("tkinter.ttk", fromlist=["Style"]).Style(app).theme_use() == original_theme
+    before = (studio.workspace / "project.json").read_bytes()
+    backup = tmp_path / "StudioProject.zip"
+    project_transfer.create_archive(pipeline.project, backup)
+    with zipfile.ZipFile(backup) as archive:
+        assert archive.read("metadata/modding-studio/project.json") == before
+    restored = project_transfer.restore_archive(backup, project_name="StudioRestored")
+    restored_project = Path(restored["project"])
+    assert (hud._metadata_dir(restored_project) / "modding-studio" / "project.json").read_bytes() == before
+    studio.root.destroy()
+
+
+def test_visible_project_menu_opens_bound_studio_and_backup_saves_revision(app_and_tree, tmp_path):
+    app, work, monkeypatch = app_and_tree
+    tab = app.workflow_tab
+    app.update()
+    assert tab.more_actions_button.winfo_ismapped()
+    menu = tab.actions_menu
+    index = next(i for i in range(menu.index("end") + 1)
+                 if menu.type(i) == "command" and menu.entrycget(i, "label") == "Modding Studio")
+    menu.invoke(index)
+    studio = app._modding_studio_window
+    assert studio.root.master is app
+    assert studio.project_bound
+    studio.project["title"] = "Draft in the shared project"
+    assert studio in tab._dirty_windows()
+    destination = work / "project-copy"
+    destination.mkdir()
+    monkeypatch.setattr(flow_ui.messagebox, "askyesno", lambda *a, **k: False)
+    assert not tab.activate_project(destination)
+    assert studio.root.winfo_exists()
+    assert studio.is_dirty()
+    archive = tmp_path / "studio-project.zip"
+    monkeypatch.setattr(flow_ui.filedialog, "asksaveasfilename", lambda **kwargs: str(archive))
+    monkeypatch.setattr(flow_ui.messagebox, "askyesno", lambda *a, **k: True)
+    result = tab.backup_project()
+    assert result is not None
+    assert not studio.is_dirty()
+    with zipfile.ZipFile(archive) as opened:
+        assert "metadata/modding-studio/current.json" in opened.namelist()
+        assert any(name.startswith("metadata/modding-studio/revisions/") for name in opened.namelist())
+    assert tab.activate_project(destination)
+    assert not studio.root.winfo_exists()
+
+
+@pytest.mark.parametrize("size,scale", [("1020x680",1.25),("1280x720",1.5)])
+def test_expanded_details_and_lower_sidebar_remain_reachable(app_and_tree, size, scale):
+    app, _work, _monkeypatch = app_and_tree
+    previous_scaling = float(app.tk.call("tk", "scaling"))
+    previous_wheel = app.bind_all("<MouseWheel>")
+    try:
+        app.tk.call("tk", "scaling", previous_scaling * scale)
+        app.geometry(size + "+30+30")
+        view = app.workflow_tab
+        if not view.export_details.winfo_manager():
+            view.details_toggle.invoke()
+        app.update()
+        view.workarea.reveal(view.version_entry)
+        app.update()
+        def visible(widget, canvas):
+            assert widget.winfo_ismapped()
+            assert widget.winfo_rootx() >= canvas.winfo_rootx() - 2
+            assert widget.winfo_rooty() >= canvas.winfo_rooty() - 2
+            assert widget.winfo_rootx() + widget.winfo_width() <= canvas.winfo_rootx() + canvas.winfo_width() + 2
+            assert widget.winfo_rooty() + widget.winfo_height() <= canvas.winfo_rooty() + canvas.winfo_height() + 2
+        visible(view.version_entry, view.workarea.canvas)
+        view.workarea.canvas.yview_moveto(0)
+        view.workarea.canvas.xview_moveto(0)
+        view.version_entry.event_generate("<FocusIn>")
+        app.update()
+        visible(view.version_entry, view.workarea.canvas)
+        shell = app.modern_shell
+        if not shell.more_expanded:
+            shell.more_toggle.invoke()
+        app.update()
+        shell.scroll.reveal(shell.strict)
+        app.update()
+        visible(shell.strict, shell.scroll.canvas)
+        app.open_tab(app.catalog_page)
+        app.update()
+        app.notebook_viewport.reveal(app.catalog_run_button)
+        app.update()
+        visible(app.catalog_run_button, app.notebook_viewport.canvas)
+        assert app.bind_all("<MouseWheel>") == previous_wheel
+    finally:
+        app.tk.call("tk", "scaling", previous_scaling)
+
+
+def test_visible_assistant_menu_and_sidebar_reuse_one_native_window(app_and_tree):
+    app, _work, _monkeypatch = app_and_tree
+    app._assistant_extra_delegates = ()
+    menu = app.workflow_tab.actions_menu
+    index = next(i for i in range(menu.index("end")+1)
+                 if menu.type(i) == "command" and menu.entrycget(i,"label") == "KI-Assistent")
+    menu.invoke(index)
+    host = app._ai_assistant_window
+    app.update()
+    assert host.root.winfo_exists()
+    assert host._session is None
+    app.modern_shell.scroll.reveal(app.modern_shell.ai_button)
+    app.update()
+    assert app.modern_shell.ai_button.winfo_ismapped()
+    app.modern_shell.ai_button.invoke()
+    assert app._ai_assistant_window is host
+    assert host.close()
+
+
+def test_status_labels_wrap_to_their_actual_width_after_pane_resize(app_and_tree):
+    app, _work, _monkeypatch = app_and_tree
+    app.geometry("1020x680+20+20")
+    view = app.workflow_tab
+    text = "Langer überprüfbarer Status mit Dateinamen und mehreren Wörtern. " * 12
+    for variable in (view.source_text,view.selection_text,view.message,view.result_text):
+        variable.set(text)
+    app.update()
+    view.main_split.sashpos(0,240)
+    app.update()
+    for label in (view.source_label,view.selection_text_label,view.message_label,view.result_label):
+        assert int(label.cget("wraplength")) <= label.winfo_width()
+        assert label.winfo_reqheight() > 25

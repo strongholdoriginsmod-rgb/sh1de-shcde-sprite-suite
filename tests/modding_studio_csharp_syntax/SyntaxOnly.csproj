@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Mocks.cs" />
+    <Compile Include="$(GeneratedStudioPluginPath)" Link="Generated/StudioPlugin.cs" />
+  </ItemGroup>
+  <Target Name="RequireExplicitGeneratedSource" BeforeTargets="CoreCompile">
+    <Error Condition="'$(GeneratedStudioPluginPath)' == ''" Text="An explicit generated Studio C# source file is required." />
+    <Error Condition="!Exists('$(GeneratedStudioPluginPath)')" Text="The generated Studio plugin source was not found." />
+  </Target>
+</Project>

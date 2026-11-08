@@ -36,7 +36,7 @@ def codex_command() -> list[str]:
 
 
 class CodexSession:
-    def __init__(self, cwd: Path):
+    def __init__(self, cwd: Path, *, image_generation: bool = True):
         env = {key: value for key, value in os.environ.items() if key.upper() not in {
             "OPENAI_API_KEY", "CODEX_API_KEY", "CODEX_ACCESS_TOKEN", "OPENAI_BASE_URL",
             "OPENAI_API_BASE", "AZURE_OPENAI_API_KEY", "CODEX_CHATGPT_BASE_URL"
@@ -46,7 +46,7 @@ class CodexSession:
             "-c", 'model_provider="openai"', "-c", 'mcp_servers={}',
             "-c", 'web_search="disabled"', "--disable", "hooks", "--disable", "shell_tool",
             "--disable", "unified_exec", "--disable", "multi_agent", "--disable", "view_image",
-            "--disable", "plugins", "--enable", "image_generation",
+            "--disable", "plugins", "--enable" if image_generation else "--disable", "image_generation",
         ], cwd=cwd, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, text=True, encoding="utf-8",
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
@@ -120,7 +120,8 @@ class CodexSession:
         url = result.get("authUrl", "")
         parsed = urlsplit(url)
         if (result.get("type") != "chatgpt" or parsed.scheme != "https"
-                or parsed.netloc != "auth.openai.com" or not result.get("loginId")):
+                or parsed.netloc not in {"auth.openai.com", "chatgpt.com"}
+                or not result.get("loginId")):
             raise CodexError("Codex hat keine gültige ChatGPT-Anmeldeadresse geliefert. Führe 'codex login' aus.")
         if not webbrowser.open(url):
             raise CodexError("Der Anmeldebrowser konnte nicht geöffnet werden. Führe 'codex login' aus.")
@@ -168,6 +169,8 @@ class CodexSession:
                 if item.get("type") == "imageGeneration":
                     completed.append(item)
             if event["method"] == "turn/completed" and params["turn"]["id"] == turn:
+                if params["turn"].get("status") != "completed":
+                    raise CodexError("Codex-Auftrag wurde nicht erfolgreich abgeschlossen. Prüfe Kontolimits und Bildfunktion im Client.")
                 break
         if len(completed) != 1:
             raise CodexError("Codex hat kein einzelnes Bild geliefert. Prüfe Bildgenerierung und Kontolimits in Codex.")

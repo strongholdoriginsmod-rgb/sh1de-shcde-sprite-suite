@@ -9,7 +9,6 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 from scipy import ndimage as ndi
-from suite_windows_paths import is_link_or_reparse
 from suite_output_transaction import OutputBatch
 
 
@@ -19,33 +18,6 @@ SKIRMISH_NAMES = (
     + [f"SkirmishSands{number}Map.png" for number in range(1, 8)]
     + ["SkirmishTrailMap.png", "SkirmishTrailMap2.png", "SkirmishTrailMap3.png"]
 )
-
-
-def _preflight_images(source: Path, filenames: list[str], *, missions: bool) -> None:
-    """Check every original before generating any persistent outputs.
-
-    A missing or corrupted late source must not leave a seemingly complete
-    route/mission report containing only the first processed images.
-    """
-    if not source.is_dir() or is_link_or_reparse(source):
-        raise ValueError(f"Originalbildordner fehlt oder ist verknüpft: {source}")
-    family_sizes: dict[int, tuple[int, int]] = {}
-    for index, filename in enumerate(filenames):
-        path = source / filename
-        if is_link_or_reparse(path) or not path.is_file():
-            raise FileNotFoundError(f"Originalgrafik fehlt oder ist verknüpft: {path}")
-        with Image.open(path) as image:
-            if image.format != "PNG":
-                raise ValueError(f"Keine PNG-Originalgrafik: {path}")
-            size = image.size
-            image.verify()  # Validates PNG structure without retaining large pixels.
-        if missions:
-            family = index // 7
-            if family in family_sizes and family_sizes[family] != size:
-                raise RuntimeError(
-                    f"Mission family dimensions differ: {filename}"
-                )
-            family_sizes[family] = size
 
 
 def _rgba(path: Path) -> Image.Image:
@@ -161,8 +133,9 @@ def _overlay_preview(
     preview.save(output, quality=90, optimize=True)
 
 
-def audit_skirmish(source: Path, output: Path) -> list[dict[str, object]]:
-    _preflight_images(source, list(SKIRMISH_NAMES), missions=False)
+def audit_skirmish(source: Path, output: Path, *,
+                   report: bool = False) -> list[dict[str, object]]:
+    """Generate every image before publishing any destination change."""
     records: list[dict[str, object]] = []
     with OutputBatch(output) as batch:
         for filename in SKIRMISH_NAMES:
@@ -173,15 +146,16 @@ def audit_skirmish(source: Path, output: Path) -> list[dict[str, object]]:
                 batch.stage(f"{stem}-route-lock.png")
             )
             _overlay_preview(
-                original, exact, batch.stage(f"{stem}-route-overlay.jpg")
+                original, exact, batch.stage(f"{stem}-route-overlay.jpg"))
+            records.append(
+                {"file": filename, "seed_pixels": int(seed.sum()),
+                 "locked_pixels": int(exact.sum())}
             )
-            records.append({
-                "file": filename, "seed_pixels": int(seed.sum()),
-                "locked_pixels": int(exact.sum()),
-            })
-        batch.stage("report.json").write_text(json.dumps({
-            "command": "audit-skirmish", "count": len(records), "files": records
-        }, indent=2) + "\n", encoding="utf8")
+        if report:
+            batch.stage("report.json").write_text(
+                json.dumps({"command": "audit-skirmish", "count": len(records),
+                            "files": records}, indent=2) + "\n",
+                encoding="utf-8")
         batch.publish()
     return records
 
@@ -214,9 +188,9 @@ def mission_overlay_mask(base: Image.Image, current: Image.Image, first: bool) -
     return ndi.binary_closing(mask, structure=_disk(2))
 
 
-def audit_missions(source: Path, output: Path) -> list[dict[str, object]]:
-    names = [f"HistoricalCampaign-Map-{number:02d}.png" for number in range(1, 50)]
-    _preflight_images(source, names, missions=True)
+def audit_missions(source: Path, output: Path, *,
+                   report: bool = False) -> list[dict[str, object]]:
+    """Publish all 49 mission images as a guarded output generation."""
     records: list[dict[str, object]] = []
     with OutputBatch(output) as batch:
         for family in range(1, 8):
@@ -236,13 +210,15 @@ def audit_missions(source: Path, output: Path) -> list[dict[str, object]]:
                     current, mask, batch.stage(f"{stem}-overlay-preview.jpg"),
                     color=(0, 220, 255),
                 )
-                records.append({
-                    "file": filename, "family": family,
-                    "family_base": base_name, "locked_pixels": int(mask.sum()),
-                })
-        batch.stage("report.json").write_text(json.dumps({
-            "command": "audit-missions", "count": len(records), "files": records
-        }, indent=2) + "\n", encoding="utf8")
+                records.append(
+                    {"file": filename, "family": family,
+                     "family_base": base_name, "locked_pixels": int(mask.sum())}
+                )
+        if report:
+            batch.stage("report.json").write_text(
+                json.dumps({"command": "audit-missions", "count": len(records),
+                            "files": records}, indent=2) + "\n",
+                encoding="utf-8")
         batch.publish()
     return records
 
@@ -260,10 +236,10 @@ def _parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = _parser().parse_args()
     if args.command == "audit-skirmish":
-        records = audit_skirmish(args.source, args.output)
+        records = audit_skirmish(args.source, args.output, report=True)
     else:
-        records = audit_missions(args.source, args.output)
-    # The report and all images have already been published as one guarded batch.
+        records = audit_missions(args.source, args.output, report=True)
+    # The report is staged with the pictures, never after their publication.
     print(json.dumps({"command": args.command, "count": len(records)}, indent=2))
     return 0
 

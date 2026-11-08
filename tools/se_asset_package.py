@@ -224,7 +224,9 @@ def _validate_asset(path: Path, relative: str) -> None:
             raise AssetModError(f"Asset-JSON unlesbar: {relative}") from exc
 
 
-def _discover(source: Path, *, strict_static: bool = False) -> list[tuple[str, Path, int, str]]:
+def _discover(source: Path, *, strict_static: bool = False, unrestricted: bool | None = None) -> list[tuple[str, Path, int, str]]:
+    if unrestricted is not None:
+        strict_static = not unrestricted
     if not source.is_dir():
         raise AssetModError("Asset-Mod-Quellordner fehlt")
     items = []
@@ -270,7 +272,10 @@ def package_zip_path(output: Path) -> Path:
 
 def build(source: Path | str, guid: str, *, name: str, author: str,
           target: Path | str | None = None, version: str = "1.0.0",
-          strict_static: bool = False) -> dict:
+          strict_static: bool = False, unrestricted: bool | None = None,
+          allow_unverified_runtime_archive: bool = False) -> dict:
+    if unrestricted is not None:
+        strict_static = not unrestricted
     if (not isinstance(guid, str) or not guid or guid in (".", "..") or
             any(ch in guid for ch in '/\\:*?"<>|\x00') or
             is_reserved_windows_component(guid) or
@@ -298,6 +303,8 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
         "Description": ("Static asset pack" if strict_static else "Custom mod bundle"),
         "Version": version, "Manifest": 0, "AssetMode": "Global", "NetworkMode": 0,
     }
+    has_runtime = any(relative.casefold().endswith((".dll", ".exe", ".lua", ".cs"))
+                      for relative, *_ in files)
     supplied_info = next((src for relative, src, _, _ in files
                           if relative.casefold() == "info.json"), None)
     if supplied_info is not None:
@@ -307,6 +314,9 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
             info = json.loads(supplied_info.read_text(encoding="utf-8"))
         except (ValueError, UnicodeError):
             info = None
+    unverified_runtime = has_runtime and supplied_info is None
+    if unverified_runtime:
+        info["Description"] = "DRAFT offline archive: custom runtime files; compatibility unverified"
     output.parent.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix=".asset-mod-stage-", dir=output.parent))
     zip_stage = None
@@ -362,6 +372,11 @@ def build(source: Path | str, guid: str, *, name: str, author: str,
                        else "sprite-suite.unrestricted-mod-bundle.v1"),
             "guid": guid, "se_version_required": None,
             "runtime_dll": any(name.casefold().endswith(".dll") for name, *_ in files),
+            "user_manifest_preserved": supplied_info is not None,
+            "unverified_runtime_archive": unverified_runtime,
+            "runtime_plugin_abi_verified": False,
+            "native_game_runtime_verified": False,
+            "installed_into_game": False,
             "source_files": len(files),
             "asset_mod_folder": str(output),
             "zip": str(archive_path),

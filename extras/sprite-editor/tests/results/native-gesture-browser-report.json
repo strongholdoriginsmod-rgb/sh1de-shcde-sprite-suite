@@ -1,0 +1,131 @@
+{
+  "schema": "spritesuite.native-gesture-browser-proof.v1",
+  "passed": true,
+  "variants": [
+    {
+      "file": "Stronghold_Sprite_Editor.html",
+      "passed": true,
+      "checks": [
+        "scene drag uses fixed model coordinates, one Undo entry and exact state/canvas restoration",
+        "middle-button pan uses the initial transform without cumulative drift; Fit and history stay native",
+        "real trusted user drag rejects API interference and remains owned until its own pointerup",
+        "two separate native taps produce a measured segment without mutating history",
+        "pivot tap reaches the original pivot callback and one native Undo restores the source",
+        "split ownership brush uses the native raster path, one commit and exact state/canvas Undo/Redo",
+        "in-flight brush abort discards only its preview, preserving state/store/history and allowing the next call",
+        "invalid point shapes, booleans, modifiers, infinities and huge finite coordinates are rejected without history changes"
+      ],
+      "pageErrors": [],
+      "externalNetworkRequests": [],
+      "htmlSHA256": "3de83e1be406cafb57e4f2b6618e6bef88d8ce5c94932e132abae8241a77b7db",
+      "syntheticOnly": true,
+      "gameStarted": false,
+      "evidence": {
+        "beforeDrag": {
+          "state": "ab234508d8f1a7f28fc089a9b425e7d2bcc361ba1bca85807912a3dcc219008c",
+          "canvas": "5b7c87c81a08dffa274479810d673702f9a51e67f20f6fd28ceb9a3759b19a48",
+          "undo": 0,
+          "redo": 0,
+          "assets": 25,
+          "pixels": 97280
+        },
+        "afterDrag": {
+          "state": "48fdbb3f53ad8a51924316e8ff72667da70193fe4ab259cc6c532fc85cf2b325",
+          "canvas": "752c1bab86ec492dbedd161ff22958feb419f7c3e959e4fcb01dd95e7ba1961f",
+          "undo": 1,
+          "redo": 0,
+          "assets": 25,
+          "pixels": 97280
+        },
+        "brushBefore": {
+          "state": "3c82a0ad33ee26dfdaedabc46314ef872536f860e6185de7c08899b79bbc3cf7",
+          "canvas": "ea1e4878082d3f43d53fb8ba2702672ea59f4a8ab46f96a7a32a6c4fb9f47ef9",
+          "undo": 1,
+          "redo": 0,
+          "assets": 27,
+          "pixels": 269312
+        },
+        "brushAfter": {
+          "state": "ec12e323068715f9aac473a45e0a0d7ea2a64cd2804c40de871fb011ae85756b",
+          "canvas": "d0ae50cfb897be16b1652f3051e137d17993127692d6522ba4c1f032a9edb875",
+          "undo": 2,
+          "redo": 0,
+          "assets": 28,
+          "pixels": 355328
+        },
+        "afterCancel": {
+          "state": "3c82a0ad33ee26dfdaedabc46314ef872536f860e6185de7c08899b79bbc3cf7",
+          "canvas": "ea1e4878082d3f43d53fb8ba2702672ea59f4a8ab46f96a7a32a6c4fb9f47ef9",
+          "undo": 1,
+          "redo": 1,
+          "assets": 28,
+          "pixels": 355328
+        }
+      }
+    },
+    {
+      "file": "Stronghold_Sprite_Editor_EN.html",
+      "passed": true,
+      "checks": [
+        "scene drag uses fixed model coordinates, one Undo entry and exact state/canvas restoration",
+        "middle-button pan uses the initial transform without cumulative drift; Fit and history stay native",
+        "real trusted user drag rejects API interference and remains owned until its own pointerup",
+        "two separate native taps produce a measured segment without mutating history",
+        "pivot tap reaches the original pivot callback and one native Undo restores the source",
+        "split ownership brush uses the native raster path, one commit and exact state/canvas Undo/Redo",
+        "in-flight brush abort discards only its preview, preserving state/store/history and allowing the next call",
+        "invalid point shapes, booleans, modifiers, infinities and huge finite coordinates are rejected without history changes"
+      ],
+      "pageErrors": [],
+      "externalNetworkRequests": [],
+      "htmlSHA256": "7a54e8ae8aa4665110dc50c9ecfbbd6c683b4c632dfa0c9f0e681defb8cd9d9d",
+      "syntheticOnly": true,
+      "gameStarted": false,
+      "evidence": {
+        "beforeDrag": {
+          "state": "12b6cef806f66d82c50e443ff3b1c28c6cbceec14443057dcb7618e3db264f5f",
+          "canvas": "5b7c87c81a08dffa274479810d673702f9a51e67f20f6fd28ceb9a3759b19a48",
+          "undo": 0,
+          "redo": 0,
+          "assets": 25,
+          "pixels": 97280
+        },
+        "afterDrag": {
+          "state": "ec6b875eda1240b89fb04ef6dca6f17175b1a6162c6819da48f4e5e7dc024598",
+          "canvas": "752c1bab86ec492dbedd161ff22958feb419f7c3e959e4fcb01dd95e7ba1961f",
+          "undo": 1,
+          "redo": 0,
+          "assets": 25,
+          "pixels": 97280
+        },
+        "brushBefore": {
+          "state": "b8dacd79222df1f4c11219a8cc1718f0e676682b0f237a0321da75dd6d5bdd6b",
+          "canvas": "2fea972a75c9a15feec9be169c03970c6312f8b858e6285916a595e96a0f88d1",
+          "undo": 1,
+          "redo": 0,
+          "assets": 27,
+          "pixels": 269312
+        },
+        "brushAfter": {
+          "state": "90f5c7c8356428a4eb01627491d4a31a76a2ea09dc7be773a5322d0e51a32bea",
+          "canvas": "644a00f27fd58cdf76d248e00ca35c1cff58350b9aeeddcbdc4bb997b1094007",
+          "undo": 2,
+          "redo": 0,
+          "assets": 28,
+          "pixels": 355328
+        },
+        "afterCancel": {
+          "state": "b8dacd79222df1f4c11219a8cc1718f0e676682b0f237a0321da75dd6d5bdd6b",
+          "canvas": "2fea972a75c9a15feec9be169c03970c6312f8b858e6285916a595e96a0f88d1",
+          "undo": 1,
+          "redo": 1,
+          "assets": 28,
+          "pixels": 355328
+        }
+      }
+    }
+  ],
+  "syntheticOnly": true,
+  "liveCodexCalled": false,
+  "gameStarted": false
+}

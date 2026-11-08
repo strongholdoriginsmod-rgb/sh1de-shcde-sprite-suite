@@ -1,5 +1,5 @@
 /* Pure, offline SpriteSuite AI request, comparison and review contracts.
-   Images are never sent over the network by the browser editor. */
+   Reference bundles and candidate receipts are shared by offline and local Codex flows. */
 (function (root, factory) {
     'use strict';
     const C = typeof module === 'object' && module.exports ? require('./core.js') : root.SpriteCore;
@@ -10,10 +10,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (C, K) {
     'use strict';
     const MODELS = Object.freeze(['gpt-image-2.6-flare', 'gpt-image-2.6-sunburst']);
-    const ASSET_CLASSES = Object.freeze(['building', 'unit', 'vegetation', 'hud', 'ui', 'other']);
+    const ASSET_CLASSES = Object.freeze(['building', 'unit', 'animation', 'texture', 'vegetation', 'hud', 'ui', 'other']);
     const CLASS_PROMPTS = Object.freeze({
         building: 'Maintain the isometric game camera, building silhouette, ground contact, recognizable construction and tiered tiles.',
         unit: 'Preserve the complete subject pose, direction, frame registration and character size used in the game.',
+        animation: 'Preserve the frame pose, direction, ground anchor and character size. Generate one directional frame, never a contact sheet.',
+        texture: 'Preserve material scale, texture bounds, tile alignment and readable original pixel structure.',
         vegetation: 'Maintain tree or vegetation ground anchor, scale, silhouette and correct alpha fringe.',
         hud: 'Preserve interface shape, alignment, pixel margins, state-specific contrast and icon legibility.',
         ui: 'Preserve icon bounds, pixel alignment, readability and independent transparent edges.',
@@ -70,7 +72,7 @@
             fail('PNG-Quellabmessungen passen nicht zur Arbeitskopie.');
         const registered = await K.encodePNG(registeredImage(img, plan));
         const request = {
-            format: 'sprite-suite.ai-image-edit', version: 1,
+            format: 'sprite-suite.ai-image-edit', version: 1, provider: 'codex-chatgpt',
             assetClass: settings.assetClass, goal: settings.goal,
             restrictions: settings.restrictions, model: settings.model,
             variants: settings.variants, quality: 'high', complexity: 'high',
@@ -86,8 +88,8 @@
         const guide = [
             'SpriteSuite KI-Werkstatt – Kandidatenauftrag',
             'Erst validieren (kostenfrei): python tools/suite_ai_codex.py --bundle request.zip --output neuer_ordner --dry-run',
-            'Bezahlte Generierung nur mit ausdruecklichem --execute UND --confirm-paid-requests.',
-            'OPENAI_API_KEY ausschliesslich aus der Umgebung lesen; keine Schluessel in der Projektdatei.',
+            'Generierung nach ChatGPT-Anmeldung: python tools/suite_ai_codex.py --bundle request.zip --output neuer_ordner --execute',
+            'Die lokale Codex-Sitzung verwendet das angemeldete ChatGPT-Konto und dessen aktuelle Limits.',
             'PNG-Kandidaten im Sprite Editor unter KI-Werkstatt importieren.',
             'Abmessung, Alpha, Geometrie und Originaltreue visuell pruefen; danach manuell uebernehmen.',
             'Keine automatische Mod-Installation oder Ingame-Freigabe.',
@@ -128,6 +130,127 @@
             assetClass: raw.assetClass, variant: raw.variant,
             requestSHA256: raw.requestSHA256 };
     }
+    /** Deterministic pixel-risk metrics; NEVER a game-compatibility or copyright score. */
+    function visualRisk(original, candidate) {
+        C.dimensions(original.width, original.height);
+        C.dimensions(candidate.width, candidate.height);
+        if (original.width !== candidate.width || original.height !== candidate.height)
+            fail('Qualitätsvergleich benötigt identische Sprite-Abmessungen.');
+        const a = original.data, b = candidate.data, width = original.width;
+        let changedPixels = 0, changedAlpha = 0, added = 0, removed = 0;
+        let hiddenRGBChanges = 0, sourceVisible = 0, targetVisible = 0;
+        let sourceBaseline = -1, candidateBaseline = -1, sourcePartial = 0, targetPartial = 0;
+        let sourceX = 0, sourceY = 0, targetX = 0, targetY = 0;
+        for (let index = 0; index < a.length; index += 4) {
+            const ordinal = index / 4, x = ordinal % width, y = Math.floor(ordinal / width);
+            const oa = a[index + 3], ca = b[index + 3];
+            const rgbChanged = a[index] !== b[index] ||
+                a[index + 1] !== b[index + 1] || a[index + 2] !== b[index + 2];
+            if (oa !== ca) changedAlpha++;
+            if (rgbChanged || oa !== ca) changedPixels++;
+            if (!oa && ca) added++;
+            if (oa && !ca) removed++;
+            if (!oa && !ca && rgbChanged) hiddenRGBChanges++;
+            if (oa) {
+                sourceVisible++;
+                sourceX += x; sourceY += y;
+                sourceBaseline = Math.max(sourceBaseline, y);
+            }
+            if (ca) {
+                targetVisible++;
+                targetX += x; targetY += y;
+                candidateBaseline = Math.max(candidateBaseline, y);
+            }
+            if (oa > 0 && oa < 255) sourcePartial++;
+            if (ca > 0 && ca < 255) targetPartial++;
+        }
+        const groundShift = sourceBaseline < 0 || candidateBaseline < 0 ?
+            null : candidateBaseline - sourceBaseline;
+        const centroidShift = !sourceVisible || !targetVisible ? null : {
+            dx: (targetX / targetVisible) - (sourceX / sourceVisible),
+            dy: (targetY / targetVisible) - (sourceY / sourceVisible)
+        };
+        const originalPixels = Math.max(sourceVisible, 1);
+        const points = Math.min(100, Math.round(
+            16 * Math.min(1, changedAlpha / originalPixels) +
+            24 * Math.min(1, added / originalPixels) +
+            24 * Math.min(1, removed / originalPixels) +
+            12 * Math.min(1, hiddenRGBChanges / originalPixels) +
+            14 * Math.min(1, Math.abs(groundShift ?? 0) / 4) +
+            10 * Math.min(1, Math.hypot(centroidShift?.dx || 0, centroidShift?.dy || 0) /
+                Math.max(1, Math.min(original.width, original.height) / 4))
+        ));
+        const warnings = [];
+        if (groundShift !== null && Math.abs(groundShift) > 2)
+            warnings.push('Bodenlinie um ' + groundShift + ' px verschoben: Pivot prüfen.');
+        if (hiddenRGBChanges)
+            warnings.push('Verdeckte RGB-Werte im volltransparenten Bereich geändert: Atlas/BC7-Ränder prüfen.');
+        if (added)
+            warnings.push('Neue sichtbare Pixel außerhalb der ursprünglichen Silhouette: Rand und Maske prüfen.');
+        if (centroidShift && Math.hypot(centroidShift.dx, centroidShift.dy) >
+                Math.max(2, Math.min(original.width, original.height) / 8))
+            warnings.push('Sichtbarer Bildschwerpunkt deutlich verschoben: Pose/Ausrichtung prüfen.');
+        if (sourcePartial !== targetPartial)
+            warnings.push('Anzahl halbtransparenter Pixel geändert: Alpha-Fransen prüfen.');
+        return { changedPixels, changedAlpha, addedVisible: added,
+            removedVisible: removed, hiddenRGBChanges, sourceVisible, targetVisible,
+            sourcePartial, targetPartial, groundShift,
+            centroidShift, reviewRiskPoints: points,
+            riskBand: points >= 50 ? 'high_review_risk' :
+                points >= 15 ? 'moderate_review_risk' : 'low_observed_pixel_risk',
+            warnings, approved: false, inGameTested: false };
+    }
+    /** Compare 1–4 alternatives without choosing or accepting any of them. */
+    function rankCandidates(original, candidates) {
+        if (!Array.isArray(candidates) || !candidates.length || candidates.length > 4)
+            fail('Ranking benötigt ein bis vier Bildkandidaten.');
+        const ranked = candidates.map((row, index) => {
+            const image = row?.image || row;
+            const report = reviewCandidate(original, image);
+            return { index, name: row?.name || ('Variante ' + (index + 1)),
+                reviewRiskPoints: report.quality?.reviewRiskPoints ?? 100,
+                errors: report.errors.slice(), warnings: report.warnings.slice(),
+                approved: false };
+        });
+        return ranked.sort((a, b) => (a.errors.length > 0) - (b.errors.length > 0) ||
+            a.reviewRiskPoints - b.reviewRiskPoints || a.index - b.index);
+    }
+    /** One common frame-animation QA: anchor/baseline consistency, not motion synthesis. */
+    function analyzeSequence(frames) {
+        if (!Array.isArray(frames) || frames.length < 2 || frames.length > 256)
+            fail('Animationsprüfung benötigt 2 bis 256 Frames.');
+        const rows = frames.map((item, index) => {
+            if (!item || !item.image) fail('Animationsframe ohne Bilddaten.');
+            const img = item.image;
+            C.dimensions(img.width, img.height);
+            const anchor = C.pivot(item.pivot ?? { x:.5, y:0 });
+            let visible = 0, right = -1, bottom = -1, left = img.width, top = img.height;
+            for (let i = 3; i < img.data.length; i += 4) {
+                if (!img.data[i]) continue;
+                const ordinal = (i - 3) / 4, x = ordinal % img.width, y = Math.floor(ordinal / img.width);
+                visible++; left = Math.min(left, x); right = Math.max(right, x);
+                top = Math.min(top, y); bottom = Math.max(bottom, y);
+            }
+            return { index, name: String(item.name || index).slice(0, 150),
+                width: img.width, height: img.height, visiblePixels: visible,
+                anchor: { x: img.width * anchor.x, y: img.height * (1 - anchor.y) },
+                bounds: visible ? { left, top, right, bottom } : null,
+                relativeGroundY: visible ? bottom - img.height * (1 - anchor.y) : null };
+        });
+        const warnings = [];
+        for (const row of rows)
+            if (!row.visiblePixels) warnings.push({ frame:row.index, code:'empty_alpha', detail:'Transparentes Bild' });
+        for (let i = 1; i < rows.length; i++) {
+            const prev = rows[i - 1], row = rows[i];
+            if (row.width !== prev.width || row.height !== prev.height)
+                warnings.push({frame:i, code:'canvas_size_changed', detail:'Frame-Abmessungen weichen ab'});
+            if (row.relativeGroundY !== null && prev.relativeGroundY !== null &&
+                    Math.abs(row.relativeGroundY - prev.relativeGroundY) > 2)
+                warnings.push({frame:i, code:'ground_jitter', detail:'Bodenanker variiert >2 px; möglicherweise beabsichtigte Bewegung'});
+        }
+        return { schema:'sprite-suite.animation-qa.v1', frames:rows, warnings,
+            automatedReleaseApproval:false, nativeAnimationTested:false };
+    }
     function reviewCandidate(original, candidate) {
         C.dimensions(original.width, original.height);
         C.dimensions(candidate.width, candidate.height);
@@ -149,10 +272,13 @@
         if (!errors.length && alphaChanged) warnings.push('Transparenz/Silhouette verändert: manuell prüfen.');
         if (!errors.length && changedPixels > original.width * original.height * .8)
             warnings.push('Mehr als 80 % der Pixel verändert: Stil und Originaltreue prüfen.');
-        return { errors, warnings,
+        const quality = original.width === candidate.width && original.height === candidate.height ?
+            visualRisk(original, candidate) : null;
+        if (quality) warnings.push(...quality.warnings);
+        return { errors, warnings, quality,
             stats: { changedPixels, alphaChanged, visible, originalVisible },
             needsManualReview: true, approved: false };
     }
     return Object.freeze({ MODELS, ASSET_CLASSES, options, canvasPlan, registeredImage,
-        prompt, makeRequestBundle, verifyCandidateMetadata, reviewCandidate });
+        prompt, makeRequestBundle, verifyCandidateMetadata, reviewCandidate, visualRisk, rankCandidates, analyzeSequence });
 });

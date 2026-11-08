@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "browser": "Edg/157.0.4341.42",
+  "htmlSHA256": "3de83e1be406cafb57e4f2b6618e6bef88d8ce5c94932e132abae8241a77b7db",
+  "checks": [
+    "historical pivot import",
+    "visible overlay",
+    "manual pivot receipt",
+    "pivot undo and redo",
+    "offline request source SHA",
+    "candidate metadata SHA",
+    "pixel quality risks",
+    "manual candidate approval",
+    "original preserved",
+    "candidate undo and redo",
+    "animation sequence QA download",
+    "English deep-link"
+  ],
+  "pageErrors": [],
+  "networkRequests": [],
+  "liveCodexCalled": false,
+  "inGameTested": false
+}

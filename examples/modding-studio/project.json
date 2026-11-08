@@ -1,0 +1,195 @@
+{
+  "modules": {
+    "audio": {
+      "clips": [
+        {
+          "id": "sample_tone",
+          "path": "sounds/test_tone.wav",
+          "sha256": "2d206367dad0004d291af28c908013d1521971b0cbb4bcdf6facaa70aee54ed2"
+        }
+      ],
+      "cues": [
+        {
+          "clip_id": "sample_tone",
+          "cooldown_ticks": 100,
+          "event": "mission_start",
+          "id": "test_audio",
+          "volume_percent": 30
+        }
+      ]
+    },
+    "balance": {
+      "cost_rules": [
+        {
+          "base": {
+            "gold": 12,
+            "wood": 1
+          },
+          "category": "unit",
+          "denominator": 2,
+          "id": "archer_gold",
+          "numerator": 3,
+          "subject": "archer"
+        }
+      ]
+    },
+    "castle": {
+      "buildings": [
+        {
+          "height": 4,
+          "id": "keep",
+          "kind": "keep",
+          "rotation": 0,
+          "step": 0,
+          "width": 4,
+          "x": 46,
+          "y": 46
+        },
+        {
+          "height": 2,
+          "id": "tower",
+          "kind": "watchtower",
+          "rotation": 90,
+          "step": 2,
+          "width": 2,
+          "x": 52,
+          "y": 46
+        }
+      ],
+      "grid_size": 100
+    },
+    "hud": {
+      "expected_images": [
+        "Assets/GUI/Images/sede-wall-stone-low.png"
+      ],
+      "xaml_files": [
+        "hud/example.xaml"
+      ]
+    },
+    "lords": {
+      "profiles": []
+    },
+    "maps": {
+      "resources": []
+    },
+    "mission": {
+      "triggers": [
+        {
+          "actions": [
+            {
+              "kind": "message",
+              "text": "Willkommen im Entwurf"
+            }
+          ],
+          "event": "mission_start",
+          "id": "welcome",
+          "once": true,
+          "when": {}
+        },
+        {
+          "actions": [
+            {
+              "kind": "objective",
+              "state": "complete",
+              "text": "Goldziel"
+            }
+          ],
+          "event": "resources_at_least",
+          "id": "first_wage",
+          "once": true,
+          "when": {
+            "amount": 500,
+            "good": "gold",
+            "player": 1
+          }
+        }
+      ]
+    },
+    "native": {
+      "sites": []
+    },
+    "saves": {
+      "peers": [],
+      "records": [
+        {
+          "id": "mission_gold",
+          "known_entries": [
+            "gold"
+          ],
+          "minimum_reader": 1,
+          "simulation_relevant": true,
+          "values": {
+            "gold": 0
+          },
+          "version": 1
+        }
+      ]
+    },
+    "sdk": {
+      "requires": [
+        "hud_extras",
+        "simulation_ticks",
+        "versioned_save"
+      ]
+    },
+    "units": {
+      "grid": {
+        "blocked": [
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            5
+          ]
+        ],
+        "height": 8,
+        "penalties": [
+          {
+            "cost": 8,
+            "x": 2,
+            "y": 4
+          }
+        ],
+        "width": 8
+      },
+      "routes": [
+        {
+          "goal": [
+            6,
+            4
+          ],
+          "id": "archer_route",
+          "player": 1,
+          "start": [
+            1,
+            4
+          ]
+        }
+      ]
+    },
+    "workshop": {
+      "mods": [
+        {
+          "guid": "example.studio.preview",
+          "id": "example_mod",
+          "manifest_path": "mods/sample/info.json",
+          "requires": [],
+          "version": "1.0.0"
+        }
+      ]
+    }
+  },
+  "project_id": "example_studio",
+  "revision": 1,
+  "schema": "spritesuite.modding-studio.project.v1",
+  "target": {
+    "api_shared": "0.27.0",
+    "game": "SHCDE",
+    "mode": "offline",
+    "native_sha256": "fbcb93195fc7efca9bdac5204852efdd76f9818f59a6711750d77c9cef2831e2",
+    "script_extender": "2.14.0"
+  },
+  "title": "SpriteSuite Beispielprojekt"
+}

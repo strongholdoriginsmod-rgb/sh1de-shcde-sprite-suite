@@ -1,5 +1,7 @@
 # SpriteSuite V2: Werkzeugkonvergenz, Auto-Discovery, KI-Evidenz
 
+Aktueller Integrationsstand: Der allgemeine KI-Adapter verwendet die lokale, verwaltete ChatGPT-/Codex-Sitzung. Bedienung und aktuelle Tests stehen in `SPRITESUITE_KI_CHATGPT_KONSOLIDIERUNG_20261108.md`. Die folgenden älteren Entwicklungsbefunde dokumentieren ihren jeweiligen Zwischenstand.
+
 Datum: 08.11.2026 · Ausgangscommit: `e6a413d` · Isolierter Zweig:
 `feature/spritesuite-unified-tools-ai-v2-20261108`.
 

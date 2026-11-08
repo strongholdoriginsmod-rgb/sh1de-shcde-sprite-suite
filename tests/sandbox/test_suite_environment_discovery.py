@@ -82,3 +82,94 @@ def test_symlink_game_root_is_not_followed(tmp_path):
         pytest.skip(f"Symlinks unavailable: {error}")
     result = discovery.discover(tmp_path, roots=[link], environment={})
     assert not result["games"]
+
+
+
+def test_pinned_runtime_byte_evidence_and_apishared_version_gate(tmp_path):
+    from hashlib import sha256
+    crusader = game(tmp_path / "games", "shcde")
+    ext = crusader / "BepInEx/plugins/000shcdese"
+    ext.mkdir(parents=True)
+    payload = b"synthetic-not-an-assembly"
+    (ext / "SHCDESE.dll").write_bytes(payload)
+    (ext / "info.json").write_text(
+        json.dumps({"GUID": "000shcdese", "Version": "2.11.0"}), encoding="utf-8"
+    )
+    api = crusader / "BepInEx/plugins/APIShared_Serp"
+    api.mkdir()
+    (api / "APIShared.dll").write_bytes(b"fake-api")
+    (api / "APIShared.Content.dll").write_bytes(b"fake-content")
+    (api / "info.json").write_text(
+        json.dumps({"GUID": "APIShared_Serp", "Version": "0.27.0"}), encoding="utf-8"
+    )
+    config = tmp_path / "config"
+    config.mkdir()
+    (config / "runtime-prerequisites.json").write_text(json.dumps({
+        "files": [{
+            "id": "shcdese",
+            "relative_path": "BepInEx/plugins/000shcdese/SHCDESE.dll",
+            "size": len(payload),
+            "sha256": sha256(payload).hexdigest(),
+        }]
+    }), encoding="utf-8")
+    result = discovery.discover(tmp_path, roots=[crusader], environment={})
+    evidence = result["games"][0]["runtime_capabilities"]
+    assert evidence["status"] == "BLOCKED"
+    assert evidence["files"]["shcdese"]["state"] == "SOURCE_PIN_BYTE_MATCH"
+    assert evidence["verified_source_pin_bytes"]
+    assert evidence["script_extender_declared_version"] == "2.11.0"
+    assert evidence["api_shared_declared_version"] == "0.27.0"
+    assert "APIShared 0.27 requires Script Extender >=2.14.0" in evidence["blocking_reasons"]
+    assert not evidence["runtime_abi_verified"]
+    assert not evidence["metadata_signatures_verified"]
+    assert not evidence["performed_live_injection"]
+
+
+def test_runtime_digest_change_is_blocked_not_silently_accepted(tmp_path):
+    from hashlib import sha256
+    crusader = game(tmp_path, "shcde")
+    ext = crusader / "BepInEx/plugins/000shcdese"
+    ext.mkdir(parents=True)
+    source = b"trusted-candidate"
+    (ext / "SHCDESE.dll").write_bytes(b"tampered-candidate")
+    (ext / "info.json").write_text(
+        json.dumps({"GUID": "000shcdese", "Version": "2.14.0"}), encoding="utf-8"
+    )
+    cfg = tmp_path / "config"
+    cfg.mkdir()
+    (cfg / "runtime-prerequisites.json").write_text(json.dumps({
+        "files": [{
+            "id": "shcdese",
+            "relative_path": "BepInEx/plugins/000shcdese/SHCDESE.dll",
+            "size": len(source), "sha256": sha256(source).hexdigest(),
+        }]
+    }), encoding="utf-8")
+    evidence = discovery.discover(tmp_path, roots=[crusader], environment={})["games"][0]["runtime_capabilities"]
+    assert evidence["files"]["shcdese"]["state"] == "SOURCE_PIN_MISMATCH"
+    assert evidence["status"] == "BLOCKED"
+    assert not evidence["verified_source_pin_bytes"]
+    assert not evidence["in_game_qa_verified"]
+
+
+def test_snapshot_cannot_claim_unreviewed_new_release(tmp_path):
+    crusader = game(tmp_path, "shcde")
+    cfg = tmp_path / "config"
+    cfg.mkdir()
+    (cfg / "studio-runtime-capabilities-20261108.json").write_text(json.dumps({
+        "schema": "sprite-suite.runtime-capability-snapshot.v1",
+        "api_shared": {
+            "release": "9.0.0", "minimum_script_extender": "2.14.0",
+            "plugin_guid": "APIShared_Serp", "source_commit": "fake"
+        },
+        "serp": {"native_dll_sha256": discovery._NATIVE_BASELINE},
+    }), encoding="utf-8")
+    import pytest
+    with pytest.raises(ValueError, match="explicit ABI"):
+        discovery.discover(tmp_path, roots=[crusader], environment={})
+
+
+def test_declared_version_rejects_noncanonical_strings():
+    assert discovery._version("2.14.0") == (2, 14, 0)
+    assert discovery._version("0.27.0") == (0, 27, 0)
+    for version in ("v2.14.0", "2.14", "2.14.0-other", "02.14.0", "n/a"):
+        assert discovery._version(version) is None

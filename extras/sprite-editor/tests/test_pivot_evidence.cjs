@@ -109,3 +109,12 @@ test('source-bound manual pivot review persists in project and invalidates on ch
     store.get(imageId).data[4] = 99;
     a.throws(()=>I.validate(history.state,store),/Zinnenlineal-Nachweis/);
 });
+
+
+test('historical alternate suffix never targets a regular sprite', () => {
+    const {state,store} = project();
+    const alternate = P.parseMeasurements(data({name:'anim_castle 002x'}))[0];
+    a.equal(P.review(alternate,state.frames,store).status,'not_found');
+    const actualAlternate = {...state.frames[0], name:'anim_castle-002x.png'};
+    a.equal(P.review(alternate,[actualAlternate],store).status,'review');
+});

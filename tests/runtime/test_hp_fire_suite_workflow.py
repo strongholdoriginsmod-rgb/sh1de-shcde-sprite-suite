@@ -186,6 +186,38 @@ def test_full_runtime_source_avoids_missing_framework_assemblies():
     assert "t.Tile.tileImage = replacement;" in runtime
     assert "t.Tile.tileImage = t.Original;" in runtime
     assert "SPRITESUITE_DAMAGE|event=controls_reloaded" in runtime
+    assert "SPRITESUITE_DAMAGE|event=stage_tilemap_verified" in runtime
+    assert "sprite_field_written=true|renderer_modified=false" in runtime
+    assert "TilemapReadbackMatches(t, t.Applied)" in runtime
+
+
+def test_tilemap_readback_proof_is_distinct_from_field_assignment():
+    legacy = L.report(simulated_cycle())
+    assert legacy["legacyRendererClaimsWithoutTilemapReadback"] == 2
+    assert legacy["nativeSpriteFieldWritesObserved"]
+    assert not legacy["nativeTilemapReadbackProved"]
+    original = simulated_cycle()
+    upgraded = []
+    for event in original:
+        if event["event"] == "stage_applied":
+            event["renderer_modified"] = "false"
+            event["sprite_field_written"] = "true"
+        upgraded.append(event)
+        if event["event"] == "stage_applied":
+            verified = dict(event)
+            verified["event"] = "stage_tilemap_verified"
+            verified["tilemap_readback_matches"] = "true"
+            verified["renderer_modified"] = "true"
+            upgraded.append(verified)
+    valid = L.report(upgraded)
+    assert valid["tilemapReadbackVerifiedStageSlots"] == 2
+    assert valid["nativeTilemapReadbackProved"]
+    assert valid["legacyRendererClaimsWithoutTilemapReadback"] == 0
+    assert valid["completePreviewCycleObserved"]
+    upgraded[1]["tilemap_readback_matches"] = "false"
+    invalid = L.report(upgraded)
+    assert not invalid["nativeTilemapReadbackProved"]
+    assert "tilemap_readback_not_confirmed" in invalid["auditErrors"]
 
 
 @pytest.mark.skipif(sys.platform != "win32" or not shutil.which("powershell.exe"),
@@ -262,3 +294,21 @@ def test_installer_preserves_previous_files_on_conflict_or_partial_update(tmp_pa
     assert info.is_dir()
     assert (plugin / W.DLL_NAME).read_bytes() == before[W.DLL_NAME]
     assert (plugin / "runtime.json").read_bytes() == before["runtime.json"]
+
+
+@pytest.mark.parametrize("boundary", ["before_write", "after_restore", "after_map_reset", "wrong_hp"])
+def test_tilemap_readback_must_follow_the_same_current_assignment(boundary):
+    field = dict(simulated_cycle()[0], sprite_field_written="true", renderer_modified="false")
+    verified = dict(field, event="stage_tilemap_verified",
+                    tilemap_readback_matches="true", renderer_modified="true")
+    if boundary == "before_write":
+        events = [verified, field]
+    elif boundary == "after_restore":
+        events = [field, simulated_cycle()[2], verified]
+    elif boundary == "after_map_reset":
+        events = [field, {"event": "map_reset"}, verified]
+    else:
+        events = [field, dict(verified, live_hp="50")]
+    result = L.report(events)
+    assert not result["nativeTilemapReadbackProved"]
+    assert result["tilemapReadbackVerifiedStageSlots"] == 0

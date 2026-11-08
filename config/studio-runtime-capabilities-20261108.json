@@ -1,0 +1,18 @@
+{
+  "schema": "sprite-suite.runtime-capability-snapshot.v1",
+  "reference_date": "2026-11-08",
+  "api_shared": {
+    "release": "0.27.0",
+    "minimum_script_extender": "2.14.0",
+    "plugin_guid": "APIShared_Serp",
+    "source_commit": "ee77e0d267c795cf7375863f6eac243fea8fe72c",
+    "source_url": "https://github.com/SHCDE-APIShared/APIShared/blob/ee77e0d267c795cf7375863f6eac243fea8fe72c/docs/API_CATALOG.md",
+    "manifest_url": "https://github.com/SHCDE-APIShared/APIShared/releases/tag/APIShared/v0.27.0"
+  },
+  "serp": {
+    "source_commit": "e1b61a67fe673e4389c404646ae1e53155a64857",
+    "native_dll_sha256": "fbcb93195fc7efca9bdac5204852efdd76f9818f59a6711750d77c9cef2831e2",
+    "source_url": "https://github.com/Serpens66/Stronghold-Crusader-DE-Mods/blob/e1b61a67fe673e4389c404646ae1e53155a64857/_inspect/CrusaderDE-Native-Baseline/CURRENT.md"
+  },
+  "status": "external_source_snapshot_only_no_installed_binary_or_game_qa_proof"
+}

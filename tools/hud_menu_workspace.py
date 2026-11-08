@@ -478,10 +478,13 @@ def write_png(
 
 
 def audit_assets(project: Path | str = DEFAULT) -> dict:
-    """Run the exact version-neutral asset builder's validators, no package write."""
+    """Audit the full editable project via its exporter's source contract.
+
+    Includes user-provided Mod files, but never launches or installs them.
+    """
     from se_asset_package import _discover
     root = workspace(project)
-    files = _discover(root)
+    files = _discover(root, unrestricted=True)
     return {"assets": len(files), "total_bytes": sum(row[2] for row in files),
             "bytes_sha256": _sha(json.dumps(
                 [(row[0],row[3]) for row in files],separators=(",",":")).encode())}

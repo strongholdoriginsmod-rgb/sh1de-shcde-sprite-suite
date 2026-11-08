@@ -1,4 +1,6 @@
 # SpriteSuite – gemeinsamer Geometrieeditor, Umgebungserkennung und KI-Werkstatt
+
+Aktueller Integrationsstand: Der allgemeine KI-Adapter verwendet die lokale, verwaltete ChatGPT-/Codex-Sitzung. Bedienung und aktuelle Tests stehen in `SPRITESUITE_KI_CHATGPT_KONSOLIDIERUNG_20261108.md`. Die folgenden älteren Entwicklungsbefunde dokumentieren ihren jeweiligen Zwischenstand.
 Stand: 2026-11-08 · Zweig: `feature/spritesuite-editor-ai-discovery-20261108`
 
 ## Ausgangspunkt und nachgewiesene Projektstände

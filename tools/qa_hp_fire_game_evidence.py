@@ -117,6 +117,19 @@ def evaluate(log: str, evidence_root: Path, save_sha256: str) -> dict:
             if stage != ORIGINAL and phase != "Extinguished":
                 matching = [e for e in runtime if previous_line < e["logLine"] < line and
                     e.get("event") == "stage_applied" and e.get("preview") == "False" and
+                    e.get("sprite_field_written") == "true" and
+                    e.get("global_id") == sample["global_id"] and
+                    e.get("building_id") == sample["building_id"] and
+                    e.get("live_hp") == str(hp) and e.get("live_max") == str(maximum) and
+                    (int(e.get("live_fire_ticks", "-1")) > 0 if burning else
+                     e.get("live_fire_ticks") == "0") and
+                    stage == "SpriteSuite:" + e.get("stage", "") + ":"]
+                # A logged GameMapTile field assignment does not establish
+                # that Unity's Tilemap actually returned the new Sprite.
+                readbacks = [e for e in runtime if previous_line < e["logLine"] < line and
+                    e.get("event") == "stage_tilemap_verified" and
+                    e.get("preview") == "False" and
+                    e.get("tilemap_readback_matches") == "true" and
                     e.get("renderer_modified") == "true" and
                     e.get("global_id") == sample["global_id"] and
                     e.get("building_id") == sample["building_id"] and
@@ -124,8 +137,13 @@ def evaluate(log: str, evidence_root: Path, save_sha256: str) -> dict:
                     (int(e.get("live_fire_ticks", "-1")) > 0 if burning else
                      e.get("live_fire_ticks") == "0") and
                     stage == "SpriteSuite:" + e.get("stage", "") + ":"]
-                if not matching:
-                    raise ValueError("no matching non-preview production runtime write")
+                if not matching or not any(
+                    a["logLine"] < r["logLine"] and
+                    a.get("x") not in (None, "") and a.get("y") not in (None, "") and
+                    a.get("x") == r.get("x") and a.get("y") == r.get("y")
+                    for a in matching for r in readbacks
+                ):
+                    raise ValueError("no matching non-preview field write and native tilemap readback")
             if require_image:
                 captures = [e for e in requested if e.get("phase") == phase]
                 if (evidence is None or len(captures) != 1 or captures[0]["logLine"] <= line or

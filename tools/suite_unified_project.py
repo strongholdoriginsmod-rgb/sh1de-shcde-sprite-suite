@@ -17,7 +17,10 @@ from zipfile import ZipFile
 import hud_menu_workspace as hud
 from suite_windows_paths import is_link_or_reparse
 from suite_hud_menu_session import read_session, save_session
-from se_asset_package import build as build_static_mod, AssetModError, package_zip_path
+from se_asset_package import build as build_mod_bundle, AssetModError, package_zip_path
+
+
+from stronghold_europe_de.asset_inspector import inspect_asset, inspect_image_mask, AssetInspectionError
 
 
 class UnifiedFlowError(ValueError):
@@ -35,6 +38,55 @@ def _sha_file(path: Path) -> str:
 
 def _sha_stream(stream) -> str:
     return file_digest(stream, "sha256").hexdigest()
+
+
+def _publish_selected_zip(source: Path, destination: Path) -> Path:
+    """Publish ONLY the validated ZIP to a Save-As target, never an asset tree.
+
+    Staging in the destination's own directory prevents a cross-volume
+    partial rename. The existing target is never replaced.
+    """
+    source = Path(source)
+    destination = Path(destination)
+    if (destination.suffix.lower() != ".zip"
+            or not destination.name or destination.name.startswith(".")
+            or any(part.casefold() == "bepinex" or
+                   part.casefold() == "streamingassets" or
+                   part.casefold().endswith("_data")
+                   for part in destination.parts)):
+        raise UnifiedFlowError("ZIP-Ziel darf keine Spielinstallation/Datendatei sein")
+    if (any(is_link_or_reparse(p)
+            for p in (destination, destination.parent, *destination.parents))
+            or not destination.parent.is_dir()
+            or destination.exists()):
+        raise UnifiedFlowError("ZIP-Ziel ist nicht neu oder verweist auf verknüpfte Pfade")
+    expected_digest = _sha_file(source)
+    expected_size = source.stat().st_size
+    staged = destination.with_name(
+        "." + destination.name + "." + token_hex(8) + ".partial")
+    try:
+        with source.open("rb") as reader, staged.open("xb") as writer:
+            for block in iter(lambda: reader.read(1024 * 1024), b""):
+                writer.write(block)
+            writer.flush()
+            os.fsync(writer.fileno())
+        if (staged.stat().st_size != expected_size or
+                _sha_file(staged) != expected_digest or
+                _sha_file(source) != expected_digest):
+            raise UnifiedFlowError("ZIP hat sich vor der Ausgabe verändert")
+        # Unlike os.replace, on Windows rename cannot overwrite an existing
+        # destination. This also catches a user-created path appearing now.
+        if os.name == "nt":
+            os.rename(staged, destination)
+        else:
+            os.link(staged, destination)
+        if (destination.stat().st_size != expected_size or
+                _sha_file(destination) != expected_digest):
+            raise UnifiedFlowError("ZIP-Inhalt nach Ausgabe nicht mehr identisch")
+        return destination
+    finally:
+        if staged.is_file() and not is_link_or_reparse(staged):
+            staged.unlink()
 
 
 def project_id(project: Path) -> str:
@@ -241,7 +293,10 @@ class ProjectPipeline:
             raise UnifiedFlowError("Exportbeleg enthält ungültige ZIP- oder Hashdaten")
         package=Path(package_name)
         if (not package.is_file() or is_link_or_reparse(package) or
-            not package.resolve().is_relative_to(base) or
+            (not package.resolve().is_relative_to(base) and
+             proof.get("user_selected_output") is not True) or
+            package.suffix.lower() != ".zip" or
+            any(is_link_or_reparse(p) for p in package.parents) or
             package.stat().st_size!=package_bytes or
             _sha_file(package)!=package_sha):
             raise UnifiedFlowError("Vorherige Mod-ZIP-Datei ist verändert oder fehlt")
@@ -251,6 +306,20 @@ class ProjectPipeline:
 
     def assets(self) -> list[hud.WorkshopAsset]:
         return hud.list_assets(self.project, include_mod_files=True)
+
+    def inspect_asset(self, relative_path: str) -> dict:
+        """Shared image/atlas/mask inspector; never creates or edits an asset."""
+        matches = [asset for asset in self.assets()
+                   if asset.relative_path == relative_path]
+        if len(matches) != 1:
+            raise UnifiedFlowError("Inspektion erfordert genau ein Projekt-Asset")
+        item = matches[0]
+        try:
+            result = inspect_asset(item.path, relative_label=item.relative_path)
+        except AssetInspectionError as exc:
+            raise UnifiedFlowError("Asset-Inspektion fehlgeschlagen: " + str(exc)) from exc
+        return result
+
 
     def audit(self) -> dict:
         assets=self.assets()
@@ -273,7 +342,34 @@ class ProjectPipeline:
         if any(a.relative_path.startswith("Override/Sprites/") for a in assets):
             warnings.append("Spiel-Sprite-Indizes und Atlaszuordnung sind "+
                             "im statischen ZIP nicht ingame nachgewiesen")
+        inspections = []
+        by_rel = {a.relative_path: a for a in assets}
+        for asset in assets:
+            if not asset.relative_path.startswith(("Override/", "Patches/")):
+                continue
+            if asset.path.suffix.lower() not in (".png", ".dds", ".json", ".xaml"):
+                continue
+            try:
+                result = inspect_asset(asset.path, relative_label=asset.relative_path)
+            except AssetInspectionError as exc:
+                if any(word in str(exc).casefold() for word in ("budget", "nicht für diesen inspector", "unbekanntes assetformat")):
+                    warnings.append(asset.relative_path + ": " + str(exc))
+                    continue
+                raise UnifiedFlowError("Gemeinsame Asset-Inspektion blockiert " +
+                                       asset.relative_path + ": " + str(exc)) from exc
+            inspections.append({"path": asset.relative_path,
+                                "source_sha256": result["sha256"],
+                                "format": result["details"]["format"],
+                                "checks": result["checks"]})
+            if asset.path.suffix.lower() == ".png" and not asset.path.name.lower().endswith("_m.png"):
+                mask = by_rel.get(asset.relative_path[:-4] + "_m.png")
+                if mask is not None:
+                    pair = inspect_image_mask(asset.path, mask.path)
+                    if not pair["dimensions_match"]:
+                        raise UnifiedFlowError("Farb- und Masken-PNG haben unterschiedliche Größe: " +
+                                               asset.relative_path)
         return {**evidence,"warnings":warnings,"project":str(self.project),
+                "asset_inspections": inspections,
                 "native_game_runtime_verified":False,
                 "original_game_files_modified":False}
 
@@ -281,17 +377,35 @@ class ProjectPipeline:
               output: Path | None = None) -> dict:
         """Real guarded exporter; never silently call native game installation."""
         preflight=self.audit()
-        target=Path(output) if output is not None else (
-            hud.WORK/"se-asset-mods"/(guid+"-export-"+token_hex(6)))
+        requested=Path(output) if output is not None else None
+        selected_zip=(requested if requested is not None and
+                      requested.suffix.lower()==".zip" else None)
+        if selected_zip is not None:
+            # A Save-As ZIP must never cause an asset tree to be built outside
+            # work/. Only the independently verified archive is published.
+            if (selected_zip.exists() or
+                    is_link_or_reparse(selected_zip) or
+                    any(is_link_or_reparse(p) for p in selected_zip.parents)
+                    or not selected_zip.parent.is_dir()):
+                raise UnifiedFlowError(
+                    "Gewähltes ZIP existiert bereits oder hat einen unsicheren Pfad")
+        target=(hud.WORK/"se-asset-mods"/(guid+"-export-"+token_hex(6))
+                if selected_zip is not None or requested is None else requested)
         if target.exists() or package_zip_path(target).exists():
             raise UnifiedFlowError("Zielpaket existiert bereits; kein Überschreiben")
-        result=build_static_mod(self.project,guid,name=name,author=author,version=version,
-                                target=target)
+        # The explicitly chosen project export can archive arbitrary bytes.
+        # When native files lack an authored info.json, output is only a DRAFT
+        # offline archive; runtime/ABI/in-game acceptance stays unproven.
+        # The standalone strict static-exporter behavior is unchanged.
+        result=build_mod_bundle(
+            self.project,guid,name=name,author=author,version=version,
+            target=target,unrestricted=True,
+            allow_unverified_runtime_archive=True)
         package=Path(result["zip"])
         if not package.is_file():
             raise UnifiedFlowError("Export meldete ZIP, aber ZIP-Datei fehlt")
         from se_asset_package import _discover
-        expected=_discover(self.project)
+        expected=_discover(self.project,unrestricted=True)
         members={f"BepInEx/plugins/{guid}/{row[0]}" for row in expected}
         manifest_path=f"BepInEx/plugins/{guid}/info.json"
         has_custom_manifest=any(member.casefold()==manifest_path.casefold() for member in members)
@@ -315,17 +429,28 @@ class ProjectPipeline:
         post=self.audit()
         if preflight["bytes_sha256"]!=post["bytes_sha256"]:
             raise UnifiedFlowError("Assets während des Exports verändert; nicht freigegeben")
+        if result.get("unverified_runtime_archive"):
+            post["warnings"].append(
+                "ENTWURF: Runtime-/DLL-Dateien ohne authored info.json; "
+                "keine native ABI-/Ingame- oder Installationsfreigabe.")
+        if selected_zip is not None:
+            # Zip is already checked against every project file. Publish only
+            # that artifact to the explicit Save-As path, never its asset tree.
+            package=_publish_selected_zip(package,selected_zip)
         proof={
             "schema":RECEIPT_SCHEMA,
             "project":str(self.project),
             "guid":guid,"name":name,"asset_count":preflight["assets"],
             "assets_sha256":preflight["bytes_sha256"],
             "zip":str(package),"zip_bytes":package.stat().st_size,
+            "user_selected_output":selected_zip is not None,
             "zip_sha256":_sha_file(package),
             "zip_verified_against_project":True,
             "game_files_modified":False,
             "installed_into_game":False,
             "native_game_runtime_verified":False,
+            "unverified_runtime_archive":result.get(
+                "unverified_runtime_archive",False),
             "warnings":post["warnings"],
         }
         receipt=target.with_name(target.name+".receipt.json")

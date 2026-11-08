@@ -544,8 +544,11 @@ class Suite(tk.Tk):
         self.stop_button.pack(side="right")
         self.stop_button.state(["disabled"])
 
-        self.notebook = ttk.Notebook(self)
-        self.notebook.pack(fill="both", expand=True, padx=14, pady=(0, 6))
+        from suite_workarea import ScrollableWorkarea
+        self.notebook_viewport = ScrollableWorkarea(self, background=BG, hide_unused=True)
+        self.notebook = ttk.Notebook(self.notebook_viewport.canvas)
+        self.notebook_viewport.set_content(self.notebook)
+        self.notebook_viewport.pack(fill="both", expand=True, padx=14, pady=(0, 6))
 
         self.tab_groups = GroupsTab(self.notebook, self)
         self.tab_art = ArtTab(self.notebook, self)

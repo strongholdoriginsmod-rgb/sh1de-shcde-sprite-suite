@@ -2700,6 +2700,7 @@ class Universal(center.Center):
         lang_box.bind("<<ComboboxSelected>>", lambda _e: self.set_language(self.language.get().lower()))
         ttk.Label(self.command_bar, text="DE / EN:", style="Muted.TLabel").pack(side="right", padx=4)
         ttk.Button(self.command_bar, text="Anleitung / Guide", command=self.open_guide).pack(side="right", padx=8)
+        ttk.Button(self.command_bar, text="Modding Studio", command=self.open_modding_studio).pack(side="right", padx=4)
         self.strict = tk.BooleanVar(master=self, value=os.environ.get("SEDE_STRENG") == "1")
         ttk.Checkbutton(self.command_bar, text="Streng (Warnungen sperren)", variable=self.strict,
                         command=self._strict_changed).pack(side="right", padx=12)
@@ -2802,7 +2803,7 @@ class Universal(center.Center):
         self._compact_tabs = True
         self._strip_refreshing = False
         row = ttk.Frame(self)
-        row.pack(before=self.notebook, side="top", fill="x",
+        row.pack(before=getattr(self, "notebook_viewport", self.notebook), side="top", fill="x",
                  padx=18, pady=(0, 5))
         ttk.Label(
             row, text="Bereich öffnen / Go to:", style="Muted.TLabel"
@@ -2865,7 +2866,7 @@ class Universal(center.Center):
         panel = self.console.master
         if getattr(self, "_console_wanted", False):
             if panel.winfo_manager() != "pack":
-                panel.pack(before=self.notebook, side="bottom", fill="both",
+                panel.pack(before=getattr(self, "notebook_viewport", self.notebook), side="bottom", fill="both",
                            padx=14, pady=(0, 8))
         else:
             if panel.winfo_manager() == "pack":
@@ -3003,6 +3004,7 @@ class Universal(center.Center):
         if compat is not None and compat.winfo_exists():
             compat.refresh_language()
         self.hud_menu_tab.update_project_caption()
+        self.hud_menu_tab.refresh_language()
         layout=getattr(self.hud_menu_tab,"_layout_window",None)
         if layout is not None and layout.winfo_exists():
             layout._update_guidance()
@@ -3099,6 +3101,51 @@ class Universal(center.Center):
             return bool(bridge.window.load_test_scene(Path(scene_path)))
         return True
 
+    def open_ai_assistant(self):
+        from suite_ai_assistant import open_assistant
+        extras = getattr(self, "_assistant_extra_delegates", None)
+        if extras is None:
+            from suite_editor_client import EditorNativeClient
+            from suite_native_qt import NativeQtTools
+            extras = (
+                EditorNativeClient(ROOT),
+                NativeQtTools(lambda: getattr(
+                    getattr(self.sandbox_tab, "bridge", None), "window", None)),
+            )
+        return open_assistant(self, extra_delegates=extras)
+
+    def open_modding_studio(self):
+        """Open authoring modules in the current project's portable metadata."""
+        current = getattr(self, "_modding_studio_window", None)
+        project = self.workflow_tab.pipeline.project
+        if current is not None and current.root.winfo_exists() and getattr(current, "_suite_project", None) == project:
+            current.root.lift()
+            return current
+        from stronghold_europe_de.modding_studio.gui import StudioWindow
+        from stronghold_europe_de.modding_studio.model import new_project
+        from stronghold_europe_de.modding_studio.safety import StudioError
+        import hud_menu_workspace as hud
+        window = None
+        try:
+            metadata = hud._metadata_dir(project)
+            workspace = metadata / "modding-studio"
+            if not workspace.exists():
+                metadata.mkdir(parents=True, exist_ok=True)
+                slug = re.sub(r"[^a-z0-9-]", "-", project.name.casefold()).strip("-")
+                new_project(workspace, "suite-" + (slug or "project"), project.name)
+            window = tk.Toplevel(self)
+            studio = StudioWindow(window, workspace, project_bound=True)
+            window.project = project
+            window._studio_controller = studio
+            self._modding_studio_window = studio
+            studio._suite_project = project
+            return self._modding_studio_window
+        except (OSError, ValueError, StudioError) as exc:
+            if window is not None:
+                window.destroy()
+            messagebox.showerror("Modding Studio", str(exc), parent=self)
+            return None
+
     def open_sandbox_studio(self):
         """Select, map and initialize the ONE embedded Sandbox predictably.
 
@@ -3117,6 +3164,16 @@ class Universal(center.Center):
         self.sandbox_tab.select_sprite(group, frame)
 
     def destroy(self):
+        workflow = getattr(self, "workflow_tab", None)
+        studio = getattr(self, "_modding_studio_window", None)
+        if (workflow is not None and studio is not None and
+                studio.root.winfo_exists() and studio.is_dirty() and
+                not workflow._save_pending("dem Beenden")):
+            return
+        assistant = getattr(self, "_ai_assistant_window", None)
+        if (assistant is not None and assistant.root.winfo_exists() and
+                not assistant.close(on_closed=self.destroy)):
+            return
         # Studio may have unsaved sprite overlays. Its closeEvent must accept
         # the close before Tk is allowed to destroy the native Qt child HWND.
         tab = getattr(self, "sandbox_tab", None)

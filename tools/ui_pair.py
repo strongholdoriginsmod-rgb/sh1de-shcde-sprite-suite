@@ -33,7 +33,7 @@ import sys
 
 from PIL import Image
 
-# Keep Pillow's decompression-bomb limits enabled for untrusted artwork.
+# Preserve Pillow's default decompression-bomb limit; never disable it globally.
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 

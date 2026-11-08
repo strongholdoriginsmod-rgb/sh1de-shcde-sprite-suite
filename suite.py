@@ -67,6 +67,7 @@ def main() -> int:
     config.add_argument('--repair-toolchain', action='store_true',
                         help='Beschädigte Werkzeugdatei nach Backup ausdrücklich neu schreiben')
     sub.add_parser('gui', help='Bestehende Modding-Oberflaeche starten')
+    sub.add_parser('modding', help='Gemeinsames Modding Studio', add_help=False)
     sub.add_parser('test', help='Regressionstests ausfuehren')
     for command in ['doctor','verify','fingerprint','inventory','map','build','validate','install','uninstall','runtime-validate']:
         sub.add_parser(command, add_help=False)
@@ -77,6 +78,8 @@ def main() -> int:
         if rest:
             parser.error('Unbekannte Optionen: ' + ' '.join(rest))
         return configure(args)
+    if args.command == 'modding':
+        return run(['tools/modding_studio.py', *rest])
     if args.command == 'gui':
         return run(['tools/modding_host.py', *rest])
     if args.command == 'test':
@@ -88,6 +91,17 @@ def main() -> int:
         candidate = (ROOT/'tools'/args.name).resolve()
         if candidate.parent != ROOT/'tools' or candidate.suffix not in {'.py','.pyw'} or not candidate.is_file():
             parser.error('Werkzeug muss eine vorhandene Python-Datei direkt in tools/ sein.')
+        # A source tool can have module-level side effects before its parser.
+        # --help never launches the requested script, even from the CLI bridge.
+        if any(arg in {'--help', '-h'} for arg in rest):
+            sys.path.insert(0, str(ROOT/'tools'))
+            from suite_catalog import describe, format_static_help
+            try:
+                print(format_static_help(describe(candidate)))
+            except (OSError, SyntaxError, UnicodeError, ValueError) as exc:
+                print(f'Statische Hilfe nicht lesbar: {exc}',file=sys.stderr)
+                return 2
+            return 0
         return run([str(candidate), *rest])
     return run(['-m','stronghold_europe_de',args.command,*rest])
 

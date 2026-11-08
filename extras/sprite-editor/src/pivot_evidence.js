@@ -4,71 +4,38 @@
     'use strict';
     const C = typeof module === 'object' && module.exports ?
         require('./core.js') : root.SpriteCore;
-    const api = factory(C);
+    const L = typeof module === 'object' && module.exports ?
+        require('./legacy_measurements.js') : root.SpriteLegacyMeasurements;
+    const api = factory(C, L);
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.SpritePivotEvidence = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (C) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (C, L) {
     'use strict';
     const SCHEMA = 'zinnenlineal.versatz.v1';
-    const NAME = /^([A-Za-z][A-Za-z0-9_]{0,90})[ -]([0-9]{1,7})(x?)$/;
-    const EPSILON = 2e-5;
-    const LIMIT = 4096;
-    const fail = detail => C.fail('Zinnenlineal: ' + detail);
-    const finite = (value, label, max = 4) => {
-        if (typeof value !== 'number' || !Number.isFinite(value) ||
-                Math.abs(value) > max) fail(label + ': ungültige Zahl.');
-        return value;
-    };
-    const integer = (value, label, min, max) => {
-        if (typeof value !== 'number' || !Number.isSafeInteger(value) ||
-                value < min || value > max) fail(label + ': ungültige Ganzzahl.');
-        return value;
-    };
+    const EPSILON = L.EPSILON;
     const near = (a, b) => Math.abs(a - b) <= EPSILON;
-
     function parseMeasurements(jsonText) {
-        if (typeof jsonText !== 'string' || jsonText.length > 2 * 1024 * 1024)
-            fail('Messdatei ist zu groß.');
-        const raw = C.json(jsonText);
-        if (!raw || Array.isArray(raw) || raw.schema !== SCHEMA ||
-                !Array.isArray(raw.frames) || raw.frames.length > LIMIT)
-            fail('Unbekanntes Messformat oder zu viele Einträge.');
-        const names = new Set();
-        return raw.frames.map((entry, index) => {
-            if (!entry || Array.isArray(entry) || typeof entry !== 'object')
-                fail('Eintrag ' + index + ' ist kein Objekt.');
-            const match = typeof entry.name === 'string' ?
-                NAME.exec(entry.name) : null;
-            if (!match || entry.gruppe !== match[1])
-                fail('Gruppen- oder Spritename ungültig.');
-            const number = integer(entry.nummer, 'nummer', 0, 1000000);
-            if (Number(match[2]) !== number) fail('Nummer widerspricht Dateinamen.');
-            if (names.has(entry.name)) fail('Doppelter Frame: ' + entry.name);
-            names.add(entry.name);
-            const width = integer(entry.breite, 'breite', 1, 8192);
-            const height = integer(entry.hoehe, 'hoehe', 1, 8192);
-            const right = integer(entry.rechts, 'rechts', -4096, 4096);
-            const up = integer(entry.hoch, 'hoch', -4096, 4096);
-            const oldX = finite(entry.pivot_x, 'pivot_x');
-            const oldY = finite(entry.pivot_y, 'pivot_y');
-            const newX = finite(entry.neu_pivot_x, 'neu_pivot_x');
-            const newY = finite(entry.neu_pivot_y, 'neu_pivot_y');
-            if (!near(newX, oldX - right / width) ||
-                    !near(newY, oldY - up / height))
-                fail(entry.name + ': Korrektur widerspricht dem Messversatz.');
-            if (Object.hasOwn(entry, 'pixel_je_einheit') &&
-                    finite(entry.pixel_je_einheit, 'pixel_je_einheit', 2048) <= 0)
-                fail('Pixel pro Einheit müssen positiv sein.');
-            return Object.freeze({ name: entry.name, group: match[1], number,
-                width, height, right, up,
-                oldPivot: Object.freeze({ x: oldX, y: oldY }),
-                newPivot: Object.freeze({ x: newX, y: newY }) });
-        });
+        if (typeof jsonText !== 'string' || jsonText.length > L.MAX_BYTES)
+            C.fail('Zinnenlineal: Messdatei ist zu groß.');
+        return L.parseDocument(C.json(jsonText)).rows.map(row => Object.freeze({
+            name: row.name, group: row.group, number: row.number,
+            width: row.width, height: row.height, right: row.right, up: row.up,
+            oldPivot: row.original, newPivot: row.candidate
+        }));
+    }
+    function matchesFrame(row, frame) {
+        const name = /^([A-Za-z][A-Za-z0-9_]{0,90})[ -]([0-9]{1,7})(x?)$/;
+        const measured = name.exec(row.name);
+        const current = name.exec(String(frame.name).replace(/\.png$/i, ''));
+        const parsedName = C.parseName(frame.name);
+        const metadataMatches = frame.group === row.group && frame.index === row.number ||
+            frame.index === null && parsedName.index === null && frame.group === parsedName.group;
+        return !!(metadataMatches && measured && current && measured[1] === current[1] &&
+            Number(measured[2]) === Number(current[2]) && measured[3] === current[3]);
     }
 
     function review(row, frames, store) {
-        const matches = frames.filter(frame => frame.group === row.group &&
-            frame.index === row.number);
+        const matches = frames.filter(frame => matchesFrame(row, frame));
         if (!matches.length)
             return { row, status: 'not_found', frameId: null, reason:
                 'Kein exakt passender Gruppen-/Frame-Index im aktuellen Projekt.' };
@@ -113,5 +80,5 @@
     function reviewAll(rows, state, store) {
         return rows.map(row => review(row, state.frames, store));
     }
-    return Object.freeze({ SCHEMA, EPSILON, parseMeasurements, review, reviewAll });
+    return Object.freeze({ SCHEMA, EPSILON, parseMeasurements, matchesFrame, review, reviewAll });
 });

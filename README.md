@@ -1,5 +1,9 @@
 # SH1DE → SHCDE Universal-Suite 2.0 (Stronghold Europe / ORIGINS)
 
+## Konsolidierter Release-Kandidat vom 08.11.2026
+
+Gemeinsamer Geometrie- und KI-Editor, historische Messdaten, automatische Werkzeugerkennung, Projekt-/Assetinspektion, zwölf Modding-Arbeitsbereiche und die SHCDE-Werkbank sind verbunden. Der integrierte **KI-Assistent** bedient die vorhandenen Projektwerkzeuge, die Suite-Oberfläche, den lokalen Sprite-Editor und die geöffnete Qt-Sandbox über native Schnittstellen. Anmeldung und Bildaufträge verwenden die lokale Codex-Sitzung mit ChatGPT-Konto, ohne API-Schlüssel. Scrollbare Arbeitsflächen halten auch untere Felder bei kleinen Fenstern erreichbar. Das **Windows-Startpaket** enthält Python und installiert beim ersten Start die übrigen Abhängigkeiten lokal; Internet wird dafür benötigt. [Release- und Integrationsbericht](docs/SPRITESUITE_RELEASE_KONSOLIDIERUNG_20261108.md).
+
 Grafik aus **Stronghold: Definitive Edition** nach **Stronghold Crusader: Definitive Edition** übertragen, ansehen, ändern, prüfen und als Mod ausliefern – in einer Oberfläche. Statische HUD-/Sprite-Pakete entstehen **ohne feste SE-Version und ohne eigene C#-DLL**; für optionale C#-Plugins gelten getrennte ABI-Schutzprüfungen. Oberfläche **Deutsch / English** (umschaltbar). English: [README.en.md](README.en.md)
 
 ## Gemeinsame Stronghold-Fachwerkzeuge (Entwicklungszweig, 06.11.2026)
@@ -53,9 +57,10 @@ zuletzt gespeicherte Layout erneut. Der Zustandsvermerk bleibt unter
 
 | Variante | Inhalt | Wie |
 |---|---|---|
+| **Windows-Startpaket RC4** | Suite und Python; zusätzliche Pakete werden beim ersten Start hashgeprüft heruntergeladen | [Neue Vorabversion v2.0.0-rc.4](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) · keine separate Python-Installation, Internet beim Erststart nötig |
 | **Windows Portable 2.0.0 (lokaler Release-Kandidat)** | Suite mit Python-Laufzeit im ZIP; **keine Python-Installation nötig** | `SpriteSuite-Windows-Portable-v2.0.0-py313-x64.zip` – noch keine öffentliche Stable-Freigabe; [Release- und Abnahmestand](docs/RELEASE_CANDIDATE_2026-11-04.md) |
 | **Frühere öffentlich angebotene Portable-Ausgabe** | Historischer Stand mit sicherer Projektsicherung | [Windows-Release vom 30. Oktober 2026](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/windows-portable-safe-project-backup-2026-10-30) |
-| **Quellcode** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | `main` → *Code* → *Download ZIP* |
+| **Quellcode RC4** | Werkzeuge, Profile, Oberfläche und Editor, jedoch **ohne** Python-Laufzeit | [Quellcode und Prüfsumme im RC4-Release](https://github.com/strongholdoriginsmod-rgb/sh1de-shcde-sprite-suite/releases/tag/v2.0.0-rc.4) |
 | Frühere Versionen 1.x | Sprite Suite 1.0–1.1.3 mit Installern | Tag `v1.1.3` |
 
 Spielgrafik wird **nicht** verteilt. Sie entsteht beim Einlesen und Bauen aus den eigenen, installierten Spielen.
@@ -122,6 +127,7 @@ Dieser Zweig erweitert **Oberfläche** um einen eigenen Stronghold-1-HUD-Editor:
 
 1. Ordner an einen **kurzen Pfad** entpacken, z. B. `D:\SU` (Unity legt tiefe Pfade an).
 2. **`Suite starten.cmd`** doppelklicken.
+   - *Windows-Startpaket RC4:* Python ist enthalten. Der Erststart installiert die gesperrten Paketversionen lokal mit SHA-256-Prüfung; dafür ist Internet erforderlich. Danach wird die lokale Umgebung wiederverwendet.
    - *Windows Portable:* Python und sämtliche GUI-Pakete sind bereits im entpackten Ordner. **Kein Python, pip oder Setup auf dem PC nötig.**
    - *Quellcode-ZIP:* für Entwickler mit Python **3.13 oder 3.14**; `setup.ps1` verwendet automatisch den passenden hashgeprüften Lock. Fehlt Python, die Portable-Ausgabe aus den Releases laden.
    - [Anleitung für den portablen Windows-Start](docs/SPRITESUITE_WINDOWS_PORTABLE_2026-10-28.md).

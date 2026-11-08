@@ -133,17 +133,36 @@ class DamageCodexTests(unittest.TestCase):
         codex.request = mock.Mock(side_effect=[
             {"account": {"type": "chatgpt"}},
             {"thread": {"id": "thread"}},
-            {"turn": {"id": "turn"}},
+            {"turn": {"id": "turn", "status": "completed"}},
         ])
         codex.events = mock.Mock(return_value=iter([
             {"method": "item/completed", "params": {"threadId": "thread", "turnId": "turn",
               "item": {"type": "imageGeneration", "inputImages": [{"sha256": "bad"}]}}},
-            {"method": "turn/completed", "params": {"threadId": "thread", "turn": {"id": "turn"}}},
+            {"method": "turn/completed", "params": {"threadId": "thread", "turn": {"id": "turn", "status": "completed"}}},
         ]))
         with self.assertRaisesRegex(CodexError, "Referenzdateien"):
             codex.generate(self.root, request_for(self.source), [("reference.png", self.source)])
         turn = codex.request.call_args.args[1]
         self.assertEqual(turn["input"][1], {"type": "localImage", "path": str(self.root / "reference.png")})
+
+    def test_failed_or_interrupted_turn_never_promotes_an_image_item(self):
+        for status in ("failed", "interrupted", "inProgress", None):
+            with self.subTest(status=status):
+                codex = object.__new__(CodexSession)
+                codex.connected = mock.Mock(return_value=True)
+                codex.request = mock.Mock(side_effect=[
+                    {"thread": {"id": "thread"}}, {"turn": {"id": "turn"}},
+                ])
+                codex.events = mock.Mock(return_value=iter([
+                    {"method": "item/completed", "params": {
+                        "threadId": "thread", "turnId": "turn",
+                        "item": {"type": "imageGeneration", "inputImages": [
+                            {"sha256": hashlib.sha256(self.source).hexdigest()}]}}},
+                    {"method": "turn/completed", "params": {
+                        "threadId": "thread", "turn": {"id": "turn", "status": status}}},
+                ]))
+                with self.assertRaisesRegex(CodexError, "erfolgreich abgeschlossen"):
+                    codex.generate(self.root, request_for(self.source), [("reference.png", self.source)])
 
     def test_registered_pixel_canvas_roundtrip_and_stray_pixel_guard(self):
         from PIL import Image

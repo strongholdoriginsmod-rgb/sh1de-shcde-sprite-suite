@@ -17,6 +17,8 @@ CATEGORY_EN = {
 
 STATIC_EN = {
     "Noch keine Datei ausgewählt.": "No file selected.",
+    "Noch keine Datei. Links Bild oder XAML hinzufügen.":
+        "No file yet. Add an image or XAML on the left.",
     "Noch keine Datei. Links Dateien hinzufügen.":
         "No file yet. Add files on the left.",
     "Noch keine originale Noesis-Menüseite zugeordnet. Bilder lassen sich auch allein bearbeiten.":

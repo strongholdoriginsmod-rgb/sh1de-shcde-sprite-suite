@@ -269,7 +269,7 @@ def cmd_oeffnen(args) -> int:
     area = getattr(args, "bereich", None)
     if area is not None and area not in ("geometry", "ai", "damage"):
         raise ValueError("Unbekannter Editorbereich")
-    if args.offline:
+    if getattr(args, "offline", False):
         webbrowser.open(target.as_uri() + ("#" + area if area else ""))
     else:
         from sprite_editor_local import launch

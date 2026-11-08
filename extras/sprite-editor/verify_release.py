@@ -39,6 +39,29 @@ def verify() -> None:
             or not damage_report.get('directFileUrl')):
         raise ValueError('Damage browser check requires real file:// navigation without network/page errors.')
 
+    for filename, count in (("ai-browser-report.json", 12),
+                            ("codex-workshop-browser-report.json", 9),
+                            ("native-browser-report.json", 16)):
+        extra = json.loads((root / 'tests/results' / filename).read_text(encoding='utf-8'))
+        if (extra.get('passed') is not True or len(extra.get('checks', [])) != count
+                or extra.get('htmlSHA256') != sha256(html) or extra.get('pageErrors')
+                or extra.get('networkRequests') or extra.get('liveCodexCalled') is not False):
+            raise ValueError(f'AI browser report does not describe the verified build: {filename}')
+
+    gestures = json.loads((root / 'tests/results/native-gesture-browser-report.json').read_text(encoding='utf-8'))
+    variants = gestures.get('variants', [])
+    expected_variants = {'Stronghold_Sprite_Editor.html', 'Stronghold_Sprite_Editor_EN.html'}
+    if (gestures.get('passed') is not True or gestures.get('syntheticOnly') is not True
+            or gestures.get('liveCodexCalled') is not False or gestures.get('gameStarted') is not False
+            or len(variants) != 2 or {item.get('file') for item in variants} != expected_variants):
+        raise ValueError('Native gesture browser variants are incomplete.')
+    for item in variants:
+        if (item.get('passed') is not True or len(item.get('checks', [])) != 8
+                or item.get('htmlSHA256') != sha256(root / item['file'])
+                or item.get('pageErrors') or item.get('externalNetworkRequests')
+                or item.get('syntheticOnly') is not True or item.get('gameStarted') is not False):
+            raise ValueError('Native gesture evidence does not describe the verified HTML.')
+
     # The language wrapper must match the exact German editor build plus the
     # deterministic bilingual translation payload.
     from sprache.einbauen import SCRIPT, HERE
@@ -66,7 +89,7 @@ def verify() -> None:
         if sha256(path) != digest:
             raise ValueError(f'Checksum mismatch: {relative}')
         checked += 1
-    print(f'PASS: deterministic DE/EN HTML builds, 49 legacy + 16 damage browser checks, {checked} file hashes.')
+    print(f'PASS: deterministic DE/EN HTML builds, 49 legacy + 16 damage + 12 AI + 9 local Codex + 16 native + 16 gesture browser checks, {checked} file hashes.')
     print('This verifies package integrity, not game compatibility or native local storage.')
 
 

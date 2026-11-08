@@ -58,6 +58,14 @@ class HudMenuWorkshop(ttk.Frame):
         self._poll_job=self.after(120,self._poll)
         self._refresh_job=self.after(350,self.refresh)
 
+    def refresh_language(self):
+        """Translate existing project-archive actions without changing assets."""
+        english = self.app.language.get().upper() == "EN"
+        self.project_open_button.configure(text=(
+            "Open project ZIP…" if english else "Projekt aus ZIP öffnen …"))
+        self.project_backup_button.configure(text=(
+            "Back up project…" if english else "Projekt sichern …"))
+
     def _build(self):
         header=ttk.Frame(self)
         header.pack(fill="x",padx=12,pady=(9,2))
@@ -84,10 +92,14 @@ class HudMenuWorkshop(ttk.Frame):
         project_toggle_row=ttk.Frame(self)
         self.project_actions_row=project_toggle_row
         project_toggle_row.pack(fill="x",padx=12,pady=(0,2))
-        ttk.Button(project_toggle_row,text="Projekt aus ZIP öffnen …",
-                   command=self.import_project_archive).pack(side="right",padx=(4,0))
-        ttk.Button(project_toggle_row,text="Projekt sichern …",
-                   command=self.export_project_archive).pack(side="right",padx=(4,0))
+        self.project_open_button = ttk.Button(
+            project_toggle_row,text="Projekt aus ZIP öffnen …",
+            command=self.import_project_archive)
+        self.project_open_button.pack(side="right",padx=(4,0))
+        self.project_backup_button = ttk.Button(
+            project_toggle_row,text="Projekt sichern …",
+            command=self.export_project_archive)
+        self.project_backup_button.pack(side="right",padx=(4,0))
         self.project_toggle=ttk.Button(project_toggle_row,
             text="Arbeitsordner anzeigen",command=self.toggle_project)
         self.project_toggle.pack(side="left")

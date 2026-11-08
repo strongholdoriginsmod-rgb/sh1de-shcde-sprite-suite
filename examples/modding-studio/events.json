@@ -1,0 +1,17 @@
+[
+  {
+    "event": "mission_start",
+    "tick": 0
+  },
+  {
+    "event": "simulation_tick",
+    "tick": 10
+  },
+  {
+    "amount": 600,
+    "event": "resource_snapshot",
+    "good": "gold",
+    "player": 1,
+    "tick": 50
+  }
+]

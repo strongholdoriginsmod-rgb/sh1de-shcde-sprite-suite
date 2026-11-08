@@ -8,9 +8,10 @@ footprint can differ from the artwork's grid.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZipFile, BadZipFile
 
 TRANSFORMS = {
     "identity": lambda u, v: (u, v),
@@ -138,29 +139,58 @@ def propose(events: list[dict], a: int, b: int, group_id: str,
                            "requiresGameplayOwnerOffsetReview": True}}
 
 
-def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--log", type=Path, required=True)
-    p.add_argument("--archive", type=Path, required=True)
-    p.add_argument("--building-group", required=True)
-    p.add_argument("--building-type", type=int, required=True)
-    p.add_argument("--global-id", type=int)
-    p.add_argument("--orientation", choices=list(TRANSFORMS), default="identity")
-    p.add_argument("--output", type=Path, required=True)
-    args = p.parse_args()
-    with ZipFile(args.archive) as zip:
-        manifest = json.loads(zip.read("damage-manifest.json"))
-    profile = next(b for b in manifest["buildings"] if b["id"] == args.building_group)
-    scene = profile["stages"][0]["settings"]
-    events = read_graphic_events(args.log, args.building_type, args.global_id)
-    report = propose(events, scene["a"], scene["b"], args.building_group,
-                     args.building_type, args.orientation)
-    if args.output.exists():
-        raise FileExistsError("Output already exists: " + str(args.output))
-    args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
-    print("PROPOSED_BINDINGS="+str(len(report["bindings"])))
-    print("CONFIRMED_IN_GAME=false")
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--log", type=Path, required=True)
+    parser.add_argument("--expected-log-sha256", help="Optional exact source-log SHA-256")
+    parser.add_argument("--archive", type=Path, help="SpriteSuite damage ZIP to read the sprite grid")
+    parser.add_argument("--grid-a", type=int, help="Explicit source-art grid dimension A")
+    parser.add_argument("--grid-b", type=int, help="Explicit source-art grid dimension B")
+    parser.add_argument("--building-group", required=True)
+    parser.add_argument("--building-type", type=int, required=True)
+    parser.add_argument("--global-id", type=int)
+    parser.add_argument("--orientation", choices=list(TRANSFORMS), default="identity")
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args(argv)
+    try:
+        digest = hashlib.sha256(args.log.read_bytes()).hexdigest()
+        if args.expected_log_sha256 and digest != args.expected_log_sha256.lower():
+            raise ValueError("Graphics QA log does not match its expected SHA-256")
+        a, b = args.grid_a, args.grid_b
+        if (a is None) != (b is None):
+            raise ValueError("Provide both --grid-a and --grid-b")
+        if args.archive:
+            with ZipFile(args.archive) as archive:
+                manifest = json.loads(archive.read("damage-manifest.json"))
+            matches = [building for building in manifest["buildings"]
+                       if building["id"] == args.building_group]
+            if len(matches) != 1 or not matches[0].get("stages"):
+                raise ValueError("Archive must identify one building with a stage grid")
+            settings = matches[0]["stages"][0]["settings"]
+            archive_grid = settings["a"], settings["b"]
+            if a is not None and (a, b) != archive_grid:
+                raise ValueError("Explicit grid differs from the archive grid")
+            a, b = archive_grid
+        if type(a) is not int or type(b) is not int or a <= 0 or b <= 0:
+            raise ValueError("Provide an archive or positive --grid-a and --grid-b")
+        events = read_graphic_events(args.log, args.building_type, args.global_id)
+        report = propose(events, a, b, args.building_group,
+                         args.building_type, args.orientation)
+        # A proposal remains freely editable. It can include partial logs and
+        # unresolved overhangs, which the provenance describes for the caller.
+        report["enabled"] = False
+        report["previewEnabled"] = False
+        report["provenance"]["graphicsLogSHA256"] = digest
+        with args.output.open("x", encoding="utf-8", newline="\n") as output:
+            json.dump(report, output, ensure_ascii=False, indent=2)
+            output.write("\n")
+        print("PROPOSED_BINDINGS=" + str(len(report["bindings"])))
+        print("CONFIRMED_IN_GAME=false")
+        print("ENABLED=false")
+        return 0
+    except (OSError, ValueError, KeyError, TypeError, BadZipFile) as error:
+        parser.exit(2, "Runtime binding proposal: " + str(error) + "\n")
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

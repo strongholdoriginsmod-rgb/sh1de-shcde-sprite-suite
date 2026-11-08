@@ -124,6 +124,7 @@ namespace SpriteSuite.BuildingDamage
             internal GameMapTile Tile;
             internal Sprite Original;
             internal Sprite Applied;
+            internal Sprite ReadbackVerified;
             internal SpriteBinding Binding;
             internal int BuildingId;
             internal int GlobalId;
@@ -155,6 +156,7 @@ namespace SpriteSuite.BuildingDamage
         private int _frames;
         private int _errors;
         private int _changeReports;
+        private int _tilemapReports;
         private bool _running;
         private bool _mutating;
         private string _root;
@@ -235,6 +237,18 @@ namespace SpriteSuite.BuildingDamage
                 directory = Path.Combine(_root, directory);
             directory = Path.GetFullPath(directory);
             string manifestPath = Path.Combine(directory, "damage-manifest.json");
+            if (!File.Exists(manifestPath) && !config.enabled && config.bindings.Length == 0)
+            {
+                _settings = config;
+                _settingsModifiedUtc = File.GetLastWriteTimeUtc(settingsPath);
+                _library = new DamageArchive {
+                    format = "stronghold-building-damage-library",
+                    version = 1, buildings = new DamageBuilding[0]
+                };
+                _artRoot = directory;
+                _log.LogInfo("SPRITESUITE_DAMAGE|event=disabled_unconfigured|reason=no_artwork");
+                return;
+            }
             string json = File.ReadAllText(manifestPath, Encoding.UTF8);
             DamageArchive library = DamageJsonParser.Library(json);
             if (library == null || library.buildings == null)
@@ -361,9 +375,14 @@ namespace SpriteSuite.BuildingDamage
                 ppu.ToString("R", CultureInfo.InvariantCulture);
             Sprite sprite;
             if (_createdSprites.TryGetValue(key, out sprite)) return sprite;
-            string artwork = Path.Combine(_artRoot,
-                tile.image.Replace('/', Path.DirectorySeparatorChar));
-            if (!File.Exists(artwork)) return null;
+            string relativeImage = tile.image.Replace('/', Path.DirectorySeparatorChar);
+            if (Path.IsPathRooted(relativeImage)) return null;
+            string artwork = Path.GetFullPath(Path.Combine(_artRoot, relativeImage));
+            string root = Path.GetFullPath(_artRoot).TrimEnd(
+                Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
+            if (!artwork.StartsWith(root, StringComparison.OrdinalIgnoreCase) ||
+                !File.Exists(artwork)) return null;
             byte[] bytes = File.ReadAllBytes(artwork);
             if (!string.IsNullOrEmpty(tile.sha256))
             {
@@ -446,6 +465,7 @@ namespace SpriteSuite.BuildingDamage
                 {
                     t.Tile.tileImage = replacement;
                     t.Applied = replacement;
+                    t.ReadbackVerified = null;
                     Refresh(t);
                     if (++_changeReports <= 400)
                         _log.LogInfo("SPRITESUITE_DAMAGE|event=stage_applied|global_id=" +
@@ -455,11 +475,39 @@ namespace SpriteSuite.BuildingDamage
                             "|slot=" + t.Binding.slot + "|live_hp=" + health +
                             "|live_max=" + maximum + "|live_fire_ticks=" + fireTicks +
                             "|preview=" + _settings.previewEnabled +
-                            "|renderer_modified=true");
+                            "|sprite_field_written=true|renderer_modified=false");
                 }
                 finally { _mutating = false; }
             }
+            // A field assignment is not evidence of a displayed sprite.
+            // Native Tilemap readback can occur on a later frame, and this
+            // does not claim that pixels were visually inspected.
+            if (t.Applied != null && t.ReadbackVerified != t.Applied &&
+                TilemapReadbackMatches(t, t.Applied))
+            {
+                t.ReadbackVerified = t.Applied;
+                if (++_tilemapReports <= 400)
+                    _log.LogInfo("SPRITESUITE_DAMAGE|event=stage_tilemap_verified|global_id=" +
+                        t.GlobalId + "|building_id=" + t.BuildingId +
+                        "|x=" + t.X + "|y=" + t.Y +
+                        "|stage=" + (stage == null ? "none" : stage.id) +
+                        "|live_hp=" + health + "|live_max=" + maximum +
+                        "|live_fire_ticks=" + fireTicks +
+                        "|preview=" + _settings.previewEnabled +
+                        "|tilemap_readback_matches=true|renderer_modified=true");
+            }
             return true;
+        }
+
+        private static bool TilemapReadbackMatches(ObservedTile tile, Sprite target)
+        {
+            if (tile.Tile == null || tile.Tile.tilemapRef == null || target == null)
+                return false;
+            try
+            {
+                return tile.Tile.tilemapRef.GetSprite(new Vector3Int(tile.X, tile.Y, 0)) == target;
+            }
+            catch (Exception) { return false; }
         }
 
         private static void Refresh(ObservedTile t)
@@ -479,6 +527,7 @@ namespace SpriteSuite.BuildingDamage
             {
                 t.Tile.tileImage = t.Original;
                 t.Applied = null;
+                t.ReadbackVerified = null;
                 Refresh(t);
                 return t.Tile.tileImage == t.Original;
             }

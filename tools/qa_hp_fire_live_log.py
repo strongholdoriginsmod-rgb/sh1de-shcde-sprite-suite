@@ -54,33 +54,58 @@ def report(events: list[dict[str, str]]) -> dict:
     full_cycles = 0
     configs = []
     applied = 0
+    applied_slots = set()
+    verified_slots = set()
+    current_application = {}
+    legacy_claims = 0
     previews = set()
     health_values = set()
-    for event in events:
+    for index, event in enumerate(events):
         kind = event.get("event")
+        if kind == "map_reset" or (kind == "host_awake" and event.get("phase") == "entered"):
+            current_application.clear()
+            pending.clear()
         if kind == "controls_reloaded":
             configs.append({k: event.get(k) for k in
                             ("enabled", "preview", "hp", "fire")})
         if kind == "host_awake" and event.get("phase") == "exception":
             errors.append("host_awake_exception")
-        if kind not in ("stage_applied", "restored"):
+        if kind not in ("stage_applied", "restored", "stage_tilemap_verified"):
             continue
         key = tuple(event.get(k, "") for k in
                     ("global_id", "building_id", "x", "y"))
         if any(not v for v in key):
             continue
+        signature = tuple(event.get(name, "") for name in
+                          ("stage", "live_hp", "live_max", "live_fire_ticks", "preview"))
+        if kind == "stage_tilemap_verified":
+            previous = current_application.get(key)
+            if (event.get("tilemap_readback_matches") == "true" and
+                    event.get("renderer_modified") == "true" and
+                    previous is not None and previous[1] == signature):
+                verified_slots.add(previous[0])
+            else:
+                errors.append("tilemap_readback_not_confirmed")
+            continue
         if kind == "restored":
+            current_application.pop(key, None)
             restored.add(key)
             if pending.pop(key, None) == "fire":
                 full_cycles += 1
             continue
         applied += 1
+        applied_slots.add(index)
+        current_application[key] = (index, signature)
         stages[event.get("kind", "")] += 1
         previews.add(event.get("preview", ""))
         health_values.add((event.get("live_hp"), event.get("live_max"),
                            event.get("live_fire_ticks")))
-        if event.get("renderer_modified") != "true":
-            errors.append("non_write_applied_event")
+        if event.get("sprite_field_written") != "true":
+            if ("sprite_field_written" not in event and
+                    event.get("renderer_modified") == "true"):
+                legacy_claims += 1  # old format reports a field write as a render
+            else:
+                errors.append("non_write_applied_event")
         if event.get("kind") == "mechanical":
             mechanical.add(key)
             pending[key] = "mechanical"
@@ -111,6 +136,10 @@ def report(events: list[dict[str, str]]) -> dict:
         "screenPixelsVisuallyReviewed": False,
         "gameValueWritesByThisMod": False,
         "nativeSpriteFieldWritesObserved": applied > 0 and not errors,
+        "legacyRendererClaimsWithoutTilemapReadback": legacy_claims,
+        "tilemapReadbackVerifiedStageSlots": len(applied_slots & verified_slots),
+        "nativeTilemapReadbackProved": (bool(applied_slots) and
+                                     applied_slots <= verified_slots and not errors),
         "completePreviewCycleObserved": (preview_only and bool(common) and
                                           full_cycles == len(common) and
                                           mechanical == fire == restored and

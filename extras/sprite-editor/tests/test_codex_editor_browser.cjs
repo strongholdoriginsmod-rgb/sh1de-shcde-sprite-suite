@@ -14,6 +14,7 @@ const fake = [
   'from types import SimpleNamespace',
   'from PIL import Image',
   'from building_damage_codex import result_files',
+  'from suite_ai_codex import execute as workshop_execute',
   'from sprite_editor_local import EditorServer',
   'def execute(req, refs, output):',
   '    assert req["provider"] == "codex-chatgpt"',
@@ -30,7 +31,18 @@ const fake = [
   '@contextmanager',
   'def session(_):',
   '    yield SimpleNamespace(connected=lambda: True)',
-  'with patch("sprite_editor_local.execute", execute), patch("sprite_editor_local.session", session), EditorServer(port=0) as server:',
+  'def generate_one(req, refs):',
+  '    assert req["format"] == "sprite-suite.ai-image-edit"',
+  '    im = Image.open(BytesIO(refs[0][1])).convert("RGBA")',
+  '    box = im.getchannel("A").getbbox()',
+  '    assert box is not None',
+  '    x,y = box[0],box[1]',
+  '    r,g,b,a = im.getpixel((x,y))',
+  '    factor=req["registration"]["scale"]',
+  '    im.paste(((r+30)%256,g,b,a),(x,y,x+factor,y+factor))',
+  '    buf = BytesIO(); im.save(buf,"PNG")',
+  '    return buf.getvalue(),"synthetic-workshop"',
+  'with patch("sprite_editor_local.execute_damage", execute), patch("suite_ai_codex._generate_one", generate_one), patch("sprite_editor_local.session", session), EditorServer(port=0) as server:',
   '    print(server.origin, flush=True)',
   '    server.serve_forever()'
 ].join('\n');
@@ -79,7 +91,35 @@ const fake = [
     assert.deepEqual(after.frames.filter(f => f.groupId === before.scenes[0].id), before.frames);
     assert.equal(after.scenes.length,5);
     assert.deepEqual(calls,['/codex/status','/codex/generate','/codex/generate','/codex/generate','/codex/generate']);
+    await page.locator('[data-panel="ai"]').click();
+    await page.locator('#inspector-content textarea').first().fill('Repair a single original sprite while preserving the isometric camera and baseline.');
+    await page.locator('#inspector-content textarea').first().dispatchEvent('change');
+    const generalBefore = await snapshot();
+    await page.getByRole('button',{name:'Create variants with Codex…',exact:true}).click();
+    await page.getByText('Unreviewed candidate',{exact:true}).waitFor({timeout:30000});
+    assert(await page.locator('#inspector-content').innerText().then(text => text.includes('Pixel risk indicator')));
+    await page.getByRole('button',{name:'Review original and candidate…',exact:true}).click();
+    await page.locator('#modal [name=reviewed]').check();
+    await page.locator('#modal [name=notes]').fill('Synthetic local Codex candidate checked against original');
+    await page.locator('#modal-submit').click();
+    await page.waitForFunction(() => SpriteEditor.inspect().state.frames.some(f => f.aiGeneration?.manualReview));
+    const generalAfter = await snapshot();
+    assert.deepEqual(generalAfter.frames.map(f => f.originalId),generalBefore.frames.map(f => f.originalId));
+    const accepted = generalAfter.frames.find(f => f.aiGeneration?.manualReview);
+    assert(accepted.aiGeneration.requestSHA256);
+    assert.equal(calls.at(-1),'/codex/generate');
     assert.deepEqual(errors,[]);
+    const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
+    const reportRoot = path.join(__dirname,'results');
+    await page.screenshot({path:path.join(reportRoot,'codex-workshop-edge.png')});
+    fs.writeFileSync(path.join(reportRoot,'codex-workshop-browser-report.json'),JSON.stringify({
+      passed:true, browser:await browser.version(),
+      htmlSHA256:crypto.createHash('sha256').update(fs.readFileSync(path.join(app,'extras/sprite-editor/Stronghold_Sprite_Editor.html'))).digest('hex'),
+      checks:['cross-origin blocked','ChatGPT connection state','two mechanical and one fire stages',
+              'previous-stage reference','independent building version','originals preserved',
+              'general workshop source-bound generation','pixel risk shown','explicit review and SHA receipt'],
+      codexRoutes:calls,pageErrors:errors,liveCodexCalled:false,inGameTested:false
+    },null,2)+'\n');
     console.log('PASS Edge /en: login state, 2 mechanical + 1 fire editable damage scenes, prior image, independent version, original unchanged, cross-origin rejected');
   } finally {
     if (browser) await browser.close();

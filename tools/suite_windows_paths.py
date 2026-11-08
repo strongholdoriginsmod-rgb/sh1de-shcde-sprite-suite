@@ -37,3 +37,35 @@ def is_reserved_windows_component(part: str) -> bool:
     stem = part.split(".", 1)[0].rstrip(" ").upper()
     return (stem in {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"} or
             re.fullmatch(r"(?:COM|LPT)[1-9¹²³]", stem) is not None)
+
+
+def safe_relative_file(
+    root: Path, relative: str, *, allowed_suffixes: frozenset[str] | None = None
+) -> Path:
+    """Keep generated atlas/sprite paths inside an explicitly chosen source.
+
+    No filesystem writes; reject traversal, DOS devices, alternate data streams,
+    linked parents, malformed separators and wrong file formats before opening.
+    """
+    if (not isinstance(relative, str) or not relative
+            or len(relative) > 230 or "\\" in relative
+            or relative.startswith("/") or "\x00" in relative):
+        raise ValueError("Unsicherer Dateipfad")
+    parts = relative.split("/")
+    if any(part in {"", ".", ".."} or part.startswith(".")
+           or is_reserved_windows_component(part) for part in parts):
+        raise ValueError("Unsicherer Dateipfad")
+    destination = Path(root).joinpath(*parts)
+    suffix = destination.suffix.lower()
+    if allowed_suffixes is not None and suffix not in allowed_suffixes:
+        raise ValueError("Unsicherer Dateityp")
+    base = Path(root).resolve(strict=False)
+    resolved = destination.resolve(strict=False)
+    if resolved == base or not resolved.is_relative_to(base):
+        raise ValueError("Unsicherer Exportpfad")
+    node = destination
+    while node != root and node != node.parent:
+        if is_link_or_reparse(node):
+            raise ValueError("Unsicherer verknüpfter Exportpfad")
+        node = node.parent
+    return destination

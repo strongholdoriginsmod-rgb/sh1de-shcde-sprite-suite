@@ -13,6 +13,11 @@ from PIL import Image
 ROOT=Path(__file__).resolve().parents[2]
 sys.path[:0]=[str(ROOT/"src"),str(ROOT/"tools")]
 ORIGINAL=Path("E:/SU/projekt/sandbox/szenen")
+pytestmark = pytest.mark.skipif(
+    not all((ORIGINAL / name).is_file()
+            for name in ("beispieldorf.json", "katalog-vorschau.json")),
+    reason="Historical original V1 scenes are unavailable",
+)
 from stronghold_europe_de.sandbox.scene_model import (
     SceneError,EditableScene,SceneHistory,load_scene,save_scene
 )

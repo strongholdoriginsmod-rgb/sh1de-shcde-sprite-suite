@@ -97,7 +97,6 @@ def main() -> int:
             cur = [rec]
     families.append(cur)
 
-    # Assemble both outputs before replacing any existing catalogue data.
     katalog = []
     for i, fam in enumerate(families, 1):
         katalog.append({
@@ -108,10 +107,9 @@ def main() -> int:
             "groesse": fam[0]["groesse"],
             "dateien": [r["datei"] for r in fam],
         })
-    catalogue_bytes = (json.dumps(
+    katalog_payload = json.dumps(
         {"quelle": str(ATLAS), "familien": katalog},
-        indent=2, ensure_ascii=False
-    ) + "\n").encode("utf-8")
+        indent=2, ensure_ascii=False)
 
     cols, cell = 10, 132
     rows = (len(families) + cols - 1) // cols
@@ -128,8 +126,10 @@ def main() -> int:
         sheet.paste(im, (bx + (cell - im.width) // 2, by + (cell - im.height) // 2), im)
         dr.text((bx + 4, by + cell + 2), f"F{i+1:02d}  {fam[0]['key']}", fill=(245, 245, 245))
         dr.text((bx + 4, by + cell + 14), f"{len(fam)}x  {fam[0]['groesse'][0]}x{fam[0]['groesse'][1]}", fill=(190, 190, 200))
+    # Both outputs are staged together. A failed sheet write must not replace
+    # the old JSON or strand a partial review generation.
     with OutputBatch(OUT) as batch:
-        batch.stage("katalog.json").write_bytes(catalogue_bytes)
+        batch.stage("katalog.json").write_text(katalog_payload, encoding="utf-8")
         sheet.save(batch.stage("kontaktbogen_familien.png"))
         batch.publish()
 

@@ -8,6 +8,8 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
+from suite_workarea import ScrollableWorkarea
+
 DARK = "#1e1f22"
 PANEL = "#252b33"
 LIGHT = "#f1f4f8"
@@ -46,8 +48,10 @@ def _styles(master):
 def build_workflow(view):
     """Build the one project workspace with preview as main work area."""
     _styles(view)
-    root = ttk.Frame(view, style="Workspace.TFrame")
-    root.pack(fill="both", expand=True)
+    view.workarea = ScrollableWorkarea(view, background=DARK,
+        style="Workspace.TFrame", min_height=500)
+    view.workarea.pack(fill="both", expand=True)
+    root = view.workarea.body
     view.workbench = root
 
     heading = ttk.Frame(root, style="Workspace.TFrame", padding=(14, 8, 14, 5))
@@ -61,15 +65,15 @@ def build_workflow(view):
     project = ttk.Frame(heading, style="Workspace.TFrame")
     project.pack(side="right", anchor="ne")
     # These four actions must stay visible, including at 1020x680.
-    for title, action in (
+    for index, (title, action) in enumerate((
         ("Projekt-ZIP öffnen", view.restore_project),
         ("Projekt sichern (ZIP)", view.backup_project),
         ("Projekt wechseln", view.choose_project),
         ("Neues Projekt", view.create_project),
-    ):
+    )):
         button=ttk.Button(project, text=title, command=action,
                           style="WorkspaceSmall.TButton")
-        button.pack(side="left",padx=(3,0))
+        button.grid(row=index//2, column=index%2, sticky="ew", padx=(3,0), pady=1)
         if title=="Projekt sichern (ZIP)":
             view.project_backup_button=button
         elif title=="Projekt-ZIP öffnen":
@@ -149,20 +153,26 @@ def build_workflow(view):
     view.selection_text_label.pack(fill="x", pady=(0, 7))
     actions = ttk.Frame(inspector, style="WorkspacePanel.TFrame")
     actions.pack(fill="x")
+    actions.columnconfigure(0, weight=1)
+    actions.columnconfigure(1, weight=1)
     view.edit_button = ttk.Button(
         actions, text="Datei bearbeiten", command=view.edit_selected,
         style="WorkspacePrimary.TButton")
-    view.edit_button.pack(side="left", padx=(0, 6))
+    view.edit_button.grid(row=0, column=0, sticky="ew", padx=(0,6), pady=(0,3))
     view.layout_button = ttk.Button(
         actions, text="Layout gestalten", command=view.open_layout)
-    view.layout_button.pack(side="left", padx=(0, 6))
+    view.layout_button.grid(row=0, column=1, sticky="ew", padx=(0,6), pady=(0,3))
     view.noesis_button = ttk.Button(
         actions, text="Noesis-XAML bearbeiten", command=view.open_noesis)
-    view.noesis_button.pack(side="left", padx=(0, 6))
+    view.noesis_button.grid(row=1, column=0, columnspan=2, sticky="ew", padx=(0,6))
     more = ttk.Menubutton(actions, text="Mehr ▾")
     view.more_actions_button=more
-    more.pack(side="right")
+    more.grid(row=0, column=2, rowspan=2, sticky="ns")
     view.actions_menu = tk.Menu(more, tearoff=False)
+    view.actions_menu.add_command(label="KI-Assistent", command=view.app.open_ai_assistant)
+    view.actions_menu.add_command(label="Modding Studio", command=view.app.open_modding_studio)
+    view.actions_menu.add_command(label="Assetquelle prüfen", command=view.inspect_selected_asset)
+    view.inspect_asset_menu_index = view.actions_menu.index("end")
     view.actions_menu.add_command(label="Bild mit Noesis verknüpfen",
                                   command=view.bind_selected_image)
     view.actions_menu.add_command(label="Echte Noesis-Spielpixel ansehen",
@@ -219,22 +229,21 @@ def build_workflow(view):
         style="WorkspaceBottomLabel.TLabel", wraplength=750, justify="left")
     view.result_label.pack(side="left", fill="x", expand=True, padx=(8, 0))
     view.export_details = ttk.Frame(bottom, style="WorkspaceBottom.TFrame")
-    ttk.Label(view.export_details, text="Mod-ID:",
-              style="WorkspaceBottomMuted.TLabel").pack(side="left")
-    ttk.Entry(view.export_details, textvariable=view.guid, width=28).pack(
-        side="left", padx=(5, 12))
-    ttk.Label(view.export_details, text="Paketname:",
-              style="WorkspaceBottomMuted.TLabel").pack(side="left")
-    ttk.Entry(view.export_details, textvariable=view.mod_name, width=35).pack(
-        side="left", padx=(5, 0), fill="x", expand=True)
-    ttk.Label(view.export_details, textvariable=view._display_var("Autor"),
-              style="WorkspaceBottomMuted.TLabel").pack(side="left", padx=(12, 0))
-    ttk.Entry(view.export_details, textvariable=view.mod_author, width=16).pack(
-        side="left", padx=(5, 0))
-    ttk.Label(view.export_details, textvariable=view._display_var("Version"),
-              style="WorkspaceBottomMuted.TLabel").pack(side="left", padx=(12, 0))
-    ttk.Entry(view.export_details, textvariable=view.mod_version, width=12).pack(
-        side="left", padx=(5, 0))
+    view.export_details.columnconfigure(1, weight=1)
+    view.export_details.columnconfigure(3, weight=1)
+    for row, column, title, variable, width in (
+        (0, 0, "Mod-ID:", view.guid, 24),
+        (0, 2, "Paketname:", view.mod_name, 27),
+        (1, 0, "Autor", view.mod_author, 24),
+        (1, 2, "Version", view.mod_version, 18),
+    ):
+        ttk.Label(view.export_details, textvariable=view._display_var(title),
+                  style="WorkspaceBottomMuted.TLabel").grid(
+            row=row, column=column, sticky="w", padx=(0, 5), pady=3)
+        entry = ttk.Entry(view.export_details, textvariable=variable, width=width)
+        entry.grid(row=row, column=column + 1, sticky="ew", padx=(0, 12), pady=3)
+        if variable is view.mod_version:
+            view.version_entry = entry
 
     def toggle_details():
         if view.export_details.winfo_manager():
@@ -243,26 +252,28 @@ def build_workflow(view):
         else:
             view.export_details.pack(fill="x", pady=(6, 0))
             view.details_toggle.configure(text="Paketdetails ▾")
+        view.workarea.refresh()
     view.details_toggle.configure(command=toggle_details)
     view.message_label = ttk.Label(
         bottom, textvariable=view.message,
         style="WorkspaceBottomMuted.TLabel", wraplength=1050)
     view.message_label.pack(fill="x", pady=(7, 0))
+    for label in (view.source_label, view.selection_text_label, view.message_label, view.result_label):
+        label.bind("<Configure>", _wrap_label, add="+")
     view.bind("<Configure>", lambda _e: _adapt(view), add="+")
 
 
+def _wrap_label(event):
+    if event.width >= 40:
+        target = max(1, event.width - 4)
+        if int(event.widget.cget("wraplength")) != target:
+            event.widget.configure(wraplength=target)
+
+
 def _adapt(view):
-    if not getattr(view, "workbench", None):
-        return
-    w = view.winfo_width()
-    if w < 100:
-        return
-    if hasattr(view, "source_label"):
-        view.source_label.configure(wraplength=max(140, view.tree.winfo_width()-18))
-    if hasattr(view, "selection_text_label"):
-        view.selection_text_label.configure(
-            wraplength=max(280, view.preview.winfo_width()-20))
-    if hasattr(view, "message_label"):
-        view.message_label.configure(wraplength=max(400, w-35))
-    if hasattr(view, "result_label"):
-        view.result_label.configure(wraplength=max(250, int(w*0.55)))
+    for name in ("source_label", "selection_text_label", "message_label", "result_label"):
+        label = getattr(view, name, None)
+        if label is not None and label.winfo_width() >= 40:
+            width = label.winfo_width() - 4
+            if int(label.cget("wraplength")) != width:
+                label.configure(wraplength=width)

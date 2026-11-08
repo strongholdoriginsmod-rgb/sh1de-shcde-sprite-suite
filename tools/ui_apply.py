@@ -69,9 +69,9 @@ from pathlib import Path
 import sys
 
 from PIL import Image
-from ui_einpflegen import EinpflegeError, _safe_slot
+from suite_windows_paths import safe_relative_file
 
-# Keep Pillow's decompression-bomb limits enabled for untrusted artwork.
+# Preserve Pillow's default decompression-bomb limit; never disable it globally.
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -213,10 +213,12 @@ def anwenden(
 
     for eintrag in gewaehlt:
         try:
-            slot_pfad = _safe_slot(baum, eintrag["slot"])
-            sh1_pfad = _safe_slot(sh1_dir, eintrag["sh1"])
-        except EinpflegeError as exc:
-            raise ApplyError("Unsicherer Bildpfad in der Zuordnung: " + str(exc)) from exc
+            slot_pfad = safe_relative_file(
+                baum, eintrag['slot'], allowed_suffixes=frozenset({'.png'}))
+            sh1_pfad = safe_relative_file(
+                sh1_dir, eintrag['sh1'], allowed_suffixes=frozenset({'.png'}))
+        except (ValueError, TypeError) as exc:
+            raise ApplyError('Unsicherer Slot-/Quellpfad in der Zuordnung') from exc
         if not slot_pfad.is_file():
             zaehler["slot fehlt im Baum"] += 1
             abgelehnt.append({**eintrag, "grund": "slot fehlt im Baum"})

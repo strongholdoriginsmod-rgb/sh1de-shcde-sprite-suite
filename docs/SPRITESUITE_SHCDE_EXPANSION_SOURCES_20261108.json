@@ -1,0 +1,126 @@
+{
+  "sourceTree": "SpriteSuite_SHCDE_Expansion_20261108",
+  "sourceHead": "00276ec8d8fe5647f5341cb84f3cdcb398919042",
+  "sourceState": "17 untracked files",
+  "files": [
+    {
+      "path": "tools/shcde_aiv_lord_studio.py",
+      "sourceSHA256": "7ff8cfffcd727a0b3845ff4a797f85c5d5a1db32261a29bffa8beb528f7e6c5f",
+      "sourceBytes": 10274,
+      "canonicalSHA256": "7ff8cfffcd727a0b3845ff4a797f85c5d5a1db32261a29bffa8beb528f7e6c5f",
+      "canonicalBytes": 10274
+    },
+    {
+      "path": "tools/shcde_api_native_index.py",
+      "sourceSHA256": "00bef2cdd0d41f6b435f7a078205bc93e5bcf40792cd40670424653cdcea6ddc",
+      "sourceBytes": 11903,
+      "canonicalSHA256": "00bef2cdd0d41f6b435f7a078205bc93e5bcf40792cd40670424653cdcea6ddc",
+      "canonicalBytes": 11903
+    },
+    {
+      "path": "tools/shcde_api_probe.cs",
+      "sourceSHA256": "d65260a1ec315db45fd28f462469126c6845d92abe59d636cbce58f11d82b522",
+      "sourceBytes": 2485,
+      "canonicalSHA256": "d65260a1ec315db45fd28f462469126c6845d92abe59d636cbce58f11d82b522",
+      "canonicalBytes": 2485
+    },
+    {
+      "path": "tools/shcde_game_inspector.py",
+      "sourceSHA256": "28576328977da10a8cdd66c32890a96b9ba555a907f4e11af5cda6a62ca2d13c",
+      "sourceBytes": 8291,
+      "canonicalSHA256": "d3605dd5e6c4143e45363c1173d8fc8feb4bd32f67b36ac0ac9549446f00e90e",
+      "canonicalBytes": 7298
+    },
+    {
+      "path": "tools/shcde_gameplay_rules.py",
+      "sourceSHA256": "54f1366ff44958a88eaa21bbb4dcce345f71e72f910c10f733c842528b5f569a",
+      "sourceBytes": 5417,
+      "canonicalSHA256": "5c483ad8ae2e3c924dd8946664f786975c4672cd4f4f3ff3a8620182dafb3cd6",
+      "canonicalBytes": 5405
+    },
+    {
+      "path": "tools/shcde_managed_builder.py",
+      "sourceSHA256": "4b47e18a22b0aa05b279aee6cc9109f0a35c97ac62ce6bb184cb63115104fc20",
+      "sourceBytes": 5777,
+      "canonicalSHA256": "c9cc52e926b6ff38456d60b992063bdd69ce70bf2208753a7dca4dbe79c7f04b",
+      "canonicalBytes": 6705
+    },
+    {
+      "path": "tools/shcde_mod_composer.py",
+      "sourceSHA256": "db7842658bb470ebb189a4106c1a38820a11257e6e4610046b9befd1f649bf3c",
+      "sourceBytes": 11796,
+      "canonicalSHA256": "d66518b79bb3158372ce1a4681fb4ef15fc82dbba70e89d4d4f7afab04c54308",
+      "canonicalBytes": 14833
+    },
+    {
+      "path": "tools/shcde_mod_project.py",
+      "sourceSHA256": "15a3af0ed0b3cf239bb0ef83abecf7a3ab872cafc1f4986dc94025f6280710da",
+      "sourceBytes": 12515,
+      "canonicalSHA256": "9a2717f1c7489a3be5262716bbee085c0c497806b625d18019e090dac68bd6ea",
+      "canonicalBytes": 14694
+    },
+    {
+      "path": "tools/shcde_mod_settings.py",
+      "sourceSHA256": "9e46851a0724a13bf600853dc71a71a8a97f2c5ae514bdd39d0b3497a8d5c4da",
+      "sourceBytes": 8135,
+      "canonicalSHA256": "9e46851a0724a13bf600853dc71a71a8a97f2c5ae514bdd39d0b3497a8d5c4da",
+      "canonicalBytes": 8135
+    },
+    {
+      "path": "tools/shcde_pathing_report.py",
+      "sourceSHA256": "84729b96dd814e67050ee5ff95113c29a5d42a6b939303fa7a3427548ce16554",
+      "sourceBytes": 5658,
+      "canonicalSHA256": "84729b96dd814e67050ee5ff95113c29a5d42a6b939303fa7a3427548ce16554",
+      "canonicalBytes": 5658
+    },
+    {
+      "path": "tools/shcde_qa_suite.py",
+      "sourceSHA256": "cfabf784ce43b8ddf79d87143e2562993a83fd0123eb23608210a9a3a131ddd5",
+      "sourceBytes": 5331,
+      "canonicalSHA256": "7ff850502134680d215d06037ec0eaa72aa8aada1862720c34c2083eee916a7b",
+      "canonicalBytes": 5628
+    },
+    {
+      "path": "tools/shcde_scenario_graph.py",
+      "sourceSHA256": "800cb363e667b153557c9da8f9f8827c3c9ebb5cf37b70c9a6238e9269a057c1",
+      "sourceBytes": 9877,
+      "canonicalSHA256": "800cb363e667b153557c9da8f9f8827c3c9ebb5cf37b70c9a6238e9269a057c1",
+      "canonicalBytes": 9877
+    },
+    {
+      "path": "tools/shcde_workbench.py",
+      "sourceSHA256": "6e7d26902b03597a847d0bcc2cdbb7576b9fa050964a29881a25a44ba21cf91b",
+      "sourceBytes": 3091,
+      "canonicalSHA256": "6e7d26902b03597a847d0bcc2cdbb7576b9fa050964a29881a25a44ba21cf91b",
+      "canonicalBytes": 3091
+    },
+    {
+      "path": "tools/shcde_workbench_gui.py",
+      "sourceSHA256": "d666835df5009697304bfa13105ace1bee2df5163974280b070f2ee82f57f93f",
+      "sourceBytes": 20416,
+      "canonicalSHA256": "478b7cc7e82b04ab6561ade0f20197cf98638a148c66ac80e5a55f46f387815a",
+      "canonicalBytes": 25117
+    },
+    {
+      "path": "runtime/SpriteSuite.ShcdeGameplay/GameplayRules.cs",
+      "sourceSHA256": "a298e076c89bbc7529bad7ab1a360a3442628386e7921de903854304040ff2fa",
+      "sourceBytes": 8854,
+      "canonicalSHA256": "a298e076c89bbc7529bad7ab1a360a3442628386e7921de903854304040ff2fa",
+      "canonicalBytes": 8854
+    },
+    {
+      "path": "runtime/SpriteSuite.ShcdeInspector/SpriteSuiteInspector.cs",
+      "sourceSHA256": "85c06f150fb2e7c371aaf7931d3271de1a49a35c9e868fac08bfa96c203fce82",
+      "sourceBytes": 8163,
+      "canonicalSHA256": "85c06f150fb2e7c371aaf7931d3271de1a49a35c9e868fac08bfa96c203fce82",
+      "canonicalBytes": 8163
+    },
+    {
+      "path": "tests/shcde/test_expansion.py",
+      "sourceSHA256": "d5c4f9c0bc5f26a2470bb5ba60c92734ec82239ea861c10447fa96bce4407b19",
+      "sourceBytes": 16332,
+      "canonicalSHA256": "d6d80b044a75bd9243416adcb129f5cca13f0a05ca9696ace151b4468776bcbd",
+      "canonicalBytes": 24696
+    }
+  ]
+}
