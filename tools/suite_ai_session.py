@@ -232,8 +232,11 @@ class AssistantSession(CodexSession):
         names = [spec["name"] for spec in specs]
         if len(set(names)) != len(names):
             raise ValueError("Native tool names must be unique")
+        mode = getattr(self.service, "mode", "tasks")
+        if mode not in {"questions", "tasks", "code"}:
+            raise ValueError("Unbekannter Arbeitsmodus.")
         identity = (str(self.service.project), hashlib.sha256(json.dumps(specs, sort_keys=True).encode()).hexdigest(),
-                    str(getattr(self.service, "conversation_key", "")))
+                    str(getattr(self.service, "conversation_key", "")), mode)
         old_identity = getattr(self, "_thread_identity", None)
         if self.thread_id is not None and old_identity is not None and identity != old_identity:
             if not history_context.strip():
@@ -243,7 +246,8 @@ class AssistantSession(CodexSession):
         if self.thread_id is None:
             thread_params = {
                 "cwd": str(self.service.project), "ephemeral": True,
-                "approvalPolicy": "never", "sandbox": "read-only",
+                "approvalPolicy": "never",
+                "sandbox": "read-only" if mode == "questions" else "workspace-write",
                 "modelProvider": "openai", "dynamicTools": specs,
                 "developerInstructions": INSTRUCTIONS,
             }

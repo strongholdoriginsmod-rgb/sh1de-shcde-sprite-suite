@@ -151,7 +151,8 @@ def test_thread_registers_native_tools_and_never_requests_a_shell():
     c.run("Use native project tools", context="synthetic", timeout=1)
     options = calls[0][1]
     assert options["dynamicTools"] == c.service.specs()
-    assert options["sandbox"] == "read-only"
+    assert options["sandbox"] == "workspace-write"
+    assert options["cwd"] == str(c.service.project)
     assert "ONLY the supplied suite_*" in options["developerInstructions"]
     assert not any("apiKey" in str(arguments) for _, arguments in calls)
 
@@ -339,3 +340,27 @@ def test_oversize_context_is_rejected_before_turn_or_account_access():
     with pytest.raises(ValueError, match="Größenlimit"):
         c.run("Prompt", history_context="ü" * 100000)
     assert c.requests == []
+
+
+@pytest.mark.parametrize("mode,sandbox", [("questions", "read-only"), ("tasks", "workspace-write"), ("code", "workspace-write")])
+def test_thread_sandbox_matches_current_host_mode_and_project(mode, sandbox):
+    c = runnable_client()
+    c.service.mode = mode
+    c.run("Use only supplied native tools")
+    thread = next(arguments for method, arguments in c.requests if method == "thread/start")
+    assert thread["sandbox"] == sandbox
+    assert thread["cwd"] == str(c.service.project)
+    assert thread["approvalPolicy"] == "never"
+    assert thread["dynamicTools"] == c.service.specs()
+
+
+def test_question_to_task_switch_restarts_sandbox_with_visible_context():
+    c = runnable_client()
+    c.service.mode = "questions"
+    c.run("Explain")
+    c.service.mode = "tasks"
+    with pytest.raises(ValueError, match="Gesprächskontext"):
+        c.run("Edit")
+    c.run("Edit", history_context="Visible prior question and answer")
+    threads = [arguments for method, arguments in c.requests if method == "thread/start"]
+    assert [thread["sandbox"] for thread in threads] == ["read-only", "workspace-write"]
