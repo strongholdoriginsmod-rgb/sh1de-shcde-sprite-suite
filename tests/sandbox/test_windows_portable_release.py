@@ -3,8 +3,38 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import os
+import subprocess
+import sys
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+@pytest.mark.parametrize("inherited_path", [None, ""])
+def test_native_qt_import_when_windows_path_is_missing_or_empty(monkeypatch, inherited_path):
+    import suite_start
+    if inherited_path is None:
+        monkeypatch.delenv("PATH", raising=False)
+    else:
+        monkeypatch.setenv("PATH", inherited_path)
+    env = suite_start.child_environment(QT_QPA_PLATFORM="offscreen")
+    assert env["PATH"]
+    assert not os.environ.get("PATH")
+    result = subprocess.run([sys.executable, "-c",
+        "from PySide6.QtWidgets import QApplication; "
+        "app=QApplication([]); assert app.platformName()=='offscreen'; "
+        "print('QT_WITHOUT_SYSTEM_PYTHON_PATH=1'); app.quit()"],
+        env=env, capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    assert "QT_WITHOUT_SYSTEM_PYTHON_PATH=1" in result.stdout
+
+
+def test_launcher_preserves_an_existing_user_search_path(monkeypatch):
+    import suite_start
+    monkeypatch.setenv("PATH", "X:/UserTools;Y:/ExistingTools")
+    assert suite_start.child_environment()["PATH"] == "X:/UserTools;Y:/ExistingTools"
 
 
 def _builder():

@@ -20,6 +20,7 @@ Sie werden nicht zu einer künstlich erhöhten Gesamtzahl addiert.
 | Codex-Assistentensitzung und lokaler Editorclient | 28 bestanden: Protokoll, Wiederholungen, Zustandsprüfung, Abbruch, Ausgabebegrenzung, Loopback und Dateitransfer. |
 | Letzte Tk-Assistenten-/Layoutkorrekturen | 20 Hostfälle sowie vier Workarea-Fälle und ein Labelumbruch-Fall bestanden: GUI-Dispatch und abgebrochene Warteschlange, echte Pixel-/Layoutgesten mit Undo, realer Texteditor mit Dirty-/Undo, Listen/Skalen, deaktivierte Menüs, Recovery nach fehlgeschlagener nativer Geste, Fokus/Mausrad und Textbreite nach Größenänderung. |
 | Windows-Startpaket-Builder | 11 bestanden, einschließlich Unicode-Ziel, leerem PATH, frischer Umgebung und Wiederholung nach unterbrochener Einrichtung. |
+| Windows-Launcher und Readiness | 15 bestanden, darunter reale Qt-Starts bei fehlendem und leerem `PATH` sowie Erhaltung eines vorhandenen Benutzerpfads. |
 | Native C#-Prüfung | 59 Assertions; drei optionale native DLLs gegen lokal vorhandene SDK-Bibliotheken kompiliert. Die DLLs bleiben lokale QA-Ergebnisse. |
 | Physische Windows-Layoutprüfung | Hauptansicht bei 1020×680 und 1280×720 mit vergrößerter Darstellung; untere Felder und Scrollleisten erreichbar. Letzter nativer Wheel-Test bestätigte Scrollanfang und Scrollende. |
 | Browserlayout | Ansichten, Panels und Dialoge auch bei 1280×480, 1024×540, 800×500 und 640×360 geprüft. |
@@ -69,6 +70,13 @@ dafür ist Internet erforderlich. Ein abgebrochener Erststart wird wiederholt.
 Die ZIPs und ihre separaten SHA-256-Dateien werden vor Veröffentlichung geprüft.
 Das vollständige Offline-Portable mit Drittanbieter-Laufzeiten bleibt ein lokaler
 Kandidat und wird nicht als öffentliches GitHub-Asset hochgeladen.
+
+Die echte frische Windows-Ersteinrichtung deckte nach erfolgreicher
+Paketinstallation einen Qt-Importfehler bei vollständig fehlendem `PATH` auf.
+Der Launcher ergänzt nun ausschließlich für seine Kindprozesse den minimalen
+Windows-Systempfad, wenn `PATH` fehlt oder leer ist. Ein vorhandener Benutzerpfad
+bleibt erhalten. Reale Qt-Regressionen prüfen beide fehlenden Pfadvarianten;
+die Auslieferungspakete werden aus dem korrigierten Commit neu gebaut.
 
 Die konkrete Commit-ID, Paket-Hashes, CRC- und Startprüfungen werden im externen
 Release-Prüfbeleg zusammen mit den ZIPs ausgegeben. Das vermeidet selbstbezügliche

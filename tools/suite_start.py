@@ -38,6 +38,15 @@ PYTHON_HOME = next((p for p in (PROJECT / "python", PACKAGE / "python") if (p / 
 VENV = PROJECT / ".venv"
 
 
+def child_environment(**updates) -> dict[str, str]:
+    """Keep native GUI imports working when CMD removes an empty PATH."""
+    env = dict(os.environ, **updates)
+    if not env.get("PATH"):
+        windows = Path(env.get("SystemRoot") or "C:/Windows")
+        env["PATH"] = str(windows / "System32") + os.pathsep + str(windows)
+    return env
+
+
 def fix_venv() -> None:
     cfg = VENV / "pyvenv.cfg"
     if not PYTHON_HOME.joinpath("python.exe").is_file():
@@ -125,7 +134,7 @@ def portable_self_test() -> int:
     except (OSError,TclRuntimeError) as exc:
         print("PORTABLE_TCL_ERROR:", exc, file=sys.stderr)
         return 4
-    env = dict(os.environ,
+    env = child_environment(
                PYTHONPATH=str(PROJECT / "tools")+os.pathsep+str(PROJECT / "src"),
                PYTHONDONTWRITEBYTECODE="1", **prepared)
     try:
@@ -161,8 +170,7 @@ def main() -> int:
     except (OSError,TclRuntimeError) as exc:
         print("SPRITESUITE_TCL_ERROR:", exc, file=sys.stderr)
         return 4
-    env = dict(os.environ)
-    env.update(prepared)
+    env = child_environment(**prepared)
     env["PYTHONPATH"] = str(PROJECT / "src")
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     dotnet = find_dotnet_sdk(PROJECT)
