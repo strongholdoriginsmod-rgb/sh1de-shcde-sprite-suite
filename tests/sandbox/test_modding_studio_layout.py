@@ -172,3 +172,64 @@ def test_long_status_and_preview_corners_are_reachable_without_expanding_window(
         _visible(area.ybar, preview)
         footer = next(w for w in preview.winfo_children() if isinstance(w, ttk.Label))
         _visible(footer, preview)
+
+
+def test_long_status_has_current_scroll_metrics_before_idle_callbacks(small_studio):
+    studio, window, _ = small_studio
+    # Tk 9 can return (-1, 1) while its deferred display-line metric tasks are
+    # still pending. Native count -update makes the scrollbar usable directly
+    # after a diagnostic replacement; update()/dlineinfo() must not hide this.
+    studio.status.set("Long diagnostic " * 150 + " LAST_STATUS_DETAIL")
+    studio.status_view.see("end-1c")
+    start, end = studio.status_view.yview()
+    assert 0 < start < end <= 1
+    assert studio.status_view.get("end-20c", "end-1c").endswith("LAST_STATUS_DETAIL")
+    assert studio.status_view.dlineinfo("end-1c") is not None
+    studio.status_view.yview_moveto(0)
+    assert studio.status_view.dlineinfo("1.0") is not None
+    studio.status_view.yview_moveto(1)
+    assert studio.status_view.dlineinfo("end-1c") is not None
+    _visible(studio.status_view, window)
+
+
+@pytest.mark.parametrize("destroy_default", [False, True])
+def test_studio_owns_variables_when_default_root_is_foreign_or_destroyed(
+        layout_runtime, tmp_path, monkeypatch, destroy_default):
+    # Embedded windows must use their own interpreter even if another tool
+    # created/destroyed Tk's implicit default. Do not repair global Tk state.
+    foreign = tk.Tk()
+    foreign.withdraw()
+    if destroy_default:
+        foreign.destroy()
+    monkeypatch.setattr(tk, "_default_root", foreign)
+    directory = tmp_path / "owned-studio"
+    new_project(directory, "owned_studio", "Explicit interpreter")
+    window = tk.Toplevel(layout_runtime)
+    try:
+        studio = StudioWindow(window, directory)
+        window.geometry("950x630+30+30")
+        window.update()
+        for variable in (studio.info, studio.section_title, studio.section_summary, studio.status):
+            assert variable._tk is window.tk
+            assert variable._tk is not foreign.tk
+        info_entry = next(w for w in _descendants(window) if isinstance(w, ttk.Entry)
+                          and str(w.cget("textvariable")) == str(studio.info))
+        assert info_entry.get() == studio.info.get() and directory.name in info_entry.get()
+        for index in (2, 7):
+            studio.module_list.selection_clear(0, tk.END)
+            studio.module_list.selection_set(index)
+            studio._on_module_select(None)
+            window.update()
+            assert studio.current_module == MODULES[index][0]
+            label = next(w for w in _descendants(window) if isinstance(w, ttk.Label)
+                         and str(w.cget("textvariable")) == str(studio.section_title))
+            assert label.tk.call("set", str(studio.section_title)) == studio.section_title.get()
+        studio.status.set("Long diagnostic " * 150 + " LAST_STATUS_DETAIL")
+        studio.status_view.see("end-1c")
+        assert 0 < studio.status_view.yview()[0] < 1
+        assert studio.status_view.get("end-20c", "end-1c").endswith("LAST_STATUS_DETAIL")
+        assert tk._default_root is foreign
+    finally:
+        window.destroy()
+        if not destroy_default:
+            foreign.destroy()

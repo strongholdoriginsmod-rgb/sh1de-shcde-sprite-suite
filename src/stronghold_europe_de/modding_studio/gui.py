@@ -190,7 +190,7 @@ class StudioWindow:
             self.action_buttons.append(ttk.Button(
                 self.actions_frame, text=title, command=callback, style="Studio.TButton"))
         self.actions_frame.bind("<Configure>", self._schedule_actions)
-        self.info = tk.StringVar(value="Kein Projekt geladen")
+        self.info = tk.StringVar(master=self.root, value="Kein Projekt geladen")
         ttk.Entry(self.root, textvariable=self.info, state="readonly",
                   style="Studio.TEntry").grid(row=2, column=0, sticky="ew",
                                               padx=14, pady=(0, 5))
@@ -229,11 +229,11 @@ class StudioWindow:
         self._horizontal_wheel(self.module_list)
         self.module_list.bind("<<ListboxSelect>>", self._on_module_select)
 
-        self.section_title = tk.StringVar(value="Projekt auswählen")
+        self.section_title = tk.StringVar(master=self.root, value="Projekt auswählen")
         heading = ttk.Label(right, textvariable=self.section_title,
                             style="Studio.Heading.TLabel")
         heading.grid(row=0, column=0, sticky="ew", padx=8, pady=(0, 3))
-        self.section_summary = tk.StringVar(value="JSON-Entwurf prüfen und als neue Revision speichern.")
+        self.section_summary = tk.StringVar(master=self.root, value="JSON-Entwurf prüfen und als neue Revision speichern.")
         description = ttk.Label(
             right, textvariable=self.section_summary,
             foreground=MUTED, style="Studio.TLabel",
@@ -282,7 +282,7 @@ class StudioWindow:
         self.results_ybar.grid(row=1, column=1, sticky="ns")
         self.results_xbar.grid(row=2, column=0, sticky="ew")
         self._horizontal_wheel(self.results)
-        self.status = tk.StringVar(value="Nur Quell-/Vertragsprüfung, kein Unity-Build.")
+        self.status = tk.StringVar(master=self.root, value="Nur Quell-/Vertragsprüfung, kein Unity-Build.")
         status_frame = ttk.Frame(self.root, style="Studio.TFrame")
         status_frame.grid(row=4, column=0, sticky="ew", padx=14, pady=5)
         status_frame.columnconfigure(0, weight=1)
@@ -302,6 +302,10 @@ class StudioWindow:
         self.status_view.configure(state=tk.NORMAL)
         self.status_view.delete("1.0", tk.END)
         self.status_view.insert("1.0", self.status.get())
+        # Wrapped-line heights are computed asynchronously (TIP 438), so even
+        # update() need not finish before see()/yview() reads the scrollbar.
+        # Synchronize only this Text's metrics, without pumping other callbacks.
+        self.status_view.count("1.0", "end", "update", "ypixels")
         self.status_view.configure(state=tk.DISABLED)
 
     def _show_welcome(self) -> None:

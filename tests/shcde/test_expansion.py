@@ -521,10 +521,11 @@ def test_workbench_lower_actions_and_status_are_scroll_reachable_at_small_size(t
     import shcde_workbench_gui as gui
     window = gui.WorkbenchWindow()
     window.geometry(f"{window_size[0]}x{window_size[1]}+30+30")
-    fonts = {name: font.nametofont(name).cget("size") for name in font.names()}
+    fonts = {name: font.nametofont(name, root=window).cget("size")
+             for name in font.names(root=window)}
     try:
         for name, size in fonts.items():
-            font.nametofont(name).configure(size=round(size * text_scale))
+            font.nametofont(name, root=window).configure(size=round(size * text_scale))
         window.notebook.select(1)
         window.update()
         scroll = window.form_scroll
@@ -555,7 +556,36 @@ def test_workbench_lower_actions_and_status_are_scroll_reachable_at_small_size(t
         assert window.minsize()[1] < 680
     finally:
         for name, size in fonts.items():
-            font.nametofont(name).configure(size=size)
+            font.nametofont(name, root=window).configure(size=size)
         for after in window.tk.splitlist(window.tk.call("after", "info")):
             window.after_cancel(after)
+        window.destroy()
+
+
+def test_workbench_owns_variables_and_fonts_with_destroyed_foreign_default_root(monkeypatch):
+    tk = pytest.importorskip("tkinter")
+    import tkinter.font as font
+    import shcde_workbench_gui as gui
+    foreign = tk.Tk()
+    foreign.withdraw()
+    foreign.destroy()
+    monkeypatch.setattr(tk, "_default_root", foreign)
+    window = gui.WorkbenchWindow()
+    window.withdraw()
+    try:
+        for name in ("language", "project_path", "game_path", "baseline_path", "query",
+                     "tool_args", "property_name", "current_domain", "status", "tool_selected"):
+            variable = getattr(window, name)
+            assert variable._tk is window.tk, name
+            assert window.getvar(variable._name) == variable.get()
+        names = font.names(root=window)
+        assert names
+        assert font.nametofont("TkDefaultFont", root=window).metrics("linespace") > 0
+        window.language.set("en")
+        window.update_idletasks()
+        assert window.domains.get(0) == project.DOMAINS["api"]
+        assert tk._default_root is foreign  # No global interpreter replacement.
+    finally:
+        for pending in window.tk.splitlist(window.tk.call("after", "info")):
+            window.after_cancel(pending)
         window.destroy()

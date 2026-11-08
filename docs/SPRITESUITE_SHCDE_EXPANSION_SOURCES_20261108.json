@@ -98,8 +98,8 @@
       "path": "tools/shcde_workbench_gui.py",
       "sourceSHA256": "d666835df5009697304bfa13105ace1bee2df5163974280b070f2ee82f57f93f",
       "sourceBytes": 20416,
-      "canonicalSHA256": "478b7cc7e82b04ab6561ade0f20197cf98638a148c66ac80e5a55f46f387815a",
-      "canonicalBytes": 25117
+      "canonicalSHA256": "a25759dd3d08c482268383611d5bc50d1dfdb1e23a6973480bb025bafd25acd2",
+      "canonicalBytes": 25235
     },
     {
       "path": "runtime/SpriteSuite.ShcdeGameplay/GameplayRules.cs",
@@ -119,8 +119,9 @@
       "path": "tests/shcde/test_expansion.py",
       "sourceSHA256": "d5c4f9c0bc5f26a2470bb5ba60c92734ec82239ea861c10447fa96bce4407b19",
       "sourceBytes": 16332,
-      "canonicalSHA256": "d6d80b044a75bd9243416adcb129f5cca13f0a05ca9696ace151b4468776bcbd",
-      "canonicalBytes": 24696
+      "canonicalSHA256": "661a63d649a9509f88cb2e3415fc63615a006b0ec7f65ed36de44572ca136435",
+      "canonicalBytes": 26015
     }
-  ]
+  ],
+  "canonicalUpdate": "2026-11-08: post-merge Tk interpreter ownership and CI regression fix"
 }
