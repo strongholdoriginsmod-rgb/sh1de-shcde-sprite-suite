@@ -224,6 +224,11 @@ def test_local_editor_launcher_preserves_navigation_fragment(monkeypatch):
 
 
 def test_loopback_workshop_zip_roundtrip_with_synthetic_codex(tmp_path, monkeypatch):
+    import gc
+    # Earlier GUI tests leave unreachable Tcl/Variable cycles in this process.
+    # Finalize them on their owning main thread before HTTP allocations can
+    # trigger collection in the request worker (which has no Tk event loop).
+    gc.collect()
     from http.client import HTTPConnection
     from threading import Thread
     import sprite_editor_local as local
