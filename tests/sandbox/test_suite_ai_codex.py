@@ -1,0 +1,113 @@
+"""Cost-gated AI Sprite request checks; no web access and no game writes."""
+from __future__ import annotations
+import hashlib
+import io
+import json
+import sys
+from pathlib import Path
+import zipfile
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+import suite_ai_codex as ai  # noqa: E402
+
+
+def sample_bundle(tmp_path: Path, *, variants=2, overrides=None):
+    from PIL import Image
+    original = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
+    original.paste((130, 160, 200, 255), (4, 4, 60, 32))
+    source = io.BytesIO()
+    original.save(source, format="PNG")
+    plan = {"width": 1536, "height": 1024, "scale": 28, "left": -1,
+            "top": 64, "sourceWidth": 64, "sourceHeight": 32}
+    # 28*64 doesn't fit a 1536 canvas; use computed lossless factor 22.
+    plan["scale"] = 22
+    plan["left"] = (1536 - 64 * 22) // 2
+    plan["top"] = 1024 - 64 - 32 * 22
+    canvas = Image.new("RGBA", (1536, 1024), (0, 0, 0, 0))
+    canvas.paste(original.resize((64 * 22, 32 * 22), Image.Resampling.NEAREST),
+                 (plan["left"], plan["top"]))
+    registered = io.BytesIO()
+    canvas.save(registered, format="PNG")
+    sourcebytes = source.getvalue()
+    registeredbytes = registered.getvalue()
+    req = {
+        "format": ai.FORMAT, "version": 1, "assetClass": "building",
+        "goal": "Make a visibly damaged version while keeping the original baseline.",
+        "model": "gpt-image-2.6-flare", "variants": variants,
+        "quality": "high", "complexity": "high", "background": "transparent",
+        "output_format": "png", "requiresManualApproval": True,
+        "automaticInstallation": False, "size": "1536x1024",
+        "registration": plan, "referenceWidth": 64, "referenceHeight": 32,
+        "referenceSHA256": hashlib.sha256(sourcebytes).hexdigest(),
+        "modelReferenceSHA256": hashlib.sha256(registeredbytes).hexdigest(),
+        "referenceFiles": ["model_reference.png"],
+        "prompt": "Edit source image. Retain the existing ground position and alpha. "
+                  "Only change the art inside the original registered rectangle."
+    }
+    req.update(overrides or {})
+    bundle = tmp_path / "request.zip"
+    with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("reference.png", sourcebytes)
+        z.writestr("model_reference.png", registeredbytes)
+        z.writestr("request.json", json.dumps(req))
+        z.writestr("WORKFLOW.txt", "Dry run before execution.")
+    return bundle
+
+
+def test_offline_validation_and_source_hashes(tmp_path):
+    bundle = sample_bundle(tmp_path)
+    req, files = ai.load_request(bundle)
+    assert req["variants"] == 2
+    assert files[0][0] == "model_reference.png"
+    assert ai.main(["--bundle", str(bundle), "--output",
+                    str(tmp_path / "candidate"), "--dry-run"]) == 0
+    assert not (tmp_path / "candidate").exists()
+
+
+def test_paid_calls_require_exact_explicit_confirmation(tmp_path, monkeypatch):
+    bundle = sample_bundle(tmp_path)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-non-secret")
+    monkeypatch.setattr(ai.urllib.request, "urlopen", lambda *a, **k:
+                        pytest.fail("A paid API call must not be made"))
+    args = ["--bundle", str(bundle), "--output", str(tmp_path / "output")]
+    assert ai.main(args + ["--execute"]) == 2
+    assert ai.main(args + ["--execute", "--confirm-paid-requests", "1"]) == 2
+    assert ai.main(args + ["--dry-run", "--confirm-paid-requests", "2"]) == 2
+    assert not (tmp_path / "output").exists()
+
+
+def test_invalid_source_and_model_do_not_generate(tmp_path):
+    for overrides in (
+        {"model": "unknown"},
+        {"variants": 17},
+        {"referenceSHA256": "a" * 64},
+        {"size": "64x32"},
+        {"requiresManualApproval": False},
+        {"registration": {"width": 1024}},
+        {"referenceFiles": ["reference.png"]},
+        {"input_fidelity": "high"},
+    ):
+        folder = tmp_path / str(len(list(tmp_path.iterdir())))
+        folder.mkdir()
+        bundle = sample_bundle(folder, overrides=overrides)
+        with pytest.raises(ValueError):
+            ai.load_request(bundle)
+
+
+def test_cannot_write_directly_to_game_folder(tmp_path):
+    target = tmp_path / "Stronghold Crusader Definitive Edition" / "BepInEx"
+    with pytest.raises(ValueError, match="Spielverzeichnisses"):
+        ai._safe_output(target)
+
+
+def test_inverse_registration_reuses_existing_strict_geometry(tmp_path):
+    bundle = sample_bundle(tmp_path)
+    req, images = ai.load_request(bundle)
+    normalized, metadata = ai.normalize_model_output(images[0][1], req)
+    assert normalized is not None
+    assert ai.png_dimensions(normalized) == (64, 32)
+    assert metadata["registered"]
+    assert metadata["sampling"] == "nearest"

@@ -24,6 +24,14 @@ Rechts liegen **Eigenschaften**, **Ziel** und **Prüfung**. Quelldateiname, Rast
 
 Die Schadensbibliothek kann einschließlich Entwürfen exportiert werden. Die optionale Inhaltsfreigabe ermöglicht einen getrennten Export geprüfter Stufen. Die Bibliothek ist ein Eingabeformat des SpriteSuite-Runtime-Moduls. Bedienung und CLI-Ablauf stehen im [Handbuch für Gebäudeschäden](dokumentation/GEBAEUDESCHADEN.md).
 
+## Gemeinsamer Geometrie-Inspektor und KI-Werkstatt
+
+Der Inspector bietet jetzt **Geometrie** und **KI-Werkstatt** als zusätzliche Reiter. Im Geometrie-Reiter sind Pivot, Bodenanker, Fangraster, Abstand, Winkel, Overlay-Vergleich und optional das Übernehmen eines gemessenen Versatzes in einer gemeinsamen Editoroberfläche zusammengeführt. Der frühere Zinnenlineal-Anwendungsfall benötigt damit keinen zusätzlichen Bildschirm oder eine eigene Verschiebe-Logik. Unveränderte Originalbilder und die Undo-Historie bleiben geschützt.
+
+In der **KI-Werkstatt** können für Gebäude, Einheiten, Vegetation und UI/HUD individuelle Ziele und Erhaltungsregeln formuliert und bis zu vier getrennte Varianten vorbereitet werden. Der Editor exportiert offline ein ZIP mit Originalreferenz, registriertem Modellbild, Prompt und SHA-256-Nachweis. Das optionale Tool `tools/suite_ai_codex.py` validiert das ZIP standardmäßig **ohne** Netzwerk oder Kosten. Kostenpflichtige GPT-Image-Aufrufe erfordern ausdrücklich `--execute --confirm-paid-requests N` und einen getrennt bereitgestellten API-Schlüssel. Die Varianten werden als unabhängige PNGs kontrolliert, nie automatisch ins Spiel installiert. Erst eine manuelle Referenzprüfung samt Abnahmevermerk übernimmt einen Kandidaten in die Arbeitskopie. Die Projektprovenienz ist an das exakte RGBA-Bild gebunden.
+
+Der spezifische **HP-/Feuer-Schadensworkflow** behält seine strengeren Freigabe- und Exportschranken; ein normales KI-Sprite ist **kein** automatisch freigegebenes Schadensmodell. Weitere technische Grenzen und QA-Gates sind in `../../docs/SPRITESUITE_EDITOR_AI_KONSOLIDIERUNG_20261108.md` dokumentiert.
+
 ## Portierung
 
 Quell-PNGs und zugehörige `_m.png`-Masken importieren. Vorhandene Quellmetadaten hinzufügen. SHCDE-Zielreferenzen und deren Metadaten separat laden. Zielnamen für die ausgewählten Frames einzeln, als Serie oder per CSV zuordnen. Pivot, Auflösung, PPU und Material abgleichen. Unter **Prüfung** Fehler bearbeiten; erst anschließend das Modpaket exportieren.
@@ -38,7 +46,7 @@ Die Originaldateien bleiben getrennt von Bearbeitungen erhalten. `.shsprite` ent
 
 ## Prüfung und Grenzen
 
-Der aktuelle Teststand umfasst **114 bestandene Kern-/Format-/Überlappungs-Tests und 49 bestandene Browser-Prüfungen**, einschließlich sichtbarer 1-Pixel-Schnittüberlappung und sicher geteilter hinterer Reihen. Dazu gehören echte Importdialoge und Downloads, unabhängige PNG-Vergleiche, der Import des ursprünglichen v0.1-Beispiels sowie ein 4096-Frame-Projekt mit virtualisierter Liste.
+Der Teststand umfasst die bestehende Kern-/Format-/Überlappungs-Suite, zusätzliche KI- und Geometrie-Kerntests, **49 allgemeine Browser-Prüfungen und 16 Schadensbrowser-Prüfungen** sowie einen separaten Edge-End-to-End-Test der neuen KI-Oberfläche, einschließlich sichtbarer 1-Pixel-Schnittüberlappung und sicher geteilter hinterer Reihen. Dazu gehören echte Importdialoge und Downloads, unabhängige PNG-Vergleiche, der Import des ursprünglichen v0.1-Beispiels sowie ein 4096-Frame-Projekt mit virtualisierter Liste.
 
 **Noch offen:** In-Game-Abnahme der drei konkreten Ruinen, Prüfung an deren extrahierten Original-Tiles, native macOS-Prüfung und dauerhafte native IndexedDB-Wiederherstellung. Der direkte `file://`-Start wurde inzwischen unter Windows mit Edge in Deutsch und Englisch getestet. Die Browserprüfung verwendete die unveränderte HTML-Datei in Chromium per `page.set_content`. Dies ist kein Ersatz für eine Abnahme in der konkreten Spielinstallation.
 

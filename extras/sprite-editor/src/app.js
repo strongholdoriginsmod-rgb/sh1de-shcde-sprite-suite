@@ -1,7 +1,7 @@
 /* Stronghold Sprite Editor. DOM and canvas view; all exports use the independent RGBA codec. */
 (function () {
     'use strict';
-    const C = window.SpriteCore, K = window.SpriteCodec, I = window.SpriteIO, D = window.SpriteDamage, DI = window.SpriteDamageIO, $ = id => document.getElementById(id);
+    const C = window.SpriteCore, K = window.SpriteCodec, I = window.SpriteIO, D = window.SpriteDamage, DI = window.SpriteDamageIO, AI = window.SpriteAI, $ = id => document.getElementById(id);
     if (!window.crypto?.getRandomValues || !window.CompressionStream || !window.DecompressionStream || !window.structuredClone) {
         document.body.textContent = 'Dieser Browser unterstützt die benötigten lokalen Datei- und Kompressionsfunktionen nicht. Die HTML-Datei in einer aktuellen Chromium-basierten Desktop-Version öffnen.';
         return;
@@ -26,7 +26,8 @@
     };
     let history = new I.History(I.blank(), new I.AssetStore()), groupId = '', selected = new Set(), lastSelected = null, view = 'scene', panel = 'properties', dirty = false, busy = false, modalHandler = null, pendingFiles = [], toastTimer = null, aborter = null;
     let damageBuildingId = '', damageKind = 'mechanical', damageHp = 100, damageApprovedOnly = false;
-    let playing = false, animIndex = 0, lastFrameTime = 0, pivotTool = false, brushTool = false, brushMap = null, drag = null, spaceDown = false, renderQueued = false, model = null, layoutError = '', fitNext = true, atlasGroup = '';
+    let aiGoal = '', aiRestrictions = '', aiAssetClass = 'building', aiModel = AI.MODELS[0], aiVariants = 1, aiCandidates = [], aiCandidateIndex = 0, aiLastRequest = null;
+    let playing = false, animIndex = 0, lastFrameTime = 0, pivotTool = false, measureTool = false, measureStart = null, measurement = null, snapStep = 1, brushTool = false, brushMap = null, drag = null, spaceDown = false, renderQueued = false, model = null, layoutError = '', fitNext = true, atlasGroup = '';
     let recoveryCandidate = null, recoveryTimer = null, recoveryRunning = false, recoveryAgain = false, recoveryEnabled = true, sessionId = I.uid('s'), autosaveGeneration = 0;
     try {
         sessionId = sessionStorage.getItem('sprite-session') || sessionId;
@@ -241,6 +242,10 @@
     }
     function setProject(result, name) {
         playing = false;
+        aiCandidates = [];
+        aiLastRequest = null;
+        aiCandidateIndex = 0;
+        measureStart = measurement = null;
         history = new I.History(result.state, result.store);
         selected = new Set();
         groupId = state().scenes[0]?.id || '';
@@ -1098,6 +1103,281 @@
         ]));
         return sections;
     }
+    function activeMeasurement() {
+        const f = primary();
+        return f && measurement && measurement.frameId === f.id &&
+            measurement.imageId === f.imageId ? measurement : null;
+    }
+    function geometrySection() {
+        const f = primary();
+        if (!f) return section('Anker, Ebenen & Messungen', [
+            note('Zum Vermessen zunächst links einen Sprite auswählen.')]);
+        const img = store().get(f.imageId), p = C.pixelAnchor(f, img), m = activeMeasurement();
+        return section('Anker, Ebenen & Messungen', [
+            line('Bildgröße', img.width + ' × ' + img.height + ' px'),
+            line('Pivot in Pixeln', p.x.toFixed(2) + ' / ' + p.y.toFixed(2)),
+            line('Versatz', f.dx + ' / ' + f.dy + ' px'),
+            fields(field('Fangraster · Pixel', String(snapStep), {
+                wide: true, options: ['1', '2', '4', '8'],
+                onchange: v => { snapStep = C.integer(v, 'Fangraster', 1, 8); renderInspector(); }
+            })),
+            buttons(button('Pivot auf Fangraster', () => {
+                if (f.locked) throw new Error('Sprite ist gesperrt.');
+                frameUpdate(x => {
+                    x.pivot = C.pivotFromPixel(img,
+                        C.snapCoordinate(p.x, snapStep), C.snapCoordinate(p.y, snapStep), false);
+                    x.metadataStatus = 'manual';
+                }, 'Pivot auf Pixelraster');
+            }), button('Bodenmitte', () => {
+                if (f.locked) throw new Error('Sprite ist gesperrt.');
+                frameUpdate(x => {
+                    x.pivot = { x: .5, y: 0 }; x.metadataStatus = 'manual';
+                }, 'Bodenanker ausrichten');
+            })),
+            buttons(button('Zwei Bildpunkte messen', () => {
+                selected = new Set([f.id]);
+                measureTool = true;
+                pivotTool = false;
+                measureStart = null;
+                $('compare').value = 'current';
+                setView('sprite');
+                render();
+            }), button('Pivot per Mausklick', () => {
+                selected = new Set([f.id]);
+                pivotTool = true;
+                measureTool = false;
+                measureStart = null;
+                $('compare').value = 'current';
+                setView('sprite');
+                render();
+            })),
+            ...(m ? [
+                line('Gemessener Abstand X / Y', m.dx + ' / ' + m.dy + ' px'),
+                line('Strecke', m.length.toFixed(2) + ' px'),
+                line('Winkel', m.angleDegrees.toFixed(1) + '°'),
+                buttons(button('Als Sprite-Versatz übernehmen…', () => {
+                    if (f.locked) throw new Error('Sprite ist gesperrt.');
+                    confirmDialog('Messung auf Versatz anwenden',
+                        'Den gemessenen Abstand (' + m.dx + ', ' + m.dy +
+                        ' px) zum bestehenden Versatz addieren? Original bleibt unverändert.',
+                        () => frameUpdate(x => {
+                            x.dx = C.integer(x.dx + m.dx, 'Versatz X');
+                            x.dy = C.integer(x.dy + m.dy, 'Versatz Y');
+                        }, 'Messung als Versatz übernehmen'));
+                }), button('Messprotokoll exportieren', async () => {
+                    const source = await store().bytes(f.imageId);
+                    download(JSON.stringify({
+                        schema: 'sprite-suite.geometry-measurement.v1',
+                        frameName: f.name, imageSHA256: await K.sha256(source),
+                        width: img.width, height: img.height,
+                        pivot: { ...f.pivot }, snapStep, measurement: m,
+                        approvedForGame: false
+                    }, null, 2) + '\n', C.safeName(f.name) + '_messung.json', 'application/json');
+                }))
+            ] : [note(measureStart ? 'Startpunkt gesetzt. Zweiten Punkt im Bild anklicken.' :
+                'Messmodus: Im Sprite-Bild nacheinander Start- und Endpunkt anklicken. ' +
+                'Die Messung ändert keine Bilddaten oder Versätze.')]),
+            note('Überlagerung und Transparenz im Sprite-Reiter vergleichen. Alte ' +
+                 'Zinnenlineal-Messdateien bleiben als nachvollziehbare Importbelege erhalten.')
+        ]);
+    }
+    function aiActiveCandidates() {
+        const frame = primary();
+        return frame ? aiCandidates.filter(row => row.frameId === frame.id &&
+            row.sourceImageId === frame.imageId) : [];
+    }
+    async function aiExportRequest() {
+        const frame = primary();
+        if (!frame) throw new Error('Zuerst einen Sprite auswählen.');
+        const sourceImageId = frame.imageId;
+        const settings = AI.options({ assetClass: aiAssetClass, goal: aiGoal,
+            restrictions: aiRestrictions, model: aiModel, variants: aiVariants });
+        await task('KI-Anfrage mit unveränderter Bildreferenz vorbereiten', async opts => {
+            const sourcePNG = await store().bytes(sourceImageId, opts.signal);
+            const payload = await AI.makeRequestBundle(store().get(sourceImageId), sourcePNG, settings);
+            if (primary()?.id !== frame.id || primary()?.imageId !== sourceImageId)
+                throw new Error('Sprite wurde während der Anfragevorbereitung geändert.');
+            aiLastRequest = { frameId: frame.id, sourceImageId,
+                request: payload.request };
+            download(payload.bytes, C.safeName(frame.name) + '_ki_auftrag.zip');
+            message('KI-Auftragsbundle exportiert. Keine API-Anfrage gesendet.');
+        });
+    }
+    async function aiImportCandidates() {
+        const frame = primary();
+        if (!frame) throw new Error('Zuerst einen Sprite auswählen.');
+        const files = await askFiles('.png', true);
+        if (!files.length) return;
+        if (files.length > 4 || files.some(file => !/\.png$/i.test(file.name)))
+            throw new Error('Maximal vier unabhängige PNG-Kandidaten importieren.');
+        const sourceImageId = frame.imageId;
+        await task('Bildvarianten getrennt prüfen', async opts => {
+            const original = store().get(sourceImageId), incoming = [];
+            let totalPixels = 0;
+            for (let index = 0; index < files.length; index++) {
+                K.aborted(opts.signal);
+                const file = files[index];
+                if (file.size > C.LIMITS.fileBytes)
+                    throw new Error('Kandidatenbild ist größer als das Dateibudget.');
+                const bytes = new Uint8Array(await file.arrayBuffer());
+                const image = await K.decodePNG(bytes, opts);
+                totalPixels += image.width * image.height;
+                if (totalPixels > C.LIMITS.totalPixels)
+                    throw new Error('Kandidaten überschreiten das 32-Megapixel-Arbeitsbudget.');
+                incoming.push({ frameId: frame.id, sourceImageId,
+                    name: file.name, image,
+                    sha256: await K.sha256(bytes),
+                    review: AI.reviewCandidate(original, image) });
+                opts.progress(index + 1, files.length, file.name);
+                await I.tick();
+            }
+            if (primary()?.id !== frame.id || primary()?.imageId !== sourceImageId)
+                throw new Error('Sprite wurde während des Imports geändert.');
+            aiCandidates = incoming;
+            aiCandidateIndex = 0;
+            message('KI-Kandidaten als getrennte Vorschauen geladen; nichts übernommen.');
+        });
+    }
+    function aiApprovalDialog() {
+        const frame = primary(), candidates = aiActiveCandidates();
+        if (!frame || !candidates.length) throw new Error('Kein passender Kandidat geladen.');
+        const candidate = candidates[Math.min(aiCandidateIndex, candidates.length - 1)];
+        const sourceImageId = frame.imageId;
+        const review = AI.reviewCandidate(store().get(sourceImageId), candidate.image);
+        if (review.errors.length)
+            throw new Error('Kandidat blockiert: ' + review.errors.join(' '));
+        const source = store().get(sourceImageId);
+        const inspected = [
+            damagePreview(source, 'Arbeitsoriginal'),
+            damagePreview(candidate.image, 'Kandidat: ' + candidate.name)
+        ];
+        modal('KI-Kandidaten bildbezogen abnehmen', [
+            el('div', { class: 'damage-review-gallery' }, inspected),
+            line('Veränderte Pixel', review.stats.changedPixels),
+            line('Geänderte Alphawerte', review.stats.alphaChanged),
+            ...review.warnings.map(msg => el('p', { class: 'warning-text', text: msg })),
+            note('Nur die aktuelle Arbeitskopie wird ersetzt. Das Original und der Undo-Verlauf bleiben erhalten. ' +
+                'Masken, Pivots und Spielkompatibilität müssen separat geprüft werden.'),
+            checkbox('Ich habe Ausrichtung, Perspektive, Silhouette, Transparenz, Masken und Rechte geprüft.', false, 'reviewed'),
+            fields(field('Abnahmevermerk', '', {
+                name: 'notes', type: 'textarea', wide: true,
+                placeholder: 'Warum entspricht dieser Kandidat der Vorlage?'
+            }))
+        ], 'Kandidaten übernehmen', async data => {
+            if (!data.has('reviewed'))
+                throw new Error('Sichtprüfung muss ausdrücklich bestätigt werden.');
+            const notes = String(data.get('notes') || '').trim();
+            if (notes.length < 8 || notes.length > 1200)
+                throw new Error('Abnahmevermerk mit mindestens acht Zeichen erforderlich.');
+            const current = primary();
+            if (!current || current.id !== frame.id || current.imageId !== sourceImageId)
+                throw new Error('Quelle hat sich geändert; Kandidat erneut prüfen.');
+            if (current.locked) throw new Error('Gesperrter Sprite darf nicht ersetzt werden.');
+            await task('Geprüfte Arbeitskopie übernehmen', async opts => {
+                const sourcePNG = await store().bytes(sourceImageId, opts.signal);
+                const currentSHA = await K.sha256(sourcePNG);
+                if (current.id !== primary()?.id || current.imageId !== primary()?.imageId)
+                    throw new Error('Sprite-Auswahl hat sich geändert.');
+                const next = store().fork(), nextState = I.clone(state());
+                const updated = nextState.frames.find(f => f.id === frame.id);
+                updated.imageId = next.add(candidate.image);
+                updated.aiGeneration = {
+                    appliedImageId: updated.imageId,
+                    sourceSHA256: currentSHA,
+                    candidateSHA256: candidate.sha256,
+                    imageContentSHA256: I.imageContentSHA256(candidate.image),
+                    requestedModel: aiLastRequest?.frameId === frame.id &&
+                        aiLastRequest?.sourceImageId === sourceImageId ?
+                        aiLastRequest.request.model : 'unverified',
+                    requestReferenceSHA256: aiLastRequest?.frameId === frame.id &&
+                        aiLastRequest?.sourceImageId === sourceImageId ?
+                        aiLastRequest.request.referenceSHA256 : null,
+                    reviewNotes: notes,
+                    manualReview: true, apiOriginVerified: false
+                };
+                updated.metadataStatus = 'manual';
+                commit(nextState, 'KI-Kandidat nach Sichtprüfung übernehmen', next, { fit: true });
+                aiCandidates = [];
+                aiCandidateIndex = 0;
+                aiLastRequest = null;
+                view = 'sprite';
+                message('Geprüfter KI-Kandidat übernommen. Spieltest und Exportprüfung stehen aus.');
+            });
+        });
+    }
+    function aiSection() {
+        const frame = primary();
+        if (!frame) return [section('KI-Werkstatt', [
+            note('Zuerst einen Sprite auswählen. Der Editor selbst verbindet sich nicht mit der KI-API.')
+        ])];
+        const candidates = aiActiveCandidates();
+        const candidate = candidates[Math.min(aiCandidateIndex, candidates.length - 1)];
+        return [
+            section('1 · Briefing und Vorlage', [
+                line('Original-/Arbeits-Sprite', frame.name),
+                line('Arbeitsbild', store().get(frame.imageId).width + ' × ' +
+                    store().get(frame.imageId).height + ' px'),
+                fields(field('Assetklasse', aiAssetClass, {
+                    wide: true, options: [
+                        ['building', 'Gebäude'], ['unit', 'Einheiten / Frames'],
+                        ['vegetation', 'Vegetation'], ['hud', 'HUD'],
+                        ['ui', 'UI-Sprite / Icon'], ['other', 'Sonstige']
+                    ], onchange: v => { aiAssetClass = v; }
+                }), field('Modell', aiModel, {
+                    wide: true, options: AI.MODELS, onchange: v => { aiModel = v; }
+                })),
+                fields(field('Gestaltungsziel', aiGoal, {
+                    type: 'textarea', wide: true, onchange: v => { aiGoal = v; },
+                    placeholder: 'Was soll geändert werden? Bezug zum Original genau benennen.'
+                }), field('Muss erhalten bleiben', aiRestrictions, {
+                    type: 'textarea', wide: true, onchange: v => { aiRestrictions = v; }
+                })),
+                fields(field('Getrennte Varianten', String(aiVariants), {
+                    options: ['1', '2', '3', '4'],
+                    onchange: v => { aiVariants = C.integer(v, 'Varianten', 1, 4); }
+                })),
+                buttons(button('KI-Auftragsbundle exportieren…', aiExportRequest)),
+                note('Enthält unverändertes Referenz-PNG, registrierte Arbeitsvorlage, ' +
+                    'Prompt, Prüfsummen und die Anleitung für Codex. Offline und ohne API-Kosten. ' +
+                    'Jede Variante benötigt einen eigenständigen Kandidaten und eine eigene Freigabe.'),
+                ...(aiLastRequest?.frameId === frame.id &&
+                    aiLastRequest?.sourceImageId === frame.imageId ?
+                    [line('Vorbereitete Modellanfrage', aiLastRequest.request.model +
+                        ' · ' + aiLastRequest.request.variants + ' Variante(n)')] : [])
+            ]),
+            section('2 · Kandidaten vergleichen', [
+                buttons(button('Kandidaten-PNGs importieren…', aiImportCandidates)),
+                ...(candidate ? [
+                    fields(field('Variante', String(Math.min(aiCandidateIndex, candidates.length - 1)), {
+                        wide: true, options: candidates.map((row, n) => [
+                            String(n), (n + 1) + ' · ' + row.name
+                        ]), onchange: v => { aiCandidateIndex = Number(v); renderInspector(); }
+                    })),
+                    damagePreview(candidate.image, 'Ungeprüfte Variante'),
+                    line('Pixel verändert', candidate.review.stats.changedPixels),
+                    line('Alpha verändert', candidate.review.stats.alphaChanged),
+                    ...candidate.review.errors.map(msg =>
+                        el('p', { class: 'error-text', text: msg })),
+                    ...candidate.review.warnings.map(msg =>
+                        el('p', { class: 'warning-text', text: msg })),
+                    buttons(button('Original + Variante abnehmen…', aiApprovalDialog, {
+                        disabled: !!candidate.review.errors.length
+                    })),
+                    buttons(button('Varianten verwerfen', () => {
+                        aiCandidates = [];
+                        aiCandidateIndex = 0;
+                        renderInspector();
+                    }))
+                ] : [note('Noch kein Kandidat geladen. PNGs bleiben bis zur ' +
+                    'ausdrücklichen Abnahme außerhalb des Projekts.')]),
+                ...(frame.aiGeneration ?
+                    [line('Letzte manuelle KI-Abnahme', frame.aiGeneration.reviewNotes),
+                     line('Quellnachweis', frame.aiGeneration.sourceSHA256.slice(0, 16) + '…')] : []),
+                note('Kein automatischer Qualitäts- oder Rechte-Nachweis. Nach der Übernahme ' +
+                    'sind Masken, Atlas, Animationsverlauf und die Darstellung im QA-Spiel zu testen.')
+            ])
+        ];
+    }
     function renderInspector() {
         const root = $('inspector-content');
         root.replaceChildren();
@@ -1108,6 +1388,10 @@
                 root.append(...targetSection());
             else if (panel === 'damage')
                 root.append(...damageSection());
+            else if (panel === 'geometry')
+                root.append(geometrySection());
+            else if (panel === 'ai')
+                root.append(...aiSection());
             else if (panel === 'checks')
                 root.append(renderChecks());
             else {
@@ -1747,6 +2031,29 @@
             ctx.lineTo(model.anchorX, model.anchorY + len);
             ctx.stroke();
         }
+        if (view === 'sprite') {
+            const f = primary(), item = [...model.items].reverse().find(p => p.frame?.id === f?.id);
+            const m = activeMeasurement();
+            const start = m?.start || (measureStart?.frameId === f?.id &&
+                measureStart?.imageId === f?.imageId ? measureStart.point : null);
+            if (item && start) {
+                const ax = item.x + start.x, ay = item.y + start.y;
+                ctx.strokeStyle = '#e58d1a';
+                ctx.lineWidth = 2 / t.zoom;
+                ctx.beginPath();
+                ctx.arc(ax, ay, 4 / t.zoom, 0, 2 * Math.PI);
+                if (m) {
+                    ctx.moveTo(ax, ay);
+                    ctx.lineTo(item.x + m.end.x, item.y + m.end.y);
+                    ctx.arc(item.x + m.end.x, item.y + m.end.y,
+                        4 / t.zoom, 0, 2 * Math.PI);
+                }
+                ctx.stroke();
+                if (m && t.zoom > .16)
+                    drawLabel(ctx, 'Δ ' + m.dx + ' / ' + m.dy + ' px',
+                        ax + 9 / t.zoom, ay - 7 / t.zoom, t.zoom);
+            }
+        }
         if (view === 'scene' || view === 'atlas')
             for (const p of model.items) {
                 if (selected.has(p.frame?.id)) {
@@ -1773,7 +2080,7 @@
         }
         $('zoom-value').textContent = Math.round(t.zoom * 100) + ' %';
         $('status-middle').textContent = `${model.width} × ${model.height} px`;
-        cv.style.cursor = view === 'split' && brushTool ? 'crosshair' : view === 'sprite' && pivotTool ? 'crosshair' : spaceDown || drag?.kind === 'pan' ? 'grab' : 'default';
+        cv.style.cursor = view === 'split' && brushTool ? 'crosshair' : view === 'sprite' && (pivotTool || measureTool) ? 'crosshair' : spaceDown || drag?.kind === 'pan' ? 'grab' : 'default';
     }
     function drawLabel(ctx, label, x, y, zoom) {
         ctx.font = `${11 / zoom}px -apple-system,Segoe UI,sans-serif`;
@@ -1819,6 +2126,7 @@
         $('animation-bar').hidden = view !== 'animation';
         $('split-bar').hidden = view !== 'split';
         $('pivot-tool').setAttribute('aria-pressed', pivotTool);
+        $('measure-tool').setAttribute('aria-pressed', measureTool);
         $('brush-tool').setAttribute('aria-pressed', brushTool);
         $('play').textContent = playing ? 'Pause' : 'Abspielen';
         $('status-left').textContent = currentGroup() ? `${currentGroup().name} · ${I.originLabel(currentGroup().source)}` : state().split && view === 'split' ? 'Schnittbild' : 'Keine Dateien';
@@ -1828,6 +2136,11 @@
         if (view === next)
             return;
         playing = false;
+        if (next !== 'sprite') {
+            measureTool = false;
+            measureStart = null;
+            pivotTool = false;
+        }
         view = next;
         animIndex = 0;
         fitNext = !transforms.has(view);
@@ -1901,6 +2214,29 @@
                 drag = { kind: 'brush', point };
                 paintStroke(point);
             }
+            else if (view === 'sprite' && measureTool) {
+                const f = primary(), p = [...model.items].reverse().find(p => p.frame?.id === f?.id);
+                if (!f || !p) throw new Error('Kein Sprite zum Vermessen ausgewählt.');
+                if (!['current', 'overlay'].includes($('compare').value))
+                    throw new Error('Für eine Messung „Bearbeitet“ oder „Quelle + Ziel“ anzeigen.');
+                const at = { x: C.snapCoordinate(point.x - p.x, snapStep),
+                    y: C.snapCoordinate(point.y - p.y, snapStep) };
+                if (at.x < 0 || at.x > p.width || at.y < 0 || at.y > p.height)
+                    throw new Error('Messpunkt außerhalb des Bildes.');
+                if (!measureStart || measureStart.frameId !== f.id ||
+                        measureStart.imageId !== f.imageId) {
+                    measureStart = { frameId: f.id, imageId: f.imageId, point: at };
+                    measurement = null;
+                }
+                else {
+                    measurement = { frameId: f.id, imageId: f.imageId,
+                        ...C.measurePoints(measureStart.point, at, snapStep) };
+                    measureStart = null;
+                    measureTool = false;
+                    panel = 'geometry';
+                }
+                render();
+            }
             else if (view === 'sprite' && pivotTool) {
                 const f = primary(), p = model.items.find(p => p.frame?.id === f?.id);
                 if (!f || !p)
@@ -1909,10 +2245,10 @@
                     throw new Error('Sprite ist gesperrt.');
                 if ($('compare').value !== 'current')
                     throw new Error('Zum Setzen des Pivots „Bearbeitet“ anzeigen.');
-                const x = C.number((point.x - p.x) / p.width, 'Pivot X', 0, 1), y = C.number(1 - (point.y - p.y) / p.height, 'Pivot Y', 0, 1);
+                const nextPivot = C.pivotFromPixel(store().get(f.imageId), point.x - p.x, point.y - p.y, false);
                 selected = new Set([f.id]);
                 frameUpdate(a => {
-                    a.pivot = { x: Math.round(x * 1e6) / 1e6, y: Math.round(y * 1e6) / 1e6 };
+                    a.pivot = { x: Math.round(nextPivot.x * 1e6) / 1e6, y: Math.round(nextPivot.y * 1e6) / 1e6 };
                     a.metadataStatus = 'manual';
                 }, 'Pivot setzen');
             }
@@ -2208,6 +2544,14 @@
         'toggle-files': () => $('files-panel').classList.toggle('open'), 'toggle-inspector': () => $('inspector').classList.toggle('open'),
         'pivot-tool': () => {
             pivotTool = !pivotTool;
+            measureTool = false;
+            measureStart = null;
+            render();
+        }, 'measure-tool': () => {
+            measureTool = !measureTool;
+            pivotTool = false;
+            measureStart = null;
+            panel = 'geometry';
             render();
         }, 'brush-tool': () => {
             brushTool = !brushTool;

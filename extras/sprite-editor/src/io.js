@@ -34,6 +34,39 @@
     const bool = (value, fallback = false) => value === undefined ? fallback : (typeof value === 'boolean' ? value : C.fail('Ungültiger Wahrheitswert.'));
     const source = value => ['shde', 'custom', 'shcde'].includes(value) ? value : C.fail('Unbekannte Assetherkunft.');
     const originLabel = s => ({ shde: 'Stronghold: Definitive Edition', shcde: 'Stronghold Crusader: Definitive Edition', custom: 'Eigene Assets' }[s] || s);
+    /** Bind human review to exact decoded RGBA and dimensions, including hidden RGB. */
+    function imageContentSHA256(img) {
+        C.dimensions(img.width, img.height);
+        return K.sha256Fallback(K.concat([
+            K.encodeText(img.width + 'x' + img.height + ':RGBA:'),
+            new Uint8Array(img.data.buffer, img.data.byteOffset, img.data.byteLength)
+        ]));
+    }
+    /** Review data is descriptive provenance, never an export or installation approval. */
+    function validateGeneration(generation, imageId, img) {
+        if (generation == null) return null;
+        if (typeof generation !== 'object' || Array.isArray(generation))
+            C.fail('Ungültige KI-Herkunftsangabe.');
+        if (generation.appliedImageId !== imageId) return null;
+        const digest = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+        if (!digest(generation.sourceSHA256) || !digest(generation.candidateSHA256) ||
+                !digest(generation.imageContentSHA256) ||
+                generation.imageContentSHA256 !== imageContentSHA256(img) ||
+                (generation.requestReferenceSHA256 != null &&
+                 !digest(generation.requestReferenceSHA256)) ||
+                !['unverified', 'gpt-image-2.6-flare', 'gpt-image-2.6-sunburst']
+                    .includes(generation.requestedModel) ||
+                generation.manualReview !== true || generation.apiOriginVerified !== false)
+            C.fail('KI-Herkunft ist nicht ausreichend nachweisbar.');
+        return { appliedImageId: id(generation.appliedImageId),
+            sourceSHA256: generation.sourceSHA256,
+            candidateSHA256: generation.candidateSHA256,
+            imageContentSHA256: generation.imageContentSHA256,
+            requestedModel: generation.requestedModel,
+            requestReferenceSHA256: generation.requestReferenceSHA256 ?? null,
+            reviewNotes: text(generation.reviewNotes, 'KI-Abnahmevermerk', 1200),
+            manualReview: true, apiOriginVerified: false };
+    }
     const tick = () => new Promise(r => setTimeout(r, 0));
     function blank() {
         return {
@@ -159,11 +192,13 @@
             if (originalMaskId)
                 store.get(originalMaskId);
             const rawTarget = text(f.targetName ?? '', 'Zielname'), target = rawTarget ? C.targetName(rawTarget).name : '';
+            const aiGeneration = validateGeneration(f.aiGeneration, imageId, img);
             return {
                 id: fid, groupId, name: text(f.name, 'Dateiname'), group: text(f.group, 'Quellgruppe'), index: f.index === null ? null : C.integer(f.index, 'Quellindex', 0, 100000000), slot: C.integer(f.slot, 'Rasterplatz', 0, 4095),
                 imageId, originalId, maskId, originalMaskId, pivot: C.pivot(f.pivot), originalPivot: C.pivot(f.originalPivot || f.pivot), ppu: C.number(f.ppu, 'PPU', .001, 65536), originalPPU: C.number(f.originalPPU ?? f.ppu, 'Original-PPU', .001, 65536),
                 metadataStatus: ['assumed', 'imported', 'manual'].includes(f.metadataStatus) ? f.metadataStatus : C.fail('Ungültiger Metadatenstatus.'), targetName: target, targetConfirmed: bool(f.targetConfirmed),
-                dx: C.integer(f.dx, 'X-Versatz'), dy: C.integer(f.dy, 'Y-Versatz'), trimOffsetX: C.integer(f.trimOffsetX ?? 0, 'Trimversatz X'), trimOffsetY: C.integer(f.trimOffsetY ?? 0, 'Trimversatz Y'), visible: bool(f.visible, true), locked: bool(f.locked)
+                dx: C.integer(f.dx, 'X-Versatz'), dy: C.integer(f.dy, 'Y-Versatz'), trimOffsetX: C.integer(f.trimOffsetX ?? 0, 'Trimversatz X'), trimOffsetY: C.integer(f.trimOffsetY ?? 0, 'Trimversatz Y'), visible: bool(f.visible, true), locked: bool(f.locked),
+                ...(aiGeneration ? { aiGeneration } : {})
             };
         });
         for (const g of s.scenes) {
@@ -778,7 +813,7 @@
         return K.zip(entries);
     }
     return {
-        FORMAT, SCHEMA, uid, clone, blank, AssetStore, History, assetIds, validate, makeFrame, expandFiles, importPNGs, applyMetadata, importAtlas, readProject, writeProject, legacyProject,
+        FORMAT, SCHEMA, imageContentSHA256, uid, clone, blank, AssetStore, History, assetIds, validate, makeFrame, expandFiles, importPNGs, applyMetadata, importAtlas, readProject, writeProject, legacyProject,
         mappingCSV, importMapping, preflight, modInfo, packFrames, atlasEntries, tileEntries, exportMod, exportSplit, transferSplit, exportORA, originLabel, tick
     };
 });

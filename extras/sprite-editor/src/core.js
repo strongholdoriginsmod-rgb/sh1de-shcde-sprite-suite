@@ -88,6 +88,29 @@
         const p = pivot(frame.pivot);
         return usePivot ? { x: img.width * p.x, y: img.height * (1 - p.y) } : { x: Math.floor(img.width / 2), y: img.height };
     }
+    /** Shared pixel-space geometry for pivots, overlay comparisons and measurements.
+     * Image coordinates are top-left origin; persisted pivots use bottom-left. */
+    function snapCoordinate(value, step = 1) {
+        number(step, 'Snap-Abstand', 0.001, 4096);
+        return Math.round(number(value, 'Koordinate', -LIMITS.side, LIMITS.side) / step) * step;
+    }
+    function pivotFromPixel(img, x, y, snapped = true) {
+        dimensions(img.width, img.height);
+        const px = snapped ? snapCoordinate(x) : number(x, 'X');
+        const py = snapped ? snapCoordinate(y) : number(y, 'Y');
+        if (px < 0 || px > img.width || py < 0 || py > img.height)
+            fail('Ankerpunkt liegt außerhalb des Sprites.');
+        return pivot({ x: px / img.width, y: 1 - py / img.height });
+    }
+    function measurePoints(from, to, snapStep = 1) {
+        if (!from || !to)
+            fail('Messung benötigt Anfang und Ende.');
+        const start = { x: snapCoordinate(from.x, snapStep), y: snapCoordinate(from.y, snapStep) };
+        const end = { x: snapCoordinate(to.x, snapStep), y: snapCoordinate(to.y, snapStep) };
+        const dx = end.x - start.x, dy = end.y - start.y;
+        return { start, end, dx, dy, length: Math.hypot(dx, dy),
+            angleDegrees: Math.atan2(-dy, dx) * 180 / Math.PI };
+    }
     function layout(frames, raw, getImage) {
         const s = scene(raw), ps = positions(s), f = footprint(s), used = new Set();
         let left = f.left, top = f.top, right = f.right, bottom = f.bottom;
@@ -843,6 +866,6 @@
         });
     }
     return Object.freeze({
-        VERSION, LIMITS, DEFAULT_SCENE, MATERIALS, fail, number, integer, dimensions, image, scene, positions, footprint, pivot, pixelAnchor, layout, blit, compose, crop, alphaBounds, trimRect, flip, resize, channel, adjust, difference, parseName, targetName, safeName, safePath, uniqueNames, assignSlots, autoScene, ownerAt, partition, ownershipImage, ownershipMap, paintMap, splitAnalysis, split, pack, atlasImage, atlasDefinition, parseMetadata, atlasCropRect, csvString, parseCSV, json
+        VERSION, LIMITS, DEFAULT_SCENE, MATERIALS, fail, number, integer, dimensions, image, scene, positions, footprint, pivot, pixelAnchor, snapCoordinate, pivotFromPixel, measurePoints, layout, blit, compose, crop, alphaBounds, trimRect, flip, resize, channel, adjust, difference, parseName, targetName, safeName, safePath, uniqueNames, assignSlots, autoScene, ownerAt, partition, ownershipImage, ownershipMap, paintMap, splitAnalysis, split, pack, atlasImage, atlasDefinition, parseMetadata, atlasCropRect, csvString, parseCSV, json
     });
 });

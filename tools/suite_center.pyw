@@ -193,7 +193,7 @@ class Center(workshop.Suite):
         self.unity=entry(page,'Unity 2021.3.45f2',defaults.get('unity_editor',''),file=True)
         self.dotnet=entry(page,'.NET SDK (8 oder neuer)',defaults.get('dotnet_directory',''))
         row=ttk.Frame(page);row.pack(fill='x',pady=16)
-        for label,fn in [('Pfade speichern',self.save_config),('Einrichtungsstatus',self.show_setup_diagnostics),('Einrichtung prüfen',lambda:self.tool('suite_workflow.py',['check'])),('Spiele einlesen',self.prepare_games)]:
+        for label,fn in [('Pfade speichern',self.save_config),('Automatisch erkennen',self.auto_detect_environment),('Einrichtungsstatus',self.show_setup_diagnostics),('Einrichtung prüfen',lambda:self.tool('suite_workflow.py',['check'])),('Spiele einlesen',self.prepare_games)]:
             ttk.Button(row,text=label,command=fn).pack(side='left',padx=(0,8))
         self.setup_save_status=tk.StringVar(
             value=(' '.join(setup_warnings) if setup_warnings
@@ -328,6 +328,50 @@ class Center(workshop.Suite):
             'Vor dem Bau die Voraussetzungen erneut prüfen.'
         )
         self.tool('suite_bridge.py',args)
+
+    def auto_detect_environment(self):
+        """Read-only discovery. Fill only empty UI fields; never save paths."""
+        from suite_environment_discovery import discover
+        try:
+            report = discover(ROOT, roots=[
+                p for p in (self.source.get().strip(), self.target.get().strip())
+                if p
+            ])
+            filled = []
+            for kind, var in (("sh1de", self.source), ("shcde", self.target)):
+                path = report["suggestions"][kind]
+                if path and not var.get().strip():
+                    var.set(path)
+                    filled.append(kind.upper())
+            for field, key in ((self.unity, "unity_editor"),
+                               (self.dotnet, "dotnet_directory")):
+                if report[key] and not field.get().strip():
+                    field.set(report[key])
+                    filled.append(key)
+            rows = ["Nur Dateierkennung – keine Programme ausgeführt, "
+                    "keine Konfiguration gespeichert.", ""]
+            for game in report["games"]:
+                rows.append(game["kind"].upper() + ": " + game["root"])
+                if game["kind"] == "shcde":
+                    se = game["script_extender"]
+                    rows.append("Script Extender: " +
+                                ("vorhanden" if se["installed"] else "nicht nachgewiesen"))
+                    for component, files in game["components"].items():
+                        rows.append(component + ": " +
+                                    (str(len(files)) + " DLL-Fund(e)" if files else
+                                     "nicht nachgewiesen"))
+            rows.extend(("", "Unity: " + str(report["unity_editor"] or "nicht gefunden"),
+                         ".NET: " + str(report["dotnet_directory"] or "nicht gefunden"),
+                         "Python: " + ", ".join(report["python_executables"][:5]),
+                         "Felder nur ergänzt: " + (", ".join(filled) if filled else "keine"),
+                         "Mehrere Spielkandidaten müssen manuell ausgewählt werden.",
+                         "Vor Builds sind SHA, Spielversion und Runtime-ABI separat zu prüfen."))
+            self.setup_save_status.set("Automatische Suche abgeschlossen. "
+                                       "Geänderte Felder erst ausdrücklich speichern.")
+            messagebox.showinfo("Umgebung erkennen (nur lesend)",
+                                "\n".join(rows), parent=self)
+        except (OSError, ValueError, RuntimeError) as exc:
+            messagebox.showerror("Umgebung erkennen", str(exc), parent=self)
 
     def show_setup_diagnostics(self):
         """Read-only setup overview; independent of BC7 build readiness."""

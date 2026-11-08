@@ -44,6 +44,7 @@ def verify() -> None:
     from sprache.einbauen import SCRIPT, HERE
     table = json.loads((HERE / 'en.json').read_text(encoding='utf-8'))
     table.update(json.loads((HERE / 'en_damage.json').read_text(encoding='utf-8')))
+    table.update(json.loads((HERE / 'en_ai.json').read_text(encoding='utf-8')))
     language_script = SCRIPT.replace('__TABLE__',
         json.dumps(table, ensure_ascii=False).replace('</', '<\\/'))
     raw = html.read_text(encoding='utf-8')
